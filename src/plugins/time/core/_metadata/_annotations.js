@@ -54,12 +54,12 @@
  * Additionally, this system tracks "time of day". "Time of Day" is defined
  * as a block of time (measured in hours) that is named.
  * There are six of these blocks of time that make up a day:
- * - Night (00:00am - 03:59am)
+ * - Moontide (00:00am - 03:59am)
  * - Dawn (04:00am - 7:59am)
  * - Morning (08:00am - 11:59am)
  * - Afternoon (12:00pm - 15:59pm)
  * - Evening (16:00pm - 19:59pm)
- * - Twilight (20:00pm - 23:59pm)
+ * - Night (20:00pm - 23:59pm)
  *
  * Alongside the "time of day" functionality, there is also an optional "tone"
  * adjustment to alter the screen tone based on "time of day". The tone will
@@ -117,8 +117,8 @@
  *  <yearPage:YEAR>                <yearChoice:YEAR>
  *  <timeOfDayPage:TIME_OF_DAY>    <timeOfDayChoice:TIME_OF_DAY>
  *  <seasonOfYearPage:SEASON>      <seasonOfYearChoice:SEASON>
- * Where TIME_OF_DAY is a 0-5 index or one of: night, dawn, morning,
- *   afternoon, evening, twilight.
+ * Where TIME_OF_DAY is a 0-5 index or one of: moontide, dawn, morning,
+ *   afternoon, evening, night.
  * Where SEASON is a 0-3 index or one of: spring, summer, autumn, winter.
  *
  * RANGE TAG FORMAT (inclusive START-END):
@@ -201,6 +201,14 @@
  *
  * =============================================================================
  * CHANGELOG:
+ * - 2.0.0
+ *    BREAKING: the day/night look moved out to J-Lighting-Time. This plugin keeps the
+ *    clock, the variables, the conditionals and the HUD, and paints nothing.
+ *    BREAKING: the phases are now Moontide, Dawn, Morning, Afternoon, Evening, Night.
+ *    The hours each one covers are unchanged; twilight was two times of day wearing
+ *    one word, and night was sitting on the block it describes.
+ *    An overnight range like 18-5 now holds past midnight instead of ending there.
+ *    setTime announces the change, so setting the clock while it is stopped repaints.
  * - 1.3.0
  *    Time conditionals are resolved from TimeMapper.ConditionalKinds, an ordered list
  *    a plugin can register its own conditional into, rather than from a hardcoded pair
@@ -299,15 +307,6 @@
  * @on Real Time
  * @off Artificial Time
  * @default false
- *
- * @param changeToneByTime
- * @parent BASEconfigs
- * @type boolean
- * @text Change Tone by Time
- * @desc Lets TIME manage screen tone based on the hour.
- * @on Allow
- * @off Disallow
- * @default true
  *
  * @param useVariableAssignment
  * @parent BASEconfigs
@@ -516,7 +515,7 @@
  * @type select
  * @desc Use the dropdown to select a time of day to jump to.
  * This will jump to the next day rather than rewind.
- * @option Night (00:00am aka midnight)
+ * @option Moontide (00:00am aka midnight)
  * @value 0
  * @option Dawn (04:00am)
  * @value 1
@@ -526,7 +525,7 @@
  * @value 3
  * @option Evening (16:00pm)
  * @value 4
- * @option Twilight (20:00pm)
+ * @option Night (20:00pm)
  * @value 5
  *
  * @command setTime
@@ -613,14 +612,5 @@
  * @command startTime
  * @text Start TIME
  * @desc Starts the flow of time; only applicable to artificial time.
- *
- * @command unlockTone
- * @text Unlock Screen Tone
- * @desc Allows the TIME system to control screen tone.
- * Does nothing if screen tone changing was initially disabled.
- *
- * @command lockTone
- * @text Lock Screen Tone
- * @desc Prevents the TIME system from controlling the screen tone.
  *
  */

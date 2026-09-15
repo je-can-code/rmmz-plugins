@@ -61,6 +61,7 @@ describe('JuiceMotionManager', () =>
   const buildOverlayEffect = (overrides = {}) => Object.assign({
     isSpriteAlive: vi.fn(() => true),
     tick: vi.fn(() => true),
+    restore: vi.fn(),
   }, overrides);
 
   describe('scheduleSquish', () =>
@@ -509,6 +510,80 @@ describe('JuiceMotionManager', () =>
       // Assert
       expect(dead.tick).not.toHaveBeenCalled();
       expect(alive.tick).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('discardEffect', () =>
+  {
+    it('tears the effect down', () =>
+    {
+      // Arrange
+      const effect = buildOverlayEffect();
+      JuiceMotionManager.pushExternalEffect(effect);
+
+      // Act
+      JuiceMotionManager.discardEffect(effect);
+
+      // Assert
+      expect(effect.restore).toHaveBeenCalledTimes(1);
+    });
+
+    it('takes it off the queue so a later frameTick no longer reaches it', () =>
+    {
+      // Arrange
+      const effect = buildOverlayEffect();
+      JuiceMotionManager.pushExternalEffect(effect);
+
+      // Act
+      JuiceMotionManager.discardEffect(effect);
+      JuiceMotionManager.frameTick();
+
+      // Assert
+      expect(effect.tick).not.toHaveBeenCalled();
+    });
+
+    it('leaves every other queued effect running', () =>
+    {
+      // Arrange
+      const doomed = buildOverlayEffect();
+      const bystander = buildOverlayEffect();
+      JuiceMotionManager.pushExternalEffect(doomed);
+      JuiceMotionManager.pushExternalEffect(bystander);
+
+      // Act
+      JuiceMotionManager.discardEffect(doomed);
+      JuiceMotionManager.frameTick();
+
+      // Assert
+      expect(doomed.tick).not.toHaveBeenCalled();
+      expect(bystander.tick).toHaveBeenCalledTimes(1);
+    });
+
+    it('still tears down an effect the queue has already let go of', () =>
+    {
+      // Arrange: a scene teardown drained the queue, and only now does something withdraw it.
+      const stale = buildOverlayEffect();
+
+      // Act
+      JuiceMotionManager.discardEffect(stale);
+
+      // Assert
+      expect(stale.restore).toHaveBeenCalledTimes(1);
+    });
+
+    it('evicts nothing from the queue when the effect was not on it', () =>
+    {
+      // Arrange: splicing at a not-found index of -1 would take the last entry instead.
+      const stale = buildOverlayEffect();
+      const bystander = buildOverlayEffect();
+      JuiceMotionManager.pushExternalEffect(bystander);
+
+      // Act
+      JuiceMotionManager.discardEffect(stale);
+      JuiceMotionManager.frameTick();
+
+      // Assert
+      expect(bystander.tick).toHaveBeenCalledTimes(1);
     });
   });
 

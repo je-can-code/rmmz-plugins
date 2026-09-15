@@ -177,7 +177,7 @@ Game_Temp.prototype.buildAppliedDifficulty = function()
     actorEffects.bparams.forEach((bparam, bIndex) =>
     {
       // calculate the factor.
-      const bParamFactor = parseFloat((bparam / 100).toFixed(3));
+      const bParamFactor = bparam / 100;
 
       // apply the multiplier.
       enabledActorEffects.bparams[bIndex] *= bParamFactor;
@@ -187,7 +187,7 @@ Game_Temp.prototype.buildAppliedDifficulty = function()
     actorEffects.xparams.forEach((xparam, xIndex) =>
     {
       // calculate the factor.
-      const xParamFactor = parseFloat((xparam / 100).toFixed(3));
+      const xParamFactor = xparam / 100;
 
       // apply the multiplier.
       enabledActorEffects.xparams[xIndex] *= xParamFactor;
@@ -197,7 +197,7 @@ Game_Temp.prototype.buildAppliedDifficulty = function()
     actorEffects.sparams.forEach((sparam, sIndex) =>
     {
       // calculate the factor.
-      const sParamFactor = parseFloat((sparam / 100).toFixed(3));
+      const sParamFactor = sparam / 100;
 
       // apply the multiplier.
       enabledActorEffects.sparams[sIndex] *= sParamFactor;
@@ -207,7 +207,7 @@ Game_Temp.prototype.buildAppliedDifficulty = function()
     enemyEffects.bparams.forEach((bparam, bIndex) =>
     {
       // calculate the factor.
-      const bParamFactor = parseFloat((bparam / 100).toFixed(3));
+      const bParamFactor = bparam / 100;
 
       // apply the multiplier.
       enabledEnemyEffects.bparams[bIndex] *= bParamFactor;
@@ -217,7 +217,7 @@ Game_Temp.prototype.buildAppliedDifficulty = function()
     enemyEffects.xparams.forEach((xparam, xIndex) =>
     {
       // calculate the factor.
-      const xParamFactor = parseFloat((xparam / 100).toFixed(3));
+      const xParamFactor = xparam / 100;
 
       // apply the multiplier.
       enabledEnemyEffects.xparams[xIndex] *= xParamFactor;
@@ -227,38 +227,38 @@ Game_Temp.prototype.buildAppliedDifficulty = function()
     enemyEffects.sparams.forEach((sparam, sIndex) =>
     {
       // calculate the factor.
-      const sParamFactor = parseFloat((sparam / 100).toFixed(3));
+      const sParamFactor = sparam / 100;
 
       // apply the multiplier.
       enabledEnemyEffects.sparams[sIndex] *= sParamFactor;
     });
 
     // calculate the factor.
-    const expFactor = parseFloat((layer.rewards.exp / 100).toFixed(3));
+    const expFactor = layer.rewards.exp / 100;
 
     // apply the multiplier.
     rewards.exp *= expFactor;
 
     // calculate the factor.
-    const goldFactor = parseFloat((layer.rewards.gold / 100).toFixed(3));
+    const goldFactor = layer.rewards.gold / 100;
 
     // apply the multiplier.
     rewards.gold *= goldFactor;
 
     // calculate the factor.
-    const dropsFactor = parseFloat((layer.rewards.drops / 100).toFixed(3));
+    const dropsFactor = layer.rewards.drops / 100;
 
     // apply the multiplier.
     rewards.drops *= dropsFactor;
 
     // calculate the factor.
-    const encountersFactor = parseFloat((layer.rewards.encounters / 100).toFixed(3));
+    const encountersFactor = layer.rewards.encounters / 100;
 
     // apply the multiplier.
     rewards.encounters *= encountersFactor;
 
     // calculate the factor.
-    const sdpFactor = parseFloat((layer.rewards.sdp / 100).toFixed(3));
+    const sdpFactor = layer.rewards.sdp / 100;
 
     // apply the multiplier.
     rewards.sdp *= sdpFactor;

@@ -146,7 +146,13 @@ describe('J-ABS-AllyAI JABS_AiManager (unit, all downstream dependencies stubbed
   beforeEach(() =>
   {
     globalThis.$jabsEngine = { getPlayer1: () => buildBattler({ getCharacter: () => buildCharacter({ _realX: 0, _realY: 0 }), getX: () => 0, getY: () => 0 }) };
-    globalThis.$gamePlayer = { followers: () => ({ areGathering: () => false, data: () => [] }) };
+    globalThis.$gamePlayer = {
+      followers: () => ({
+        areGathering: () => false,
+        isVisible: () => true,
+        data: () => [],
+      }),
+    };
     globalThis.$gameParty = { getPartyFormation: () => 'default' };
     globalThis.$gameMap = { distance: (x1, y1, x2, y2) => Math.abs(x2 - x1) + Math.abs(y2 - y1) };
   });
@@ -293,22 +299,53 @@ describe('J-ABS-AllyAI JABS_AiManager (unit, all downstream dependencies stubbed
 
     it('enables through while gathering', () =>
     {
-      globalThis.$gamePlayer.followers = () => ({ areGathering: () => true, data: () => [] });
+      // Arrange
+      globalThis.$gamePlayer.followers = () => ({
+        areGathering: () => true,
+        isVisible: () => true,
+        data: () => [],
+      });
       const character = buildCharacter({ isFollower: () => true });
       const battler = buildBattler({ getCharacter: () => character });
 
+      // Act
       globalThis.JABS_AiManager.enforceFollowerThroughPolicy(battler);
 
+      // Assert
       expect(character.setThrough).toHaveBeenCalledWith(true);
     });
 
-    it('disables through while not gathering', () =>
+    it('enables through while the followers are hidden', () =>
     {
+      // Arrange
+      // deliberately not gathering, so passing can only be down to being unseen.
+      globalThis.$gamePlayer.followers = () => ({
+        areGathering: () => false,
+        isVisible: () => false,
+        data: () => [],
+      });
       const character = buildCharacter({ isFollower: () => true });
       const battler = buildBattler({ getCharacter: () => character });
 
+      // Act
       globalThis.JABS_AiManager.enforceFollowerThroughPolicy(battler);
 
+      // Assert
+      // an ally that is never drawn cannot be seen standing in a wall, but it can very much be seen
+      // stranded behind one by anything that points at where a party member is.
+      expect(character.setThrough).toHaveBeenCalledWith(true);
+    });
+
+    it('disables through while visible and not gathering', () =>
+    {
+      // Arrange
+      const character = buildCharacter({ isFollower: () => true });
+      const battler = buildBattler({ getCharacter: () => character });
+
+      // Act
+      globalThis.JABS_AiManager.enforceFollowerThroughPolicy(battler);
+
+      // Assert
       expect(character.setThrough).toHaveBeenCalledWith(false);
     });
   });

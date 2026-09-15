@@ -19,7 +19,7 @@ describe('RPG_EquipItem ext/refine augments (direct src import)', () =>
               NotRefinementMaterial: /<notRefinementMaterial>/i,
               Unrefinable: /<unrefinable>/i,
               MaxRefineCount: /<maxRefineCount:(\d+)>/i,
-              MaxTraitCount: /<maxTraitCount:(\d+)>/i,
+              MaxRefinedTraits: /<maxRefinedTraits:(\d+)>/i,
             },
           },
         },
@@ -211,7 +211,7 @@ describe('RPG_EquipItem ext/refine augments (direct src import)', () =>
 
   describe('jaftingMaxTraitCount', () =>
   {
-    it('reads the MaxTraitCount note tag', () =>
+    it('reads the MaxRefinedTraits note tag', () =>
     {
       // Arrange
       globalThis.RPGManager.getNumberFromNoteByRegex.mockReturnValue(3);
@@ -220,8 +220,12 @@ describe('RPG_EquipItem ext/refine augments (direct src import)', () =>
       // Act
       const result = equip.jaftingMaxTraitCount;
 
-      // Assert
+      // Assert: the value alone proves nothing, since the mock returns it regardless of which tag was
+      // asked for- which is how this accessor spent its whole life reading a tag no content used.
+      // Pinning the regex is the part that constrains the accessor to the right tag.
       expect(result).toEqual(3);
+      expect(globalThis.RPGManager.getNumberFromNoteByRegex)
+        .toHaveBeenCalledWith(equip, globalThis.J.JAFTING.EXT.REFINE.RegExp.MaxRefinedTraits);
     });
   });
 });

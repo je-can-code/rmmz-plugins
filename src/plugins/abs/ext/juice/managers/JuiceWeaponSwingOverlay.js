@@ -125,6 +125,40 @@ class JuiceWeaponSwingOverlay
   }
 
   /**
+   * Plays an overlay preset with nothing but a preset key to go on.
+   *
+   * {@link #play} is shaped for combat, where a skill and a weapon between them have already
+   * answered which way a barrel points and whether the art is drawn in profile. An overlay asked
+   * for by name has no weapon behind it, so the preset's own reading of the IconSet cell is all
+   * there is — and every caller in that position was otherwise assembling the same ten arguments.
+   * @param {Sprite_Character} parentSprite The character sprite receiving the overlay.
+   * @param {number} iconIndex Icon index on the IconSet sheet.
+   * @param {string} motionType Preset key (kebab-case).
+   * @param {number} durationFrames Duration of the motion in frames.
+   * @param {number} repeatCount Times the motion repeats within the duration.
+   * @param {number} arcSpanDegrees Arc span for the presets that orbit.
+   * @param {number} swingDirection RMMZ 8-dir the geometry is built against.
+   * @returns {JuiceWeaponSwingMotionEffect} The queued effect.
+   */
+  static playPreset(parentSprite, iconIndex, motionType, durationFrames, repeatCount, arcSpanDegrees, swingDirection)
+  {
+    const tipRadians = JuiceWeaponSwingMotionEffect.defaultTipRadiansFor(motionType);
+
+    return JuiceWeaponSwingOverlay.play(
+      parentSprite,
+      iconIndex,
+      J.ABS.EXT.JUICE.Metadata.weaponSwingPeakRadians,
+      durationFrames,
+      motionType,
+      arcSpanDegrees,
+      swingDirection,
+      tipRadians,
+      repeatCount,
+      false
+    );
+  }
+
+  /**
    * Plays a swing arc using an icon from IconSet, then removes the overlay.
    * @param {Sprite_Character} parentSprite The character sprite receiving the overlay.
    * @param {number} iconIndex Icon index on the IconSet sheet.
@@ -140,6 +174,7 @@ class JuiceWeaponSwingOverlay
    * @param {number} spinCount Full rotations for spin / spin-reverse
    * ({@link JuiceProfileResolver.resolveJuiceSpinCount}).
    * @param {boolean} profileGun Skill `<juiceProfileGun>` — horizontal mirror for side-profile gun icons (east/west).
+   * @returns {JuiceWeaponSwingMotionEffect} The queued effect, for callers that keep hold of it.
    */
   static play(
     parentSprite,
@@ -337,6 +372,10 @@ class JuiceWeaponSwingOverlay
     );
 
     JuiceMotionManager.pushExternalEffect(motion);
+
+    // handed back so a caller that intends to keep this overlay around has something to keep. the
+    // combat hooks ignore it, which is the whole difference between a swing and a held pose.
+    return motion;
   }
 }
 export default JuiceWeaponSwingOverlay;

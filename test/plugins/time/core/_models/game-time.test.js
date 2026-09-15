@@ -26,16 +26,14 @@ describe('Game_Time', () =>
 
     defaultMetadata = {
       UseRealTime: J.TIME.Metadata.UseRealTime,
-      ChangeToneByTime: J.TIME.Metadata.ChangeToneByTime,
       UseVariableAssignment: J.TIME.Metadata.UseVariableAssignment,
     };
   });
 
   beforeEach(() =>
   {
-    // restore the three forking flags so a test that enabled tone or variables cannot leak into the next.
+    // restore the forking flags so a test that enabled one cannot leak into the next.
     J.TIME.Metadata.UseRealTime = defaultMetadata.UseRealTime;
-    J.TIME.Metadata.ChangeToneByTime = defaultMetadata.ChangeToneByTime;
     J.TIME.Metadata.UseVariableAssignment = defaultMetadata.UseVariableAssignment;
 
     Graphics.frameCount = 0;
@@ -56,14 +54,19 @@ describe('Game_Time', () =>
       expect(t.years()).toBe(J.TIME.Metadata.StartingYear);
     });
 
-    it('primes the current tone during construction', () =>
+    it('announces the starting hour during construction', () =>
     {
       // Arrange
+      const announced = vi.spyOn(Game_Time.prototype, 'onTimeChanged');
+
       // Act
       const t = new Game_Time();
 
       // Assert
-      expect(Array.isArray(t.getCurrentTone())).toBe(true);
+      expect(announced).toHaveBeenCalled();
+      expect(t.hours()).toBe(J.TIME.Metadata.StartingHour);
+
+      announced.mockRestore();
     });
   });
 
@@ -82,31 +85,6 @@ describe('Game_Time', () =>
       expect(t.hours()).toBe(17);
     });
 
-    it('always resets the tone-change flag regardless of prior state', () =>
-    {
-      // Arrange
-      const t = new Game_Time();
-      t.setNeedsToneChange(true);
-
-      // Act
-      t.initMembers();
-
-      // Assert
-      expect(t._needsToneChange).toBe(false);
-    });
-
-    it('always resets the current tone regardless of prior state', () =>
-    {
-      // Arrange
-      const t = new Game_Time();
-      t.setCurrentTone([ 1, 2, 3, 4 ]);
-
-      // Act
-      t.initMembers();
-
-      // Assert
-      expect(t.getCurrentTone()).toEqual([]);
-    });
   });
 
   describe('accessors', () =>
@@ -326,34 +304,6 @@ describe('Game_Time', () =>
     });
   });
 
-  describe('tone locking', () =>
-  {
-    it('reports locked after locking the tone', () =>
-    {
-      // Arrange
-      const t = new Game_Time();
-
-      // Act
-      t.lockTone();
-
-      // Assert
-      expect(t.isToneLocked()).toBe(true);
-    });
-
-    it('reports unlocked after unlocking the tone', () =>
-    {
-      // Arrange
-      const t = new Game_Time();
-      t.lockTone();
-
-      // Act
-      t.unlockTone();
-
-      // Assert
-      expect(t.isToneLocked()).toBe(false);
-    });
-  });
-
   describe('map window visibility', () =>
   {
     it('reports the window visible through the map-window alias', () =>
@@ -539,568 +489,37 @@ describe('Game_Time', () =>
       expect(t.seconds()).toBe(before);
     });
 
-    it('processes a pending tone change when one is needed', () =>
-    {
-      // Arrange
-      const t = new Game_Time();
-      J.TIME.Metadata.ChangeToneByTime = true;
-      Graphics.frameCount = 1;
-      t.setTickFrames(60);
-      t.setCurrentTone([ 1, 2, 3, 4 ]);
-      t.setNeedsToneChange(true);
-      const tint = vi.spyOn($gameScreen, 'startTint');
-
-      // Act
-      t.update();
-      tint.mockRestore();
-
-      // Assert
-      expect(t.getNeedsToneChange()).toBe(false);
-    });
-
-    it('skips tone processing when none is pending', () =>
-    {
-      // Arrange
-      const t = new Game_Time();
-      J.TIME.Metadata.ChangeToneByTime = true;
-      Graphics.frameCount = 1;
-      t.setTickFrames(60);
-      t.setNeedsToneChange(false);
-      const tint = vi.spyOn($gameScreen, 'startTint');
-
-      // Act
-      t.update();
-      const called = tint.mock.calls.length;
-      tint.mockRestore();
-
-      // Assert
-      expect(called).toBe(0);
-    });
   });
 
-  describe('getNeedsToneChange', () =>
+  describe('onTimeChanged', () =>
   {
-    it('returns false when tone changes are disabled in metadata', () =>
+    it('announces once per minute rather than once per tick', () =>
     {
       // Arrange
       const t = new Game_Time();
-      J.TIME.Metadata.ChangeToneByTime = false;
-      t.setNeedsToneChange(true);
+      const announced = vi.spyOn(t, 'onTimeChanged');
 
       // Act
-      const result = t.getNeedsToneChange();
+      t.addMinutes(1);
 
       // Assert
-      expect(result).toBe(false);
+      expect(announced).toHaveBeenCalledTimes(1);
+
+      announced.mockRestore();
     });
 
-    it('returns false and warns when there is no map data to inspect', () =>
+    it('does nothing on its own, so the clock works with nothing presenting it', () =>
     {
       // Arrange
       const t = new Game_Time();
-      J.TIME.Metadata.ChangeToneByTime = true;
-      t.setNeedsToneChange(true);
-      $dataMap = null;
-      const warn = vi.spyOn(console, 'warn').mockImplementation(() =>
-      {
-      });
+      const before = t.hours();
 
       // Act
-      const result = t.getNeedsToneChange();
-      warn.mockRestore();
+      const result = t.onTimeChanged();
 
       // Assert
-      expect(result).toBe(false);
-    });
-
-    it('returns false when the map data carries no meta block', () =>
-    {
-      // Arrange
-      const t = new Game_Time();
-      J.TIME.Metadata.ChangeToneByTime = true;
-      t.setNeedsToneChange(true);
-      $dataMap = {};
-      const warn = vi.spyOn(console, 'warn').mockImplementation(() =>
-      {
-      });
-
-      // Act
-      const result = t.getNeedsToneChange();
-      warn.mockRestore();
-
-      // Assert
-      expect(result).toBe(false);
-    });
-
-    it('still reports a pending change on a map that opts out of the tone cycle', () =>
-    {
-      // Arrange
-      const t = new Game_Time();
-      J.TIME.Metadata.ChangeToneByTime = true;
-      t.setNeedsToneChange(true);
-      $dataMap = { meta: { noToneChange: true } };
-
-      // Act
-      const result = t.getNeedsToneChange();
-
-      // Assert
-      // suppressing the change here is what used to strand the previous map's tone on screen; the
-      // opt-out now resolves to a neutral target tone that this pipeline goes on to apply.
-      expect(result).toBe(true);
-    });
-
-    it('returns the pending flag when nothing blocks the tone change', () =>
-    {
-      // Arrange
-      const t = new Game_Time();
-      J.TIME.Metadata.ChangeToneByTime = true;
-      t.setNeedsToneChange(true);
-
-      // Act
-      const result = t.getNeedsToneChange();
-
-      // Assert
-      expect(result).toBe(true);
-    });
-  });
-
-  describe('setNeedsToneChange', () =>
-  {
-    it('defaults to flagging a change as needed', () =>
-    {
-      // Arrange
-      const t = new Game_Time();
-      t.setNeedsToneChange(false);
-
-      // Act
-      t.setNeedsToneChange();
-
-      // Assert
-      expect(t._needsToneChange).toBe(true);
-    });
-
-    it('accepts an explicit false', () =>
-    {
-      // Arrange
-      const t = new Game_Time();
-      t.setNeedsToneChange(true);
-
-      // Act
-      t.setNeedsToneChange(false);
-
-      // Assert
-      expect(t._needsToneChange).toBe(false);
-    });
-  });
-
-  describe('canUpdateTone', () =>
-  {
-    it('returns false when tone changes are disabled in metadata', () =>
-    {
-      // Arrange
-      const t = new Game_Time();
-      J.TIME.Metadata.ChangeToneByTime = false;
-
-      // a clock built while tone changes are off starts out with its tone locked, and a lock refuses
-      // just as flatly as the setting does. unlocking leaves the setting as the only thing that can
-      // be answering here.
-      t.unlockTone();
-
-      // Act
-      const result = t.canUpdateTone();
-
-      // Assert
-      expect(result).toBe(false);
-    });
-
-    it('returns false when the tone is locked', () =>
-    {
-      // Arrange
-      const t = new Game_Time();
-      J.TIME.Metadata.ChangeToneByTime = true;
-      t.lockTone();
-
-      // Act
-      const result = t.canUpdateTone();
-
-      // Assert
-      expect(result).toBe(false);
-    });
-
-    it('returns true when enabled and unlocked', () =>
-    {
-      // Arrange
-      const t = new Game_Time();
-      J.TIME.Metadata.ChangeToneByTime = true;
-      t.unlockTone();
-
-      // Act
-      const result = t.canUpdateTone();
-
-      // Assert
-      expect(result).toBe(true);
-    });
-  });
-
-  describe('updateCurrentTone', () =>
-  {
-    it('does nothing when the tone cannot be updated', () =>
-    {
-      // Arrange
-      const t = new Game_Time();
-      J.TIME.Metadata.ChangeToneByTime = false;
-      t.setCurrentTone([ 9, 9, 9, 9 ]);
-
-      // Act
-      t.updateCurrentTone();
-
-      // Assert
-      expect(t.getCurrentTone()).toEqual([ 9, 9, 9, 9 ]);
-    });
-
-    it('adopts the target tone and flags a change when the tone differs', () =>
-    {
-      // Arrange
-      const t = new Game_Time();
-      J.TIME.Metadata.ChangeToneByTime = true;
-      t.unlockTone();
-      t.setHours(3);
-      t.setCurrentTone([ 9, 9, 9, 9 ]);
-
-      // Act
-      t.updateCurrentTone();
-
-      // Assert
-      expect(t.getCurrentTone()).toEqual(t.translateHourToTone());
-      expect(t._needsToneChange).toBe(true);
-    });
-
-    it('leaves the flag alone when the tone already matches', () =>
-    {
-      // Arrange
-      const t = new Game_Time();
-      J.TIME.Metadata.ChangeToneByTime = true;
-      t.unlockTone();
-      t.setHours(3);
-      t.setCurrentTone(t.translateHourToTone().clone());
-      t.setNeedsToneChange(false);
-
-      // Act
-      t.updateCurrentTone();
-
-      // Assert
-      expect(t._needsToneChange).toBe(false);
-    });
-  });
-
-  describe('targetTone', () =>
-  {
-    it('resolves to the tone of the current hour on an ordinary map', () =>
-    {
-      // Arrange
-      const t = new Game_Time();
-      t.setHours(3);
-      $dataMap = { meta: {} };
-
-      // Act
-      const result = t.targetTone();
-
-      // Assert
-      expect(result).toEqual(t.translateHourToTone());
-    });
-
-    it('resolves to a neutral tone on a map that opts out of the tone cycle', () =>
-    {
-      // Arrange
-      const t = new Game_Time();
-      t.setHours(3);
-      $dataMap = { meta: { noToneChange: true } };
-
-      // Act
-      const result = t.targetTone();
-
-      // Assert
-      expect(result).toEqual([ 0, 0, 0, 0 ]);
-    });
-  });
-
-  describe('isToneSuppressedByMap', () =>
-  {
-    it('reports no suppression when there is no map loaded', () =>
-    {
-      // Arrange
-      const t = new Game_Time();
-      $dataMap = null;
-
-      // Act
-      const result = t.isToneSuppressedByMap();
-
-      // Assert
-      expect(result).toBe(false);
-    });
-
-    it('reports no suppression when the map carries no meta block', () =>
-    {
-      // Arrange
-      const t = new Game_Time();
-      $dataMap = {};
-
-      // Act
-      const result = t.isToneSuppressedByMap();
-
-      // Assert
-      expect(result).toBe(false);
-    });
-
-    it('reports no suppression on a map without the opt-out tag', () =>
-    {
-      // Arrange
-      const t = new Game_Time();
-      $dataMap = { meta: {} };
-
-      // Act
-      const result = t.isToneSuppressedByMap();
-
-      // Assert
-      expect(result).toBe(false);
-    });
-
-    it('reports suppression on a map carrying the opt-out tag', () =>
-    {
-      // Arrange
-      const t = new Game_Time();
-      $dataMap = { meta: { noToneChange: true } };
-
-      // Act
-      const result = t.isToneSuppressedByMap();
-
-      // Assert
-      expect(result).toBe(true);
-    });
-  });
-
-  describe('updateCurrentTone on a tone-suppressed map', () =>
-  {
-    it('adopts the neutral tone so the previous map\'s tone cannot linger', () =>
-    {
-      // Arrange
-      const t = new Game_Time();
-      J.TIME.Metadata.ChangeToneByTime = true;
-      t.unlockTone();
-      t.setHours(3);
-      // arrive carrying the deep night tone the outdoor map left behind, with the screen still
-      // heading toward that same tone - which is what makes it the clock's own to clear.
-      t.setCurrentTone([ -100, -100, -30, 100 ]);
-      $gameScreen._toneTarget = [ -100, -100, -30, 100 ];
-      $dataMap = { meta: { noToneChange: true } };
-
-      // Act
-      t.updateCurrentTone();
-
-      // Assert
-      expect(t.getCurrentTone()).toEqual([ 0, 0, 0, 0 ]);
-      expect(t.getNeedsToneChange()).toBe(true);
-    });
-
-    it('leaves a tint it did not apply alone, rather than neutralizing over the top of it', () =>
-    {
-      // Arrange
-      const t = new Game_Time();
-      J.TIME.Metadata.ChangeToneByTime = true;
-      t.unlockTone();
-      t.setHours(3);
-      t.setCurrentTone([ -100, -100, -30, 100 ]);
-      // an event has deliberately tinted this interior something the clock never asked for.
-      $gameScreen._toneTarget = [ 34, -34, -34, 0 ];
-      $dataMap = { meta: { noToneChange: true } };
-
-      // Act
-      t.updateCurrentTone();
-
-      // Assert- the bookkeeping still moves to neutral, so that leaving this map reads as a change
-      // and re-tints correctly. Only the visible transition is withheld, because the tint is not the
-      // clock's to erase - and without this it was erased again on every load, forever.
-      expect(t.getCurrentTone()).toEqual([ 0, 0, 0, 0 ]);
-      expect(t.getNeedsToneChange()).toBe(false);
-    });
-  });
-
-  describe('isSameTone', () =>
-  {
-    it('returns false when the current tone is not a full rgba quad', () =>
-    {
-      // Arrange
-      const t = new Game_Time();
-      t.setCurrentTone([ 1, 2 ]);
-
-      // Act
-      const result = t.isSameTone([ 1, 2, 3, 4 ]);
-
-      // Assert
-      expect(result).toBe(false);
-    });
-
-    it('returns false when the red channel differs', () =>
-    {
-      // Arrange
-      const t = new Game_Time();
-      t.setCurrentTone([ 1, 2, 3, 4 ]);
-
-      // Act
-      const result = t.isSameTone([ 9, 2, 3, 4 ]);
-
-      // Assert
-      expect(result).toBe(false);
-    });
-
-    it('returns false when the green channel differs', () =>
-    {
-      // Arrange
-      const t = new Game_Time();
-      t.setCurrentTone([ 1, 2, 3, 4 ]);
-
-      // Act
-      const result = t.isSameTone([ 1, 9, 3, 4 ]);
-
-      // Assert
-      expect(result).toBe(false);
-    });
-
-    it('returns false when the blue channel differs', () =>
-    {
-      // Arrange
-      const t = new Game_Time();
-      t.setCurrentTone([ 1, 2, 3, 4 ]);
-
-      // Act
-      const result = t.isSameTone([ 1, 2, 9, 4 ]);
-
-      // Assert
-      expect(result).toBe(false);
-    });
-
-    it('returns false when the grey channel differs', () =>
-    {
-      // Arrange
-      const t = new Game_Time();
-      t.setCurrentTone([ 1, 2, 3, 4 ]);
-
-      // Act
-      const result = t.isSameTone([ 1, 2, 3, 9 ]);
-
-      // Assert
-      expect(result).toBe(false);
-    });
-
-    it('returns true when every channel matches', () =>
-    {
-      // Arrange
-      const t = new Game_Time();
-      t.setCurrentTone([ 1, 2, 3, 4 ]);
-
-      // Act
-      const result = t.isSameTone([ 1, 2, 3, 4 ]);
-
-      // Assert
-      expect(result).toBe(true);
-    });
-  });
-
-  describe('translateHourToTone', () =>
-  {
-    // the full 24-hour table, captured from the shipped switch. this doubles as the regression net
-    // for collapsing that switch into a phase/quarter lookup- every hour must keep its exact tone.
-    const expectedByHour = [
-      [ -76, -76, -8, 76 ],
-      [ -84, -84, -15, 84 ],
-      [ -92, -92, -23, 92 ],
-      [ -100, -100, -30, 100 ],
-      [ -82, -79, -19, 91 ],
-      [ -65, -57, -7, 82 ],
-      [ -47, -36, 4, 73 ],
-      [ -30, -15, 15, 64 ],
-      [ -22, -11, 11, 48 ],
-      [ -15, -7, 7, 32 ],
-      [ -7, -4, 4, 16 ],
-      [ 0, 0, 0, 0 ],
-      [ 3, 3, 3, 3 ],
-      [ 5, 5, 5, 5 ],
-      [ 8, 8, 8, 8 ],
-      [ 10, 10, 10, 10 ],
-      [ 7, 0, 0, 0 ],
-      [ 5, -10, -10, -10 ],
-      [ 2, -20, -20, -20 ],
-      [ 0, -30, -30, -30 ],
-      [ -17, -40, -22, -5 ],
-      [ -34, -49, -15, 19 ],
-      [ -51, -59, -7, 44 ],
-      [ -68, -68, 0, 68 ],
-    ];
-
-    expectedByHour.forEach((expected, hour) =>
-    {
-      it(`maps hour ${hour} to its designated tone`, () =>
-      {
-        // Arrange
-        const t = new Game_Time();
-        t.setHours(hour);
-
-        // Act
-        const result = t.translateHourToTone();
-
-        // Assert
-        expect(result).toEqual(expected);
-      });
-    });
-
-    it('reads the real-world hour when real time is enabled', () =>
-    {
-      // Arrange
-      const t = new Game_Time();
-      J.TIME.Metadata.UseRealTime = true;
-      t.setHours(3);
-      const realHour = new Date().getHours();
-
-      // Act
-      const result = t.translateHourToTone();
-
-      // Assert
-      expect(result).toEqual(expectedByHour[realHour]);
-    });
-  });
-
-  describe('processToneChange', () =>
-  {
-    it('tints over the standard transition by default', () =>
-    {
-      // Arrange
-      const t = new Game_Time();
-      t.setCurrentTone([ 1, 2, 3, 4 ]);
-      const tint = vi.spyOn($gameScreen, 'startTint');
-
-      // Act
-      t.processToneChange();
-      const [ call ] = tint.mock.calls;
-      tint.mockRestore();
-
-      // Assert
-      expect(call).toEqual([ [ 1, 2, 3, 4 ], 300 ]);
-    });
-
-    it('tints near-instantly when told to skip the transition', () =>
-    {
-      // Arrange
-      const t = new Game_Time();
-      t.setCurrentTone([ 1, 2, 3, 4 ]);
-      const tint = vi.spyOn($gameScreen, 'startTint');
-
-      // Act
-      t.processToneChange(true);
-      const [ call ] = tint.mock.calls;
-      tint.mockRestore();
-
-      // Assert
-      expect(call).toEqual([ [ 1, 2, 3, 4 ], 1 ]);
+      expect(result).toBeUndefined();
+      expect(t.hours()).toBe(before);
     });
   });
 
@@ -1156,7 +575,7 @@ describe('Game_Time', () =>
       expect(t.timeOfDay(17)).toBe(4);
     });
 
-    it('maps the late hours to the twilight bucket', () =>
+    it('maps the late hours to the night bucket', () =>
     {
       // Arrange
       const t = new Game_Time();
@@ -1429,6 +848,41 @@ describe('Game_Time', () =>
 
       // Assert
       expect(t.hours()).toBe(before);
+    });
+
+    it('announces the change, so a stopped clock still repaints', () =>
+    {
+      // Arrange
+      const t = new Game_Time();
+      J.TIME.Metadata.UseRealTime = false;
+      t.deactivate();
+      const announced = vi.spyOn(t, 'onTimeChanged');
+
+      // Act
+      t.setTime(1, 2, 3, 4, 5, 2020);
+
+      // Assert
+      // a running clock would repaint on its next minute tick regardless, so the stopped clock is
+      // the case that proves the announcement is coming from here rather than from `addMinutes`.
+      expect(announced).toHaveBeenCalledTimes(1);
+      announced.mockRestore();
+    });
+
+    it('says nothing when it refused to change anything', () =>
+    {
+      // Arrange
+      const t = new Game_Time();
+      J.TIME.Metadata.UseRealTime = true;
+      const announced = vi.spyOn(t, 'onTimeChanged');
+
+      // Act
+      t.setTime(1, 2, 3, 4, 5, 2020);
+
+      // Assert
+      // real time bails before writing a single field, and announcing a change that never happened
+      // would have everything presenting the clock redraw for nothing.
+      expect(announced).not.toHaveBeenCalled();
+      announced.mockRestore();
     });
   });
 

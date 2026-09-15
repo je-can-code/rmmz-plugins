@@ -20,7 +20,18 @@ describe('JuiceWeaponSwingOverlay (unit, all downstream dependencies mocked)', (
   {
     vi.resetModules();
 
-    globalThis.J = { ABS: { EXT: { JUICE: { Metadata: { spriteJuiceVerticalOffsetPixels: 0 } } } } };
+    globalThis.J = {
+      ABS: {
+        EXT: {
+          JUICE: {
+            Metadata: {
+              spriteJuiceVerticalOffsetPixels: 0,
+              weaponSwingPeakRadians: 0.65,
+            },
+          },
+        },
+      },
+    };
 
     globalThis.ImageManager = {
       iconWidth: 32,
@@ -61,7 +72,9 @@ describe('JuiceWeaponSwingOverlay (unit, all downstream dependencies mocked)', (
           StabForward: 'stab-forward',
         },
         StabIconTipAngleRadians: -2.356,
+        BashRecoilIconTipAngleRadians: 3.14159,
         IconDiagonalRestRadians: 0.785,
+        defaultTipRadiansFor: vi.fn(() => -2.356),
         computeArcPose: vi.fn(() => ({ x: 1, y: 2, theta: 0.5 })),
         computeArcTravelRadians: vi.fn(() => 0.3),
         bladeRotationFromTravelRadians: vi.fn((t) => t + 1),
@@ -98,6 +111,39 @@ describe('JuiceWeaponSwingOverlay (unit, all downstream dependencies mocked)', (
       ...overrides,
     };
   }
+
+  describe('playPreset()', () =>
+  {
+    it('fills the weapon-specific arguments from the preset and this ship metadata', () =>
+    {
+      // Arrange: no weapon behind a preset overlay, so the cell reading and the peak come from here.
+      const parentSprite = buildParentSprite();
+
+      // Act
+      JuiceWeaponSwingOverlay.playPreset(parentSprite, 87, 'present', 30, 2, 200, 4);
+
+      // Assert
+      const [ effectArgs ] = MotionEffectCtor.mock.calls;
+      const [ , , , peakRotationRadians, durationFrames, motionType, arcSpanDegrees ] = effectArgs;
+      expect(peakRotationRadians).toEqual(0.65);
+      expect(durationFrames).toEqual(30);
+      expect(motionType).toEqual('present');
+      expect(arcSpanDegrees).toEqual(200);
+    });
+
+    it('hands back the queued effect', () =>
+    {
+      // Arrange: the held path keeps this so it can take the overlay down again later.
+      const parentSprite = buildParentSprite();
+
+      // Act
+      const effect = JuiceWeaponSwingOverlay.playPreset(parentSprite, 87, 'present', 30, 1, 120, 4);
+
+      // Assert
+      const [ [ queued ] ] = JuiceMotionManagerMock.pushExternalEffect.mock.calls;
+      expect(effect).toBe(queued);
+    });
+  });
 
   describe('play() - arc motions', () =>
   {

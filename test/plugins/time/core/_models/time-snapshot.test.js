@@ -194,7 +194,7 @@ describe('Time_Snapshot', () =>
 
   describe('TimesOfDayName', () =>
   {
-    const expectedNames = [ 'Night', 'Dawn', 'Morning', 'Afternoon', 'Evening', 'Twilight' ];
+    const expectedNames = [ 'Moontide', 'Dawn', 'Morning', 'Afternoon', 'Evening', 'Night' ];
 
     expectedNames.forEach((expected, id) =>
     {
@@ -249,7 +249,7 @@ describe('Time_Snapshot', () =>
 
   describe('TimesOfDayId', () =>
   {
-    const expectedIds = [ 'night', 'dawn', 'morning', 'afternoon', 'evening', 'twilight' ];
+    const expectedIds = [ 'moontide', 'dawn', 'morning', 'afternoon', 'evening', 'night' ];
 
     expectedIds.forEach((name, expected) =>
     {
@@ -267,7 +267,7 @@ describe('Time_Snapshot', () =>
       // Arrange
       // Act
       // Assert
-      expect(Time_Snapshot.TimesOfDayId('TwIlIgHt')).toBe(5);
+      expect(Time_Snapshot.TimesOfDayId('MoOnTiDe')).toBe(0);
     });
 
     it('returns the unknown sentinel for a name that is not a time of day', () =>

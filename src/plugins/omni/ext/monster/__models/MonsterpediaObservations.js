@@ -57,13 +57,6 @@ class MonsterpediaObservations
     this.knowsDescription = false;
 
     /**
-     * Whether or not the player knows the regions this monster is found in.
-     * When the regions are unknown, it'll simply be blank.
-     * @type {boolean}
-     */
-    this.knowsRegions = false;
-
-    /**
      * Whether or not the player knows the parameters of this monster.
      * When the parameters are unknown, they will be masked.
      * @type {boolean}

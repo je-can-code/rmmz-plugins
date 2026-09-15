@@ -93,14 +93,20 @@ JABS_AiManager.enforceFollowerThroughPolicy = function(allyBattler)
   const followers = $gamePlayer.followers();
   const isGathering = followers && followers.areGathering();
 
-  // while gathering, allow through for quick regroup.
-  if (isGathering)
+  // a follower nobody can see has no terrain worth respecting. Passability exists to keep a body the
+  // player is looking at out of a wall, and there is no body being looked at - so enforcing it only
+  // strands the ally on geometry that was never drawn, somewhere behind the party, while everything
+  // that reads the party still counts them present and pointing at them still aims where they stuck.
+  const isHidden = followers.isVisible() === false;
+
+  // while gathering, allow through for a quick regroup - and always, while hidden.
+  if (isGathering || isHidden)
   {
     chr.setThrough(true);
     return;
   }
 
-  // not gathering: disable through so terrain passability is enforced.
+  // visible and not gathering: disable through so terrain passability is enforced.
   chr.setThrough(false);
 };
 

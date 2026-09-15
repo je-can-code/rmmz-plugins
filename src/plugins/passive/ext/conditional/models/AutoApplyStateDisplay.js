@@ -19,10 +19,11 @@ class AutoApplyStateDisplay
       return `${sec} seconds`;
     }
 
+    // scaling by a hundred and back is already a two-decimal round, and interpolation drops any
+    // trailing zero on its own - so this is the finished display value.
     const rounded = Math.round(sec * 100) / 100;
-    const display = parseFloat(rounded.toFixed(2));
 
-    return `~${display} seconds`;
+    return `~${rounded} seconds`;
   }
 
   /**

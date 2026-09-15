@@ -391,25 +391,58 @@ describe('J-ABS Game_Map (unit, all downstream dependencies mocked)', () =>
 
   describe('addEvent()', () =>
   {
-    it('reuses the first empty hole in the event list', () =>
+    it('files an event at the slot its own id names', () =>
     {
+      // Arrange
       const existing = { tag: 'existing' };
-      const newEvent = { tag: 'new' };
+      const newEvent = {
+        tag: 'new',
+        eventId: () => 1,
+      };
       const map = buildMap({ _events: [ existing, null, existing ] });
 
+      // Act
       map.addEvent(newEvent);
 
+      // Assert
       expect(map._events).toEqual([ existing, newEvent, existing ]);
     });
 
-    it('appends to the end when there are no holes', () =>
+    it('leaves a free slot alone when the arriving event is not named for it', () =>
     {
+      // Arrange
+      // slot 1 is empty and is the one a hole-search would have claimed; this event says it is 3.
       const existing = { tag: 'existing' };
-      const newEvent = { tag: 'new' };
-      const map = buildMap({ _events: [ existing ] });
+      const newEvent = {
+        tag: 'new',
+        eventId: () => 3,
+      };
+      const map = buildMap({ _events: [ existing, null, existing ] });
 
+      // Act
       map.addEvent(newEvent);
 
+      // Assert
+      // taking that hole would file the event under an id unrelated to where its data was written,
+      // and an event that cannot find its own data cannot find its pages or its comments.
+      expect(map._events.at(1)).toBeNull();
+      expect(map._events.at(3)).toBe(newEvent);
+    });
+
+    it('extends the list when the id sits past its end', () =>
+    {
+      // Arrange
+      const existing = { tag: 'existing' };
+      const newEvent = {
+        tag: 'new',
+        eventId: () => 1,
+      };
+      const map = buildMap({ _events: [ existing ] });
+
+      // Act
+      map.addEvent(newEvent);
+
+      // Assert
       expect(map._events).toEqual([ existing, newEvent ]);
     });
   });

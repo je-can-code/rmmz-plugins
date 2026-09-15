@@ -39,7 +39,7 @@ describe('Time_Snapshot (direct import)', () =>
     it('returns the id for a known time-of-day name, case-insensitively', () =>
     {
       // Arrange
-      const name = 'TWILIGHT';
+      const name = 'NIGHT';
 
       // Act
       const result = Time_Snapshot.TimesOfDayId(name);

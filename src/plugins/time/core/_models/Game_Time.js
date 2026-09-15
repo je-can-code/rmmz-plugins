@@ -1,6 +1,6 @@
 //region Game_Time
 import Time_Snapshot from './Time_Snapshot.js';
-import TimeToneResolver from '../managers/TimeToneResolver.js';
+import TimePhases from '../managers/TimePhases.js';
 
 /**
  * A class for controlling time.
@@ -15,8 +15,8 @@ class Game_Time
     // initialize all the properties of TIME.
     this.initMembers();
 
-    // update the tone for the first time.
-    this.updateCurrentTone();
+    // announce the starting hour, so anything presenting it can start from the right place.
+    this.onTimeChanged();
   }
 
   //region statics
@@ -122,24 +122,6 @@ class Game_Time
      * @type {number}
      */
     this._years ??= J.TIME.Metadata.StartingYear;
-
-    /**
-     * Whether or not the screen's tone needs to be changed based on the time.
-     * @type {boolean}
-     */
-    this._needsToneChange = false;
-
-    /**
-     * The current tone of the screen.
-     * @type {[number, number, number, number]}
-     */
-    this._currentTone = [];
-
-    /**
-     * Whether or not the tone is able to be changed.
-     * @type {boolean}
-     */
-    this._toneLocked ??= !J.TIME.Metadata.ChangeToneByTime;
 
     /**
      * Whether or not the time window is visible on the map.
@@ -508,36 +490,6 @@ class Game_Time
   }
 
   /**
-   * Gets whether or not the screen tone is currently locked from changing.
-   * @returns {boolean}
-   */
-  isToneLocked()
-  {
-
-    return this._toneLocked;
-  }
-
-  /**
-   * Locks the screen's tone, preventing it from changing by this system.
-   */
-  lockTone()
-  {
-
-    // store  tone locked on the instance for later reads.
-    this._toneLocked = true;
-  }
-
-  /**
-   * Unlocks the screen's tone, allowing this system to regain control over it.
-   */
-  unlockTone()
-  {
-
-    // store  tone locked on the instance for later reads.
-    this._toneLocked = false;
-  }
-
-  /**
    * Hides the time window on the map.
    */
   hideMapWindow()
@@ -605,13 +557,6 @@ class Game_Time
       // process the TIME update.
       this.handleUpdateTime();
     }
-
-    // check if we need to process a tone change.
-    if (this.getNeedsToneChange())
-    {
-      // process the tone update.
-      this.handleUpdateTone();
-    }
   }
 
   /**
@@ -645,217 +590,18 @@ class Game_Time
   }
 
   /**
-   * Processes screen tone updating.
-   */
-  handleUpdateTone()
-  {
-
-    // disable the flag for tone change processing.
-    this.setNeedsToneChange(false);
-
-    // execute the tone change.
-    this.processToneChange();
-  }
-
-  /**
-   * Gets whether or not the screen's tone change is needed.
-   * @returns {boolean}
-   */
-  getNeedsToneChange()
-  {
-
-    if (!J.TIME.Metadata.ChangeToneByTime)
-    {
-      return false;
-    }
-
-    // if we don't have a map to inspect, don't try to interpret it. this is asked once a frame, and a transfer
-    // leaves `$dataMap` empty for as long as the next map takes to load - so this is a state to wait out rather
-    // than report, and saying so every frame buries anything worth reading.
-    if (!$dataMap || !$dataMap.meta)
-    {
-      return false;
-    }
-
-    // note that a map tagged to opt out of tone changes is deliberately NOT short-circuited here.
-    // suppressing the change outright used to leave the previous map's tone painted on the screen,
-    // so walking into a cave at midnight kept the cave midnight-blue. the opt-out is handled where
-    // the target tone is chosen instead- see targetTone- so that such a map resolves to a neutral
-    // tone and this pipeline goes on to actually apply it.
-    return this._needsToneChange;
-  }
-
-  /**
-   * Sets whether or not the screen's tone change is needed.
-   * @param {boolean} need Whether or not a tone change is needed.
-   */
-  setNeedsToneChange(need = true)
-  {
-
-    // store  needs tone change on the instance for later reads.
-    this._needsToneChange = need;
-  }
-
-  /**
-   * Gets the current screen's tone.
-   * @returns {[number, number, number, number]}
-   */
-  getCurrentTone()
-  {
-
-    return this._currentTone;
-  }
-
-  /**
-   * Sets the current screen's tone.
-   * @param {[number, number, number, number]} newTone The new tone to change to.
-   */
-  setCurrentTone(newTone)
-  {
-
-    // store  current tone on the instance for later reads.
-    this._currentTone = newTone;
-  }
-
-  /**
-   * Updates the screen's tone based on the current time.
-   */
-  updateCurrentTone()
-  {
-
-    if (!this.canUpdateTone()) return;
-
-    // if we reached this point, then grab the target tone
-    const tone = this.targetTone();
-    if (this.isSameTone(tone)) return;
-
-    // suppressing the cycle means "no tint of TIME's own", which is not the same thing as "no tint at
-    // all". An event that deliberately tinted an interior owns that tint, and driving the screen to
-    // neutral here would erase it - on arrival, and then again on every single load, forever.
-    //
-    // the bookkeeping still moves, so that leaving this map is recognised as a change and re-tints
-    // properly. Only the visible transition is withheld, because the visible tone is not ours.
-    if (this.isToneSuppressedByMap() && this.hasForeignScreenTone())
-    {
-      this.setCurrentTone(tone.clone());
-
-      return;
-    }
-
-    this.setCurrentTone(tone.clone());
-    this.setNeedsToneChange(true);
-  }
-
-  /**
-   * Determines whether the screen is showing a tint that something other than the clock asked for.
+   * Announces that the hour on the clock may now be showing something different.
    *
-   * The comparison is against the screen's *destination* rather than its current value, because a
-   * tint runs over a duration: partway through one of the clock's own fades the live tone is an
-   * interpolation matching nobody, and comparing against it would call the clock's own work foreign.
-   * @returns {boolean}
-   */
-  hasForeignScreenTone()
-  {
-    return TimeToneResolver.isSameTone($gameScreen.toneTarget(), this.getCurrentTone()) === false;
-  }
-
-  /**
-   * Determines the tone the screen ought to be showing right now.
+   * This is the seam the presentation of time hangs off, and it is deliberately shaped like an
+   * announcement rather than like an instruction. The clock's job is to know what time it is and to
+   * say when that changes; deciding what an hour should *look* like belongs to whatever is
+   * presenting it, and this class is not that.
    *
-   * Normally that is whatever the hour of the day calls for, but a map can opt out of the day/night
-   * cycle entirely with a `noToneChange` tag- an interior, a cave, anywhere the sky is not visible.
-   * Such a map resolves to a neutral tone rather than to no answer at all, because the screen tint
-   * is global state that outlives a map change: nothing in the engine clears it on transfer, so
-   * declining to answer leaves the previous map's tone painted over the new one.
-   * @returns {[number, number, number, number]}
+   * Empty on purpose. J-TIME on its own is a working clock with a window and a set of variables, and
+   * no opinion whatsoever about the screen.
    */
-  targetTone()
+  onTimeChanged()
   {
-    // a map that sits outside the day/night cycle wants no tint of ours, which is a neutral tone.
-    if (this.isToneSuppressedByMap()) return [ 0, 0, 0, 0 ];
-
-    // everywhere else takes the tone belonging to the current hour.
-    return this.translateHourToTone();
-  }
-
-  /**
-   * Determines whether the active map has opted out of the day/night tone cycle.
-   * @returns {boolean}
-   */
-  isToneSuppressedByMap()
-  {
-    // with no map loaded there is nothing opting out of anything.
-    if (!$dataMap || !$dataMap.meta) return false;
-
-    // the tag's mere presence is the opt-in; RMMZ hands back `true` for a bare `<noToneChange>`.
-    return Boolean($dataMap.meta["noToneChange"]);
-  }
-
-  /**
-   * Gets whether or not the screen's tone can be updated.
-   * @returns {boolean}
-   */
-  canUpdateTone()
-  {
-
-    // if the user decided they never want to update tones, then don't force them.
-    if (!J.TIME.Metadata.ChangeToneByTime)
-    {
-      return false;
-    }
-
-    // if the tone is locked for control reasons, then don't update it.
-    if (this.isToneLocked())
-    {
-      return false;
-    }
-
-    return true;
-  }
-
-  /**
-   * Determines the tone associated with the current hour of the day.
-   * Tone is represented as whole numbers in an array: `[red, green, blue, grey]`.
-   * For example: `[100, -50, 0, 0]`. `Grey` must be between 0 and 255, while the rest can
-   * be between -255 and 255.
-   * @returns {[number, number, number, number]}
-   */
-  translateHourToTone()
-  {
-    // real time reads the wall clock, artificial time reads the counter this class maintains.
-    // sourcing the hour is this class's business; turning it into a colour is not.
-    const hours = J.TIME.Metadata.UseRealTime
-      ? new Date().getHours()
-      : this.hours();
-
-    return TimeToneResolver.toneOfHour(hours);
-  }
-
-  /**
-   * Compares the current tone with a target tone to see if they are the same.
-   * @param {[number, number, number, number]} targetTone The tone being compared against.
-   * @returns {boolean}
-   */
-  isSameTone(targetTone)
-  {
-    return TimeToneResolver.isSameTone(this.getCurrentTone(), targetTone);
-  }
-
-  /**
-   * Processes the screen's tone change.
-   * @param {boolean} skip If true, then there will be no transition time. Defaults to false.
-   */
-  processToneChange(skip = false)
-  {
-
-    if (skip)
-    {
-      $gameScreen.startTint(this.getCurrentTone(), 1);
-    }
-    else
-    {
-      $gameScreen.startTint(this.getCurrentTone(), 300);
-    }
   }
 
   /**
@@ -997,9 +743,9 @@ class Game_Time
    */
   timeOfDay(hours)
   {
-    // the phases the tone fades between and the time-of-day ids surfaced to events are the same six
-    // buckets, so they are resolved in one place rather than defined twice and left to drift.
-    return TimeToneResolver.phaseOfHour(hours);
+    // the time-of-day ids surfaced to events and the phases anything presenting the clock fades
+    // between are the same six buckets, resolved in one place rather than defined twice and drifting.
+    return TimePhases.phaseOfHour(hours);
   }
 
   /**
@@ -1009,7 +755,7 @@ class Game_Time
    */
   startOfTimeOfDay(timeOfDayId)
   {
-    return TimeToneResolver.startOfPhase(timeOfDayId);
+    return TimePhases.startOfPhase(timeOfDayId);
   }
 
   /**
@@ -1060,6 +806,12 @@ class Game_Time
     this.setDays(days);
     this.setMonths(months);
     this.setYears(years);
+
+    // jumping the clock changes the hour, and the hour is what anything presenting the time is
+    // watching. a running clock would repaint on its next minute tick anyway, but a stopped one
+    // never gets that tick - so setting the time while paused would otherwise leave the sky showing
+    // whatever hour it was paused at.
+    this.onTimeChanged();
   }
 
   /**
@@ -1172,9 +924,9 @@ class Game_Time
    */
   addMinutes(minutes = this._minutesPerTick)
   {
-    // minutes are the finest granularity at which the screen's tone visibly shifts, so this is where
-    // the tone gets re-evaluated rather than on every single second.
-    this.updateCurrentTone();
+    // minutes are the finest granularity at which anything presenting the clock visibly shifts, so
+    // this is where the announcement goes rather than on every single second.
+    this.onTimeChanged();
 
     // minutes reset on reaching 60 and hand a tick's worth of hours upward.
     this.advanceUnit(

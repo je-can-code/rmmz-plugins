@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v3.15.0 BASE] The base class for all J plugins.
+ * [v3.16.0 BASE] The base class for all J plugins.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @help
@@ -157,6 +157,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 3.16.0
+ *    Added Spriteset_Map#weather, so a plugin can insert a display layer at a position
+ *    relative to an engine-created child rather than wherever load order lands it.
  * - 3.15.0
  *    Added Game_Event#setSelfSwitch with the short ssw/sswOn/sswOff forms, so a
  *    move route script row can flip a self-switch and still be read at a glance.
@@ -2040,7 +2043,7 @@ J.BASE.EXT = {};
 */
 J.BASE.Metadata = {};
 J.BASE.Metadata.Name = "J-Base";
-J.BASE.Metadata.Version = "3.15.0";
+J.BASE.Metadata.Version = "3.16.0";
 /**
 * The actual `plugin parameters` extracted from RMMZ.
 */
@@ -15637,6 +15640,17 @@ Sprite_Gauge.prototype.setMaxValue = function(newMaxValue) {
 */
 Spriteset_Map.prototype.tilemap = function() {
 	return this._tilemap;
+};
+/**
+* Gets the sprite rendering the weather over the current map.
+*
+* Worth having a name for because the weather is a useful landmark in the display tree rather than
+* only a visual effect: it is the last thing the engine itself adds to the spriteset, so it marks
+* the boundary between what belongs to the world and what a plugin has layered on top of it.
+* @returns {Weather} The weather.
+*/
+Spriteset_Map.prototype.weather = function() {
+	return this._weather;
 };
 /**
 * Gets the sprites representing every character on the map.

@@ -142,13 +142,7 @@ class JuiceProfileResolver
       return (deg * Math.PI) / 180;
     }
 
-    if (motionKey === JuiceWeaponSwingMotionEffect.MotionTypes.StabForward
-      || motionKey === JuiceWeaponSwingMotionEffect.MotionTypes.Present)
-    {
-      return JuiceWeaponSwingMotionEffect.StabIconTipAngleRadians;
-    }
-
-    return JuiceWeaponSwingMotionEffect.BashRecoilIconTipAngleRadians;
+    return JuiceWeaponSwingMotionEffect.defaultTipRadiansFor(motionKey);
   }
 
   /**

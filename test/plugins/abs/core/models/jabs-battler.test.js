@@ -1854,13 +1854,20 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       expect(jabsBattler.distanceToPoint(null, null)).toBeNull();
     });
 
-    it('distanceToPoint computes the rounded euclidean distance', () =>
+    it('distanceToPoint computes the euclidean distance at full precision', () =>
     {
+      // Arrange
       const jabsBattler = buildBattler();
       jabsBattler.getX = () => 0;
       jabsBattler.getY = () => 0;
 
-      expect(jabsBattler.distanceToPoint(3, 4)).toBe(5);
+      // Act
+      const distance = jabsBattler.distanceToPoint(1, 1);
+
+      // Assert
+      // a diagonal tile is the cheapest input that a two-decimal rounding would visibly truncate,
+      // so pinning the full float is what keeps this from silently passing against a rounded result.
+      expect(distance).toBe(1.4142135623730951);
     });
 
     it('distanceToDesignatedTarget returns null without a target', () =>

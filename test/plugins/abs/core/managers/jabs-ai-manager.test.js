@@ -68,7 +68,10 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
       getX: () => 0,
       getY: () => 0,
       distanceToDesignatedTarget: () => 0,
-      getCharacter: () => ({ isVisible: () => true }),
+      getCharacter: () => ({
+        isVisible: () => true,
+        isNearTheScreen: () => true,
+      }),
       getAllAggros: () => [],
       ...overrides,
     };
@@ -856,6 +859,53 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
       JABS_AiManager.addOrUpdateBattlers([ actor, enemy ]);
 
       expect(JABS_AiManager.getEnemyBattlers()).toEqual([ enemy ]);
+    });
+  });
+
+  describe('getBattlersNearTheScreen()', () =>
+  {
+    /**
+     * Builds a battler whose character reports a fixed answer for the near-screen check.
+     * @param {string} uuid The uuid distinguishing this battler from its sibling.
+     * @param {boolean} nearTheScreen What the character's near-screen check should answer.
+     * @returns {object} The stubbed battler.
+     */
+    const buildScreenBattler = (uuid, nearTheScreen) => buildBattler({
+      uuid,
+      getCharacter: () => ({
+        isVisible: () => true,
+        isNearTheScreen: () => nearTheScreen,
+      }),
+    });
+
+    it('collects battlers the camera can reach', () =>
+    {
+      // Arrange
+      const onScreen = buildScreenBattler('on-screen', true);
+      const offScreen = buildScreenBattler('off-screen', false);
+      JABS_AiManager.addOrUpdateBattlers([ onScreen, offScreen ]);
+
+      // Act
+      const nearTheScreen = JABS_AiManager.getBattlersNearTheScreen();
+
+      // Assert
+      expect(nearTheScreen).toContain(onScreen);
+    });
+
+    it('omits battlers the camera cannot reach', () =>
+    {
+      // Arrange
+      const onScreen = buildScreenBattler('on-screen', true);
+      const offScreen = buildScreenBattler('off-screen', false);
+      JABS_AiManager.addOrUpdateBattlers([ onScreen, offScreen ]);
+
+      // Act
+      const nearTheScreen = JABS_AiManager.getBattlersNearTheScreen();
+
+      // Assert
+      // the on-screen sibling has to survive alongside this, or "filters correctly" and "filters
+      // everything" would both satisfy the assertion.
+      expect(nearTheScreen).toEqual([ onScreen ]);
     });
   });
 

@@ -284,15 +284,30 @@ Game_Event._timeConditionalTimeRangeMet = function(timeConditional)
     fakeEndDate.addHours(1);
   }
 
-  // if we are not within the range of the projected start and end dates, then we did not meet the conditional.
-  if (!$gameTime.currentTime()
-    .isBetweenDates(fakeStartDate, fakeEndDate))
+  // the window built above is the one that OPENS today. for a range inside a single day that is the
+  // only window there is, so the answer is simply whether we are in it.
+  if (isOvernight === false)
   {
-    return false;
+    return $gameTime.currentTime()
+      .isBetweenDates(fakeStartDate, fakeEndDate);
   }
 
-  // we are within range!
-  return true;
+  // an overnight range is different: at any moment there are two of its windows in play, and being
+  // inside either one satisfies it. Once past midnight we are no longer before the window that opens
+  // this evening - we are in the tail of the one that opened last night, and only shifting the whole
+  // span back a day can see it. Checking today's alone is what put every torch out at midnight.
+  if ($gameTime.currentTime()
+    .isBetweenDates(fakeStartDate, fakeEndDate))
+  {
+    return true;
+  }
+
+  // the same window, as it stood when it opened yesterday.
+  const yesterdayStartDate = fakeStartDate.addDays(-1);
+  const yesterdayEndDate = fakeEndDate.addDays(-1);
+
+  return $gameTime.currentTime()
+    .isBetweenDates(yesterdayStartDate, yesterdayEndDate);
 };
 
 /**

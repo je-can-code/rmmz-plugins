@@ -34,7 +34,6 @@ describe('MonsterpediaObservations (omni ext/monster, direct src import)', () =>
       // knowsFamily is the one flag that starts true- the monster's icon/family is visible by default.
       expect(observations.knowsFamily).toBe(true);
       expect(observations.knowsDescription).toBe(false);
-      expect(observations.knowsRegions).toBe(false);
       expect(observations.knowsParameters).toBe(false);
       expect(observations.knowsAilmentalistics).toBe(false);
       expect(observations.knownDrops).toEqual([]);

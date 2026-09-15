@@ -1309,7 +1309,33 @@ mechanical effect.
 <tier-color-hex:#FF0000>
 ```
 
-**See also:** `<enemy-prefix>`
+**See also:** `<enemy-prefix>`, `<affix-tier>`
+
+---
+
+### `<affix-tier:NUM>`
+
+**Applies to:**
+States (prefix-pool states)
+
+**When:**
+presentation only — map nameplate stripe, read off the first enemy-prefix passive state on the
+battler, the same state the stripe color resolver finds
+
+**Effect:**
+sets how many pips the nameplate stripe is subdivided into, expressing the affix's rank at a glance.
+NUM is 1 or greater. **No tag means 0**, which is not "no stripe" but "no subdivision" — a single
+solid stripe, still tinted by `<tier-color-hex>` if present.
+
+Purely cosmetic. Nothing mechanical reads this, so an enemy's actual strength comes from the passives
+themselves rather than from the number here — they are only kept in step by the author.
+
+```
+<affix-tier:3>
+```
+Enemies rolling this prefix draw a three-pip stripe on their nameplate.
+
+**See also:** `<tier-color-hex>` (what color that stripe is), `<enemy-prefix>`
 
 ---
 
@@ -1907,7 +1933,37 @@ choice). A battler should only hold one role.
 ```
 This guardian ignores fights until a ward is struck, then engages from up to 6 tiles away.
 
-**See also:** `<aiTrait>`
+**See also:** `<aiTrait>`, `<guardRange>`
+
+---
+
+### `<guardRange:NUM>`
+
+**Applies to:**
+Enemy events, Enemies (database default)
+
+**When:**
+a `guardian`-role battler evaluates whether a threatened ward is close enough to answer for
+
+**Effect:**
+the maximum distance at which a guardian notices threatened wards and keeps pursuing their attacker,
+overriding the normal pursuit radius. NUM is in tiles and may be fractional.
+
+**Omitting it is not "no range."** A guardian with no tag falls back to the largest pursuit radius
+among its allied wards — so the wards themselves decide the guardian's reach unless this tag takes
+that decision away from them. Tag it when a guardian should cover more ground than its wards can see,
+or less.
+
+Meaningless on anything that is not a guardian.
+
+```
+<aiRole:guardian>
+<guardRange:6>
+```
+This guardian answers for wards struck up to 6 tiles away, regardless of its wards' own pursuit
+radii.
+
+**See also:** `<aiRole>`, `<pursuit>`, `<sight>`
 
 ---
 
@@ -1979,7 +2035,7 @@ J-ABS-Time registers the calendar methods:
 | `seconds` | J-ABS | positive whole seconds | after PARAM seconds of playtime |
 | `game-minutes` | J-ABS-Time | positive whole minutes | after PARAM minutes on the game clock |
 | `next-time` | J-ABS-Time | clock time as HMM/HHMM (`830`, `1430`) | the next time the clock reads that |
-| `next-time-of-day` | J-ABS-Time | `night`/`dawn`/`morning`/`afternoon`/`evening`/`twilight` | when that time of day next begins |
+| `next-time-of-day` | J-ABS-Time | `moontide`/`dawn`/`morning`/`afternoon`/`evening`/`night` | when that time of day next begins |
 | `next-day-of-week` | J-ABS-Time | `monday` … `sunday` | midnight on the next such weekday |
 | `next-month` | J-ABS-Time | month number 1-12 | the first midnight of that month's next occurrence |
 | `next-season` | J-ABS-Time | `spring`/`summer`/`autumn`/`winter` | the first midnight of that season's next occurrence |
@@ -2513,6 +2569,32 @@ counters.
 
 ---
 
+### `<ignoreTerrain>`
+
+**Applies to:**
+Skills
+
+**When:**
+whenever this skill forces displacement — knockback or pull-forward
+
+**Effect:**
+lets the displacement bypass terrain passability entirely, sailing over any tile — pits, gaps,
+whatever — instead of stopping at the last passable tile.
+
+**Absent by default**, which preserves knockback's terrain-respecting behavior. Tag it only where
+sailing over the map is the intended effect, since it can deposit a battler somewhere the map's own
+rules would never have allowed them to walk.
+
+```
+<knockback:4>
+<ignoreTerrain>
+```
+Knocks the target back four tiles, across a pit if one is in the way.
+
+**See also:** `<knockback>`, `<knockbackResist>`, `<proximityKnockback>`
+
+---
+
 ### `<delay:[DURATION, TOUCHABLE, TRIGGER_RADIUS?]>`
 
 **Applies to:**
@@ -2634,6 +2716,84 @@ sums to a single percent-point Parry Extension Rate stat that widens the `<parry
 Extends this battler's parry window scaled off their own AGI.
 
 **See also:** `<parry>`, `<cdr>`
+
+---
+
+### `<guardSkillId:SKILL_ID>`
+
+**Applies to:**
+Weapons, Armors, Enemies
+
+**When:**
+always — read when the battler's guarding capability is resolved
+
+**Effect:**
+names the skill that guarding uses, and **granting it is what makes guarding possible at all**. It
+lives independently of `<skillId>`/`<offhandSkillId>`: an offhand item with no guard skill declared
+grants no guarding capability whatsoever, no matter what attack skill it or the mainhand provides.
+
+Enemies have no equipment to hang a guard skill off of the way actors do, so the same tag on an enemy
+is the direct, battler-level equivalent — tag an individual enemy to give it the ability to guard.
+
+```
+<guardSkillId:112>
+```
+Equipping this (or being this enemy) makes skill 112 the guard, and enables guarding.
+
+**See also:** `<guard>`/`<parry>` (what the guard skill then does), `<guardInterval>`
+
+---
+
+### `<guardInterval:FRAMES>`
+
+**Applies to:**
+Skills used as a guard skill
+
+**When:**
+repeatedly, while the guard button is held
+
+**Effect:**
+re-executes the guard skill every FRAMES for as long as the stance is maintained. **This is how a
+guard can do something other than reduce damage** — applying a state, paying an upkeep cost,
+accumulating a shield. Without the tag a guard skill is evaluated once when the stance is raised and
+simply mitigates.
+
+```
+<guardInterval:60>
+```
+While guarding, re-execute this skill once every 60 frames.
+
+**See also:** `<guardSkillId>`, `<guard>`
+
+---
+
+### `<ignoreParry:PCT>` / `<thisIgnoreParry:PCT>`
+
+**Applies to:**
+`ignoreParry`: Actors, Classes, Enemies, Weapons, Armors, States. `thisIgnoreParry`: the executing
+skill only
+
+**When:**
+always, on the **attacker** — `ignoreParry` summed across every one of their note sources,
+`thisIgnoreParry` read from the swinging skill's own note
+
+**Effect:**
+ignores PCT percent of the defender's guard pressure. The two differ only in scope, and that is the
+whole point of having both: `ignoreParry` is battler-wide, so a weapon or accessory carrying it cuts
+through part of a guard no matter which skill is swinging, while `thisIgnoreParry` applies while that
+one skill is swinging and at no other time.
+
+```
+<ignoreParry:25>
+```
+This battler's attacks always bypass 25% of the defender's guard pressure.
+
+```
+<thisIgnoreParry:100>
+```
+This particular skill bypasses guard entirely; the battler's other skills are unaffected.
+
+**See also:** `<guard>`/`<parry>`, `<unparryable>`, `<per>`
 
 ---
 
@@ -4029,7 +4189,7 @@ player-controlled.
 
 ---
 
-### `<visOffset:[X, Y]>` / directional `<visOffsetU/D/L/R/UR/UL/DR/DL:[X, Y]>`
+### `<visOffset:[X, Y]>` / directional `<visOffset(U|D|L|R|UR|UL|DR|DL):[X, Y]>`
 
 **Applies to:**
 Skills, Items
@@ -5146,6 +5306,57 @@ Both active together add +125 max TP on top of the base.
 
 ---
 
+### `<this(mhp|mmp|mtp|atk|def|mat|mdf|agi|luk|hit|eva|cri|cev|mev|mrf|cnt|hrg|mrg|trg|tgr|grd|rec|pha|mcr|tcr|pdr|mdr|fdr|exr):AMOUNT>`
+
+**Applies to:**
+Weapons, Armors
+
+**When:**
+always — read off the equip itself, summed across every matching tag in its own note
+
+**Effect:**
+declares a flat amount of one parameter that **this equip itself carries**, rather than one it grants
+its wearer. RMMZ gives equipment a `params` array for the eight base parameters and nothing at all for
+the twenty ex- and sp-parameters, which can only ever arrive as traits — and a trait has no amount of
+its own, it multiplies whatever the *battler* already has. There is no editor field for "this shield is
+worth 25 points of parry"; this family is that missing field, the same way `<maxTp>` is the missing
+field for a resource RMMZ never modelled.
+
+That is what lets a percentage scale the **item** instead of its wearer: a `+25% ATK` on a sword can
+multiply the sword's own contribution, which keeps a legendary blade permanently worth more than a
+plussed-up Iron Sword.
+
+All twenty-nine are declared, including the eight the editor already covers via `params` — a refinement
+merge can produce any of them, so a `<thisAtk:>` arriving on a merged output needs somewhere to land
+rather than a special case. **Where a row declares both, the two sum.** AMOUNT may be negative.
+
+**Amounts are in display units** — the same numbers the editor and the UI show, not the internal rates.
+`<thisGrd:25>` is twenty-five points of parry, matching the convention `<sar:25>` already uses.
+
+PARAM is one of the shorthands below:
+
+- **Base params:** `mhp`, `mmp`, `atk`, `def`, `mat`, `mdf`, `agi`, `luk`
+- **Ex params:** `hit`, `eva`, `cri`, `cev`, `mev`, `mrf`, `cnt`, `hrg`, `mrg`, `trg`
+- **Sp params:** `tgr`, `grd`, `rec`, `pha`, `mcr`, `tcr`, `pdr`, `mdr`, `fdr`, `exr`
+- **Custom param:** `mtp` (max tech) — belongs beside max life and max magi, and is only absent from
+  the base eight because RMMZ fixed tech at a flat hundred for every battler rather than modelling it
+
+```
+<thisAtk:15>
+```
+This equip contributes 15 points of ATK of its own.
+
+```
+<thisGrd:25>
+```
+This equip is worth 25 points of parry — an amount the editor has no field for, since GRD is a trait.
+
+**See also:** `<maxTp:VALUE>`, which grants its **bearer** extra max tech wherever it is declared —
+distinct from `<thisMtp:AMOUNT>`, which is an amount the row itself is worth so a percentage can scale
+it. A row may carry both, and they mean different things.
+
+---
+
 ### `<type:CLASSIFIER>`
 
 **Applies to:**
@@ -5508,6 +5719,38 @@ to also fire skill 1027.
 
 ---
 
+### `<onCastExecuteSkillIfAfflicted:[SKILL_ID, CHANCE, STATE_REQUIREMENT]>`
+
+**Applies to:**
+Skills only — same skill-scoped rule as its unconditional sibling above; only the executing skill's
+own note is read.
+
+**When:**
+this skill is cast, gated on the **caster** carrying STATE_REQUIREMENT at that moment
+
+**Effect:**
+the `<onCastSelfStateIfAfflicted>` gate pattern applied to `<onCastExecuteSkill>`. Tags whose required
+state is not currently active on the caster are dropped **before** anything is rolled — so a
+non-qualifying payload never rolls and never executes. Whatever survives the gate goes through the
+same force-execute path as the unconditional form: roll CHANCE (1–100), then `forceMapAction` with no
+MP/TP cost and no cooldown on the payload.
+
+Stackable like its sibling, and that is the point of it: several tags with different state
+requirements let one skill fire a different payload depending on which state the caster happens to be
+carrying, with no branching authored anywhere else.
+
+```
+<onCastExecuteSkillIfAfflicted:[267, 100, 134]>
+<onCastExecuteSkillIfAfflicted:[268, 100, 135]>
+```
+Casting this skill fires skill 267 while the caster is afflicted with state 134, or skill 268 while
+afflicted with state 135 — and neither if it carries neither.
+
+**See also:** `<onCastExecuteSkill>` (ungated), `<onCastSelfStateIfAfflicted>` (same gate, self-state
+payload)
+
+---
+
 ### `<thisApplyState:[STATE_ID, CHANCE, DURATION?, STACKS?]>`
 
 **Applies to:**
@@ -5683,6 +5926,36 @@ This enemy's target frame shows only the HP gauge (and name/text/icon if present
 
 ---
 
+## J-JAFTING-Create (`src/plugins/jafting/ext/create/`)
+
+The "create" extension of JAFTING — crafting finished goods from recipes. Recipes themselves are
+authored as config data rather than notetags, so this ship declares exactly one tag: the one that
+lets a recipe ask for a *kind* of ingredient instead of a specific database row.
+
+### `<ingredientType:TYPE>`
+
+**Applies to:**
+Items, Weapons, Armors
+
+**When:**
+a recipe slot asks for a category rather than a specific id
+
+**Effect:**
+declares a type this database entry can satisfy. A recipe that names a category consumes anything
+carrying the matching tag, so a "needs one protein" step does not have to enumerate every meat in the
+game — and adding a new one later requires no edit to the recipe.
+
+**Repeat the tag on separate lines to declare several types.** The note is scanned line by line, so
+two tags sharing a line would only yield the first.
+
+```
+<ingredientType:protein>
+<ingredientType:meat>
+```
+This entry can fill a slot asking for `protein`, and a slot asking for `meat`.
+
+---
+
 ## J-JAFTING-Refine (`src/plugins/jafting/ext/refine/`)
 
 The "refine" extension of JAFTING — transfers all traits below the "Collapse Effect" divider
@@ -5730,7 +6003,7 @@ This equip can only be refined (used as a base) 3 times total.
 
 ---
 
-### `<maxTraitCount:NUM>`
+### `<maxRefinedTraits:NUM>`
 
 **Applies to:**
 Weapons, Armors
@@ -5743,10 +6016,191 @@ caps the number of combined trait slots this equip can hold as a base to NUM —
 the cap is blocked even with refinement counts remaining, though same-trait stacking and
 powering up existing traits is still allowed.
 
+**Omitting the tag means no cap at all**, not a cap of zero: the eligibility check reads a missing
+tag as the sentinel `0` and treats that as unlimited. An equip with no tag can be refined until it
+runs out of refinement counts.
+
+Usually paired with `<maxRefineCount>`, which limits how many times the equip may be refined at all.
+The two are independent limits and whichever is reached first stops the refinement.
+
 ```
-<maxTraitCount:3>
+<maxRefineCount:5>
+<maxRefinedTraits:3>
 ```
-This equip can hold at most 3 unique traits total.
+This equip can be refined five times, but can never hold more than 3 unique traits.
+
+**See also:** `<maxRefineCount>`, `<transferrableEffectsBelow>`
+
+---
+
+### `<transferrableEffectsBelow>`
+
+**Applies to:**
+Weapons, Armors
+
+**When:**
+this equip is consumed as a refinement material
+
+**Effect:**
+marks the point in a note past which effects are refinement payload. Everything **above** the tag
+describes what the equip *is* and never leaves it; everything **below** is what a donor hands over
+when consumed.
+
+The absence of this tag means an equip has no note effects to give — **not** that all of them
+transfer. That default is what keeps a weapon's own identity from being launderable: you cannot strip
+a legendary's defining tag off it by feeding it to something else.
+
+This is the note-side counterpart to the code-63 trait divider the refinement trait parser reads.
+
+```
+<skillId:1>
+<maxRefineCount:6>
+<transferrableEffectsBelow>
+<bonusHits:2>
+```
+This equip uses skill 1 and refines six times, neither of which transfers. A donor consuming it hands
+over two bonus hits.
+
+**See also:** `<noRefine>` / `<notRefinementMaterial>`
+
+---
+
+## J-Lighting (`src/plugins/lighting/core/`)
+
+Takes light away from a place, and lets things in it give light back. The engine's screen tone is
+uniform and cannot have holes punched in it; this adds the mask that torches cut through.
+
+### `<ambient:[DARKNESS]>` / `<ambient:[DARKNESS, COLOR]>`
+
+**Applies to:**
+Maps only (Map Properties → Note)
+
+**When:**
+on arrival at the map — transfers, save loads and new games alike
+
+**Effect:**
+DARKNESS is how much light is gone, 0 to 100. COLOR is an optional hex for the dark itself,
+defaulting to `ambient.color` in `data/config.lighting.json`. **A map with no tag gets no mask at
+all**, which is what leaves every map authored before this plugin exactly as bright as it was.
+
+Darkness from several sources *compounds* rather than summing — each takes a share of whatever light
+reached it — so a 30%-dark map at a 40%-dark hour is 58% dark, not 70%. The colour of the dark is
+claimed by whoever actually stated one, so a map declaring teal keeps its teal even against a source
+that outranks it on darkness but has no opinion on colour.
+
+A map's note is the correct home for this despite the usual preference for page comments: a map has
+no pages, so there is nowhere else for it to live.
+
+```
+<ambient:[60]>
+```
+Dim but navigable — 60% of the light is gone.
+
+```
+<ambient:[85, #0a2a2a]>
+```
+85% of the light is gone, and what remains reads teal rather than grey.
+
+**See also:** `<light>`, `<noToneChange>` (J-TIME)
+
+---
+
+### `<light:[TILES]>` / `<light:[TILES, COLOR]>` / `<light:[TILES, COLOR, INTENSITY]>` / `<light:[TILES, COLOR, INTENSITY, EFFECT]>`
+
+**Applies to:**
+Event pages (as a comment), and Actors, Classes, Skills, Weapons, Armors, States (as a note)
+
+**When:**
+on an event page, while that page is active; on a note, while the party leader has it
+
+**Effect:**
+TILES is how far the light reaches — the same unit as `<sight>`, `<proximityText>` and JABS's
+`<radius>`. Fractions are allowed, so `2.5` is two and a half tiles. Lights add together, so
+overlapping pools are brighter where they meet.
+
+**Only the reach has a fixed place.** The three optional parameters are told apart by what they look
+like rather than by where they sit, so they may be written in any order and any of them omitted:
+
+| Parameter | Written as | Means | Default |
+|---|---|---|---|
+| COLOR | a hex, `#ffbb73` | what colour the light is | `light.color` in `data/config.lighting.json` |
+| INTENSITY | a bare number, 0-100 | how evenly the circle is filled | `light.intensity` |
+| EFFECT | one of `flicker`, `pulse`, `glitch` | what the light does over time | steady |
+
+**INTENSITY is the light's shape, not its brightness.** At `0` it is brightest at its heart and fades
+away to nothing, the way a flame in the open does; at `100` the whole circle burns evenly and stops
+dead at the rim, the way a spotlight does. Everything between is how hard the edge is.
+
+**EFFECT is what happens to that shape over time.** `flicker` is erratic and organic — two waves at
+odds with each other, so it never repeats and two torches in a room never gutter in time. `pulse` is
+steady and rhythmic, one clean wave, the same every cycle. `glitch` holds perfectly still, stutters
+briefly, then holds again; the waiting is what sells a dying tube. Each is tuned by a `depth`,
+`period`, `chance` and `variance` under `light.effects` in the config.
+
+Every light starts at its own point in its cycle *and* runs at its own slightly-detuned tempo, so no
+two ever settle into a fixed relationship — `variance` is how far apart they are allowed to wander,
+and setting it to `0` makes a group behave as one.
+
+The two axes are independent on purpose: a sharp circle that will not hold steady is an unsteady
+spotlight, and a fuzzy one that never wavers is a street lamp. An effect costs nothing to draw —
+it animates the sprite's brightness and never the picture, so a guttering torch and a steady one of
+the same reach, colour and intensity share a single cached drawing.
+
+On an **event page** the light belongs to the page, which is what makes a torch something that can be
+lit: page one is a cold torch with no tag, and page two behind a self switch has both the lit graphic
+and the tag. Nothing registers the event as ignitable and nothing has to remember to put it out.
+
+On a **note** reachable from the party leader, the light follows the party. This is the only way the
+player carries light — there is no player globe by default, deliberately, because a light that
+follows the party everywhere makes darkness unreachable.
+
+Every light sharing a reach, colour and intensity shares one cached texture, so a map with fifty
+identical torches costs one drawing.
+
+```
+<light:[5]>
+```
+A plain white light reaching five tiles.
+
+```
+<light:[6, #ffbb73, flicker]>
+```
+A warm torch reaching six tiles, guttering.
+
+```
+<light:[5, #ffffff, 90, flicker]>
+```
+A sharp-edged beam that will not quite hold steady — an unsteady spotlight.
+
+```
+<light:[4, #ffeebb, 10]>
+```
+A soft, even, unwavering pool — a street lamp.
+
+```
+<light:[3, #88ffcc, 70, pulse]>
+```
+A crisp teal circle breathing in and out — a crystal.
+
+```
+<light:[2, #aaddff, 100, glitch]>
+```
+A hard little disc that holds, stutters, and holds again — failing machinery.
+
+```
+<light:[4.5, #ffdca8, flicker]>
+```
+On a Lantern armor: the party gives off light for four and a half tiles while it is equipped, and
+stops when it comes off.
+
+**See also:** `<ambient>`
+
+---
+
+## J-Lighting-Time (`src/plugins/lighting/ext/time/`)
+
+Makes the sky follow the clock, as both colour and darkness. Declares no notetags of its own — it
+reads J-TIME's `<noToneChange>`, and its day/night curve lives in `data/config.lighting-time.json`.
 
 ---
 
@@ -6183,7 +6637,34 @@ Every level gained permanently adds `(level × 3)` flat ATK.
 +25 flat experience rate while this tagged object is active — lost when removed.
 
 **See also:** J-CriticalFactors' equivalent `<cdmGrowthPlus>`/`<ctrGrowthPlus>` family (same
-convention, different plugin)
+convention, different plugin), `<baseMaxTp>`
+
+---
+
+### `<baseMaxTp:[FORMULA]>`
+
+**Applies to:**
+Actors, Classes, Skills, Weapons, Armors, Enemies, States
+
+**Formula context:**
+`a` = the battler itself, `b` = 0, `v` = `$gameVariables._data`.
+
+**When:**
+always (summed across all active note sources)
+
+**Effect:**
+sets the **baseline** max tech the `mtp` buff and growth tags then modify. It is the one member of
+the max-tech set that establishes a starting value rather than adjusting one, which is why it has its
+own tag instead of a `(Buff|Growth)(Plus|Rate)` spelling — there is no editor field for it, because
+RMMZ fixed tech at a flat hundred for every battler rather than modelling it as a parameter.
+
+```
+<baseMaxTp:[50]>
+```
+This battler starts from a max tech of 50 before any `mtp` buffs or growths apply.
+
+**See also:** `<mtpBuffPlus>`/`<mtpGrowthPlus>` (the family that modifies this baseline), J-Base's
+`<maxTp:VALUE>`
 
 ---
 
@@ -6834,6 +7315,93 @@ While active, all skills cost 1 fewer slot point to equip.
 
 ---
 
+### `<baseSlots:[FORMULA]>` / `<maxSlots:[FORMULA]>`
+
+**Applies to:**
+`baseSlots`: Actors, Classes only. `maxSlots`: Actors, Classes, Skills, Weapons, Armors, States
+
+**Formula context:**
+`a` = the actor, `b` = 0, `v` = `$gameVariables._data`.
+
+**When:**
+whenever the actor's slot capacity is asked for
+
+**Effect:**
+the two halves of one number, and the split is the point. **`baseSlots` sets the baseline** and is read
+from the actor and its class *only* — the first one found wins, and when neither carries it the plugin
+parameter default is used instead. **`maxSlots` is a bonus** that stacks on top, summed across every
+note source the actor has (equips, states, learned skills included), so gear and buffs can grant slots
+without any of them having to know what the baseline was. The total floors at zero.
+
+```
+<baseSlots:[4]>          (on an actor or class)
+<maxSlots:[1]>           (on an accessory)
+```
+This actor has a baseline of 4 slots, and 5 while that accessory is equipped.
+
+```
+<baseSlots:[3 + Math.floor(a.level / 10)]>
+```
+Baseline grows by one slot every ten levels.
+
+**See also:** `<baseSlotPoints>`/`<maxSlotPoints>`, the identical pairing for the point budget
+
+---
+
+### `<baseSlotPoints:[FORMULA]>` / `<maxSlotPoints:[FORMULA]>`
+
+**Applies to:**
+`baseSlotPoints`: Actors, Classes only. `maxSlotPoints`: Actors, Classes, Skills, Weapons, Armors,
+States
+
+**Formula context:**
+`a` = the actor, `b` = 0, `v` = `$gameVariables._data`.
+
+**When:**
+whenever the actor's slot point budget is asked for
+
+**Effect:**
+exactly the `<baseSlots>`/`<maxSlots>` arrangement, applied to the point budget that `<slotCost>`
+spends from rather than to the slot count. Baseline from the actor or class (else the plugin param
+default), bonuses summed from every note source, floored at zero.
+
+Having both is what lets the two axes be tuned apart: more slots without more points means more
+equipped skills but cheaper ones, and more points without more slots means fewer, costlier skills.
+
+```
+<baseSlotPoints:[10]>
+<maxSlotPoints:[5]>
+```
+A baseline budget of 10 points, plus 5 more from whatever carries the second tag.
+
+**See also:** `<baseSlots>`/`<maxSlots>`, `<slotCost>`
+
+---
+
+### `<unslottedSkills:[SKILL_IDS]>`
+
+**Applies to:**
+Actors, Classes, Skills, Weapons, Armors, States
+
+**When:**
+always — collected from every note source, flattened and deduplicated, cached until the battler's
+data changes
+
+**Effect:**
+exempts the listed skills from the slot requirement **for this battler only**. Unlike a skill's own
+`<unslotted>` tag, which frees that skill for everyone, this is a per-battler exemption — the same
+skill still costs a slot for anyone who has to learn-then-equip it through the normal pipeline. Repeat
+the tag on different sources to grant more exemptions; all of them combine.
+
+```
+<unslottedSkills:[101, 102]>
+```
+Skills 101 and 102 are always active for this battler without occupying a slot.
+
+**See also:** `<unslotted>`, the everyone-gets-it form
+
+---
+
 ## J-TIME (`src/plugins/time/core/`)
 
 A configurable time-tracking system (real or artificial), with time-of-day/season concepts, screen
@@ -6870,7 +7438,7 @@ page condition evaluation / choice list building
 
 **Effect:**
 gates visibility to an exact time value. `{unit}` is one of: `minute`, `hour`, `day`, `month`,
-`year`, `timeOfDay` (0-5 index or name: night/dawn/morning/afternoon/evening/twilight), or
+`year`, `timeOfDay` (0-5 index or name: moontide/dawn/morning/afternoon/evening/night), or
 `seasonOfYear` (0-3 index or name: spring/summer/autumn/winter).
 
 ```

@@ -72,7 +72,7 @@ That is three phases, and it is more than a build:
 
 | Phase | What runs |
 |---|---|
-| `verify-pre-compile` | `lint`, then fourteen source gates: `verify:docs`, `no-typeof`, `no-instanceof`, `no-optional-chaining`, `no-direct-property-getset`, `no-private-before-construction`, `no-late-window-command-state`, `no-self-calling-accessors`, `no-transforming-setter-aliases`, `no-chained-call-arguments`, `no-phantom-calls`, `no-rest-parameters`, `no-sourceless-addstate`, `declared-dependencies` |
+| `verify-pre-compile` | `lint`, then fifteen source gates: `verify:docs`, `no-typeof`, `no-instanceof`, `no-optional-chaining`, `no-direct-property-getset`, `no-private-before-construction`, `no-late-window-command-state`, `no-self-calling-accessors`, `no-transforming-setter-aliases`, `no-chained-call-arguments`, `no-phantom-calls`, `no-rest-parameters`, `no-sourceless-addstate`, `declared-dependencies`, `notetag-reference` |
 | `compile` | `clean:out`, then `build:all` |
 | `verify-post-compile` | `verify:ships`, **the full test suite**, then `copy:to-all` |
 

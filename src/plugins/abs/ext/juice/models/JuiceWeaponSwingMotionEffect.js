@@ -181,6 +181,28 @@ class JuiceWeaponSwingMotionEffect extends JuiceBaseEffect
     // hand back the base y.
     return this._baseY;
   }
+
+  /**
+   * Gets whether this overlay parks at its final pose instead of tearing itself down.
+   * @returns {boolean} The held.
+   */
+  isHeld()
+  {
+    // hand back whether this overlay is held.
+    return this._held;
+  }
+
+  /**
+   * Flags this overlay as one that parks at its final pose and waits to be withdrawn.
+   *
+   * Set after construction rather than passed in, because holding is a decision about how long the
+   * overlay lives rather than anything about the motion it plays — a held `present` and a one-shot
+   * `present` are the same thirteen arguments and the same arc, right up until the last frame.
+   */
+  flagHeld()
+  {
+    this._held = true;
+  }
   //endregion properties
 
   /**
@@ -561,6 +583,59 @@ class JuiceWeaponSwingMotionEffect extends JuiceBaseEffect
   };
 
   /**
+   * Determines whether a key names one of the overlay presets.
+   *
+   * The preset list is closed — every motion an overlay can play is a case in {@link #tick} — so
+   * anything else is a typo, and a typo silently falling through to the `arc` default is how an
+   * author loses an afternoon to a swing that will not swing.
+   * @param {string} motionType The candidate preset key.
+   * @returns {boolean}
+   */
+  static isKnownMotionType(motionType)
+  {
+    const known = Object.values(JuiceWeaponSwingMotionEffect.MotionTypes);
+
+    return known.includes(motionType);
+  }
+
+  /**
+   * Determines whether a preset ignores which way the character is facing.
+   *
+   * Only `present` does. It lifts the icon straight up the screen and {@link JuiceWeaponSwingOverlay}
+   * builds it against a fixed north regardless of what was asked for, so the facing a `present` was
+   * spawned at is not information about it. That matters to anything holding one: a held overlay
+   * rebuilt on every turn restarts its own ease, and for the one motion where turning changes
+   * nothing that reads as the icon dropping and being raised again.
+   * @param {string} motionType The overlay preset in question.
+   * @returns {boolean}
+   */
+  static isFacingAgnostic(motionType)
+  {
+    return motionType === JuiceWeaponSwingMotionEffect.MotionTypes.Present;
+  }
+
+  /**
+   * Which way an untagged icon points, for the presets that align to a tip rather than an orbit.
+   *
+   * Two readings of the IconSet cell, and which one is right depends on what the motion is doing
+   * with it. A thrust presents the blade of a sword, drawn corner to corner; a bash or a recoil is
+   * built around a barrel, which sits along the cell's negative x. Nothing else consults this,
+   * because an arc orients itself from the direction it is travelling.
+   * @param {string} motionType The overlay preset about to play.
+   * @returns {number} Radians from +x to the tip at rotation 0.
+   */
+  static defaultTipRadiansFor(motionType)
+  {
+    if (motionType === JuiceWeaponSwingMotionEffect.MotionTypes.StabForward
+      || motionType === JuiceWeaponSwingMotionEffect.MotionTypes.Present)
+    {
+      return JuiceWeaponSwingMotionEffect.StabIconTipAngleRadians;
+    }
+
+    return JuiceWeaponSwingMotionEffect.BashRecoilIconTipAngleRadians;
+  }
+
+  /**
    * Default IconSet cell rest: 45° CW so blade reads toward 12 o'clock before arc deltas (spec).
    * @readonly
    */
@@ -661,6 +736,12 @@ class JuiceWeaponSwingMotionEffect extends JuiceBaseEffect
      * @type {number}
      */
     this._scaleMag = Math.abs(overlay.scale.x);
+
+    /**
+     * Whether this overlay parks at its final pose rather than tearing itself down.
+     * @type {boolean}
+     */
+    this._held = false;
   }
 
   /**
@@ -751,19 +832,46 @@ class JuiceWeaponSwingMotionEffect extends JuiceBaseEffect
 
     if (this.frame() >= this.durationFrames())
     {
-      this.parentSprite().removeChild(this.overlay());
-      this.overlay().destroy();
+      // a held overlay has arrived at the pose it was asked for and simply stays there. ticking on
+      // is what keeps it there: `t` is already clamped to 1, so every further frame re-applies the
+      // same final pose, and the overlay rides along with its parent for free as a child sprite.
+      if (this.isHeld() === true) return true;
 
-      this.trail().forEach(trail =>
-      {
-        this.parentSprite().removeChild(trail.sprite);
-        trail.sprite.destroy();
-      });
-      this.trail().length = 0;
+      this.restore();
+
       return false;
     }
 
     return true;
+  }
+
+  /**
+   * Implements {@link JuiceBaseEffect#restore}.<br/>
+   * Detaches and destroys the overlay and everything trailing it.
+   *
+   * This is reached from two directions: a one-shot swing reaching the end of its duration, and
+   * something withdrawing a held overlay long after it stopped moving. Both have to leave the
+   * parent sprite exactly as they found it, so neither owns the teardown and both call this.
+   */
+  restore()
+  {
+    // pixi nulls the parent's transform when a sprite is destroyed, taking its children with it.
+    // there is nothing left to detach, and asking would throw on the way to finding that out.
+    if (this.isSpriteAlive() === false) return;
+
+    this.parentSprite()
+      .removeChild(this.overlay());
+    this.overlay()
+      .destroy();
+
+    this.trail()
+      .forEach(trail =>
+      {
+        this.parentSprite()
+          .removeChild(trail.sprite);
+        trail.sprite.destroy();
+      }, this);
+    this.trail().length = 0;
   }
 
   /**
@@ -851,10 +959,30 @@ class JuiceWeaponSwingMotionEffect extends JuiceBaseEffect
     this.overlay().x = centerX + frontX + Math.cos(theta) * orbit;
     this.overlay().y = centerY + frontY + Math.sin(theta) * orbit + juiceDy;
 
-    if (this.frame() % 2 === 0)
+    if (this.shouldSpawnTrail() === true)
     {
       this.#spawnTrailAfterimage();
     }
+  }
+
+  /**
+   * Determines whether this frame should leave an afterimage behind.
+   *
+   * A trail is a record of movement, and a held overlay stops moving the moment it arrives. Left
+   * ungated, a parked spin would keep stamping a ghost every other frame forever, on a spot the
+   * overlay has not left — no leak, since each expires on its own ttl, but a permanent shimmer of
+   * sprite churn around an icon that is supposed to be sitting still.
+   * @returns {boolean}
+   */
+  shouldSpawnTrail()
+  {
+    // an afterimage every other frame; the motion moves too little between adjacent frames to read.
+    if (this.frame() % 2 !== 0) return false;
+
+    // a one-shot is always travelling, right up until it tears itself down.
+    if (this.isHeld() === false) return true;
+
+    return this.frame() < this.durationFrames();
   }
 
   /**

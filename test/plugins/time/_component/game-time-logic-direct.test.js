@@ -179,23 +179,6 @@ describe('J-TIME Game_Time logic (direct src import)', () =>
     });
   });
 
-  describe('translateHourToTone', () =>
-  {
-    it('resolves the hour through the tone resolver and lands on the phase tone exactly', () =>
-    {
-      // Arrange
-      const t = new Game_Time();
-      t.setHours(11);
-
-      // Act
-      const tone = t.translateHourToTone();
-
-      // Assert
-      // hour 11 is the final hour of the dawn-to-morning fade, so it has arrived at morning.
-      expect(tone).toEqual([ 0, 0, 0, 0 ]);
-    });
-  });
-
   describe('canUpdateTime', () =>
   {
     it('returns false when the frame count is not evenly divisible by the tick speed', () =>

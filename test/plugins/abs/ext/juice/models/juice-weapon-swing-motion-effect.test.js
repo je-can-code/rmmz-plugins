@@ -483,6 +483,205 @@ describe('JuiceWeaponSwingMotionEffect (unit, JuiceBaseEffect mocked)', () =>
   });
 
   //region tick() across every motion type
+  describe('isKnownMotionType()', () =>
+  {
+    it('recognizes a preset that exists', () =>
+    {
+      // Arrange / Act / Assert
+      expect(JuiceWeaponSwingMotionEffect.isKnownMotionType('present')).toEqual(true);
+    });
+
+    it('recognizes every preset it publishes, not merely the one asked about', () =>
+    {
+      // Arrange: a lookup that answered true for exactly one key would pass the test above.
+      const presets = Object.values(JuiceWeaponSwingMotionEffect.MotionTypes);
+
+      // Act
+      const recognized = presets.filter(preset => JuiceWeaponSwingMotionEffect.isKnownMotionType(preset));
+
+      // Assert
+      expect(recognized).toHaveLength(9);
+    });
+
+    it('rejects a preset that does not exist', () =>
+    {
+      // Arrange / Act / Assert: `arcs` is the near miss an author actually types.
+      expect(JuiceWeaponSwingMotionEffect.isKnownMotionType('arcs')).toEqual(false);
+    });
+  });
+
+  describe('shouldSpawnTrail()', () =>
+  {
+    it('is false on an odd frame, where the overlay has barely moved', () =>
+    {
+      // Arrange
+      const { effect } = buildEffect({ durationFrames: 10 });
+      effect.setFrame(3);
+
+      // Act / Assert
+      expect(effect.shouldSpawnTrail()).toEqual(false);
+    });
+
+    it('is true on an even frame of a one-shot', () =>
+    {
+      // Arrange
+      const { effect } = buildEffect({ durationFrames: 10 });
+      effect.setFrame(4);
+
+      // Act / Assert
+      expect(effect.shouldSpawnTrail()).toEqual(true);
+    });
+
+    it('is true on an even frame of a held swing still on its way to the pose', () =>
+    {
+      // Arrange
+      const { effect } = buildEffect({ durationFrames: 10 });
+      effect.flagHeld();
+      effect.setFrame(4);
+
+      // Act / Assert
+      expect(effect.shouldSpawnTrail()).toEqual(true);
+    });
+
+    it('is false once a held swing has arrived and stopped moving', () =>
+    {
+      // Arrange: a trail records movement, and a parked overlay is not moving.
+      const { effect } = buildEffect({ durationFrames: 10 });
+      effect.flagHeld();
+      effect.setFrame(10);
+
+      // Act / Assert
+      expect(effect.shouldSpawnTrail()).toEqual(false);
+    });
+
+    it('leaves no afterimages behind a parked spin', () =>
+    {
+      // Arrange: the ghosts are spawned from inside the spin tick, so this is the real consequence.
+      const { effect, parentSprite } = buildEffect({
+        durationFrames: 2,
+        motionType: JuiceWeaponSwingMotionEffect.MotionTypes.Spin,
+      });
+      effect.flagHeld();
+      effect.tick();
+      effect.tick();
+      parentSprite.addChild.mockClear();
+
+      // Act
+      effect.tick();
+      effect.tick();
+      effect.tick();
+      effect.tick();
+
+      // Assert
+      expect(parentSprite.addChild).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('isFacingAgnostic()', () =>
+  {
+    it('is true for present, which is built against a fixed north', () =>
+    {
+      // Arrange / Act / Assert
+      expect(JuiceWeaponSwingMotionEffect.isFacingAgnostic('present')).toEqual(true);
+    });
+
+    it('is false for every other preset it publishes', () =>
+    {
+      // Arrange: a predicate answering true for everything would pass the test above.
+      const presets = Object.values(JuiceWeaponSwingMotionEffect.MotionTypes);
+
+      // Act
+      const agnostic = presets.filter(preset => JuiceWeaponSwingMotionEffect.isFacingAgnostic(preset));
+
+      // Assert
+      expect(agnostic).toStrictEqual([ 'present' ]);
+    });
+  });
+
+  describe('defaultTipRadiansFor()', () =>
+  {
+    it('reads the cell as a blade for stab-forward', () =>
+    {
+      // Arrange / Act
+      const radians = JuiceWeaponSwingMotionEffect.defaultTipRadiansFor('stab-forward');
+
+      // Assert
+      expect(radians).toEqual(JuiceWeaponSwingMotionEffect.StabIconTipAngleRadians);
+    });
+
+    it('reads the cell as a blade for present', () =>
+    {
+      // Arrange / Act
+      const radians = JuiceWeaponSwingMotionEffect.defaultTipRadiansFor('present');
+
+      // Assert
+      expect(radians).toEqual(JuiceWeaponSwingMotionEffect.StabIconTipAngleRadians);
+    });
+
+    it('reads the cell as a barrel for anything else', () =>
+    {
+      // Arrange / Act
+      const radians = JuiceWeaponSwingMotionEffect.defaultTipRadiansFor('bash');
+
+      // Assert
+      expect(radians).toEqual(JuiceWeaponSwingMotionEffect.BashRecoilIconTipAngleRadians);
+    });
+  });
+
+  describe('isHeld()', () =>
+  {
+    it('is false on a newly built swing', () =>
+    {
+      // Arrange / Act
+      const { effect } = buildEffect();
+
+      // Assert
+      expect(effect.isHeld()).toEqual(false);
+    });
+
+    it('is true once flagged', () =>
+    {
+      // Arrange
+      const { effect } = buildEffect();
+
+      // Act
+      effect.flagHeld();
+
+      // Assert
+      expect(effect.isHeld()).toEqual(true);
+    });
+  });
+
+  describe('restore()', () =>
+  {
+    it('detaches and destroys the overlay when called directly', () =>
+    {
+      // Arrange: this is the path a withdrawn held overlay takes, long after it stopped moving.
+      const { effect, parentSprite, overlay } = buildEffect();
+
+      // Act
+      effect.restore();
+
+      // Assert
+      expect(parentSprite.removeChild).toHaveBeenCalledWith(overlay);
+      expect(overlay.destroy).toHaveBeenCalled();
+    });
+
+    it('does nothing when the parent sprite has already been destroyed', () =>
+    {
+      // Arrange: pixi nulls the transform on destroy, taking the overlay with it.
+      const parentSprite = buildParentSprite({ transform: null });
+      const { effect, overlay } = buildEffect({ parentSprite });
+
+      // Act
+      effect.restore();
+
+      // Assert
+      expect(parentSprite.removeChild).not.toHaveBeenCalled();
+      expect(overlay.destroy).not.toHaveBeenCalled();
+    });
+  });
+
   describe('tick()', () =>
   {
     it('returns true while the swing has not reached its duration', () =>
@@ -519,6 +718,43 @@ describe('JuiceWeaponSwingMotionEffect (unit, JuiceBaseEffect mocked)', () =>
       expect(parentSprite.removeChild).toHaveBeenCalledWith(ghost);
       expect(ghost.destroy).toHaveBeenCalled();
       expect(effect._trail).toHaveLength(0);
+    });
+
+    it('returns true and leaves the overlay standing once a held swing reaches its duration', () =>
+    {
+      // Arrange: the same swing that tore itself down above, held instead.
+      const { effect, parentSprite, overlay } = buildEffect({
+        durationFrames: 1,
+        motionType: JuiceWeaponSwingMotionEffect.MotionTypes.Spin,
+      });
+      effect.flagHeld();
+
+      // Act
+      const result = effect.tick();
+
+      // Assert
+      expect(result).toEqual(true);
+      expect(parentSprite.removeChild).not.toHaveBeenCalled();
+      expect(overlay.destroy).not.toHaveBeenCalled();
+    });
+
+    it('keeps a held overlay alive on every frame past its duration, not merely the first', () =>
+    {
+      // Arrange: a held pose is meant to last indefinitely, so once is not evidence of anything.
+      const { effect, parentSprite } = buildEffect({
+        durationFrames: 1,
+        motionType: JuiceWeaponSwingMotionEffect.MotionTypes.Present,
+      });
+      effect.flagHeld();
+
+      // Act
+      effect.tick();
+      effect.tick();
+      const result = effect.tick();
+
+      // Assert
+      expect(result).toEqual(true);
+      expect(parentSprite.removeChild).not.toHaveBeenCalled();
     });
 
     it('drives the Arc motion (default fallback for an unrecognized motion type)', () =>

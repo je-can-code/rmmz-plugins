@@ -51,7 +51,6 @@ describe('J_TIME_PluginMetadata parameter mapping (direct src import)', () =>
     [ 'StartVisible', 'startVisible' ],
     [ 'StartActivated', 'startActivated' ],
     [ 'UseRealTime', 'useRealTime' ],
-    [ 'ChangeToneByTime', 'changeToneByTime' ],
     [ 'UseVariableAssignment', 'useVariableAssignment' ],
   ];
 

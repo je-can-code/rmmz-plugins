@@ -43,12 +43,12 @@ describe('JABS_TimeRespawnMethods (unit, all cross-ship globals stubbed)', () =>
     // minimal faithful stand-ins for the J-TIME name-to-id vocabularies.
     globalThis.Time_Snapshot = {
       TimesOfDayId: name => ({
-        night: 0,
+        moontide: 0,
         dawn: 1,
         morning: 2,
         afternoon: 3,
         evening: 4,
-        twilight: 5,
+        night: 5,
       })[name.toLowerCase()] ?? -1,
       DaysOfWeekId: name => ({
         monday: 0,

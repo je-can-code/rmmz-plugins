@@ -210,7 +210,7 @@ describe('Game_Event ext/time augments (direct src import)', () =>
       [ '<monthPage:6>', 'months', 6 ],
       [ '<yearPage:2021>', 'years', 2021 ],
       [ '<timeOfDayPage:3>', 'timeOfDay', 3 ],
-      [ '<timeOfDayPage:twilight>', 'timeOfDay', 5 ],
+      [ '<timeOfDayPage:night>', 'timeOfDay', 5 ],
       [ '<seasonOfYearPage:2>', 'seasonOfYear', 2 ],
       [ '<seasonOfYearPage:winter>', 'seasonOfYear', 3 ],
       [ '<minuteChoice:42>', 'minutes', 42 ],
@@ -488,6 +488,69 @@ describe('Game_Event ext/time augments (direct src import)', () =>
 
       // Assert
       expect(result).toBe(true);
+    });
+
+    it('stays satisfied past midnight, in the tail of a window that opened the night before', () =>
+    {
+      // Arrange
+      // two in the morning, inside a dusk-to-dawn span. the window containing this moment opened
+      // yesterday evening, so a check built only around today's date looks seventeen hours forward
+      // at a window that has not started and concludes the range is unmet.
+      globalThis.$gameTime.setTime(0, 0, 2, 1, 1, 2020);
+      const conditional = globalThis.Game_Event.toTimeConditional(comment('<hourRangePage:18-5>'));
+
+      // Act
+      const result = globalThis.Game_Event.timeConditionalMet(conditional);
+
+      // Assert
+      // every torch in the game went out on the stroke of midnight before this held.
+      expect(result).toBe(true);
+    });
+
+    it('is unsatisfied in the daylight gap between an overnight window closing and reopening', () =>
+    {
+      // Arrange
+      // noon is outside the span from either direction - too late for the window that closed this
+      // morning, too early for the one opening tonight.
+      globalThis.$gameTime.setTime(0, 0, 12, 1, 1, 2020);
+      const conditional = globalThis.Game_Event.toTimeConditional(comment('<hourRangePage:18-5>'));
+
+      // Act
+      const result = globalThis.Game_Event.timeConditionalMet(conditional);
+
+      // Assert
+      // the near-miss to the case above: consulting yesterday's window as well must not turn an
+      // overnight range into one that is simply always on.
+      expect(result).toBe(false);
+    });
+
+    it('holds an overnight range through the hour before the one it ends on', () =>
+    {
+      // Arrange
+      globalThis.$gameTime.setTime(0, 0, 4, 1, 1, 2020);
+      const conditional = globalThis.Game_Event.toTimeConditional(comment('<hourRangePage:18-5>'));
+
+      // Act
+      const result = globalThis.Game_Event.timeConditionalMet(conditional);
+
+      // Assert
+      expect(result).toBe(true);
+    });
+
+    it('releases an overnight range on the hour it ends on rather than after it', () =>
+    {
+      // Arrange
+      globalThis.$gameTime.setTime(0, 0, 5, 1, 1, 2020);
+      const conditional = globalThis.Game_Event.toTimeConditional(comment('<hourRangePage:18-5>'));
+
+      // Act
+      const result = globalThis.Game_Event.timeConditionalMet(conditional);
+
+      // Assert
+      // the end is the moment the window shuts rather than the last moment inside it, so a range
+      // written 18-5 covers 18:00 through 04:59. Pinned because it reads as a half-open span while
+      // the tag family documents itself as inclusive, and the two disagree by an hour.
+      expect(result).toBe(false);
     });
 
     it('leaves the end of a range alone when its minutes do not wrap past the hour', () =>

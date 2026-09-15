@@ -190,10 +190,6 @@ Scene_Map.prototype.onMapLoaded = function()
     this.handleTimeBlock();
   }
 
-  // this is the first point at which $dataMap is the map being entered, so the tone gets resolved
-  // here for every kind of arrival- transfers, and save loads, which are not transfers.
-  $gameTime.updateCurrentTone();
-
   // perform original logic.
   J.TIME.Aliased.Scene_Map.get("onMapLoaded")
     .call(this);

@@ -391,6 +391,35 @@ class JABS_AiManager
   }
 
   /**
+   * Gets all battlers close enough to the camera that the player could plausibly see them.<br/>
+   * This is deliberately anchored to the view rather than to the player: on a map small enough not
+   * to scroll, the player can stand in a corner while the opposite corner remains fully visible, so
+   * a radius measured from the player would leave visible battlers outside it. The engine's own
+   * {@link Game_CharacterBase.isNearTheScreen} is the same predicate it uses to decide which events
+   * keep moving, and it derives its bounds from the resolution and tile size rather than a constant,
+   * so it stays correct at any screen size and on looping maps.
+   * @returns {JABS_Battler[]} The battlers near enough to the view to warrant updating.
+   */
+  static getBattlersNearTheScreen()
+  {
+    const nearTheScreen = [];
+
+    // the roster is walked directly rather than materialized first; this runs on every frame, and
+    // the intermediate array a full materialization would build is discarded immediately.
+    this.battlers.forEach(battler =>
+    {
+      // anything the camera could reach keeps ticking; everything else is safely out of sight.
+      if (battler.getCharacter()
+        .isNearTheScreen() === true)
+      {
+        nearTheScreen.push(battler);
+      }
+    });
+
+    return nearTheScreen;
+  }
+
+  /**
    * Filters the battlers based on whether or not the battler is on an opposing
    * team from the selected battler.
    * @param {JABS_Battler[]} battlers The battlers to be filtered by team opposition.

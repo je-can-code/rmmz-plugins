@@ -172,7 +172,7 @@ class Time_Snapshot
     switch (timeOfDayId)
     {
       case 0:
-        return "Night";     // midnight-4am aka 0-4
+        return "Moontide";  // midnight-4am aka 0-4
       case 1:
         return "Dawn";      // 4am-8am aka 4-8
       case 2:
@@ -182,7 +182,7 @@ class Time_Snapshot
       case 4:
         return "Evening";   // 4pm-8pm aka 16-20
       case 5:
-        return "Twilight";  // 8pm-midnight aka 20-2359
+        return "Night";     // 8pm-midnight aka 20-2359
       default:
         Diagnostics.error(__PLUGIN_NAME__, `${timeOfDayId} is not a valid time of day id.`);
         return null;
@@ -283,8 +283,8 @@ class Time_Snapshot
   {
     switch (timeOfDayString.toLowerCase())
     {
-      case "night":
-        return 0;     // midnight-4am
+      case "moontide":
+        return 0;  // midnight-4am
       case "dawn":
         return 1;      // 4am-8am
       case "morning":
@@ -293,8 +293,8 @@ class Time_Snapshot
         return 3; // noon-4pm
       case "evening":
         return 4;   // 4pm-8pm
-      case "twilight":
-        return 5;  // 8pm-midnight
+      case "night":
+        return 5;     // 8pm-midnight
       default:
         Diagnostics.error(__PLUGIN_NAME__, `${timeOfDayString} is not a valid time of day name.`);
         return -1;

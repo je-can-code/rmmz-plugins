@@ -27,8 +27,6 @@ class J_TIME_PluginMetadata extends PluginMetadata
     this.StartVisible = pp['startVisible'] === 'true';
     this.StartActivated = pp['startActivated'] === 'true';
     this.UseRealTime = pp['useRealTime'] === 'true';
-    // assign change tone by time on this instance for callers.
-    this.ChangeToneByTime = pp['changeToneByTime'] === 'true';
     this.UseVariableAssignment = pp['useVariableAssignment'] === 'true';
 
     // assign seconds variable on this instance for callers.

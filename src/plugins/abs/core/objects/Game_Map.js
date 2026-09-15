@@ -344,47 +344,26 @@ Game_Map.prototype.newBattlerEvents = function()
 };
 
 /**
- * Adds a provided event to the current map's event list.
+ * Adds a provided event to the current map's event list, at the slot its own id names.
  *
- * INVARIANT- an event's INDEX IS ITS ID. Vanilla resolves events with `this._events[eventId]`, so
- * a slot can never shift; {@link Game_Map#removeEvent} nulls the slot rather than splicing, and
- * this method refills those nulls before appending.
+ * INVARIANT- an event's INDEX IS ITS ID. Vanilla resolves events with `this._events[eventId]` and
+ * builds that list as `this._events[event.id]`, so a slot is not a place an event happens to sit: it
+ * is the event's identity, and the only thing that makes `$gameMap.event(id)` mean anything.
  *
- * That reuse is only safe because `removeEvent` is called exclusively on SPAWNED events- expired
- * JABS actions and expired loot. Editor-placed events are never removed, so every hole sits above
- * the real-event range and reuse can never steal a real event's id.
+ * Every spawner reaches here having already chosen an index, written its data to
+ * `$dataMap.events[index]`, and built the event with that same index - so honouring the id it hands
+ * over is what keeps the runtime list and the data list describing the same world. Searching for a
+ * free slot instead would file the event under a number unrelated to its data, and an event that
+ * cannot find its own data cannot find its pages, its comments, or its name.
  *
- * Removing an editor-placed event would break that, and nothing here can stop you: the reused slot
- * would hand its id to an unrelated event, and every `$gameMap.event(id)` lookup for it would
- * silently resolve to the wrong thing.
+ * {@link Game_Map#removeEvent} nulls a slot rather than splicing it out, which is what leaves those
+ * indices free to be chosen again by the next spawn.
  * @param {Game_Event} event The `Game_Event` to add to this map.
  */
 Game_Map.prototype.addEvent = function(event)
 {
-  // attempt to find the first available hole in the event list.
-  // whether or not we found a spot to insert.
-  let inserted = false;
-
-  for (let i = 0; i < this.rawEvents().length; i++)
-  {
-    // if the slot is empty/nullish, then reuse it.
-    if (!this.rawEvents()[i])
-    {
-      // assign into the first available hole.
-      this.setEventByIndex(i, event);
-      // flag that we inserted.
-      inserted = true;
-      // stop looking for holes.
-      break;
-    }
-  }
-
-  // if we didn't find a hole, then append to the end as usual.
-  if (!inserted)
-  {
-    // append to the end.
-    this.rawEvents().push(event);
-  }
+  // the event already knows where it belongs; putting it anywhere else is what breaks the lookup.
+  this.setEventByIndex(event.eventId(), event);
 };
 
 /**
