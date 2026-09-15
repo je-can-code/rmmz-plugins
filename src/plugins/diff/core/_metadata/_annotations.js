@@ -24,6 +24,9 @@
  * All difficulties are defined in an external JSON file.
  * ============================================================================
  * CHANGELOG:
+ * - 2.2.2
+ *    Dropped a redundant round from the parameter and reward factors. The inputs are
+ *    whole percentages, so it never had anything to round.
  * - 2.2.1
  *    Routed the duplicate-key and lock/unlock/enable/disable warnings through
  *    J-Base's new Diagnostics, so each one names J-Difficulty in the console.

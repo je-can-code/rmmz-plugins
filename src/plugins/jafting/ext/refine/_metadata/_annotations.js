@@ -149,6 +149,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.6.0
+ *    Renamed the maxTraitCount notetag to maxRefinedTraits, which says what it counts.
+ *    Removed the unused JAFTING_RefinementData model.
  * - 1.5.1
  *    Routed the uncapturable-equip error through J-Base's new Diagnostics, so
  *    it names J-JAFTING-Refinement and carries the equip as its detail rather

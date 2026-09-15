@@ -59,6 +59,9 @@
  * one per tag, in the order they appear on the note.
  * ============================================================================
  * CHANGELOG:
+ * - 2.1.0
+ *    Removed the region notetag and the regions-found line it fed. Neither was ever
+ *    used, and an observation nobody could earn only made the entry look incomplete.
  * - 2.0.0
  *    Renamed from J-Omni-Monsterpedia to J-OMNI-Monsters. The shipped file is
  *    renamed with it, so an existing plugins.js entry must be updated or the
