@@ -42,7 +42,7 @@ J.TIME.RegExp.HourPage = /<hourPage:[ ]?(\d+)>/i;
 J.TIME.RegExp.DayPage = /<dayPage:[ ]?(\d+)>/i;
 J.TIME.RegExp.MonthPage = /<monthPage:[ ]?(\d+)>/i;
 J.TIME.RegExp.YearPage = /<yearPage:[ ]?(\d+)>/i;
-J.TIME.RegExp.TimeOfDayPage = /<timeOfDayPage:[ ]?([0-5]|night|dawn|morning|afternoon|evening|twilight)>/i;
+J.TIME.RegExp.TimeOfDayPage = /<timeOfDayPage:[ ]?([0-5]|moontide|dawn|morning|afternoon|evening|night)>/i;
 J.TIME.RegExp.SeasonOfYearPage = /<seasonOfYearPage:[ ]?([0-3]|spring|summer|autumn|winter)>/i;
 
 J.TIME.RegExp.MinuteRangePage = /<minuteRangePage:[ ]?(\d+)-(\d+)>/i;
@@ -60,7 +60,7 @@ J.TIME.RegExp.HourChoice = /<hourChoice:[ ]?(\d+)>/i;
 J.TIME.RegExp.DayChoice = /<dayChoice:[ ]?(\d+)>/i;
 J.TIME.RegExp.MonthChoice = /<monthChoice:[ ]?(\d+)>/i;
 J.TIME.RegExp.YearChoice = /<yearChoice:[ ]?(\d+)>/i;
-J.TIME.RegExp.TimeOfDayChoice = /<timeOfDayChoice:[ ]?([0-5]|night|dawn|morning|afternoon|evening|twilight)>/i;
+J.TIME.RegExp.TimeOfDayChoice = /<timeOfDayChoice:[ ]?([0-5]|moontide|dawn|morning|afternoon|evening|night)>/i;
 J.TIME.RegExp.SeasonOfYearChoice = /<seasonOfYearChoice:[ ]?([0-3]|spring|summer|autumn|winter)>/i;
 
 J.TIME.RegExp.MinuteRangeChoice = /<minuteRangeChoice:[ ]?(\d+)-(\d+)>/i;

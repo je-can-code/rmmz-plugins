@@ -1685,8 +1685,10 @@ class JABS_Engine
     // if we cannot update the battlers controlled by AI, then do not.
     if (!this.canUpdateAiBattlers()) return;
 
-    // grab all on-screen battlers to the player.
-    const onScreenBattlers = JABS_AiManager.getBattlersWithinRange(this.getPlayer1(), 30);
+    // gate on the camera rather than on the player: cooldowns and regen freezing is only ever a
+    // problem when the player can watch it happen, and on a map too small to scroll the player is
+    // nowhere near the center of what they can see.
+    const onScreenBattlers = JABS_AiManager.getBattlersNearTheScreen();
 
     // update each of them.
     onScreenBattlers.forEach(this.performAiBattlerUpdate, this);
@@ -3027,8 +3029,12 @@ class JABS_Engine
 
     // flag to add sprite.
     actionEventSprite.setActionSpriteNeedsAdding();
-    // assign event id.
-    actionEventSprite._eventId = actionEventData.id;
+    // NOTE: the event id is deliberately left as the constructor set it - the index its data was
+    // just written to. `actionEventData.id` carries the authored id plus a thousand, which exists to
+    // keep this copy from colliding with an authored event inside `$dataMap.events`; it is not an
+    // address. Assigning it here pointed the event at a slot holding nothing, so every `event()`
+    // lookup for the rest of its life came back empty - which is what `Game_Event#page` had to be
+    // overridden to survive. The loot and enemy spawns beside this one never did it.
     // assign sprite name.
     actionEventSprite._characterName = characterName;
     // assign sprite index.

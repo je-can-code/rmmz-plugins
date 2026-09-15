@@ -1653,7 +1653,6 @@ class Window_MonsterpediaDetail
   /*
   TODO:
   sections include
-  - regions found
   - ailmentalistics
    */
 }

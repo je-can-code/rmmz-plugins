@@ -94,6 +94,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 3.1.1
+ *    Followers pass through terrain while the party has them hidden, so an ally nobody
+ *    can see cannot strand itself on geometry nobody was shown.
  * - 3.1.0
  *    An ally backing away from its target now arcs around it toward the leader and
  *    stops on arrival, rather than marching down a single axis until it is out of

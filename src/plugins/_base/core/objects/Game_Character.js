@@ -67,7 +67,8 @@ Game_Character.prototype.distanceFromCharacter = function(character)
   // calculate the distance to the player.
   const distance = $gameMap.distance(character.x, character.y, this.x, this.y);
 
-  // make sure the distance only goes out three decimals.
+  // pixel movement makes _x/_y fractional, so the engine's manhattan sum arrives with a long tail
+  // rather than as the whole number a tile-based game would produce; constrain it here.
   const constrainedDistance = parseFloat((distance).toFixed(3));
 
   // return the calculated value.

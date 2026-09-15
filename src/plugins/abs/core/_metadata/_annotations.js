@@ -48,6 +48,11 @@
  * for JABS lives at the top instead of the bottom.
  *
  * CHANGELOG:
+ * - 4.24.0
+ *    Action events keep the event id they were built with, so an action can find its
+ *    own data for its whole life rather than only while being constructed.
+ *    Game_Map#addEvent files an event at the slot its id names instead of hunting for
+ *    a free one, which is what the invariant on that method always claimed.
  * - 4.23.0
  *    Added the jabsSlotTransforms notetag to actors, classes, equipment and states,
  *    and Game_Battler#getSlotTransformSkillId to resolve one by slot.

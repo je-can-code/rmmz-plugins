@@ -1703,29 +1703,33 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
   {
     it('does nothing when ai battler updates are not allowed', async () =>
     {
+      // Arrange
       const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
-      JABS_AiManager.getBattlersWithinRange = vi.fn();
+      JABS_AiManager.getBattlersNearTheScreen = vi.fn();
       const engine = new JABS_Engine();
       engine.canUpdateAiBattlers = () => false;
 
+      // Act
       engine.updateAiBattlers();
 
-      expect(JABS_AiManager.getBattlersWithinRange).not.toHaveBeenCalled();
+      // Assert
+      expect(JABS_AiManager.getBattlersNearTheScreen).not.toHaveBeenCalled();
     });
 
-    it('updates every on-screen battler within range of player 1', async () =>
+    it('updates every battler the camera can reach', async () =>
     {
+      // Arrange
       const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
-      const player1 = { id: 'player1' };
       const other = { id: 'other' };
-      JABS_AiManager.getBattlersWithinRange = vi.fn(() => [ other ]);
+      JABS_AiManager.getBattlersNearTheScreen = vi.fn(() => [ other ]);
       const engine = new JABS_Engine();
-      engine.setPlayer1(player1);
       engine.performAiBattlerUpdate = vi.fn();
 
+      // Act
       engine.updateAiBattlers();
 
-      expect(JABS_AiManager.getBattlersWithinRange).toHaveBeenCalledWith(player1, 30);
+      // Assert
+      expect(JABS_AiManager.getBattlersNearTheScreen).toHaveBeenCalledWith();
       expect(engine.performAiBattlerUpdate).toHaveBeenCalledWith(other, 0, [ other ]);
     });
   });

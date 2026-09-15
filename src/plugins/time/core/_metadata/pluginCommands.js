@@ -98,20 +98,4 @@ PluginManager.registerCommand(J.TIME.Metadata.name, "startTime", () =>
   $gameTime.activate();
 });
 
-/**
- * Plugin command for allowing the TIME system to control the screen tone.
- * Does nothing if the plugin parameters are set to disable tone changing.
- */
-PluginManager.registerCommand(J.TIME.Metadata.name, "unlockTone", () =>
-{
-  $gameTime.unlockTone();
-});
-
-/**
- * Plugin command for locking the TIME system from controlling screen tone.
- */
-PluginManager.registerCommand(J.TIME.Metadata.name, "lockTone", () =>
-{
-  $gameTime.lockTone();
-});
 //endregion plugin commands

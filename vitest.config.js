@@ -57,8 +57,14 @@ export default defineConfig({
         // patterns rather than one. Its Sprite_Character.js is the entire view half of the plugin -
         // where the composed motion actually reaches the screen - so leaving it unmeasured would
         // have meant calling the ship covered while the part that draws anything was not.
-        '**/src/plugins/!(motion)/**/sprites/**',
+        // J-ABS-Juice is the second family with its sprite layer lifted, and the reason is the same
+        // one: its Sprite_Character.js is where a held overlay is put back after a scene rebuild,
+        // so an unmeasured one would mean calling the ship covered while the seam that makes a held
+        // icon survive anything at all was not.
+        '**/src/plugins/!(motion|abs)/**/sprites/**',
         '**/src/plugins/motion/!(core)/**/sprites/**',
+        '**/src/plugins/abs/!(ext)/**/sprites/**',
+        '**/src/plugins/abs/ext/!(juice)/**/sprites/**',
         '**/src/plugins/!(_base)/**/windows/**',
         '**/src/plugins/_base/!(ext)/**/windows/**',
         '**/src/plugins/_base/ext/!(save)/**/windows/**',

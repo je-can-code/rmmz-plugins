@@ -207,6 +207,28 @@ class JuiceMotionManager
   }
 
   /**
+   * Tears one effect down and takes it off the queue ahead of its natural end.
+   *
+   * Only a held overlay ever needs this. Everything else in the queue ends by saying so from
+   * {@link JuiceBaseEffect#tick}, and an effect that parks forever has no such moment — so
+   * withdrawing one has to reach in from outside and finish it by hand.
+   * @param {JuiceBaseEffect} effect The effect to stop.
+   */
+  static discardEffect(effect)
+  {
+    effect.restore();
+
+    const index = JuiceMotionManager.#effects.indexOf(effect);
+
+    // the queue may well have let this one go already: a scene teardown drains everything, and a
+    // dead sprite is dropped on the next tick. splicing at -1 would evict an innocent bystander
+    // from the end of the queue instead.
+    if (index === -1) return;
+
+    JuiceMotionManager.#effects.splice(index, 1);
+  }
+
+  /**
    * Runs every frame while on the map, via the {@link Scene_Map#update} alias.
    */
   static frameTick()

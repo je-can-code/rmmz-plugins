@@ -157,6 +157,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 3.16.0
+ *    Added Spriteset_Map#weather, so a plugin can insert a display layer at a position
+ *    relative to an engine-created child rather than wherever load order lands it.
  * - 3.15.0
  *    Added Game_Event#setSelfSwitch with the short ssw/sswOn/sswOff forms, so a
  *    move route script row can flip a self-switch and still be read at a glance.

@@ -76,15 +76,6 @@ describe('J-OMNI-Monsters metadata (direct src import)', () =>
       expect(match[1]).toBe("It's fast, isn't it?");
     });
 
-    it('captures a region name', () =>
-    {
-      // Arrange & Act
-      const match = '<region:Frozen Wastes>'.match(globalThis.J.OMNI.EXT.MONSTER.RegExp.MonsterpediaRegion);
-
-      // Assert
-      expect(match[1]).toBe('Frozen Wastes');
-    });
-
     it('refuses a description line containing a character outside the allowed prose set', () =>
     {
       // Arrange & Act

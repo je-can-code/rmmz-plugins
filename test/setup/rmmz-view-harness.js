@@ -318,9 +318,32 @@ export function installBitmapMock()
         measureText: text => ({ width: String(text).length * 10 }),
         getImageData: () => ({ data: new Uint8ClampedArray(4) }),
         createLinearGradient: () => ({ addColorStop() {} }),
+        createRadialGradient: () => ({ addColorStop() {} }),
       };
 
       return this._context;
+    },
+    configurable: true,
+  });
+
+  // the real `Bitmap` builds one of these over its canvas, and anything handing a bitmap to a sprite
+  // goes through it: `Sprite#_refresh` reads the base texture's dimensions to size the frame and then
+  // assigns it onto the sprite's own texture. A real `PIXI.BaseTexture` is used rather than a plain
+  // object because that assignment lands inside PIXI, which promptly reads properties no stand-in
+  // would carry - and the failure surfaces as a type error deep in the renderer rather than here.
+  //
+  // Built without a source: PIXI autodetects a resource from whatever it is given, and the canvas
+  // this mock carries is an object with two numbers on it rather than anything PIXI could use.
+  Object.defineProperty(bitmap, 'baseTexture', {
+    get()
+    {
+      if (!this._baseTexture)
+      {
+        this._baseTexture = new PIXI.BaseTexture();
+        this._baseTexture.setSize(this._canvas.width, this._canvas.height);
+      }
+
+      return this._baseTexture;
     },
     configurable: true,
   });

@@ -12,6 +12,12 @@ describe('JuiceProfileResolver (unit, all downstream dependencies mocked)', () =
   /** @type {typeof import('../../../../../../src/plugins/abs/ext/juice/resolvers/JuiceProfileResolver.js').default} */
   let JuiceProfileResolver;
 
+  /**
+   * The mocked preset tip-angle default, held out here so each test can pin and clear it.
+   * @type {import('vitest').Mock}
+   */
+  const defaultTipRadiansFor = vi.fn();
+
   beforeAll(async () =>
   {
     vi.resetModules();
@@ -28,6 +34,7 @@ describe('JuiceProfileResolver (unit, all downstream dependencies mocked)', () =
         },
         StabIconTipAngleRadians: -2.356,
         BashRecoilIconTipAngleRadians: 3.14159,
+        defaultTipRadiansFor,
       },
     }));
 
@@ -39,6 +46,7 @@ describe('JuiceProfileResolver (unit, all downstream dependencies mocked)', () =
   {
     globalThis.J.ABS.EXT.JUICE.Metadata.weaponStyleMultipliers = {};
     globalThis.DataManager.isArmor.mockReset().mockReturnValue(false);
+    defaultTipRadiansFor.mockReset();
   });
 
   /**
@@ -203,32 +211,32 @@ describe('JuiceProfileResolver (unit, all downstream dependencies mocked)', () =
       expect(radians).toBeCloseTo(0.7854, 4);
     });
 
-    it('defaults to the stab tip angle for stab-forward when untagged', () =>
+    it('defers to the preset default when untagged', () =>
     {
+      // Arrange: which reading of the IconSet cell a preset wants belongs to the preset, not here.
       const action = buildAction({ getBaseSkill: () => ({}) });
+      defaultTipRadiansFor.mockReturnValue(-2.356);
 
-      expect(JuiceProfileResolver.resolveJuiceWeaponTipRadians(action, 'stab-forward')).toEqual(-2.356);
-    });
+      // Act
+      const radians = JuiceProfileResolver.resolveJuiceWeaponTipRadians(action, 'stab-forward');
 
-    it('defaults to the stab tip angle for present when untagged', () =>
-    {
-      const action = buildAction({ getBaseSkill: () => ({}) });
-
-      expect(JuiceProfileResolver.resolveJuiceWeaponTipRadians(action, 'present')).toEqual(-2.356);
-    });
-
-    it('defaults to the bash/recoil tip angle for any other motion when untagged', () =>
-    {
-      const action = buildAction({ getBaseSkill: () => ({}) });
-
-      expect(JuiceProfileResolver.resolveJuiceWeaponTipRadians(action, 'bash')).toEqual(3.14159);
+      // Assert
+      expect(defaultTipRadiansFor).toHaveBeenCalledWith('stab-forward');
+      expect(radians).toEqual(-2.356);
     });
 
     it('ignores a non-finite tagged degree value', () =>
     {
+      // Arrange: a tag that parsed to nonsense is no tag at all.
       const action = buildAction({ getBaseSkill: () => ({ jabsJuiceStabTipDegrees: NaN }) });
+      defaultTipRadiansFor.mockReturnValue(3.14159);
 
-      expect(JuiceProfileResolver.resolveJuiceWeaponTipRadians(action, 'bash')).toEqual(3.14159);
+      // Act
+      const radians = JuiceProfileResolver.resolveJuiceWeaponTipRadians(action, 'bash');
+
+      // Assert
+      expect(defaultTipRadiansFor).toHaveBeenCalledWith('bash');
+      expect(radians).toEqual(3.14159);
     });
   });
 

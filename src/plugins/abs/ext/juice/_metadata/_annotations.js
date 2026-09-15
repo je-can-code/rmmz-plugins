@@ -37,6 +37,38 @@
  * name too. The weapon swing overlay is the exception: it is a sprite this
  * plugin creates and owns, so it is driven directly rather than composed.
  *
+ * ============================================================================
+ * OVERLAYS OUTSIDE COMBAT
+ * The overlay presets are available to events through the Apply Overlay plugin
+ * command, which shows any IconSet cell over any character in any of the nine
+ * presets. Naming an item, weapon, armor or skill reads that row's icon, which
+ * keeps a cutscene pointing at the right picture after the database is edited;
+ * a raw cell index is there for icons that belong to no row.
+ *
+ * Set Hold to true and the icon reaches its pose and stays there until Remove
+ * Overlay withdraws it, which is what "the hero raises the amulet" looks like
+ * when the scene is not ready to move on yet. The `present` preset lifts the
+ * icon straight up over the character's head and is facing-agnostic.
+ *
+ * A held overlay survives everything that rebuilds the map's sprites — opening
+ * and closing the menu, a map transfer, a scene change — because what is stored
+ * is the request rather than the sprite, and sprites collect their overlays as
+ * they are built. It follows the character, so a held icon on the player stays
+ * with them across maps.
+ *
+ * It does NOT survive loading a save file, which matches how J-Motion's own
+ * motions behave; nothing about the character's decoration is written to the
+ * savefile by either plugin. A cutscene that holds something up should take it
+ * down before it ends.
+ *
+ * Overlays are keyed by a source, exactly as J-Motion's motions are. Two
+ * different sources can hold two icons on one character, and withdrawing one
+ * leaves the other alone. Leave the source alone unless you need that.
+ *
+ * For the motions a character makes with its own BODY — squish, tilt, flip and
+ * charge — use J-Motion's Apply Motion command instead. Those are registered
+ * motion types and are already addressable by name from any event page.
+ *
  * Coexistence with J-ABS-Poses:
  * Poses swap character sheets / patterns for readable attacks, which is a
  * different layer entirely from the transform J-Motion composes. Keep juice
@@ -240,5 +272,121 @@
  * - 1.0.0
  *    Initial release.
  * ============================================================================
+ *
+ * @command applyOverlay
+ * @text Apply Overlay
+ * @desc Shows an icon over a character in one of the overlay presets.
+ *
+ * @arg target
+ * @type select
+ * @option Player
+ * @option Follower
+ * @option Event
+ * @option This Event
+ * @default This Event
+ * @text Target
+ * @desc Which character shows the icon.
+ *
+ * @arg targetId
+ * @type number
+ * @min 1
+ * @default 1
+ * @text Target ID
+ * @desc The follower's party slot or the event's id. Ignored for the player and this event.
+ *
+ * @arg iconSource
+ * @type select
+ * @option Item
+ * @option Weapon
+ * @option Armor
+ * @option Skill
+ * @option Icon Index
+ * @default Item
+ * @text Icon Source
+ * @desc Where the icon comes from. Naming a database row survives that row's icon being changed later.
+ *
+ * @arg iconId
+ * @type number
+ * @min 0
+ * @default 1
+ * @text Icon ID
+ * @desc The database id of the row, or the IconSet cell index when the source is Icon Index.
+ *
+ * @arg motion
+ * @type select
+ * @option present
+ * @option arc
+ * @option arc-reverse
+ * @option arc-oscillate
+ * @option spin
+ * @option spin-reverse
+ * @option stab-forward
+ * @option bash
+ * @option recoil
+ * @default present
+ * @text Motion
+ * @desc Which preset to pose the icon in. `present` lifts it straight up over the head.
+ *
+ * @arg duration
+ * @type number
+ * @min 1
+ * @default 20
+ * @text Duration
+ * @desc How many frames the motion takes. When held, this is how long reaching the pose takes.
+ *
+ * @arg repeats
+ * @type number
+ * @min 1
+ * @max 8
+ * @default 1
+ * @text Repeats
+ * @desc How many times the motion repeats within the duration. Rotations, for the spin presets.
+ *
+ * @arg spanDegrees
+ * @type number
+ * @min 30
+ * @max 300
+ * @default 120
+ * @text Arc Span
+ * @desc How wide the arc sweeps, in degrees. Only the arc presets read this.
+ *
+ * @arg hold
+ * @type boolean
+ * @default false
+ * @text Hold
+ * @desc Park at the final pose and stay there until Remove Overlay withdraws it.
+ *
+ * @arg sourceKey
+ * @type string
+ * @default command
+ * @text Source
+ * @desc Who owns this overlay. Removing a source only removes what that source applied.
+ *
+ * @command removeOverlay
+ * @text Remove Overlay
+ * @desc Takes down whatever a source was holding up on a character.
+ *
+ * @arg target
+ * @type select
+ * @option Player
+ * @option Follower
+ * @option Event
+ * @option This Event
+ * @default This Event
+ * @text Target
+ * @desc Which character to take the icon from.
+ *
+ * @arg targetId
+ * @type number
+ * @min 1
+ * @default 1
+ * @text Target ID
+ * @desc The follower's party slot or the event's id. Ignored for the player and this event.
+ *
+ * @arg sourceKey
+ * @type string
+ * @default command
+ * @text Source
+ * @desc Who is withdrawing. Only overlays applied under this same source are removed.
  */
 //endregion annotations

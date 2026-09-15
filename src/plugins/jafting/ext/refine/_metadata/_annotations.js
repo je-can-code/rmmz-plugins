@@ -135,10 +135,10 @@
  * the player from adding an unreasonable number of traits onto an equip.
  *
  * TAG FORMAT
- *  <maxTraitCount:NUM>
+ *  <maxRefinedTraits:NUM>
  *
  * TAG EXAMPLES
- *  <maxTraitCount:3>
+ *  <maxRefinedTraits:3>
  * An equip with this can only have a total of 3 unique traits.
  *
  * NOTE ABOUT LIMITS

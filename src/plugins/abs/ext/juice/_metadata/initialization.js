@@ -52,6 +52,7 @@ J.ABS.EXT.JUICE.Aliased = {};
 J.ABS.EXT.JUICE.Aliased.JABS_Engine = new Map();
 J.ABS.EXT.JUICE.Aliased.JABS_Battler = new Map();
 J.ABS.EXT.JUICE.Aliased.Scene_Map = new Map();
+J.ABS.EXT.JUICE.Aliased.Sprite_Character = new Map();
 
 /**
  * All regular expressions used by this plugin.

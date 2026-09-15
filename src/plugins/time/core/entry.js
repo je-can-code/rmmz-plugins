@@ -1,6 +1,7 @@
 import './_metadata/initialization.js';
 
 import './objects/TimeMapper.js';
+import './managers/TimePhases.js';
 import './_models/Game_Time.js';
 import './database/DataManager.js';
 import './objects/Game_Event.js';

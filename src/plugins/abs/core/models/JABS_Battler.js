@@ -2438,7 +2438,8 @@ class JABS_Battler
   };
 
   /**
-   * Determines the distance from this battler and the point.
+   * Determines the distance from this battler and the point.<br/>
+   * The result is full float precision on purpose - see the note in the body.
    * @param {number|null} x2 The x coordinate to check.
    * @param {number|null} y2 The y coordinate to check.
    * @returns {number|null} The distance from the battler to the point.
@@ -2446,11 +2447,17 @@ class JABS_Battler
   distanceToPoint(x2, y2)
   {
     if ((x2 ?? y2) === null) return null;
-    const x1 = this.getX();
-    const y1 = this.getY();
-    const distance = Math.hypot(x2 - x1, y2 - y1)
-      .toFixed(2);
-    return parseFloat(distance);
+
+    // the deltas are squared inline rather than handed to Math.hypot; hypot's extra work exists to
+    // survive intermediate overflow on astronomically large operands, which tile coordinates on a
+    // map measured in the low hundreds will never produce.
+    const deltaX = x2 - this.getX();
+    const deltaY = y2 - this.getY();
+
+    // this distance is deliberately left unrounded. every caller compares it against a radius,
+    // sorts by it, or folds it into a score - none display it, and none test it for equality. this
+    // sits on the per-frame AI sweep, so precision costs nothing here and formatting costs plenty.
+    return Math.sqrt(deltaX * deltaX + deltaY * deltaY);
   };
 
   /**

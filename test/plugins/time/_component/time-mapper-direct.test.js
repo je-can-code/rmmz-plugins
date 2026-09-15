@@ -7,7 +7,7 @@ import TimeMapper from '../../../../src/plugins/time/core/objects/TimeMapper.js'
 
 const MinuteChoice = /<minuteChoice:[ ]?(\d+)>/i;
 const HourChoice = /<hourChoice:[ ]?(\d+)>/i;
-const TimeOfDayChoice = /<timeOfDayChoice:[ ]?([0-5]|night|dawn|morning|afternoon|evening|twilight)>/i;
+const TimeOfDayChoice = /<timeOfDayChoice:[ ]?([0-5]|moontide|dawn|morning|afternoon|evening|night)>/i;
 const TimeRangeChoice = /<timeRangeChoice:[ ]?(\d{1,2}):(\d{1,2})-(\d{1,2}):(\d{1,2})>/i;
 const FullDateRangeChoice = /<fullDateRangeChoice:[ ]?(\[\d+, ?\d+, ?\d+, ?\d+, ?\d+])-(\[\d+, ?\d+, ?\d+, ?\d+, ?\d+])>/i;
 const MinuteRangeChoice = /<minuteRangeChoice:[ ]?(\d+)-(\d+)>/i;

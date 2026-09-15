@@ -37,19 +37,17 @@ describe('J-TIME plugin commands (direct src import)', () =>
       jumpToTimeOfDay: vi.fn(),
       deactivate: vi.fn(),
       activate: vi.fn(),
-      unlockTone: vi.fn(),
-      lockTone: vi.fn(),
     };
   });
 
-  it('registers all ten commands under the J-TIME plugin name', () =>
+  it('registers all eight commands under the J-TIME plugin name', () =>
   {
     // Arrange/Act (registration happened in beforeAll)
 
     // Assert
     expect(Object.keys(handlers)).toEqual([
       'hideMapTime', 'showMapTime', 'setTime', 'fastForwardtime', 'rewindTime',
-      'jumpToTimeOfDay', 'stopTime', 'startTime', 'unlockTone', 'lockTone',
+      'jumpToTimeOfDay', 'stopTime', 'startTime',
     ]);
   });
 
@@ -147,22 +145,5 @@ describe('J-TIME plugin commands (direct src import)', () =>
     expect(globalThis.$gameTime.activate).toHaveBeenCalled();
   });
 
-  it('unlockTone unlocks the screen tone', () =>
-  {
-    // Arrange/Act
-    handlers.unlockTone();
-
-    // Assert
-    expect(globalThis.$gameTime.unlockTone).toHaveBeenCalled();
-  });
-
-  it('lockTone locks the screen tone', () =>
-  {
-    // Arrange/Act
-    handlers.lockTone();
-
-    // Assert
-    expect(globalThis.$gameTime.lockTone).toHaveBeenCalled();
-  });
 });
 //endregion plugins/time/core/_metadata/plugin-commands.test.js

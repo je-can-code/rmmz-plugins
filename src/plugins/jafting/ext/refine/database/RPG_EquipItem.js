@@ -117,7 +117,7 @@ Object.defineProperty(RPG_EquipItem.prototype, "jaftingMaxRefineCount", {
 Object.defineProperty(RPG_EquipItem.prototype, "jaftingMaxTraitCount", {
   get: function()
   {
-    return RPGManager.getNumberFromNoteByRegex(this, J.JAFTING.EXT.REFINE.RegExp.MaxTraitCount);
+    return RPGManager.getNumberFromNoteByRegex(this, J.JAFTING.EXT.REFINE.RegExp.MaxRefinedTraits);
   },
 });
 //endregion maxRefineCount
