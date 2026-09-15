@@ -228,6 +228,11 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.3.0
+ *    Added the Apply Overlay and Remove Overlay plugin commands, showing any IconSet
+ *    cell over any character in one of nine presets, named by database row or by index.
+ *    A held overlay survives anything that rebuilds the map's sprites, because what is
+ *    stored is the request rather than the sprite.
  * - 1.2.1
  *    Corrected which hook the juice manager reads when resolving a motion.
  * - 1.2.0
