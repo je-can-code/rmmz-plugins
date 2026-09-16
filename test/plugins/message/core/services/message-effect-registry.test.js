@@ -23,10 +23,7 @@ describe('J-Message MessageEffectRegistry (direct src import)', () =>
   afterEach(() =>
   {
     // register() mutates a static map that outlives the test file; anything added has to go.
-    if (MessageEffectRegistry.isRegistered('testEffect') === true)
-    {
-      MessageEffectRegistry.register('testEffect', undefined);
-    }
+    MessageEffectRegistry.unregister('testEffect');
   });
 
   it('reports a built-in effect as registered', () =>
@@ -319,6 +316,139 @@ describe('J-Message MessageEffectRegistry (direct src import)', () =>
     // Assert
     expect(modulation.offsetX).toBe(0);
     expect(modulation.offsetY).toBe(0);
+  });
+
+  it('forgets an effect it is told to unregister', () =>
+  {
+    // Arrange
+    MessageEffectRegistry.register('testEffect', () => new MessageGlyphModulation(1, 1, null));
+
+    // Act
+    MessageEffectRegistry.unregister('testEffect');
+
+    // Assert
+    expect(MessageEffectRegistry.isRegistered('testEffect')).toBe(false);
+  });
+
+  it('reports how far up and down a waving glyph travels', () =>
+  {
+    // Arrange & Act
+    const excursion = MessageEffectRegistry.excursionOf([ 'wave' ]);
+
+    // Assert
+    expect(excursion.offsetY).toBe(4);
+    expect(excursion.offsetX).toBe(0);
+    expect(excursion.scale).toBe(1);
+  });
+
+  it('reports a jittering glyph as reaching equally far on both axes', () =>
+  {
+    // Arrange & Act
+    const excursion = MessageEffectRegistry.excursionOf([ 'jitter' ]);
+
+    // Assert
+    expect(excursion.offsetX).toBe(2);
+    expect(excursion.offsetY).toBe(2);
+  });
+
+  it('reports a pulsing glyph as swelling rather than moving', () =>
+  {
+    // Arrange & Act
+    const excursion = MessageEffectRegistry.excursionOf([ 'pulse' ]);
+
+    // Assert
+    expect(excursion.scale).toBe(1.18);
+    expect(excursion.offsetX).toBe(0);
+    expect(excursion.offsetY).toBe(0);
+  });
+
+  it('reports a rainbow glyph as needing no room at all', () =>
+  {
+    // Arrange & Act
+    // it only ever changes colour, and a colour occupies no pixels.
+    const excursion = MessageEffectRegistry.excursionOf([ 'rainbow' ]);
+
+    // Assert
+    expect(excursion.offsetX).toBe(0);
+    expect(excursion.offsetY).toBe(0);
+    expect(excursion.scale).toBe(1);
+  });
+
+  it('sums the reach of two effects acting on the same glyph', () =>
+  {
+    // Arrange & Act
+    // a glyph that waves and trembles gets all the way out to both at once, which is the case a
+    // container has to be big enough for.
+    const excursion = MessageEffectRegistry.excursionOf([ 'wave', 'jitter' ]);
+
+    // Assert
+    expect(excursion.offsetY).toBe(6);
+    expect(excursion.offsetX).toBe(2);
+  });
+
+  it('reports a glyph carrying no effects as needing no room', () =>
+  {
+    // Arrange & Act
+    const excursion = MessageEffectRegistry.excursionOf([]);
+
+    // Assert
+    expect(excursion.offsetX).toBe(0);
+    expect(excursion.offsetY).toBe(0);
+    expect(excursion.scale).toBe(1);
+  });
+
+  it('skips an uninstalled effect when reserving room rather than failing', () =>
+  {
+    // Arrange & Act
+    // the same reasoning as skipping it during modulation: the name came from a config file or a
+    // text code, and the plugin that answers to it may simply not be installed.
+    const excursion = MessageEffectRegistry.excursionOf([ 'wave', 'definitelyNotAnEffect' ]);
+
+    // Assert
+    expect(excursion.offsetY).toBe(4);
+  });
+
+  it('reserves room for a newly registered effect that declares its reach', () =>
+  {
+    // Arrange
+    const declaredReach = new MessageGlyphModulation(7, 9, null, 1.5);
+
+    // Act
+    MessageEffectRegistry.register('testEffect', () => MessageGlyphModulation.none(), declaredReach);
+    const excursion = MessageEffectRegistry.excursionOf([ 'testEffect' ]);
+
+    // Assert
+    expect(excursion.offsetX).toBe(7);
+    expect(excursion.offsetY).toBe(9);
+    expect(excursion.scale).toBe(1.5);
+  });
+
+  it('treats an effect that declares no reach as one that never moves', () =>
+  {
+    // Arrange & Act
+    // the safe default: an effect that does move and forgot to say so is drawn correctly and
+    // measured as though it were still, which is the author's bug to find rather than a crash.
+    MessageEffectRegistry.register('testEffect', () => new MessageGlyphModulation(50, 50, null));
+    const excursion = MessageEffectRegistry.excursionOf([ 'testEffect' ]);
+
+    // Assert
+    expect(excursion.offsetX).toBe(0);
+    expect(excursion.offsetY).toBe(0);
+    expect(excursion.scale).toBe(1);
+  });
+
+  it('still applies a newly registered effect that declares a reach', () =>
+  {
+    // Arrange
+    const declaredReach = new MessageGlyphModulation(7, 9, null, 1.5);
+
+    // Act
+    MessageEffectRegistry.register('testEffect', () => new MessageGlyphModulation(3, 4, null), declaredReach);
+    const modulation = MessageEffectRegistry.modulate([ 'testEffect' ], 0, 0);
+
+    // Assert- declaring a reach must not cost the effect its actual behaviour.
+    expect(modulation.offsetX).toBe(3);
+    expect(modulation.offsetY).toBe(4);
   });
 });
 //endregion plugins/message/core/services/message-effect-registry.test.js

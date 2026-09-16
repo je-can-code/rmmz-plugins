@@ -141,13 +141,35 @@ class MessageEffectRegistry
 
   /**
    * Every registered effect, by the name a glyph carries.
-   * @type {Map<string, function(number, number): MessageGlyphModulation>}
+   *
+   * Each entry pairs what the effect *does* on a given frame with how far it is ever willing to go.
+   * The second half exists because something eventually has to draw a container around moving text -
+   * a bubble, a panel, a frame - and sizing that container from where the glyphs are resting clips
+   * them the moment they move. Asking each effect for its own worst case is the only version of that
+   * question which keeps working when somebody registers a fifth effect.
+   * @type {Map<string, {modulate: function(number, number): MessageGlyphModulation, excursion: MessageGlyphModulation}>}
    */
   static #effects = new Map([
-    [ 'wave', MessageEffectRegistry.wave ],
-    [ 'jitter', MessageEffectRegistry.jitter ],
-    [ 'rainbow', MessageEffectRegistry.rainbow ],
-    [ 'pulse', MessageEffectRegistry.pulse ],
+    [ 'wave', {
+      modulate: MessageEffectRegistry.wave,
+      excursion: new MessageGlyphModulation(0, MessageEffectRegistry.WaveAmplitude, null, 1),
+    } ],
+    [ 'jitter', {
+      modulate: MessageEffectRegistry.jitter,
+      excursion: new MessageGlyphModulation(
+        MessageEffectRegistry.JitterRadius,
+        MessageEffectRegistry.JitterRadius,
+        null,
+        1),
+    } ],
+    [ 'rainbow', {
+      modulate: MessageEffectRegistry.rainbow,
+      excursion: MessageGlyphModulation.none(),
+    } ],
+    [ 'pulse', {
+      modulate: MessageEffectRegistry.pulse,
+      excursion: new MessageGlyphModulation(0, 0, null, 1 + MessageEffectRegistry.PulseAmplitude),
+    } ],
   ]);
 
   /**
@@ -155,12 +177,35 @@ class MessageEffectRegistry
    *
    * The extension seam. A plugin loading after J-Message registers its name here and adds the text
    * code that toggles it; nothing in core needs to learn the name.
+   *
+   * The excursion is optional and defaults to "this effect never moves the glyph", which is both the
+   * safe answer for a purely colour-based effect and the honest answer for an author who has not
+   * thought about it. An effect that does move and does not say so will be drawn correctly and
+   * *measured* as though it were still, so anything sizing a container around it will clip it.
    * @param {string} name The name a glyph will carry to request this effect.
    * @param {function(number, number): MessageGlyphModulation} effect The modulation function.
+   * @param {MessageGlyphModulation} excursion The furthest this effect ever displaces or swells a
+   * glyph, as absolute magnitudes rather than as a displacement to apply.
    */
-  static register(name, effect)
+  static register(name, effect, excursion = MessageGlyphModulation.none())
   {
-    MessageEffectRegistry.#effects.set(name, effect);
+    MessageEffectRegistry.#effects.set(name, {
+      modulate: effect,
+      excursion,
+    });
+  }
+
+  /**
+   * Takes an effect back out of the registry.
+   *
+   * The counterpart to the seam above, and the only honest way to undo a registration: the map is
+   * private, so an effect registered over the top of with a placeholder would still answer
+   * {@link isRegistered} with true and would still be reached for on every glyph carrying its name.
+   * @param {string} name The name to forget.
+   */
+  static unregister(name)
+  {
+    MessageEffectRegistry.#effects.delete(name);
   }
 
   /**
@@ -197,10 +242,41 @@ class MessageEffectRegistry
       // extension from taking the message down with it.
       if (effect === undefined) return;
 
-      modulations.push(effect(glyphIndex, frame));
+      modulations.push(effect.modulate(glyphIndex, frame));
     });
 
     return MessageGlyphModulation.compose(modulations);
+  }
+
+  /**
+   * The furthest everything acting on one glyph can ever throw or swell it.
+   *
+   * Not a modulation to apply - nothing should ever hand the result of this to a sprite. It is the
+   * envelope those modulations live inside, for whoever has to reserve room for them: the offsets
+   * are magnitudes in both directions rather than a signed displacement, and the scale is the
+   * largest the glyph ever gets rather than the size it is right now.
+   *
+   * Composed the same way a frame's modulations are, and for the same reasons - offsets sum because
+   * a glyph that waves *and* trembles reaches the sum of the two, and scales multiply because they
+   * are ratios. Tint is meaningless here and is left wherever composition puts it.
+   * @param {string[]} effectNames The effects the glyph carries.
+   * @returns {MessageGlyphModulation}
+   */
+  static excursionOf(effectNames)
+  {
+    const excursions = [];
+
+    effectNames.forEach(name =>
+    {
+      const effect = MessageEffectRegistry.#effects.get(name);
+
+      // an effect nobody has installed reserves no room, exactly as it contributes no motion.
+      if (effect === undefined) return;
+
+      excursions.push(effect.excursion);
+    });
+
+    return MessageGlyphModulation.compose(excursions);
   }
 
   /**

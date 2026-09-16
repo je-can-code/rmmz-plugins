@@ -113,7 +113,27 @@ Window_Message.prototype.setMessageProfile = function(profile)
  */
 Window_Message.prototype.addMessageWait = function(frames)
 {
-  this._waitCount += frames;
+  const waiting = this.waitCount();
+
+  this.setWaitCount(waiting + frames);
+};
+
+/**
+ * How many frames this window is still waiting before it reveals anything more.
+ * @returns {number}
+ */
+Window_Message.prototype.waitCount = function()
+{
+  return this._waitCount;
+};
+
+/**
+ * Sets how many frames this window waits before it reveals anything more.
+ * @param {number} frames The frames remaining.
+ */
+Window_Message.prototype.setWaitCount = function(frames)
+{
+  this._waitCount = frames;
 };
 
 /**
@@ -232,7 +252,111 @@ Window_Message.prototype.createTextState = function(text, x, y, width)
    */
   textState.glyphIndex = 0;
 
+  /**
+   * Where this state's glyphs go instead of onto the window's plane, if anywhere.
+   *
+   * Null for the message actually being read, which emits onto the plane the player is looking at.
+   * An array for a measuring pass, which wants the same glyphs handed back rather than displayed.
+   * @type {?MessageGlyph[]}
+   */
+  textState.glyphSink = null;
+
   return textState;
+};
+
+/**
+ * Builds a message's glyphs without showing any of them.
+ *
+ * The reason this exists: glyphs are emitted *as the text reveals*, a tick at a time, so on the frame
+ * a message opens there are none of them yet. Anything that needs to know how much room the message
+ * will occupy - a bubble sized to its own text, most obviously - is asking that question at the one
+ * moment the answer does not exist. This runs the entire pipeline ahead of time and collects what it
+ * produces, so the question has an answer before the first character appears.
+ *
+ * It is the whole pipeline on purpose rather than a cheaper estimate. Line breaking, face offsets,
+ * every escape code, font size changes mid-line and the database substitution codes all move glyphs
+ * around, and a measurement that reimplemented any of that would agree with the real thing right up
+ * until it did not.
+ * @param {string} text The message text, exactly as it will be revealed.
+ * @returns {MessageGlyph[]} Every glyph the message will produce, positioned.
+ */
+Window_Message.prototype.layoutMessageGlyphs = function(text)
+{
+  // the timing codes write to the window rather than to the text state - `\.` and `\|` add frames,
+  // `\!` sets the window waiting on the player - and a measuring pass that left those behind would
+  // hand the real message a pause it never asked for.
+  const heldWaitCount = this.waitCount();
+  const heldPause = this.pause;
+
+  const textState = this.buildMessageLayoutState(text);
+  this.processAllText(textState);
+
+  this.setWaitCount(heldWaitCount);
+  this.pause = heldPause;
+
+  return textState.glyphSink;
+};
+
+/**
+ * Prepares a text state for measuring, set up exactly as the real one will be.
+ *
+ * Mirrors what `startMessage` and `newPage` do between them, because anything they do that moves a
+ * glyph has to have happened before the glyphs are counted: the face pushes the first line right,
+ * and the font settings decide how wide every character measures.
+ * @param {string} text The message text, exactly as it will be revealed.
+ * @returns {RPG_TextState}
+ */
+Window_Message.prototype.buildMessageLayoutState = function(text)
+{
+  const textState = this.createTextState(text, 0, 0, this.innerWidth);
+
+  // the face image, if there is one, is what decides where the first line starts.
+  textState.x = this.newLineX(textState);
+  textState.startX = textState.x;
+  textState.y = 0;
+
+  // collecting rather than displaying is the whole difference between this pass and the real one.
+  textState.glyphSink = [];
+
+  // whatever the last message left the font as is not what this one will be measured at.
+  this.resetFontSettings();
+  textState.height = this.calcTextHeight(textState);
+
+  return textState;
+};
+
+/**
+ * Whether a text state should produce glyphs rather than pixels.
+ *
+ * Two kinds qualify: the message being read aloud, and a measuring pass that has somewhere to put
+ * what it builds. Everything else on this window - `drawTextEx` from a subclass, `textSizeEx` from
+ * the engine - is ordinary drawing and keeps landing in `contents` exactly as it always has.
+ * @param {RPG_TextState} textState The text state in question.
+ * @returns {boolean}
+ */
+Window_Message.prototype.isEmittingGlyphs = function(textState)
+{
+  if (this.isRevealingTextState(textState) === true) return true;
+
+  return textState.glyphSink !== null;
+};
+
+/**
+ * Files one glyph wherever the state it came from wants its glyphs.
+ * @param {MessageGlyph} glyph The glyph to file.
+ * @param {RPG_TextState} textState The text state that produced it.
+ */
+Window_Message.prototype.addMessageGlyph = function(glyph, textState)
+{
+  if (textState.glyphSink !== null)
+  {
+    textState.glyphSink.push(glyph);
+
+    return;
+  }
+
+  this.messageGlyphLayer()
+    .addGlyph(glyph);
 };
 
 /**
@@ -343,7 +467,7 @@ Window_Message.prototype.playMessageVoice = function(textState, character, profi
 J.MESSAGE.Aliased.Window_Message.set('flushTextState', Window_Base.prototype.flushTextState);
 Window_Message.prototype.flushTextState = function(textState)
 {
-  if (this.isRevealingTextState(textState) === false)
+  if (this.isEmittingGlyphs(textState) === false)
   {
     // perform original logic.
     J.MESSAGE.Aliased.Window_Message.get('flushTextState')
@@ -419,8 +543,7 @@ Window_Message.prototype.emitMessageGlyphRun = function(run, x, y, textState)
 
   const glyphs = MessageGlyphRunSplitter.split(run, origin, style, measure);
 
-  const layer = this.messageGlyphLayer();
-  glyphs.forEach(glyph => layer.addGlyph(glyph));
+  glyphs.forEach(glyph => this.addMessageGlyph(glyph, textState));
 
   textState.glyphIndex += glyphs.length;
 };
@@ -451,7 +574,7 @@ Window_Message.prototype.buildMessageGlyphStyle = function(textState)
 J.MESSAGE.Aliased.Window_Message.set('processDrawIcon', Window_Base.prototype.processDrawIcon);
 Window_Message.prototype.processDrawIcon = function(iconIndex, textState)
 {
-  if (this.isRevealingTextState(textState) === false)
+  if (this.isEmittingGlyphs(textState) === false)
   {
     // perform original logic.
     J.MESSAGE.Aliased.Window_Message.get('processDrawIcon')
@@ -482,8 +605,7 @@ Window_Message.prototype.emitMessageIconGlyph = function(iconIndex, textState)
     const style = this.buildMessageGlyphStyle(textState);
     const glyph = MessageGlyph.forIcon(iconIndex, x, y, advance, textState.glyphIndex, style);
 
-    this.messageGlyphLayer()
-      .addGlyph(glyph);
+    this.addMessageGlyph(glyph, textState);
 
     textState.glyphIndex += 1;
   }

@@ -29,6 +29,16 @@ export function setPluginContextToJMessage(sandbox = globalThis)
 }
 
 /**
+ * Flips the bare `__PLUGIN_NAME__`/`__PLUGIN_VERSION__` globals to J-Message-Bubbles' identity.
+ * @param {object} [sandbox] Defaults to `globalThis`.
+ */
+export function setPluginContextToJMessageBubbles(sandbox = globalThis)
+{
+  sandbox.__PLUGIN_NAME__ = 'J-Message-Bubbles';
+  sandbox.__PLUGIN_VERSION__ = '1.0.0';
+}
+
+/**
  * Globals required for J-Message's Game_Event/Game_Message/Window_Base.js to evaluate when
  * direct-imported into the real Vitest realm instead of a nested vm context.
  * @param {object} [sandbox] Defaults to `globalThis` so direct-import tests can call this with no target arg.
