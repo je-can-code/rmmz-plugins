@@ -6275,7 +6275,7 @@ The minimap never renders on this map.
 
 ---
 
-## J-MessageTextCodes (`src/plugins/message/core/`)
+## J-Message (`src/plugins/message/core/`)
 
 Adds new `\Code[ID]` text codes for database entries (not covered here — this reference is for
 `<tag>` notetags only) and a family of `<tag>` conditionals for hiding/showing "Show Choices"
@@ -6321,6 +6321,73 @@ the "Show Choices" command is evaluated
 This choice is only visible while switch 222 is ON.
 
 **See also:** `<leaderChoiceCondition>`, `<notLeaderChoiceCondition>`
+
+---
+
+## J-Message-Chatter (`src/plugins/message/ext/chatter/`)
+
+### `<chatter:LINE>`
+
+**Applies to:**
+Event page comments
+
+**When:**
+the page becomes active, and for as long as it stays active
+
+**Effect:**
+gives this character something to mutter to themselves as the player walks past — no button pressed,
+no interpreter blocked, no input taken. Repeat the tag to give them a pool; the picker chooses
+between them at random and never says the same line twice in a row. A page carrying no `<chatter:>`
+tags is how chatter is switched off, so a merchant who has closed up for the night is simply page two
+without one.
+
+A line may not contain `<` or `>`. A comment carrying either is dropped before any plugin is offered
+it, and the character silently says nothing. Everything else in ordinary prose is fine, question
+marks and parentheses included.
+
+```
+<chatter:Lovely weather, isn't it.>
+<chatter:Anything I can get you? Half price today.>
+```
+This character says one of these two lines whenever the player is in earshot and their wait is up.
+
+**See also:** `<chatterRadius>`, `<chatterCooldown>`, `<chatterDelay>`, `<chatterDuration>`,
+`<chatterSpeed>`, `<chatterPosition>`
+
+---
+
+### `<chatterRadius:TILES>` / `<chatterCooldown:FRAMES>` / `<chatterDelay:FRAMES>` / `<chatterDuration:FRAMES>` / `<chatterSpeed:FRAMES>` / `<chatterPosition:WHERE>` / `<chatterBackground:WHAT>`
+
+**Applies to:**
+Event page comments
+
+**When:**
+the page becomes active; each overrides the project default for this character only
+
+**Effect:**
+tunes one character's chatter. Every one is optional, and most chattering events want none of them —
+they exist for the excitable child and the bemoaning merchant. The project's own defaults live in the
+`chatter` section of `data/config.message.json`; the plugin's defaults, used when that section is
+absent, are the values shown below.
+
+| Tag | Default | Means |
+|---|---|---|
+| `<chatterRadius:TILES>` | 5 | how far away the player can still hear them. Distance between two points — walls are not consulted |
+| `<chatterCooldown:FRAMES>` | 600 | how long they rest after a line. Counted from when the line **ends** |
+| `<chatterDelay:FRAMES>` | 300 | the longest they wait before starting a line. The actual wait is rolled somewhere in that range every time, which is what keeps a row of shopkeepers out of lockstep, and it only counts down while the player is close enough to hear how it ends |
+| `<chatterDuration:FRAMES>` | 180 | how long a finished line stays up. Counted from when it **finishes typing out**, so a long line is readable for as long as a short one |
+| `<chatterSpeed:FRAMES>` | 2 | frames per character as the line types itself out. `0` shows the whole line at once |
+| `<chatterPosition:WHERE>` | `top` | `top`, `middle` or `bottom` — which side of the character the bubble sits on, exactly as the Show Text Position dropdown means it to a `\pop` message. `middle` behaves as `top` does |
+| `<chatterBackground:WHAT>` | `window` | `window`, `dim` or `transparent` — the Show Text Background dropdown's own three. `dim` greys the bubble and makes it half see-through, so the character reads as muttering under their breath permanently rather than on one line |
+
+```
+<chatter:Mind the step.>
+<chatterRadius:2>
+<chatterCooldown:900>
+```
+This character is only heard from two tiles away and takes fifteen seconds between lines.
+
+**See also:** `<chatter>`
 
 ---
 

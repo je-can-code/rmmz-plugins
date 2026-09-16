@@ -5,10 +5,10 @@
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
- * @base J-MessageTextCodes
+ * @base J-Message
  * @orderAfter J-Base
  * @orderAfter J-ABS
- * @orderAfter J-MessageTextCodes
+ * @orderAfter J-Message
  * @help
  * ============================================================================
  * OVERVIEW
@@ -32,7 +32,7 @@
  *
  * Depends on other plugins of mine:
  * - J-Base (used for drawing the logs properly onto the window)
- * - J-MessageTextCodes (used for translating text codes in logging)
+ * - J-Message (used for translating text codes in logging)
  *
  * Integrates with others of mine plugins:
  * - J-ABS; enables logging of the player/allies/enemies' actions.
@@ -113,6 +113,10 @@
  * JABS integration (when installed) and by plugin commands.
  * ============================================================================
  * CHANGELOG:
+ * - 3.0.2
+ *    Renamed the declared dependency on J-MessageTextCodes to J-Message, which
+ *    is what that plugin's file is called now. Left as it was, the base
+ *    declaration named a plugin no project would have installed.
  * - 3.0.1
  *    Routed the non-array DiaLog warning through J-Base's new Diagnostics. That
  *    channel is for developer console output and is unrelated to the log windows

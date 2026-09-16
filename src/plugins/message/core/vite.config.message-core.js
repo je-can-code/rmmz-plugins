@@ -9,7 +9,7 @@ const thisConfig = defineConfig({
   build: {
     rolldownOptions: {
       input: {
-        'message/J-MessageTextCodes': path.resolve(_dirname, './entry.js'),
+        'message/J-Message': path.resolve(_dirname, './entry.js'),
       },
     },
   },

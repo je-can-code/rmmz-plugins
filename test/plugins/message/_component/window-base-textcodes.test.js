@@ -3,7 +3,7 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { installMessageHostGlobals, setPluginContextToJBase, setPluginContextToJMessage } from './fixtures/install-message-host-globals.js';
 
-describe('J-MessageTextCodes Window_Base text codes (direct src import)', () =>
+describe('J-Message Window_Base text codes (direct src import)', () =>
 {
   beforeAll(async () =>
   {

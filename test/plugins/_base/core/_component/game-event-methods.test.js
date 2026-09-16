@@ -250,6 +250,59 @@ describe('J-Base Game_Event methods (direct src import)', () =>
       // Assert
       expect(result).toBe(false);
     });
+
+    it('admits a tag carrying message effect codes', () =>
+    {
+      // Arrange & Act
+      // `~`, `%` and `=` are J-Message's effect codes. A tag holding message text has to be able to
+      // carry them, and before they were admitted the entire tag was dropped without a word.
+      const waving = globalThis.Game_Event.filterInvalidEventCommand(commentCommand('<line:she said \\~this\\~>'));
+      const trembling = globalThis.Game_Event.filterInvalidEventCommand(commentCommand('<line:\\%scared\\%>'));
+      const cycling = globalThis.Game_Event.filterInvalidEventCommand(commentCommand('<line:\\=shiny\\=>'));
+
+      // Assert
+      expect(waving).toBe(true);
+      expect(trembling).toBe(true);
+      expect(cycling).toBe(true);
+    });
+
+    it('admits a tag carrying ordinary sentence punctuation', () =>
+    {
+      // Arrange & Act
+      // a tag whose value is prose somebody says out loud is ordinary now, and a shopkeeper asking a
+      // question is the single most likely line anybody writes. Before these were admitted the whole
+      // tag was dropped without a word.
+      const asking = globalThis.Game_Event.filterInvalidEventCommand(commentCommand('<line:Anything I can get you?>'));
+      const aside = globalThis.Game_Event.filterInvalidEventCommand(commentCommand('<line:Half price (today only)>'));
+      const joining = globalThis.Game_Event.filterInvalidEventCommand(commentCommand('<line:Mind the step; it is loose.>'));
+
+      // Assert
+      expect(asking).toBe(true);
+      expect(aside).toBe(true);
+      expect(joining).toBe(true);
+    });
+
+    it('still refuses a tag carrying characters the pattern does not admit', () =>
+    {
+      // Arrange & Act
+      // widening the class is not opening it: an ampersand remains outside, so this stays a
+      // deliberate allowlist rather than "anything between angle brackets".
+      const result = globalThis.Game_Event.filterInvalidEventCommand(commentCommand('<line:fish & chips>'));
+
+      // Assert
+      expect(result).toBe(false);
+    });
+
+    it('refuses a tag whose value carries an angle bracket of its own', () =>
+    {
+      // Arrange & Act
+      // the authoring trap worth knowing about: the pattern anchors on the brackets, so a value
+      // containing either drops the entire tag and the plugin reading it simply never sees one.
+      const result = globalThis.Game_Event.filterInvalidEventCommand(commentCommand('<line:a > b>'));
+
+      // Assert
+      expect(result).toBe(false);
+    });
   });
 
   describe('matchesControlCode (static)', () =>

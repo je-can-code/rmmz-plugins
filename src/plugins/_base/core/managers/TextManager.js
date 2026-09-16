@@ -115,7 +115,7 @@ TextManager.rewardDescription = function(paramId)
 
 /**
  * Whether a given registry key is a known catalog parameter.<br/>
- * Public surface for other plugins (e.g. J-MessageTextCodes) to distinguish "unregistered key"
+ * Public surface for other plugins (e.g. J-Message) to distinguish "unregistered key"
  * from a legitimately-falsy/zero result, since {@link TextManager.parameterLabel}/
  * {@link IconManager.parameterIcon}/{@link ColorManager.parameterColor} each fall back to a
  * plausible-looking default instead of surfacing the miss.

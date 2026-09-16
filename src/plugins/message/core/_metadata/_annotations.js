@@ -13,6 +13,8 @@
  * This plugin grants additional message functionality.
  * - Adds new text codes for various database objects.
  * - Adds new conditionals for showing/hiding choices.
+ * - Adds text codes that animate the text itself.
+ * - Gives each speaker their own voice and reading pace.
  *
  * ============================================================================
  * NEW TEXT CODES:
@@ -97,6 +99,70 @@
  * In the passage above, the words "at last" would be italicized.
  *
  * ============================================================================
+ * ANIMATED TEXT
+ * Bold and italics change how a letter is drawn. These change what it does
+ * afterward- the letters of a message are individually animated objects, so
+ * they can be made to move and change colour while they sit there.
+ *
+ * Like bold and italics, each of these is a toggle: the first one opens the
+ * effect and the next one closes it again. An effect left open closes on its
+ * own at the end of the page.
+ *
+ * ANIMATED TEXT CODES AVAILABLE:
+ *  \~  the text rolls up and down like a wave
+ *  \%  the text trembles in place
+ *  \=  the text cycles through the colours of the rainbow
+ *  \+  the text swells and settles again, like breathing
+ *
+ * The symbols are picked to look like what they do, so that a passage full of
+ * them still reads: a tilde is a wave, a percent sign cannot make up its mind
+ * whether it is going up or down, and a plus is something getting bigger.
+ *
+ * NOTE ON \+ AND EVENT COMMENTS:
+ * Of the four, only \+ may appear inside an event comment tag. The others are
+ * dropped by the comment parser before any plugin sees them, because ~, % and =
+ * are not in the character set it accepts. This only matters for tags, not for
+ * Show Text, where all four work everywhere.
+ *
+ * ANIMATED TEXT EXAMPLES:
+ *  "whoa, that is \~incredible\~."
+ * In the passage above, the word "incredible" would roll like a wave.
+ *
+ *  "d-did you \%hear\% that?"
+ * In the passage above, the word "hear" would tremble.
+ *
+ *  "the door is \+locked\+."
+ * In the passage above, the word "locked" would swell and settle.
+ *
+ * These stack with everything else, so \*\~shouting\~\* is both bold and
+ * waving, and a colour code inside a wave keeps its colour while it moves.
+ *
+ * ============================================================================
+ * SPEAKER VOICES
+ * Every message already knows who is speaking- either from the Name field of
+ * the Show Text command, or from the face image it carries. That is enough to
+ * give each character a voice of their own without editing a single line of
+ * dialogue that has already been written.
+ *
+ * A speaker profile controls:
+ *  - the sound that plays as their letters appear, and its pitch
+ *  - how many letters pass between one of those sounds and the next
+ *  - how long they linger on each letter
+ *  - how long they pause on particular punctuation
+ *  - effects that act on everything they say, with no text code needed
+ *
+ * Profiles are authored in "data/config.message.json". Unlike the other
+ * configs in this suite, this one is optional: a project without it behaves
+ * exactly as it did before, with every speaker on the engine's own pace and no
+ * sound at all.
+ *
+ * The profile key is whatever literally sits in the Name field, which means a
+ * message whose Name field reads "\N[1]" is keyed as "\N[1]" and NOT as the
+ * actor's name. Messages with no Name field fall back to a key built from the
+ * face image and its index, like "People2:3", so that eight characters sharing
+ * one face sheet can still sound like eight different people.
+ *
+ * ============================================================================
  * NEW CHOICE CONDITIONALS
  * Have you ever wanted to be able to conditionally make choices appear based
  * on a situation like a switch or who the leader currently is? Well now you
@@ -141,6 +207,28 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 2.0.0
+ *    Renamed from J-MessageTextCodes. Update the entry in js/plugins.js and
+ *    delete the old file; nothing else in a project has to change.
+ *    Message text is now drawn as one sprite per character rather than baked
+ *    into the window's bitmap, which is what lets a letter move after it has
+ *    been drawn. Added \~ wave, \% jitter, \= rainbow and \+ pulse, which
+ *    nest with each other and with the engine's own codes.
+ *    Added speaker profiles, read from data/config.message.json and keyed by
+ *    the Name field or the face. A profile carries a voice, a pace, per-
+ *    punctuation beats and effects that act on everything that speaker says,
+ *    so dialogue already written gains a character without being edited.
+ *    Added layoutMessageGlyphs, which builds a message's glyphs before any of
+ *    them are revealed - the only way something drawing a container around
+ *    them can know its size on the frame it opens.
+ *    Effects now declare how far they travel, so a container can reserve room
+ *    for an effect it has never heard of.
+ *    Added a named-section accessor for the external config, so an extension
+ *    can read its own settings without opening the file a second time.
+ *    A finished message now fades out over about half a second rather than
+ *    blinking away. The engine's own close hides a window's client area on
+ *    its first frame, so the text always left instantly no matter how long
+ *    the frame took to collapse. Length is the "fade" section of the config.
  * - 1.3.1
  *    Fixed choice conditionals not hiding branches inside called common events.
  * - 1.3.0

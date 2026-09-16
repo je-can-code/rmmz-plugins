@@ -22,7 +22,7 @@
  * @orderAfter J-ABS-Shield
  * @orderAfter J-Extend
  * @orderAfter J-HUD-TargetFrame
- * @orderAfter J-MessageTextCodes
+ * @orderAfter J-Message
  * @orderAfter J-HUD
  * @orderAfter J-Resources-ABS
  * @help
@@ -267,6 +267,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.2.1
+ *    Renamed the declared dependency on J-MessageTextCodes to J-Message, which
+ *    is what that plugin's file is called now.
  * - 1.2.0
  *    Random affix rolling can be held behind a switch, so a world can stay ordinary
  *    until the story says otherwise. Affixes written onto an event or an enemy are a
