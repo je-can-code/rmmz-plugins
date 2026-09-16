@@ -62,7 +62,7 @@ class ChatterTagParser
     {
       ChatterTagParser.readLine(comment, values);
       ChatterTagParser.readNumbers(comment, values);
-      ChatterTagParser.readPosition(comment, values);
+      ChatterTagParser.readWords(comment, values);
     }, this);
 
     return values;
@@ -113,21 +113,31 @@ class ChatterTagParser
   }
 
   /**
-   * Reads which side of the character their chatter sits on, if a comment says.
+   * Reads whichever of the worded knobs a comment carries.
    * @param {string} comment The comment text to read.
    * @param {object} values The values being assembled.
    */
-  static readPosition(comment, values)
+  static readWords(comment, values)
   {
-    const match = J.MESSAGE.EXT.CHATTER.RegExp.ChatterPosition.exec(comment);
+    const patterns = J.MESSAGE.EXT.CHATTER.RegExp;
 
-    if (match === null) return;
+    const wordedTags = [
+      [ patterns.ChatterPosition, 'position' ],
+      [ patterns.ChatterBackground, 'background' ],
+    ];
 
-    const [ , position ] = match;
+    wordedTags.forEach(([ pattern, field ]) =>
+    {
+      const match = pattern.exec(comment);
 
-    // the pattern is case-insensitive because an author typing `Top` meant `top`, and everything
-    // downstream compares against the lowercase word.
-    values.position = position.toLowerCase();
+      if (match === null) return;
+
+      const [ , word ] = match;
+
+      // the patterns are case-insensitive because an author typing `Top` meant `top`, and everything
+      // downstream compares against the lowercase word.
+      values[ field ] = word.toLowerCase();
+    });
   }
 }
 

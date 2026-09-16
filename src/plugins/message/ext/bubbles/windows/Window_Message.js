@@ -373,15 +373,6 @@ Window_Message.prototype.resizeMessageBubble = function(x, y, width, height)
 };
 
 /**
- * The plate the engine draws a speaker's name on.
- * @returns {Window_NameBox}
- */
-Window_Message.prototype.nameBoxWindow = function()
-{
-  return this._nameBoxWindow;
-};
-
-/**
  * Extends {@link #updateSpeakerName}.<br/>
  * Also keeps the engine's name plate out of the way of the bubble's own legend.
  *
@@ -472,6 +463,30 @@ Window_Message.prototype.terminateMessage = function()
   this.bubbleSprite().visible = false;
 
   this.restoreRestingRect();
+};
+
+/**
+ * Extends {@link #beginMessageFade}.<br/>
+ * Also declines the fade entirely for a message that floats.
+ *
+ * A floating message does not need fading out, because it is not going anywhere: the spent bubble
+ * left behind in its place is the same words in the same spot, and the handover is already a drop
+ * from full brightness to dimmed. Fading the live one as well would put two copies of one line on
+ * top of each other for half a second, and the thing being crossfaded would be a bubble with itself.
+ */
+J.MESSAGE.EXT.BUBBLES.Aliased.Window_Message.set('beginMessageFade', Window_Message.prototype.beginMessageFade);
+Window_Message.prototype.beginMessageFade = function()
+{
+  if (this.isFloatingMessage() === true)
+  {
+    this.finishMessageFade();
+
+    return;
+  }
+
+  // perform original logic.
+  J.MESSAGE.EXT.BUBBLES.Aliased.Window_Message.get('beginMessageFade')
+    .call(this);
 };
 
 /**

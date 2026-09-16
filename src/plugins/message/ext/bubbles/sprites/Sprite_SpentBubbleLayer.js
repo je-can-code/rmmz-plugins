@@ -44,6 +44,12 @@ class Sprite_SpentBubbleLayer
      * @type {Map<string, Sprite_SpentBubble>}
      */
     this._j._bubbles = new Map();
+
+    /**
+     * The bubbles still on this plane but on their way off it.
+     * @type {FadingSprites}
+     */
+    this._j._departing = new FadingSprites();
   }
 
   /**
@@ -56,14 +62,35 @@ class Sprite_SpentBubbleLayer
   }
 
   /**
+   * The bubbles on their way off this plane.
+   * @returns {FadingSprites}
+   */
+  departingBubbles()
+  {
+    return this._j._departing;
+  }
+
+  /**
    * Extend the update to keep this plane agreeing with the conversation.
    */
   update()
   {
     this.syncSpentBubbles();
+    this.updateDepartingBubbles();
 
     // perform original logic, which is what ticks each bubble into position over its owner.
     super.update();
+  }
+
+  /**
+   * Fades out whatever is leaving, and takes it off the plane once it has.
+   */
+  updateDepartingBubbles()
+  {
+    const finished = this.departingBubbles()
+      .update(MessageFade.alphaAt);
+
+    finished.forEach(({ sprite }) => this.removeChild(sprite));
   }
 
   /**
@@ -97,7 +124,11 @@ class Sprite_SpentBubbleLayer
       const sprite = this.bubbles()
         .get(token);
 
-      this.removeChild(sprite);
+      // handed over rather than removed. A conversation ending is the most visible disappearance in
+      // the whole system - several bubbles at once - and it is the one worth not being abrupt about.
+      this.departingBubbles()
+        .begin(token, sprite, MessageFade.frames());
+
       this.bubbles()
         .delete(token);
     });
@@ -115,6 +146,16 @@ class Sprite_SpentBubbleLayer
 
     // already drawn, and its own update is what keeps it over its owner.
     if (existing !== undefined) return;
+
+    // somebody who started talking again mid-departure. The bubble on its way out is showing the
+    // line before this one, so it goes rather than being caught and reused.
+    const interrupted = this.departingBubbles()
+      .take(token);
+
+    if (interrupted !== null)
+    {
+      this.removeChild(interrupted);
+    }
 
     const sprite = new Sprite_SpentBubble(token, entry);
 

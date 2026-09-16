@@ -1,5 +1,6 @@
 //region Window_Message
 import MessageEffectSet from '../services/MessageEffectSet.js';
+import MessageFade from '../services/MessageFade.js';
 import MessageGlyph from '../__models/MessageGlyph.js';
 import MessageGlyphRunSplitter from '../services/MessageGlyphRunSplitter.js';
 import MessageGlyphStyle from '../__models/MessageGlyphStyle.js';
@@ -69,6 +70,21 @@ Window_Message.prototype.initMessageGlyphMembers = function()
    * @type {Sprite_MessageGlyphLayer}
    */
   this._j._message._glyphLayer = new Sprite_MessageGlyphLayer();
+
+  /**
+   * How many frames this window has been fading out for, or -1 when it is not.
+   * @type {number}
+   */
+  this._j._message._fadeElapsed = Window_Message.NotFading;
+
+  /**
+   * How many frames this window's fade runs for in total.
+   *
+   * Captured when the fade begins rather than asked for each frame, so a config reloaded mid-fade
+   * cannot change the length of one already running.
+   * @type {number}
+   */
+  this._j._message._fadeFrames = 0;
 
   // parenting into the client area rather than the window buys the padding, the scroll origin,
   // the open/close visibility and the draw order above contents, all of it already correct.
@@ -380,8 +396,14 @@ Window_Message.prototype.newPage = function(textState)
 };
 
 /**
+ * The elapsed value meaning this window is not fading out.
+ * @type {number}
+ */
+Window_Message.NotFading = -1;
+
+/**
  * Extends {@link #terminateMessage}.<br/>
- * Also releases the glyphs the closing message was holding.
+ * Also begins fading the finished message out rather than letting it blink away.
  */
 J.MESSAGE.Aliased.Window_Message.set('terminateMessage', Window_Message.prototype.terminateMessage);
 Window_Message.prototype.terminateMessage = function()
@@ -390,8 +412,173 @@ Window_Message.prototype.terminateMessage = function()
   J.MESSAGE.Aliased.Window_Message.get('terminateMessage')
     .call(this);
 
+  this.beginMessageFade();
+};
+
+/**
+ * How many frames this window has been fading out for.
+ * @returns {number}
+ */
+Window_Message.prototype.fadeElapsed = function()
+{
+  return this._j._message._fadeElapsed;
+};
+
+/**
+ * Sets how many frames this window has been fading out for.
+ * @param {number} elapsed The frames elapsed, or {@link Window_Message.NotFading}.
+ */
+Window_Message.prototype.setFadeElapsed = function(elapsed)
+{
+  this._j._message._fadeElapsed = elapsed;
+};
+
+/**
+ * How many frames this window's fade runs for in total.
+ * @returns {number}
+ */
+Window_Message.prototype.fadeFrames = function()
+{
+  return this._j._message._fadeFrames;
+};
+
+/**
+ * Sets how many frames this window's fade runs for in total.
+ * @param {number} frames The length of the fade.
+ */
+Window_Message.prototype.setFadeFrames = function(frames)
+{
+  this._j._message._fadeFrames = frames;
+};
+
+/**
+ * Whether this window is currently fading out.
+ * @returns {boolean}
+ */
+Window_Message.prototype.isFadingMessage = function()
+{
+  return this.fadeElapsed() !== Window_Message.NotFading;
+};
+
+/**
+ * Starts fading the finished message out.
+ *
+ * The original `terminateMessage` has just called `close()`, which begins the engine's own vertical
+ * collapse - and the first frame of that collapse hides the window's client area, taking every
+ * letter with it. So the collapse is undone here and replaced with a fade: the window is held fully
+ * open and made progressively transparent instead, which is the only way the text is still on screen
+ * to leave with it.
+ */
+Window_Message.prototype.beginMessageFade = function()
+{
+  const frames = MessageFade.frames();
+
+  this.setFadeFrames(frames);
+  this.setFadeElapsed(0);
+
+  // a project that has configured the fade away asked for the message to be gone, and it is.
+  if (frames <= 0)
+  {
+    this.finishMessageFade();
+
+    return;
+  }
+
+  // `open()` rather than reaching for the closing flag directly: it is the engine's own way of
+  // saying "not closing", and the openness is already where it needs to be.
+  this.openness = 255;
+  this.open();
+};
+
+/**
+ * Advances the fade by one frame, ending it when it has run its course.
+ */
+Window_Message.prototype.updateMessageFade = function()
+{
+  if (this.isFadingMessage() === false) return;
+
+  const frames = this.fadeFrames();
+  const elapsed = this.fadeElapsed() + 1;
+
+  this.setFadeElapsed(elapsed);
+  this.setMessageAlpha(MessageFade.alphaAt(elapsed, frames));
+
+  if (MessageFade.isFinished(elapsed, frames) === false) return;
+
+  this.finishMessageFade();
+};
+
+/**
+ * Takes the faded message off the screen.
+ */
+Window_Message.prototype.finishMessageFade = function()
+{
+  this.setFadeElapsed(Window_Message.NotFading);
+  this.setMessageAlpha(1);
+
+  this.openness = 0;
+
   this.messageGlyphLayer()
     .clearGlyphs();
+};
+
+/**
+ * Abandons a fade because the next message has arrived.
+ *
+ * The openness is deliberately left alone. Vanilla keeps the box seamlessly open when the following
+ * text is already queued, and zeroing it here would make every line of a conversation re-open with
+ * a little squeeze that the engine never had.
+ */
+Window_Message.prototype.cancelMessageFade = function()
+{
+  this.setFadeElapsed(Window_Message.NotFading);
+  this.setMessageAlpha(1);
+};
+
+/**
+ * Sets how opaque the whole message is, plate included.
+ *
+ * The name plate is a window of its own that merely copies this one's openness, so left out of the
+ * fade it would sit at full brightness over a message dissolving underneath it and then snap away.
+ * @param {number} alpha The opacity, from one down to zero.
+ */
+Window_Message.prototype.setMessageAlpha = function(alpha)
+{
+  this.alpha = alpha;
+
+  this.nameBoxWindow().alpha = alpha;
+};
+
+/**
+ * The plate the engine draws a speaker's name on.
+ * @returns {Window_NameBox}
+ */
+Window_Message.prototype.nameBoxWindow = function()
+{
+  return this._nameBoxWindow;
+};
+
+/**
+ * Extends {@link #update}.<br/>
+ * Also runs the fade, and abandons it the moment another message is waiting.
+ *
+ * The abandoning happens before the original on purpose. The original is what starts the next
+ * message, and a fade still running when it does would take the new message's own letters down with
+ * it.
+ */
+J.MESSAGE.Aliased.Window_Message.set('update', Window_Message.prototype.update);
+Window_Message.prototype.update = function()
+{
+  if (this.isFadingMessage() === true && $gameMessage.isBusy() === true)
+  {
+    this.cancelMessageFade();
+  }
+
+  // perform original logic.
+  J.MESSAGE.Aliased.Window_Message.get('update')
+    .call(this);
+
+  this.updateMessageFade();
 };
 
 /**

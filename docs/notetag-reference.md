@@ -6356,7 +6356,7 @@ This character says one of these two lines whenever the player is in earshot and
 
 ---
 
-### `<chatterRadius:TILES>` / `<chatterCooldown:FRAMES>` / `<chatterDelay:FRAMES>` / `<chatterDuration:FRAMES>` / `<chatterSpeed:FRAMES>` / `<chatterPosition:WHERE>`
+### `<chatterRadius:TILES>` / `<chatterCooldown:FRAMES>` / `<chatterDelay:FRAMES>` / `<chatterDuration:FRAMES>` / `<chatterSpeed:FRAMES>` / `<chatterPosition:WHERE>` / `<chatterBackground:WHAT>`
 
 **Applies to:**
 Event page comments
@@ -6378,6 +6378,7 @@ absent, are the values shown below.
 | `<chatterDuration:FRAMES>` | 180 | how long a finished line stays up. Counted from when it **finishes typing out**, so a long line is readable for as long as a short one |
 | `<chatterSpeed:FRAMES>` | 2 | frames per character as the line types itself out. `0` shows the whole line at once |
 | `<chatterPosition:WHERE>` | `top` | `top`, `middle` or `bottom` — which side of the character the bubble sits on, exactly as the Show Text Position dropdown means it to a `\pop` message. `middle` behaves as `top` does |
+| `<chatterBackground:WHAT>` | `window` | `window`, `dim` or `transparent` — the Show Text Background dropdown's own three. `dim` greys the bubble and makes it half see-through, so the character reads as muttering under their breath permanently rather than on one line |
 
 ```
 <chatter:Mind the step.>

@@ -66,6 +66,7 @@
  *  <chatterDuration:FRAMES>
  *  <chatterSpeed:FRAMES>
  *  <chatterPosition:top|middle|bottom>
+ *  <chatterBackground:window|dim|transparent>
  *
  * TAG EXAMPLES:
  *  <chatterRadius:5>
@@ -95,6 +96,13 @@
  * The bubble floats above this character's head. Use bottom to hang it under
  * their feet instead, which is how two characters near each other avoid
  * stacking their bubbles in the same place. Middle behaves as top does.
+ *
+ *  <chatterBackground:dim>
+ * This character's chatter is greyed and half see-through, the way a thought
+ * is - so they read as muttering under their breath rather than speaking up.
+ * The three words are the Show Text Background dropdown's own three; window
+ * is the ordinary bubble and transparent leaves the words floating with no
+ * backdrop at all.
  * ============================================================================
  * PROJECT DEFAULTS:
  * The defaults every character starts from live in the "chatter" section of

@@ -194,4 +194,25 @@ J.MESSAGE.EXT.CHATTER.RegExp.ChatterSpeed = /<chatterSpeed: ?(\d+)>/i;
  * @type {RegExp}
  */
 J.MESSAGE.EXT.CHATTER.RegExp.ChatterPosition = /<chatterPosition: ?(top|middle|bottom)>/i;
+
+/**
+ * What this character's chatter is drawn on.
+ *
+ * <pre>
+ * Structure:
+ *  <chatterBackground:WHAT>
+ *
+ * Example:
+ *  <chatterBackground:dim>
+ *
+ * Translation:
+ *  this character's chatter is greyed and half see-through, the way a thought is.
+ * </pre>
+ *
+ * The same three the Show Text Background dropdown has offered since MV, named rather than numbered.
+ * A character set to `dim` is muttering under their breath permanently, which is a thing somebody
+ * is rather than a thing they are doing on one line.
+ * @type {RegExp}
+ */
+J.MESSAGE.EXT.CHATTER.RegExp.ChatterBackground = /<chatterBackground: ?(window|dim|transparent)>/i;
 //endregion initialization

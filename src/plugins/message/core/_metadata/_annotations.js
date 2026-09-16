@@ -225,6 +225,10 @@
  *    for an effect it has never heard of.
  *    Added a named-section accessor for the external config, so an extension
  *    can read its own settings without opening the file a second time.
+ *    A finished message now fades out over about half a second rather than
+ *    blinking away. The engine's own close hides a window's client area on
+ *    its first frame, so the text always left instantly no matter how long
+ *    the frame took to collapse. Length is the "fade" section of the config.
  * - 1.3.1
  *    Fixed choice conditionals not hiding branches inside called common events.
  * - 1.3.0

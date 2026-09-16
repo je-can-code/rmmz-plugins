@@ -213,6 +213,31 @@ describe('J-Message-Chatter metadata (direct src import)', () =>
       expect(tiles).toBe('5');
     });
 
+    it('captures a backdrop', () =>
+    {
+      // Arrange
+      const { ChatterBackground } = globalThis.J.MESSAGE.EXT.CHATTER.RegExp;
+
+      // Act
+      const [ , word ] = ChatterBackground.exec('<chatterBackground:dim>');
+
+      // Assert
+      expect(word).toBe('dim');
+    });
+
+    it('refuses a backdrop that is not one of the three words', () =>
+    {
+      // Arrange- an author reaching for a look the engine does not have gets the ordinary bubble
+      // rather than an invisible one.
+      const { ChatterBackground } = globalThis.J.MESSAGE.EXT.CHATTER.RegExp;
+
+      // Act
+      const matched = ChatterBackground.test('<chatterBackground:frosted>');
+
+      // Assert
+      expect(matched).toBe(false);
+    });
+
     it('refuses a position that is not one of the three words', () =>
     {
       // Arrange- an author reaching for something the grammar does not offer gets the default rather

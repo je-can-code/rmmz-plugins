@@ -47,6 +47,12 @@ class Sprite_ChatterBubbleLayer
     this._j._bubbles = new Map();
 
     /**
+     * The bubbles still on this plane but on their way off it.
+     * @type {FadingSprites}
+     */
+    this._j._departing = new FadingSprites();
+
+    /**
      * The window every chatter line is laid out against.
      *
      * Built on demand rather than here, because a project may well go a whole session without an
@@ -63,6 +69,15 @@ class Sprite_ChatterBubbleLayer
   bubbles()
   {
     return this._j._bubbles;
+  }
+
+  /**
+   * The bubbles on their way off this plane.
+   * @returns {FadingSprites}
+   */
+  departingBubbles()
+  {
+    return this._j._departing;
   }
 
   /**
@@ -111,9 +126,21 @@ class Sprite_ChatterBubbleLayer
   update()
   {
     this.syncChatterBubbles();
+    this.updateDepartingBubbles();
 
     // perform original logic, which is what types each line out and keeps it over its speaker.
     super.update();
+  }
+
+  /**
+   * Fades out whatever is leaving, and takes it off the plane once it has.
+   */
+  updateDepartingBubbles()
+  {
+    const finished = this.departingBubbles()
+      .update(MessageFade.alphaAt);
+
+    finished.forEach(({ sprite }) => this.removeChild(sprite));
   }
 
   /**
@@ -147,7 +174,11 @@ class Sprite_ChatterBubbleLayer
       const sprite = this.bubbles()
         .get(token);
 
-      this.removeChild(sprite);
+      // handed over rather than removed. A muttered line that simply vanishes reads as a dropped
+      // frame; one that dissolves reads as somebody having finished saying it.
+      this.departingBubbles()
+        .begin(token, sprite, MessageFade.frames());
+
       this.bubbles()
         .delete(token);
     });
@@ -165,6 +196,16 @@ class Sprite_ChatterBubbleLayer
 
     // already drawn, and its own update is what types it out and keeps it over its speaker.
     if (existing !== undefined) return;
+
+    // somebody who started a new line before the last one had finished leaving. The departing bubble
+    // is showing the previous line, so it goes rather than being caught and reused.
+    const interrupted = this.departingBubbles()
+      .take(token);
+
+    if (interrupted !== null)
+    {
+      this.removeChild(interrupted);
+    }
 
     const sprite = this.buildBubble(token, session);
 

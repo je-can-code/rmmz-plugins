@@ -1,6 +1,9 @@
 import './_metadata/initialization.js';
 
 import './__models/BasicChoiceConditional.js';
+import './__models/FadingSprites.js';
+import './services/MessageConfig.js';
+import './services/MessageFade.js';
 import './objects/Game_Message.js';
 import './objects/Game_Interpreter.js';
 import './objects/Game_Event.js';

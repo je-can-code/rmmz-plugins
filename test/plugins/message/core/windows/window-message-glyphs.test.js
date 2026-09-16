@@ -396,7 +396,7 @@ describe('Window_Message glyph pipeline', () =>
 
   describe('clearing', () =>
   {
-    it('empties the plane when the message terminates', () =>
+    it('keeps the letters on screen while the finished message fades out', () =>
     {
       // Arrange
       const window = messageWindow();
@@ -404,6 +404,23 @@ describe('Window_Message glyph pipeline', () =>
 
       // Act
       window.terminateMessage();
+
+      // Assert- the letters are what is being faded. Clearing them here is what the engine's own
+      // close does by hiding the client area, and it is why a message appeared to blink away.
+      expect(glyphsOf(window)).toHaveLength(3);
+    });
+
+    it('empties the plane once the fade has run its course', () =>
+    {
+      // Arrange
+      const window = messageWindow();
+      revealMessage(window, 'abc');
+      window.terminateMessage();
+
+      // Act
+      const frames = window.fadeFrames();
+      Array.from({ length: frames })
+        .forEach(() => window.updateMessageFade());
 
       // Assert
       expect(glyphsOf(window)).toEqual([]);

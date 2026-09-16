@@ -202,6 +202,31 @@ describe('J-Message-Chatter tag parsing (direct src import)', () =>
     expect(profile.position()).toBe('bottom');
   });
 
+  it('reads what a character chatter is drawn on', () =>
+  {
+    // Arrange
+    const comments = page('<chatter:Mind the step.>', '<chatterBackground:dim>');
+
+    // Act
+    const profile = ChatterTagParser.parseComments(comments);
+
+    // Assert- a permanent mutterer, as against somebody dimmed for one line by a plugin command.
+    expect(profile.background()).toBe('dim');
+    expect(profile.backgroundType()).toBe(1);
+  });
+
+  it('takes a backdrop an author capitalised', () =>
+  {
+    // Arrange
+    const comments = page('<chatter:Mind the step.>', '<chatterBackground:Transparent>');
+
+    // Act
+    const profile = ChatterTagParser.parseComments(comments);
+
+    // Assert
+    expect(profile.background()).toBe('transparent');
+  });
+
   it('takes a position an author capitalised', () =>
   {
     // Arrange
@@ -241,7 +266,8 @@ describe('J-Message-Chatter tag parsing (direct src import)', () =>
       '<chatterDelay:60>',
       '<chatterDuration:240>',
       '<chatterSpeed:4>',
-      '<chatterPosition:bottom>');
+      '<chatterPosition:bottom>',
+      '<chatterBackground:dim>');
 
     // Act
     const profile = ChatterTagParser.parseComments(comments);
