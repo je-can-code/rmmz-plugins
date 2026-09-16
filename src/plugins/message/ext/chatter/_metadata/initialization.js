@@ -18,7 +18,7 @@ globalThis.J ||= {};
   }
 
   // check to ensure we have the minimum required version of the J-Message plugin.
-  const requiredMessageVersion = '1.3.1';
+  const requiredMessageVersion = '2.0.0';
   const hasMessageRequirement = J.BASE.Helpers.satisfies(J.MESSAGE.Metadata.version.version(), requiredMessageVersion);
   if (hasMessageRequirement === false)
   {

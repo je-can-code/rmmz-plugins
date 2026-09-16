@@ -33,7 +33,7 @@ describe('J-Message-Bubbles metadata (direct src import)', () =>
     // this extension gates on J-Message as well as J-Base, so a minimal parent umbrella has to exist
     // before the extension will load at all.
     globalThis.J.MESSAGE = {
-      Metadata: { version: { version: () => '1.3.1' } },
+      Metadata: { version: { version: () => '2.0.0' } },
       EXT: {},
     };
 
@@ -81,7 +81,7 @@ describe('J-Message-Bubbles metadata (direct src import)', () =>
 
       // Act & Assert
       await expect(import('../../../../../../src/plugins/message/ext/bubbles/_metadata/initialization.js'))
-        .rejects.toThrow('Either missing J-Message or has a lower version than the required: 1.3.0');
+        .rejects.toThrow('Either missing J-Message or has a lower version than the required: 2.0.0');
     });
 
     it('throws when J-Base has not been loaded at all', async () =>

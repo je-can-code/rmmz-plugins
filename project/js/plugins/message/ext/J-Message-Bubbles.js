@@ -123,7 +123,7 @@ globalThis.J ||= {};
 	if (hasBaseRequirement === false) {
 		throw new Error(`Either missing J-Base or has a lower version than the required: ${requiredBaseVersion}`);
 	}
-	const requiredMessageVersion = "1.3.0";
+	const requiredMessageVersion = "2.0.0";
 	const hasMessageRequirement = J.BASE.Helpers.satisfies(J.MESSAGE.Metadata.version.version(), requiredMessageVersion);
 	if (hasMessageRequirement === false) {
 		throw new Error(`Either missing J-Message or has a lower version than the required: ${requiredMessageVersion}`);

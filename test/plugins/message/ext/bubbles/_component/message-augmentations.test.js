@@ -41,7 +41,7 @@ describe('J-Message-Bubbles engine augmentations (direct src import)', () =>
     globalThis.J = realJ;
     globalThis.J.BASE.Metadata.Version = '3.2.0';
     globalThis.J.MESSAGE = {
-      Metadata: { version: { version: () => '1.3.1' } },
+      Metadata: { version: { version: () => '2.0.0' } },
       EXT: {},
     };
 

@@ -103,7 +103,7 @@ describe('Window_Message glyph pipeline', () =>
     globalThis.StorageManager.fsReadFile = () => null;
 
     globalThis.__PLUGIN_NAME__ = 'J-Message';
-    globalThis.__PLUGIN_VERSION__ = '1.3.1';
+    globalThis.__PLUGIN_VERSION__ = '2.0.0';
 
     await import('../../../../../src/plugins/message/core/_metadata/initialization.js');
     await import('../../../../../src/plugins/message/core/windows/Window_Message.js');

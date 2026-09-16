@@ -157,6 +157,12 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 3.16.1
+ *    ParsableComment now admits ~ % = ? ( ) and ; so an event comment may carry
+ *    message effect codes, and a sentence somebody says out loud rather than
+ *    only a parameter list. Previously such a comment failed the shape test and
+ *    was discarded before parsing, which read downstream as the tag simply not
+ *    being there.
  * - 3.16.0
  *    Added Spriteset_Map#weather, so a plugin can insert a display layer at a position
  *    relative to an engine-created child rather than wherever load order lands it.

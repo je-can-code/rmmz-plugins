@@ -140,6 +140,9 @@
  * This choice is only shown while objective 2 of that quest is completed.
  * ============================================================================
  * CHANGELOG:
+ * - 2.0.4
+ *    Renamed the declared dependency on J-MessageTextCodes to J-Message, which
+ *    is what that plugin's file is called now.
  * - 2.0.3
  *    Fixed quest choice conditionals not hiding branches inside called common
  *    events. Dropped the dead commonEventId accessor.

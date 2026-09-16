@@ -113,6 +113,10 @@
  * JABS integration (when installed) and by plugin commands.
  * ============================================================================
  * CHANGELOG:
+ * - 3.0.2
+ *    Renamed the declared dependency on J-MessageTextCodes to J-Message, which
+ *    is what that plugin's file is called now. Left as it was, the base
+ *    declaration named a plugin no project would have installed.
  * - 3.0.1
  *    Routed the non-array DiaLog warning through J-Base's new Diagnostics. That
  *    channel is for developer console output and is unrelated to the log windows

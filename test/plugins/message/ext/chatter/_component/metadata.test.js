@@ -36,7 +36,7 @@ describe('J-Message-Chatter metadata (direct src import)', () =>
     // this extension gates on three plugins, so a minimal umbrella for each has to exist before it
     // will load at all.
     globalThis.J.MESSAGE = {
-      Metadata: { version: { version: () => '1.3.1' } },
+      Metadata: { version: { version: () => '2.0.0' } },
       EXT: {
         BUBBLES: { Metadata: { version: { version: () => '1.0.0' } } },
       },
@@ -86,7 +86,7 @@ describe('J-Message-Chatter metadata (direct src import)', () =>
 
       // Act & Assert
       await expect(import(initializationPath))
-        .rejects.toThrow('Either missing J-Message or has a lower version than the required: 1.3.1');
+        .rejects.toThrow('Either missing J-Message or has a lower version than the required: 2.0.0');
     });
 
     it('throws when J-Message-Bubbles is below the required version', async () =>

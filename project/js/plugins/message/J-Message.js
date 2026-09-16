@@ -1,7 +1,7 @@
 //region Introduction
 /*:
  * @target MZ
- * @plugindesc [v1.3.1 MESSAGE] Gives access to more message window functionality.
+ * @plugindesc [v2.0.0 MESSAGE] Gives access to more message window functionality.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -207,6 +207,24 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 2.0.0
+ *    Renamed from J-MessageTextCodes. Update the entry in js/plugins.js and
+ *    delete the old file; nothing else in a project has to change.
+ *    Message text is now drawn as one sprite per character rather than baked
+ *    into the window's bitmap, which is what lets a letter move after it has
+ *    been drawn. Added \~ wave, \% jitter, \= rainbow and \+ pulse, which
+ *    nest with each other and with the engine's own codes.
+ *    Added speaker profiles, read from data/config.message.json and keyed by
+ *    the Name field or the face. A profile carries a voice, a pace, per-
+ *    punctuation beats and effects that act on everything that speaker says,
+ *    so dialogue already written gains a character without being edited.
+ *    Added layoutMessageGlyphs, which builds a message's glyphs before any of
+ *    them are revealed - the only way something drawing a container around
+ *    them can know its size on the frame it opens.
+ *    Effects now declare how far they travel, so a container can reserve room
+ *    for an effect it has never heard of.
+ *    Added a named-section accessor for the external config, so an extension
+ *    can read its own settings without opening the file a second time.
  * - 1.3.1
  *    Fixed choice conditionals not hiding branches inside called common events.
  * - 1.3.0
@@ -589,7 +607,7 @@ J.MESSAGE = {};
 /**
 * The `metadata` associated with this plugin, such as version.
 */
-J.MESSAGE.Metadata = new J_MessagePluginMetadata("J-Message", "1.3.1");
+J.MESSAGE.Metadata = new J_MessagePluginMetadata("J-Message", "2.0.0");
 /**
 * A collection of all base aliases.
 */
