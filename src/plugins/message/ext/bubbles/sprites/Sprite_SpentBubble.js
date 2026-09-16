@@ -168,6 +168,7 @@ class Sprite_SpentBubble
     bubble.setFillColor(style.fillColor);
     bubble.setFillAlpha(style.fillAlpha);
     bubble.setBorderColor(style.borderColor);
+    bubble.flagBordered(style.bordered);
     bubble.setLegendColor(style.legendColor);
     bubble.setSpeakerName(speakerName);
     bubble.visible = style.drawn;

@@ -86,7 +86,8 @@ class BubbleStyle
   /**
    * How a bubble should be drawn for a given Background value.
    * @param {number} background The Show Text command's Background value.
-   * @returns {{drawn: boolean, fillColor: number, fillAlpha: number, borderColor: number, legendColor: string}}
+   * @returns {{drawn: boolean, bordered: boolean, fillColor: number, fillAlpha: number, borderColor: number,
+   * legendColor: string}}
    */
   static forBackground(background)
   {
@@ -94,6 +95,10 @@ class BubbleStyle
     {
       return {
         drawn: true,
+        // no outline at all, which is most of what separates a hush from a statement. An edge is
+        // what makes a bubble read as an object somebody is holding up; a soft translucent shape
+        // with no edge reads as something happening inside a head rather than in the room.
+        bordered: false,
         fillColor: BubbleStyle.DimFillColor,
         fillAlpha: BubbleStyle.DimFillAlpha,
         borderColor: BubbleStyle.DimBorderColor,
@@ -109,6 +114,7 @@ class BubbleStyle
 
     return {
       drawn,
+      bordered: true,
       fillColor: BubbleStyle.FillColor,
       fillAlpha: BubbleStyle.FillAlpha,
       borderColor: BubbleStyle.BorderColor,

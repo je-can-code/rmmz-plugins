@@ -118,6 +118,12 @@ class Sprite_MessageBubble
     this._j._borderColor = Sprite_MessageBubble.DefaultBorderColor;
 
     /**
+     * Whether this bubble is outlined at all.
+     * @type {boolean}
+     */
+    this._j._bordered = true;
+
+    /**
      * The speaker's name, set into the border the way a legend is set into a fieldset.
      * @type {Sprite_BaseText}
      */
@@ -277,6 +283,24 @@ class Sprite_MessageBubble
   }
 
   /**
+   * Whether this bubble is outlined at all.
+   * @returns {boolean}
+   */
+  isBordered()
+  {
+    return this._j._bordered;
+  }
+
+  /**
+   * Sets whether this bubble is outlined at all.
+   * @param {boolean} bordered Whether to stroke an outline.
+   */
+  flagBordered(bordered)
+  {
+    this._j._bordered = bordered;
+  }
+
+  /**
    * Draws this bubble at the given size, pointing wherever it is pointing right now.
    *
    * Redrawn whole rather than in pieces, and redrawn on every frame the caller asks for. The tail
@@ -356,6 +380,9 @@ class Sprite_MessageBubble
    */
   strokeBorder(graphics, bounds, tail, legendGap)
   {
+    // a bubble with no outline is a deliberate look rather than an oversight - see BubbleStyle.
+    if (this.isBordered() === false) return;
+
     const path = BubbleShape.outlinePath(bounds, tail, legendGap);
 
     graphics.lineStyle(Sprite_MessageBubble.BorderWidth, this.borderColor(), 1);

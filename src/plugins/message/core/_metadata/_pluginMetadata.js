@@ -1,4 +1,5 @@
 //region plugin metadata
+import MessageConfig from '../services/MessageConfig.js';
 import MessageProfileResolver from '../services/MessageProfileResolver.js';
 
 class J_MessagePluginMetadata extends PluginMetadata
@@ -28,38 +29,51 @@ class J_MessagePluginMetadata extends PluginMetadata
 
   /**
    * Extends {@link PluginMetadata.postInitialize}.<br/>
-   * Also loads the speaker profiles, if this project has written any.
+   * Also loads the external config, if this project has written one.
    */
   postInitialize()
   {
     super.postInitialize();
 
-    this.initializeSpeakerProfiles();
+    this.initializeConfiguration();
   }
 
   /**
-   * Reads the speaker profiles out of the external config.
+   * Reads the external config once and hands it to everything that reads a part of it.
+   *
+   * One read and one distribution point, so a section can be claimed by a new consumer without the
+   * file gaining a second reader that could see a different version of it.
    */
-  initializeSpeakerProfiles()
+  initializeConfiguration()
+  {
+    const config = this.readConfig();
+
+    // the whole file, for whoever wants a section of it.
+    MessageConfig.load(config);
+
+    // the speaker profiles, which core reads itself on every message.
+    MessageProfileResolver.load(config);
+  }
+
+  /**
+   * Reads and parses the external config.
+   * @returns {object} The parsed config, or an empty one if this project has not written the file.
+   */
+  readConfig()
   {
     const rawConfig = StorageManager.fsReadFile(J_MessagePluginMetadata.CONFIG_PATH);
 
-    // no config at all means no voices configured, which leaves every speaker on the default
-    // profile - and the default profile is the engine's own behaviour, unchanged.
-    if (rawConfig === null || rawConfig === String.empty)
-    {
-      MessageProfileResolver.load({});
-      return;
-    }
+    // no config at all means nothing has been configured, which leaves every speaker on the default
+    // profile and every other knob at whatever its consumer defaults to - and the default profile is
+    // the engine's own behaviour, unchanged.
+    if (rawConfig === null || rawConfig === String.empty) return {};
 
     const options = ExternalJsonConfigLoaderOptions.Builder()
       .pluginName('J-Message')
-      .configName('message speaker profiles')
+      .configName('message configuration')
       .build();
 
-    const config = ExternalJsonConfigLoader.load(J_MessagePluginMetadata.CONFIG_PATH, options);
-
-    MessageProfileResolver.load(config);
+    return ExternalJsonConfigLoader.load(J_MessagePluginMetadata.CONFIG_PATH, options);
   }
 }
 

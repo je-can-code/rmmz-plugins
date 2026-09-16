@@ -269,6 +269,7 @@ Window_Message.prototype.refreshMessageBubble = function()
   sprite.setFillColor(style.fillColor);
   sprite.setFillAlpha(style.fillAlpha);
   sprite.setBorderColor(style.borderColor);
+  sprite.flagBordered(style.bordered);
   sprite.setLegendColor(style.legendColor);
 
   // the plate is started by the original `startMessage` whether or not anybody wants it, so closing

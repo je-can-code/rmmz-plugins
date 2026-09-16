@@ -51,6 +51,25 @@ describe('J-Message-Bubbles BubbleStyle (direct src import)', () =>
     expect(style.borderColor).toBe(0x8d95a3);
   });
 
+  it('outlines a message that is not dimmed', () =>
+  {
+    // Arrange & Act
+    const style = BubbleStyle.forBackground(0);
+
+    // Assert- the edge is what makes an ordinary bubble read as an object being held up.
+    expect(style.bordered).toBe(true);
+  });
+
+  it('draws no outline at all for a message asking to be dimmed', () =>
+  {
+    // Arrange & Act
+    const style = BubbleStyle.forBackground(1);
+
+    // Assert- an edge is most of what separates a statement from a hush. A soft translucent shape
+    // with nothing around it reads as something happening inside a head rather than in the room.
+    expect(style.bordered).toBe(false);
+  });
+
   it('greys the speaker name alongside the border it sits in', () =>
   {
     // Arrange & Act
