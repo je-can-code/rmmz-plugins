@@ -54,8 +54,10 @@ class SpentBubbleManager
   /**
    * Ends the conversation.
    *
-   * Authored rather than timed. An author knows when a scene is over and a timeout only guesses -
-   * and guessing is what would stop two characters being able to pace around between lines.
+   * Reached two ways. Ordinarily the map ends it, the frame the player has control back - an event
+   * still moving its characters around between lines is still running, so that boundary costs a
+   * scene nothing and needs nothing written into one. An author can also end one early, mid-event,
+   * for a scene that keeps going after the talking stops.
    */
   static clear()
   {

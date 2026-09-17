@@ -1,4 +1,5 @@
 //region Sprite_SpentBubbleLayer
+import BubbleConversation from '../services/BubbleConversation.js';
 import SpentBubbleManager from '../managers/SpentBubbleManager.js';
 import Sprite_SpentBubble from './Sprite_SpentBubble.js';
 
@@ -77,9 +78,35 @@ class Sprite_SpentBubbleLayer
   {
     this.syncSpentBubbles();
     this.updateDepartingBubbles();
+    this.releaseFinishedConversation();
 
     // perform original logic, which is what ticks each bubble into position over its owner.
     super.update();
+  }
+
+  /**
+   * Lets go of everyone's last line once the conversation they were having is over.
+   *
+   * **Asked here rather than from the scene, and the ordering is the whole reason.** This plane is
+   * added during `createSpriteset`, so it updates before the window layer does - which means the
+   * frame a final message terminates, this plane has already compared itself against the manager and
+   * the bubble that message left behind does not exist yet. A release decided anywhere later in that
+   * same frame would delete the entry before it was ever drawn, and a bubble that was never built
+   * cannot depart: the last line of every conversation would blink out instead of fading.
+   *
+   * Deciding it here means a retained bubble is always realized by the sync above before this can
+   * take it away, so it leaves the way every other bubble does.
+   */
+  releaseFinishedConversation()
+  {
+    const isHoldingBubbles = SpentBubbleManager.isEmpty() === false;
+    const isEventRunning = $gameMap.isEventRunning();
+    const isMessageBusy = $gameMessage.isBusy();
+
+    const shouldRelease = BubbleConversation.shouldRelease(isHoldingBubbles, isEventRunning, isMessageBusy);
+    if (shouldRelease === false) return;
+
+    SpentBubbleManager.clear();
   }
 
   /**

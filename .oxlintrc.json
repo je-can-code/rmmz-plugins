@@ -151,6 +151,8 @@
     "BounceMotionEffect": "writable",
     "BubbleAnchor": "writable",
     "BubbleBounds": "writable",
+    "BubbleConversation": "writable",
+    "BubbleFace": "writable",
     "BubbleGeometry": "writable",
     "BubbleLayout": "writable",
     "BubblePlacement": "writable",

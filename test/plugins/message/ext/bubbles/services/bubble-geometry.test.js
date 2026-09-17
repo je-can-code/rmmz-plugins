@@ -1,6 +1,7 @@
 //region plugins/message/ext/bubbles/services/bubble-geometry.test.js
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
+import BubbleBounds from '../../../../../../src/plugins/message/ext/bubbles/__models/BubbleBounds.js';
 import BubbleGeometry from '../../../../../../src/plugins/message/ext/bubbles/services/BubbleGeometry.js';
 
 /**
@@ -43,6 +44,19 @@ describe('J-Message-Bubbles BubbleGeometry (direct src import)', () =>
 
     return Object.assign(base, overrides);
   }
+
+  beforeAll(() =>
+  {
+    // the repo's own empty-string sentinel, which a bare direct import does not get for free.
+    if (String.empty === undefined)
+    {
+      Object.defineProperty(String, 'empty', {
+        value: '',
+        writable: false,
+        configurable: true,
+      });
+    }
+  });
 
   beforeEach(() =>
   {
@@ -233,6 +247,59 @@ describe('J-Message-Bubbles BubbleGeometry (direct src import)', () =>
     // Assert
     expect(bounds.top).toBe(36);
     expect(bounds.bottom).toBe(100);
+  });
+
+  describe('applyFaceFloor', () =>
+  {
+    it('grows a message too short to hold the portrait beside it', () =>
+    {
+      // Arrange- one line of text, against the seventy-two a bubble draws portraits at.
+      const bounds = new BubbleBounds(0, 0, 200, 36);
+
+      // Act
+      BubbleGeometry.applyFaceFloor(bounds, 'face_je');
+
+      // Assert
+      expect(bounds.bottom).toBe(72);
+    });
+
+    it('leaves a message already taller than its portrait alone', () =>
+    {
+      // Arrange- four lines of text, comfortably past the portrait.
+      const bounds = new BubbleBounds(0, 0, 200, 144);
+
+      // Act
+      BubbleGeometry.applyFaceFloor(bounds, 'face_je');
+
+      // Assert
+      expect(bounds.bottom).toBe(144);
+    });
+
+    it('leaves a message with no portrait alone', () =>
+    {
+      // Arrange
+      const bounds = new BubbleBounds(0, 0, 200, 36);
+
+      // Act
+      BubbleGeometry.applyFaceFloor(bounds, String.empty);
+
+      // Assert
+      expect(bounds.bottom).toBe(36);
+    });
+
+    it('never moves the edges a bubble is not sized from', () =>
+    {
+      // Arrange
+      const bounds = new BubbleBounds(7, 3, 200, 36);
+
+      // Act
+      BubbleGeometry.applyFaceFloor(bounds, 'face_je');
+
+      // Assert- the floor is a floor, not a resize.
+      expect(bounds.left).toBe(7);
+      expect(bounds.top).toBe(3);
+      expect(bounds.right).toBe(200);
+    });
   });
 });
 //endregion plugins/message/ext/bubbles/services/bubble-geometry.test.js
