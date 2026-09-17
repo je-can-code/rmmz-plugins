@@ -2,11 +2,12 @@
 import SpentBubbleManager from '../managers/SpentBubbleManager.js';
 
 /**
- * Ends the current conversation, clearing every bubble left behind by it.
+ * Ends the current conversation early, clearing every bubble left behind by it.
  *
- * Authored rather than timed on purpose. Only the person writing the scene knows when it is over,
- * and a timeout would have to guess - which would also mean characters could not pace around
- * between their lines without their own dialogue evaporating behind them.
+ * A conversation already ends on its own the moment the player has control back, which covers every
+ * ordinary scene without anything being written into it. This is for the ones where the talking
+ * finishes well before the event does - a long cutscene that keeps moving people around afterwards,
+ * where leaving the last line hanging over somebody's head for another minute would read as stuck.
  */
 PluginManager.registerCommand(
   J.MESSAGE.EXT.BUBBLES.Metadata.name,

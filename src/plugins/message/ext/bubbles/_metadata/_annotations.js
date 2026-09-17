@@ -69,18 +69,33 @@
  * ============================================================================
  * CONVERSATIONS:
  * A bubble does not disappear the moment its message closes. It stays where it
- * is, dimmed and frozen, until the conversation is declared over- so two
- * characters trading lines both stay on screen and a player who blinks does not
- * lose half of an exchange.
+ * is, dimmed and frozen, until the conversation is over- so two characters
+ * trading lines both stay on screen and a player who blinks does not lose half
+ * of an exchange.
  *
  * A speaker who talks again replaces their own bubble rather than stacking a
  * second one, so a character delivering four lines in a row leaves one behind.
  *
- * Use the End Conversation plugin command when the scene is finished. Changing
- * map, entering a battle and opening the menu all end one too, because the
- * characters those bubbles were pointing at have stopped existing.
+ * A conversation ends by itself the frame the player has control back, and the
+ * bubbles fade out rather than vanishing. An event that is still running- still
+ * pausing, still walking its characters around between lines- has not handed
+ * control back yet, so pacing about mid-scene costs nothing and no event needs
+ * anything written into it for this to be right.
+ *
+ * Use the End Conversation plugin command for a scene where the talking stops
+ * well before the event does, and the last line would otherwise hang over
+ * somebody's head for the rest of it.
+ *
+ * Changing map, entering a battle and opening the menu all end one too, because
+ * the characters those bubbles were pointing at have stopped existing.
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.0
+ *    A conversation now ends by itself once the player has control back, and
+ *    the bubbles fade out rather than vanishing.
+ *    Portraits are drawn at half size inside a bubble and are no longer cropped
+ *    to whatever height the words happened to need.
+ *    A spent bubble keeps the portrait the message was drawn with.
  * - 1.0.0
  *    The initial release.
  * ============================================================================

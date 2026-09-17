@@ -1,4 +1,5 @@
 //region Sprite_SpentBubble
+import BubbleFace from '../services/BubbleFace.js';
 import BubbleLayout from '../services/BubbleLayout.js';
 import BubbleTargetResolver from '../services/BubbleTargetResolver.js';
 import Sprite_MessageBubble from './Sprite_MessageBubble.js';
@@ -45,6 +46,7 @@ class Sprite_SpentBubble
     this.setEntry(entry);
 
     this.createBubble();
+    this.createFace();
     this.createGlyphs();
 
     this.alpha = Sprite_SpentBubble.SpentAlpha;
@@ -83,6 +85,12 @@ class Sprite_SpentBubble
      * @type {Sprite}
      */
     this._j._glyphPlane = null;
+
+    /**
+     * The speaker's portrait, for a message that named one.
+     * @type {?Sprite}
+     */
+    this._j._face = null;
   }
 
   /**
@@ -178,19 +186,75 @@ class Sprite_SpentBubble
   }
 
   /**
+   * The speaker's portrait.
+   * @returns {?Sprite} The portrait, or null for a message that named no face.
+   */
+  face()
+  {
+    return this._j._face;
+  }
+
+  /**
+   * Sets the speaker's portrait.
+   * @param {Sprite} face The portrait.
+   */
+  setFace(face)
+  {
+    this._j._face = face;
+  }
+
+  /**
+   * Redraws the speaker's portrait beside the words they said.
+   *
+   * The live message drew this into its own contents, which belong to a window that has since been
+   * resized for whoever spoke next - so it is rebuilt here from the same two values the message was
+   * carrying rather than copied from anything.
+   */
+  createFace()
+  {
+    const { faceName, faceIndex, padding, content } = this.entry();
+
+    // most messages name no portrait at all, and an idle chatterer never does.
+    if (BubbleFace.isPresent(faceName) === false) return;
+
+    const bitmap = ImageManager.loadFace(faceName);
+    const origin = BubbleFace.sourceOrigin(faceIndex);
+    const sprite = new Sprite(bitmap);
+
+    sprite.setFrame(origin.x, origin.y, ImageManager.faceWidth, ImageManager.faceHeight);
+
+    // the same reduction the live message applied a moment ago. If the two ever disagreed the
+    // portrait would visibly jump at the instant its speaker stopped talking.
+    const scale = BubbleFace.DrawSize / ImageManager.faceWidth;
+    sprite.scale.set(scale, scale);
+
+    // the same centring the live message applied, against the same measured contents.
+    const offsetY = BubbleFace.faceOffset(faceName, content.bottom);
+
+    sprite.x = padding + BubbleFace.EdgeMargin;
+    sprite.y = padding + offsetY;
+
+    this.setFace(sprite);
+    this.addChild(sprite);
+  }
+
+  /**
    * Rebuilds the message's letters, each caught at the moment its speaker stopped.
    *
    * The plane is offset by the window's padding because glyph coordinates were measured from the
    * inside of the message window's contents, and the bubble around them is drawn from its outer
    * edge. Without it every letter lands one padding up and to the left of the box it belongs in.
+   *
+   * The slack on top of that is the nudge the live message applied to sit level with its portrait,
+   * carried across rather than recomputed - the glyph coordinates never held it in the first place.
    */
   createGlyphs()
   {
-    const { glyphs, padding, frame } = this.entry();
+    const { glyphs, padding, slack, frame } = this.entry();
 
     const plane = new Sprite();
     plane.x = padding;
-    plane.y = padding;
+    plane.y = padding + slack;
 
     glyphs.forEach(glyph =>
     {

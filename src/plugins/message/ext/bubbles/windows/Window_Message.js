@@ -1,5 +1,6 @@
 //region Window_Message
 import BubbleBounds from '../__models/BubbleBounds.js';
+import BubbleFace from '../services/BubbleFace.js';
 import BubbleGeometry from '../services/BubbleGeometry.js';
 import BubbleLayout from '../services/BubbleLayout.js';
 import BubbleStyle from '../services/BubbleStyle.js';
@@ -257,6 +258,9 @@ Window_Message.prototype.refreshMessageBubble = function()
   if (this.isFloatingMessage() === false)
   {
     sprite.visible = false;
+
+    // put back whatever the last floating message nudged, or the box inherits its offset.
+    this.applyMessageFaceSlack(0);
     this.restoreRestingRect();
 
     return;
@@ -281,6 +285,14 @@ Window_Message.prototype.refreshMessageBubble = function()
   // them yet - the window has to be the right size before the first character appears in it.
   const glyphs = this.layoutMessageGlyphs($gameMessage.allText());
   const content = BubbleGeometry.contentBounds(glyphs);
+
+  // asked of the text before the portrait grows the box, because it is the text's own height that
+  // decides how far it has to move to sit level with the face beside it.
+  const faceName = $gameMessage.faceName();
+  const slack = BubbleFace.slack(faceName, content.bottom);
+  this.applyMessageFaceSlack(slack);
+
+  BubbleGeometry.applyFaceFloor(content, faceName);
   this.setBubbleContent(content);
 
   const speakerName = this.convertEscapeCharacters($gameMessage.speakerName());
@@ -297,10 +309,101 @@ Window_Message.prototype.refreshMessageBubble = function()
     style,
     padding: this.padding,
     preferBelow: this.bubblePrefersBelow(),
+    faceName,
+    faceIndex: $gameMessage.faceIndex(),
+    slack,
     frame: 0,
   });
 
   this.updateMessageBubble();
+};
+
+/**
+ * Moves this message's letters down to sit level with the portrait beside them.
+ *
+ * The whole plane rather than the glyphs themselves, because the glyph records are also what the
+ * spent bubble is rebuilt from later - shifting the coordinates would bake this message's offset
+ * into values that outlive it, and a bubble carries its own.
+ * @param {number} slack How far down the letters go, in logical pixels.
+ */
+Window_Message.prototype.applyMessageFaceSlack = function(slack)
+{
+  this.messageGlyphLayer().y = slack;
+};
+
+/**
+ * Extends {@link #newLineX}.<br/>
+ * Also indents a floating message past the smaller portrait a bubble draws.
+ *
+ * The engine indents by the size of the source tile, which is the size it draws faces at everywhere
+ * else. A bubble draws them at half that, so keeping the engine's answer would strand every line of
+ * dialogue seventy pixels clear of the speaker it belongs to.
+ * @param {RPG_TextState} textState The text state being laid out.
+ * @returns {number}
+ */
+J.MESSAGE.EXT.BUBBLES.Aliased.Window_Message.set('newLineX', Window_Message.prototype.newLineX);
+Window_Message.prototype.newLineX = function(textState)
+{
+  if (this.isFloatingMessage() === false)
+  {
+    // perform original logic.
+    return J.MESSAGE.EXT.BUBBLES.Aliased.Window_Message.get('newLineX')
+      .call(this, textState);
+  }
+
+  const faceName = $gameMessage.faceName();
+
+  return BubbleFace.indent(faceName);
+};
+
+/**
+ * Extends {@link #drawMessageFace}.<br/>
+ * Also draws a floating message's portrait scaled down rather than cropped.
+ */
+J.MESSAGE.EXT.BUBBLES.Aliased.Window_Message.set('drawMessageFace', Window_Message.prototype.drawMessageFace);
+Window_Message.prototype.drawMessageFace = function()
+{
+  if (this.isFloatingMessage() === false)
+  {
+    // perform original logic.
+    J.MESSAGE.EXT.BUBBLES.Aliased.Window_Message.get('drawMessageFace')
+      .call(this);
+
+    return;
+  }
+
+  this.drawBubbleMessageFace();
+};
+
+/**
+ * Draws this message's portrait at the size a bubble wants it.
+ *
+ * The distinction from the engine's own is entirely in the last two arguments. `drawFace` hands
+ * `blt` no destination size, so the source rows it selected land one for one and a short window
+ * simply receives fewer of them; naming a destination size shrinks the whole portrait into it
+ * instead.
+ */
+Window_Message.prototype.drawBubbleMessageFace = function()
+{
+  const faceName = $gameMessage.faceName();
+  const faceIndex = $gameMessage.faceIndex();
+  const bitmap = ImageManager.loadFace(faceName);
+  const origin = BubbleFace.sourceOrigin(faceIndex);
+  const drawSize = BubbleFace.DrawSize;
+
+  // the inner height rather than the contents bitmap's, which J-Base rebuilds at device scale.
+  const offsetY = BubbleFace.faceOffset(faceName, this.innerHeight);
+
+  this.contents.blt(
+    bitmap,
+    origin.x,
+    origin.y,
+    ImageManager.faceWidth,
+    ImageManager.faceHeight,
+    BubbleFace.EdgeMargin,
+    offsetY,
+    drawSize,
+    drawSize);
 };
 
 /**

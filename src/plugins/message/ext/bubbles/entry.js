@@ -3,6 +3,8 @@ import './_metadata/initialization.js';
 import './__models/BubbleAnchor.js';
 import './__models/BubbleBounds.js';
 import './services/BubbleTargetResolver.js';
+import './services/BubbleConversation.js';
+import './services/BubbleFace.js';
 import './services/BubbleGeometry.js';
 import './services/BubblePlacement.js';
 import './services/BubbleShape.js';

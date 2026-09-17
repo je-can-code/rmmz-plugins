@@ -1,5 +1,6 @@
 //region BubbleGeometry
 import BubbleBounds from '../__models/BubbleBounds.js';
+import BubbleFace from './BubbleFace.js';
 
 /**
  * Measures how much room a message's text actually needs.
@@ -49,6 +50,29 @@ class BubbleGeometry
     });
 
     return bounds;
+  }
+
+  /**
+   * Grows the given box downward until the speaker's portrait fits inside it.
+   *
+   * Applied to the measured text rather than folded into the measurement, because the two answers
+   * are both wanted: how tall the words are decides how far they move to sit level with the
+   * portrait, and how tall the box is decides how far the bubble is drawn around them.
+   *
+   * Only the bottom edge moves. The far edges are what a bubble is sized from - the near ones are
+   * slack the window's padding already covers - so a portrait that starts at the top of the contents
+   * needs room beneath the text and nowhere else.
+   * @param {BubbleBounds} bounds The box the text occupies, modified in place.
+   * @param {string} faceName The face image the message named, or empty when it named none.
+   */
+  static applyFaceFloor(bounds, faceName)
+  {
+    const floor = BubbleFace.floor(faceName);
+
+    // the overwhelming majority of messages: no portrait at all, or already taller than one.
+    if (bounds.bottom >= floor) return;
+
+    bounds.bottom = floor;
   }
 
   /**
