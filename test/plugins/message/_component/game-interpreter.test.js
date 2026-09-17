@@ -5,12 +5,14 @@ describe('Game_Interpreter message augments (direct src import)', () =>
 {
   let Game_Interpreter;
   let originalSetupChoices;
+  let originalCommand101;
 
   beforeAll(async () =>
   {
     vi.resetModules();
 
     originalSetupChoices = vi.fn();
+    originalCommand101 = vi.fn();
 
     globalThis.J = { MESSAGE: { Aliased: { Game_Interpreter: new Map() } } };
 
@@ -19,12 +21,28 @@ describe('Game_Interpreter message augments (direct src import)', () =>
     }
 
     StubGameInterpreter.prototype.setupChoices = originalSetupChoices;
+    StubGameInterpreter.prototype.command101 = originalCommand101;
     StubGameInterpreter.prototype.currentCommand = vi.fn();
     StubGameInterpreter.prototype.eventId = vi.fn();
 
-    // a J-Base accessor the production code reads through.
+    // the two other handlers a finished message can hand off to.
+    StubGameInterpreter.prototype.setupNumInput = vi.fn();
+    StubGameInterpreter.prototype.setupItemChoice = vi.fn();
+
+    // J-Base accessors the production code reads through.
     StubGameInterpreter.prototype.list = vi.fn();
+    StubGameInterpreter.prototype.index = vi.fn();
+    StubGameInterpreter.prototype.setIndex = vi.fn();
+    StubGameInterpreter.prototype.nextEventCode = vi.fn();
     globalThis.Game_Interpreter = StubGameInterpreter;
+
+    // the engine surfaces the welding cap is measured against, at the default resolution: a 36 pixel
+    // row, a 12 pixel frame on each edge, a 624 pixel screen, and the 176 pixel four-row box the
+    // scene builds a message window at - sixteen rows of room in all.
+    globalThis.Window_Base = { prototype: { lineHeight: () => 36 } };
+    globalThis.$gameSystem = { windowPadding: () => 12 };
+    globalThis.Graphics = { boxHeight: 624 };
+    globalThis.Scene_Message = { prototype: { messageWindowRect: () => ({ height: 176 }) } };
 
     globalThis.Game_Event = {
       filterInvalidEventCommand: vi.fn(),
@@ -72,6 +90,314 @@ describe('Game_Interpreter message augments (direct src import)', () =>
 
     return interpreter;
   }
+
+  describe('command101 welding', () =>
+  {
+    let sharedGameMessage;
+
+    /**
+     * The command every event list ends on, and the thing the walks below stop against.
+     */
+    const terminator = { code: 0, indent: 0, parameters: [] };
+
+    /**
+     * A `$gameMessage` that actually remembers whether the message being assembled asked for company.
+     *
+     * The production `add` is what lifts the code out of a line and raises the flag, and the weld
+     * loop turns entirely on that flag changing between one message and the next - so a stub that
+     * only recorded its calls would spin forever on the first message that asked for more.
+     */
+    function stubGameMessage()
+    {
+      const texts = [];
+      let linked = false;
+
+      return {
+        texts: () => texts,
+        hasMoreLink: () => linked,
+        flagMoreLink: vi.fn(value =>
+        {
+          linked = value;
+        }),
+        add: vi.fn(line =>
+        {
+          if (line.includes('\\more') === true) linked = true;
+
+          texts.push(line);
+        }),
+        backupChoices: vi.fn(),
+        hideChoice: vi.fn(),
+      };
+    }
+
+    /**
+     * An interpreter standing on a given command in a given list, with an index that really moves.
+     */
+    function makeInterpreterAt(commandList, index)
+    {
+      const interpreter = new Game_Interpreter();
+      let at = index;
+
+      interpreter.list = () => commandList;
+      interpreter.index = () => at;
+      interpreter.setIndex = value =>
+      {
+        at = value;
+      };
+      interpreter.currentCommand = () => commandList.at(at);
+      interpreter.nextEventCode = () => commandList.at(at + 1).code;
+
+      return interpreter;
+    }
+
+    /**
+     * The shape the original leaves behind: one Show Text read, standing on its last line, with
+     * another Show Text of two lines waiting directly after it.
+     */
+    function twoMessageList(firstLine)
+    {
+      return [
+        { code: 101, parameters: [] },
+        { code: 401, parameters: [ firstLine ] },
+        { code: 101, parameters: [] },
+        { code: 401, parameters: [ 'second.' ] },
+        { code: 401, parameters: [ 'third.' ] },
+        terminator ];
+    }
+
+    beforeEach(() =>
+    {
+      sharedGameMessage = globalThis.$gameMessage;
+      originalCommand101.mockReturnValue(true);
+    });
+
+    afterEach(() =>
+    {
+      globalThis.$gameMessage = sharedGameMessage;
+    });
+
+    it('welds the message written after one that asked for more', () =>
+    {
+      // Arrange- the second message holds two lines, so a weld that read only the first would show.
+      const interpreter = makeInterpreterAt(twoMessageList('first.\\more'), 1);
+      globalThis.$gameMessage = stubGameMessage();
+      globalThis.$gameMessage.add('first.\\more');
+
+      // Act
+      const started = interpreter.command101([]);
+
+      // Assert
+      expect(started).toBe(true);
+      expect(globalThis.$gameMessage.texts()).toEqual([ 'first.\\more', 'second.', 'third.' ]);
+      expect(interpreter.index()).toBe(4);
+    });
+
+    it('keeps welding for as long as each message in turn asks for more', () =>
+    {
+      // Arrange- three messages, the middle one asking for company of its own. A weld that read the
+      // first message's answer twice instead of each message's own would stop after the second.
+      const commands = [
+        { code: 101, parameters: [] },
+        { code: 401, parameters: [ 'a.\\more' ] },
+        { code: 101, parameters: [] },
+        { code: 401, parameters: [ 'b.\\more' ] },
+        { code: 101, parameters: [] },
+        { code: 401, parameters: [ 'c.' ] },
+        terminator ];
+
+      const interpreter = makeInterpreterAt(commands, 1);
+      globalThis.$gameMessage = stubGameMessage();
+      globalThis.$gameMessage.add('a.\\more');
+
+      // Act
+      interpreter.command101([]);
+
+      // Assert
+      expect(globalThis.$gameMessage.texts()).toEqual([ 'a.\\more', 'b.\\more', 'c.' ]);
+    });
+
+    it('welds nothing when the original declined to start the message', () =>
+    {
+      // Arrange- everything else is armed to weld: the message asked for more, a Show Text is
+      // waiting, and it has room. The original refusing is the only thing that can stop it, and it
+      // leaves the command index where it found it so the interpreter can try again next frame.
+      const interpreter = makeInterpreterAt(twoMessageList('first.\\more'), 1);
+      globalThis.$gameMessage = stubGameMessage();
+      globalThis.$gameMessage.add('first.\\more');
+      originalCommand101.mockReturnValue(false);
+
+      // Act
+      const started = interpreter.command101([]);
+
+      // Assert
+      expect(started).toBe(false);
+      expect(globalThis.$gameMessage.texts()).toEqual([ 'first.\\more' ]);
+      expect(interpreter.index()).toBe(1);
+    });
+
+    it('welds nothing when the message never asked for more', () =>
+    {
+      // Arrange- a Show Text is waiting with room to spare, so the missing code is the only reason.
+      const interpreter = makeInterpreterAt(twoMessageList('first.'), 1);
+      globalThis.$gameMessage = stubGameMessage();
+      globalThis.$gameMessage.add('first.');
+
+      // Act
+      interpreter.command101([]);
+
+      // Assert
+      expect(globalThis.$gameMessage.texts()).toEqual([ 'first.' ]);
+      expect(interpreter.index()).toBe(1);
+    });
+
+    it('welds nothing when the command after the message is not another Show Text', () =>
+    {
+      // Arrange- the message asked for more, and what follows is a "Show Choices" instead.
+      const commands = [
+        { code: 101, parameters: [] },
+        { code: 401, parameters: [ 'first.\\more' ] },
+        { code: 102, parameters: [ 'choices' ] },
+        terminator ];
+
+      const interpreter = makeInterpreterAt(commands, 1);
+      globalThis.$gameMessage = stubGameMessage();
+      globalThis.$gameMessage.add('first.\\more');
+
+      const choicesSpy = vi.spyOn(Game_Interpreter.prototype, 'setupChoices')
+        .mockImplementation(() => {});
+
+      // Act
+      interpreter.command101([]);
+
+      // Assert- nothing welded, and the choices are left for the original's own dispatch rather than
+      // being set up a second time on top of it.
+      expect(globalThis.$gameMessage.texts()).toEqual([ 'first.\\more' ]);
+      expect(interpreter.index()).toBe(1);
+      expect(choicesSpy).not.toHaveBeenCalled();
+
+      choicesSpy.mockRestore();
+    });
+
+    it('welds nothing when the next message would outgrow the screen', () =>
+    {
+      // Arrange- fifteen rows already assembled and a two-line message waiting, which is seventeen
+      // rows against the sixteen a 624 pixel screen holds.
+      const interpreter = makeInterpreterAt(twoMessageList('nearly full.\\more'), 1);
+      globalThis.$gameMessage = stubGameMessage();
+
+      const filler = Array.from({ length: 14 }, (unused, index) => `line ${index}.`);
+      filler.forEach(line => globalThis.$gameMessage.add(line));
+      globalThis.$gameMessage.add('nearly full.\\more');
+
+      // Act
+      interpreter.command101([]);
+
+      // Assert- the chain stops before the message that would overflow rather than half-welding it.
+      expect(globalThis.$gameMessage.texts()).toHaveLength(15);
+      expect(globalThis.$gameMessage.texts()
+        .at(14)).toBe('nearly full.\\more');
+      expect(interpreter.index()).toBe(1);
+    });
+
+    it('welds a Show Text holding no lines at all', () =>
+    {
+      // Arrange- an empty Show Text contributes nothing, but still has to be stepped over.
+      const commands = [
+        { code: 101, parameters: [] },
+        { code: 401, parameters: [ 'first.\\more' ] },
+        { code: 101, parameters: [] },
+        terminator ];
+
+      const interpreter = makeInterpreterAt(commands, 1);
+      globalThis.$gameMessage = stubGameMessage();
+      globalThis.$gameMessage.add('first.\\more');
+
+      // Act
+      interpreter.command101([]);
+
+      // Assert
+      expect(globalThis.$gameMessage.texts()).toEqual([ 'first.\\more' ]);
+      expect(interpreter.index()).toBe(2);
+    });
+
+    it('hands the welded message off to a "Show Choices" written after it', () =>
+    {
+      // Arrange- the original dispatched against the Show Text this message has since swallowed,
+      // where it matched nothing at all.
+      const choices = [ [ 'yes', 'no' ], 0 ];
+      const commands = [
+        { code: 101, parameters: [] },
+        { code: 401, parameters: [ 'first.\\more' ] },
+        { code: 101, parameters: [] },
+        { code: 401, parameters: [ 'second.' ] },
+        { code: 102, parameters: choices },
+        terminator ];
+
+      const interpreter = makeInterpreterAt(commands, 1);
+      globalThis.$gameMessage = stubGameMessage();
+      globalThis.$gameMessage.add('first.\\more');
+
+      const choicesSpy = vi.spyOn(Game_Interpreter.prototype, 'setupChoices')
+        .mockImplementation(() => {});
+
+      // Act
+      interpreter.command101([]);
+
+      // Assert
+      expect(choicesSpy).toHaveBeenCalledWith(choices);
+      expect(interpreter.index()).toBe(4);
+
+      choicesSpy.mockRestore();
+    });
+
+    it('hands the welded message off to an "Input Number" written after it', () =>
+    {
+      // Arrange
+      const numberInput = [ 1, 4 ];
+      const commands = [
+        { code: 101, parameters: [] },
+        { code: 401, parameters: [ 'first.\\more' ] },
+        { code: 101, parameters: [] },
+        { code: 401, parameters: [ 'second.' ] },
+        { code: 103, parameters: numberInput },
+        terminator ];
+
+      const interpreter = makeInterpreterAt(commands, 1);
+      globalThis.$gameMessage = stubGameMessage();
+      globalThis.$gameMessage.add('first.\\more');
+
+      // Act
+      interpreter.command101([]);
+
+      // Assert
+      expect(Game_Interpreter.prototype.setupNumInput).toHaveBeenCalledWith(numberInput);
+      expect(interpreter.index()).toBe(4);
+    });
+
+    it('hands the welded message off to a "Select Item" written after it', () =>
+    {
+      // Arrange
+      const itemChoice = [ 2, 1 ];
+      const commands = [
+        { code: 101, parameters: [] },
+        { code: 401, parameters: [ 'first.\\more' ] },
+        { code: 101, parameters: [] },
+        { code: 401, parameters: [ 'second.' ] },
+        { code: 104, parameters: itemChoice },
+        terminator ];
+
+      const interpreter = makeInterpreterAt(commands, 1);
+      globalThis.$gameMessage = stubGameMessage();
+      globalThis.$gameMessage.add('first.\\more');
+
+      // Act
+      interpreter.command101([]);
+
+      // Assert
+      expect(Game_Interpreter.prototype.setupItemChoice).toHaveBeenCalledWith(itemChoice);
+      expect(interpreter.index()).toBe(4);
+    });
+  });
 
   describe('setupChoices', () =>
   {

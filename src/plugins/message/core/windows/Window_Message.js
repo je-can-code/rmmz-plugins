@@ -1,4 +1,5 @@
 //region Window_Message
+import MessageChain from '../services/MessageChain.js';
 import MessageEffectSet from '../services/MessageEffectSet.js';
 import MessageFade from '../services/MessageFade.js';
 import MessageGlyph from '../__models/MessageGlyph.js';
@@ -86,6 +87,16 @@ Window_Message.prototype.initMessageGlyphMembers = function()
    */
   this._j._message._fadeFrames = 0;
 
+  /**
+   * The rectangle the scene built this window at.
+   *
+   * Captured rather than recomputed, because a message that welds several Show Text commands
+   * together grows the window to hold all of them, and the ordinary message after it has to find
+   * the window at the size the project laid out.
+   * @type {Rectangle}
+   */
+  this._j._message._defaultRect = new Rectangle(this.x, this.y, this.width, this.height);
+
   // parenting into the client area rather than the window buys the padding, the scroll origin,
   // the open/close visibility and the draw order above contents, all of it already correct.
   this.addInnerChild(this._j._message._glyphLayer);
@@ -98,6 +109,69 @@ Window_Message.prototype.initMessageGlyphMembers = function()
 Window_Message.prototype.messageGlyphLayer = function()
 {
   return this._j._message._glyphLayer;
+};
+
+/**
+ * The rectangle the scene built this window at.
+ * @returns {Rectangle}
+ */
+Window_Message.prototype.defaultMessageRect = function()
+{
+  return this._j._message._defaultRect;
+};
+
+/**
+ * The rectangle this window should occupy for the message it is about to reveal.
+ *
+ * Everything but the height is the scene's answer passed straight back. A message is only ever
+ * allowed to grow downward, because how wide the box is and where it sits are the project's layout
+ * - not something any one line of dialogue gets an opinion about.
+ * @returns {Rectangle}
+ */
+Window_Message.prototype.messageRestingRect = function()
+{
+  const rect = this.defaultMessageRect();
+  const height = this.messageRestingHeight();
+
+  return new Rectangle(rect.x, rect.y, rect.width, height);
+};
+
+/**
+ * How tall this window has to be to hold the message it is about to reveal.
+ *
+ * Deliberately not clamped to the screen. The ceiling is enforced where the decision to weld another
+ * Show Text onto this one is made, which is the only place that can stop before crossing it rather
+ * than trimming afterward - and the editor gives a single Show Text four lines, so a message that
+ * never welded cannot outgrow the box on its own.
+ * @returns {number}
+ */
+Window_Message.prototype.messageRestingHeight = function()
+{
+  const rect = this.defaultMessageRect();
+  const lineHeight = this.lineHeight();
+
+  const defaultRows = MessageChain.rowsFor(rect.height, lineHeight, this.padding);
+  const rows = $gameMessage.texts().length;
+
+  return MessageChain.heightFor(rows, rect.height, defaultRows, lineHeight);
+};
+
+/**
+ * Puts this window at the size the message it is showing calls for.
+ *
+ * Named for restoring rather than resizing because that is what it does the overwhelming majority of
+ * the time: the message before this one grew the box, or floated it somewhere, and this is the box
+ * coming home. A message long enough to need more room is the rare case, not the ordinary one.
+ */
+Window_Message.prototype.restoreMessageRect = function()
+{
+  const resting = this.messageRestingRect();
+
+  // nothing to do at all for a message the same shape as the one before it, which is most of them.
+  if (this.width === resting.width && this.height === resting.height) return;
+
+  this.move(resting.x, resting.y, resting.width, resting.height);
+  this.createContents();
 };
 
 /**
@@ -209,7 +283,8 @@ Window_Message.prototype.isRevealingTextState = function(textState)
 
 /**
  * Extends {@link #startMessage}.<br/>
- * Also works out who is speaking, before anything is built that needs to know.
+ * Also works out who is speaking and how much room they need, before anything is built that needs
+ * to know either.
  */
 J.MESSAGE.Aliased.Window_Message.set('startMessage', Window_Message.prototype.startMessage);
 Window_Message.prototype.startMessage = function()
@@ -217,6 +292,10 @@ Window_Message.prototype.startMessage = function()
   // resolved first rather than last, because the original builds the text state and pages it in
   // on the way through - and the page is where a speaker's baseline effects are applied.
   this.resolveMessageProfile();
+
+  // sized before the original for a plainer reason: the original is what puts the window on screen,
+  // and where it lands is worked out from how tall it is.
+  this.restoreMessageRect();
 
   // perform original logic.
   J.MESSAGE.Aliased.Window_Message.get('startMessage')

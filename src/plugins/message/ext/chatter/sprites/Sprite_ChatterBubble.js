@@ -366,8 +366,8 @@ class Sprite_ChatterBubble
       this.padding(),
       anchorX,
       anchorY,
-      Graphics.boxWidth,
-      Graphics.boxHeight,
+      Graphics.width,
+      Graphics.height,
       preferBelow);
 
     this.x = solved.x;

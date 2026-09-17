@@ -327,8 +327,8 @@ class Sprite_SpentBubble
       padding,
       anchorX,
       anchorY,
-      Graphics.boxWidth,
-      Graphics.boxHeight,
+      Graphics.width,
+      Graphics.height,
       preferBelow);
 
     this.x = solved.x;

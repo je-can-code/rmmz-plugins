@@ -44,7 +44,7 @@ Game_Message.prototype.add = function(text)
 };
 
 /**
- * Reads the pop code out of a line, remembering what it named.
+ * Reads the pop code out of a line, remembering what the first one named.
  * @param {string} text One line of the message.
  * @returns {string} The line without its pop code, or the line unchanged when it had none.
  */
@@ -56,7 +56,15 @@ Game_Message.prototype.extractBubbleTarget = function(text)
   if (match === null) return text;
 
   const [ whole, target ] = match;
-  this.setBubbleTarget(target);
+
+  // every code found is lifted out, but only the first one gets to name anybody. Several Show Text
+  // commands can be welded into a single message, and a welded run is one utterance - so a second
+  // `\pop` inside one is an author repeating themselves rather than handing the line to somebody
+  // else halfway through it.
+  if (this.bubbleTarget() === String.empty)
+  {
+    this.setBubbleTarget(target);
+  }
 
   return text.replace(whole, String.empty);
 };

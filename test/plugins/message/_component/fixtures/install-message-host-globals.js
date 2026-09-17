@@ -3,10 +3,6 @@ import { installJBaseHostGlobals } from '../../../_base/core/_component/fixtures
 import { installPluginManagerWithParams } from '../../../../setup/install-plugin-manager-with-params.js';
 import PluginMetadata from '../../../../../src/plugins/_base/core/models/PluginMetadata.js';
 
-const noop = function()
-{
-};
-
 /**
  * `__PLUGIN_NAME__`/`__PLUGIN_VERSION__` are bare identifiers read once, at import time, by
  * _base/_metadata/initialization.js.
@@ -136,7 +132,18 @@ export function installMessageHostGlobals(sandbox = globalThis)
   {
   }
 
-  Game_Message.prototype.clear = noop;
+  // the real shapes rather than placeholders, because J-Message aliases `add` and `clear` and a
+  // plugin alias with nothing underneath it to call is an alias that throws the moment it is used.
+  Game_Message.prototype.clear = function()
+  {
+    this._texts = [];
+  };
+
+  Game_Message.prototype.add = function(text)
+  {
+    this._texts.push(text);
+  };
+
   Game_Message.prototype._choices = [];
   sandbox.Game_Message = Game_Message;
 

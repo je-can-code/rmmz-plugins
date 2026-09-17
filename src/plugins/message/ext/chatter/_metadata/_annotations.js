@@ -136,6 +136,9 @@
  * spoken line at bottom, or the reverse.
  * ============================================================================
  * CHANGELOG:
+ * - 1.0.1
+ *    A chatter bubble near the edge is held against the screen rather than the
+ *    slightly smaller area windows are laid out in.
  * - 1.0.0
  *    The initial release.
  * ============================================================================

@@ -41,7 +41,7 @@ describe('J-Message-Bubbles engine augmentations (direct src import)', () =>
     globalThis.J = realJ;
     globalThis.J.BASE.Metadata.Version = '3.2.0';
     globalThis.J.MESSAGE = {
-      Metadata: { version: { version: () => '2.0.0' } },
+      Metadata: { version: { version: () => '2.1.0' } },
       EXT: {},
     };
 
@@ -185,6 +185,20 @@ describe('J-Message-Bubbles engine augmentations (direct src import)', () =>
 
       // Assert
       expect(globalThis.$gameMessage.bubbleTarget()).toBe('a1');
+    });
+
+    it('keeps the target a first line set when a later line names somebody else', () =>
+    {
+      // Arrange- several Show Text commands can weld into a single message, and a welded run is one
+      // utterance: it floats above one character rather than changing hands partway through.
+      globalThis.$gameMessage.add('\\pop[a1]That signpost is judging me.');
+
+      // Act
+      globalThis.$gameMessage.add('\\pop[e12]It really is.');
+
+      // Assert- the later code named nobody, and was still lifted out of the line regardless.
+      expect(globalThis.$gameMessage.bubbleTarget()).toBe('a1');
+      expect(globalThis.$gameMessage._texts).toEqual([ 'That signpost is judging me.', 'It really is.' ]);
     });
 
     it('forgets the target when the message is cleared', () =>

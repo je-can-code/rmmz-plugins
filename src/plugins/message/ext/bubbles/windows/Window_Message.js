@@ -71,15 +71,6 @@ Window_Message.prototype.initMessageBubbleMembers = function()
   this._j._bubbles._entry = null;
 
   /**
-   * The rectangle this window occupies when it is not floating anywhere.
-   *
-   * Captured rather than recomputed, because a floating message resizes the window to fit its own
-   * text and the next ordinary message has to find it the size the scene built it.
-   * @type {Rectangle}
-   */
-  this._j._bubbles._restingRect = new Rectangle(this.x, this.y, this.width, this.height);
-
-  /**
    * The backdrop a floating message is drawn on.
    * @type {Sprite_MessageBubble}
    */
@@ -159,15 +150,6 @@ Window_Message.prototype.bubbleContent = function()
 Window_Message.prototype.setBubbleContent = function(content)
 {
   this._j._bubbles._content = content;
-};
-
-/**
- * The rectangle this window occupies when it is not floating anywhere.
- * @returns {Rectangle}
- */
-Window_Message.prototype.bubbleRestingRect = function()
-{
-  return this._j._bubbles._restingRect;
 };
 
 /**
@@ -261,7 +243,7 @@ Window_Message.prototype.refreshMessageBubble = function()
 
     // put back whatever the last floating message nudged, or the box inherits its offset.
     this.applyMessageFaceSlack(0);
-    this.restoreRestingRect();
+    this.restoreMessageRect();
 
     return;
   }
@@ -407,20 +389,6 @@ Window_Message.prototype.drawBubbleMessageFace = function()
 };
 
 /**
- * Puts the window back the size and shape the scene built it.
- */
-Window_Message.prototype.restoreRestingRect = function()
-{
-  const resting = this.bubbleRestingRect();
-
-  // nothing to do for the overwhelming majority of messages, which never moved it in the first place.
-  if (this.width === resting.width && this.height === resting.height) return;
-
-  this.move(resting.x, resting.y, resting.width, resting.height);
-  this.createContents();
-};
-
-/**
  * Places the floating window over its target and redraws the bubble around it.
  *
  * Run every frame rather than once, because the target walks. `updatePlacement` fires exactly once
@@ -439,16 +407,23 @@ Window_Message.prototype.updateMessageBubble = function()
   const anchorY = target.bubbleAnchorY(preferBelow);
 
   // the same solve a spent bubble uses, so a live message and the line before it sit identically.
+  // Solved against the screen rather than the window box, because the speaker it is being placed
+  // against is drawn on the map, and the map is measured in screen pixels.
   const solved = BubbleLayout.solve(
     content,
     this.padding,
     anchorX,
     anchorY,
-    Graphics.boxWidth,
-    Graphics.boxHeight,
+    Graphics.width,
+    Graphics.height,
     preferBelow);
 
-  this.resizeMessageBubble(solved.x, solved.y, solved.width, solved.height);
+  // and handed back here, because this window is the one thing in the conversation that does not
+  // live in screen space - it hangs off the engine's window layer, which begins a few pixels in.
+  const insetX = BubbleLayout.windowInset(Graphics.width, Graphics.boxWidth);
+  const insetY = BubbleLayout.windowInset(Graphics.height, Graphics.boxHeight);
+
+  this.resizeMessageBubble(solved.x - insetX, solved.y - insetY, solved.width, solved.height);
 
   this.bubbleSprite()
     .refresh(solved.bounds, solved.tail);
@@ -565,7 +540,9 @@ Window_Message.prototype.terminateMessage = function()
 
   this.bubbleSprite().visible = false;
 
-  this.restoreRestingRect();
+  // the original cleared `$gameMessage` on the way past, so there is no message left asking for room
+  // and this settles on the plain rectangle the scene laid out.
+  this.restoreMessageRect();
 };
 
 /**

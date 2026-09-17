@@ -134,5 +134,36 @@ describe('J-Message-Bubbles BubbleLayout (direct src import)', () =>
     expect(solved.width).toBe(24);
     expect(solved.height).toBe(24);
   });
+
+  describe('the inset a window has to give back', () =>
+  {
+    it('is half of what the box gives up to the screen', () =>
+    {
+      // Arrange & Act
+      // the engine's own numbers: a 1920 screen laid out in the 1912 box it insets by four a side.
+      const inset = BubbleLayout.windowInset(1920, 1912);
+
+      // Assert- four, which is how far the window layer begins inside the screen.
+      expect(inset).toBe(4);
+    });
+
+    it('measures the vertical axis the same way', () =>
+    {
+      // Arrange & Act
+      const inset = BubbleLayout.windowInset(1080, 1072);
+
+      // Assert
+      expect(inset).toBe(4);
+    });
+
+    it('is nothing at all for a project whose box fills its screen', () =>
+    {
+      // Arrange & Act
+      const inset = BubbleLayout.windowInset(816, 816);
+
+      // Assert- a floating message then needs no correction, and must not invent one.
+      expect(inset).toBe(0);
+    });
+  });
 });
 //endregion plugins/message/ext/bubbles/services/bubble-layout.test.js

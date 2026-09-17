@@ -106,6 +106,10 @@ describe('Window_Message glyph pipeline', () =>
     globalThis.__PLUGIN_VERSION__ = '2.0.0';
 
     await import('../../../../../src/plugins/message/core/_metadata/initialization.js');
+
+    // the window sizes itself from how many lines the message holds, and asking that is an accessor
+    // this plugin adds - the engine keeps its lines private and offers only `allText` against them.
+    await import('../../../../../src/plugins/message/core/objects/Game_Message.js');
     await import('../../../../../src/plugins/message/core/windows/Window_Message.js');
   });
 
