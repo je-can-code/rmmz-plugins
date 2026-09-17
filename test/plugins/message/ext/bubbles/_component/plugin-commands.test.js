@@ -49,7 +49,7 @@ describe('J-Message-Bubbles plugin commands (direct src import)', () =>
     globalThis.J = realJ;
     globalThis.J.BASE.Metadata.Version = '3.2.0';
     globalThis.J.MESSAGE = {
-      Metadata: { version: { version: () => '2.0.0' } },
+      Metadata: { version: { version: () => '2.1.0' } },
       EXT: {},
     };
 

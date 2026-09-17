@@ -49,4 +49,25 @@ J.MESSAGE.RegExp.LeaderChoiceConditional = /<leaderChoiceCondition:[ ]?(\d+)>/i;
 J.MESSAGE.RegExp.NotLeaderChoiceConditional = /<notLeaderChoiceCondition:[ ]?(\d+)>/i;
 J.MESSAGE.RegExp.SwitchOnChoiceConditional = /<switchOnChoiceCondition:[ ]?(\d+)>/i;
 J.MESSAGE.RegExp.SwitchOffChoiceConditional = /<switchOffChoiceCondition:[ ]?(\d+)>/i;
+
+/**
+ * The text code welding a message to the one written after it.
+ *
+ * <pre>
+ * Structure:
+ *  \more
+ *
+ * Example:
+ *  I have been thinking about this for a while.\more
+ *
+ * Translation:
+ *  reveal this message and the next one together, as a single window.
+ * </pre>
+ *
+ * The trailing word boundary is what keeps this from matching the front of a longer code. Without
+ * it a `\moreover` somebody invents later would be silently eaten here, and the half of it left
+ * behind would be drawn to the screen for a player to read.
+ * @type {RegExp}
+ */
+J.MESSAGE.RegExp.MoreLink = /\\more\b/i;
 //endregion introduction

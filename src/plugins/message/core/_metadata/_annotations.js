@@ -138,6 +138,50 @@
  * waving, and a colour code inside a wave keeps its colour while it moves.
  *
  * ============================================================================
+ * COMBINING MESSAGES
+ * A long speech is uncomfortable to author as a single Show Text command. The
+ * editor offers four lines, the box holds four lines, and a paragraph broken
+ * across several commands reaches the player as several boxes with a button
+ * press between each one.
+ *
+ * The text code below welds a message onto the one written directly after it.
+ * The two are revealed as a single message, in a single window that grows to
+ * hold all of it. The code itself is removed before anything is drawn.
+ *
+ * TEXT CODE FORMAT:
+ *  \more
+ *
+ * Put it anywhere in a Show Text command whose text should run on into the next
+ * one. The end of the last line is the tidiest place; a line holding nothing
+ * but the code leaves an empty line behind in the message.
+ *
+ * TEXT CODE EXAMPLES:
+ *  Show Text: "I have been thinking about this for a while.\more"
+ *  Show Text: "And I still do not know what to tell you."
+ * Both lines appear together in one window, and the player presses the confirm
+ * button once rather than twice.
+ *
+ *  Show Text: "First.\more"
+ *  Show Text: "Second.\more"
+ *  Show Text: "Third."
+ * All three are welded into a single message. A chain runs for as long as each
+ * message in it carries the code; the message that ends the chain does not.
+ *
+ * WHAT THE COMBINED MESSAGE LOOKS LIKE:
+ * The first message of a chain decides everything about presentation- the face
+ * image, the Name field, the Background and Position dropdowns, and the \pop
+ * target if J-Message-Bubbles is installed. Every message welded onto it
+ * contributes its text and nothing else.
+ *
+ * The window grows downward to fit, up to the height of the screen. A chain
+ * that would outgrow the screen stops before the message that would overflow
+ * it, and that message is shown as an ordinary separate message instead.
+ *
+ * A chain only ever reaches the Show Text command written immediately after it.
+ * Anything sitting in between- a conditional branch closing, a set of choices,
+ * the end of the page- ends the chain, whether or not more was asked for.
+ *
+ * ============================================================================
  * SPEAKER VOICES
  * Every message already knows who is speaking- either from the Name field of
  * the Show Text command, or from the face image it carries. That is enough to
@@ -207,6 +251,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 2.1.0
+ *    Added the \more text code, which welds a message onto the one written
+ *    after it. The box grows to hold whatever they add up to.
  * - 2.0.0
  *    Renamed from J-MessageTextCodes. Update the entry in js/plugins.js and
  *    delete the old file; nothing else in a project has to change.

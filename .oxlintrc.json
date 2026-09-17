@@ -483,6 +483,7 @@
     "MenuCommandBroadcaster": "writable",
     "MenuSection": "writable",
     "MenuStatusCatalog": "writable",
+    "MessageChain": "writable",
     "MessageConfig": "writable",
     "MessageEffectRegistry": "writable",
     "MessageEffectSet": "writable",

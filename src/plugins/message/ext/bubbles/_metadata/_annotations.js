@@ -90,6 +90,10 @@
  * the characters those bubbles were pointing at have stopped existing.
  * ============================================================================
  * CHANGELOG:
+ * - 1.2.0
+ *    A floating message now sits exactly on its speaker, and stops shifting
+ *    when it hands over to the bubble it leaves behind.
+ *    The first \pop in a message names the speaker; any later one is ignored.
  * - 1.1.0
  *    A conversation now ends by itself once the player has control back, and
  *    the bubbles fade out rather than vanishing.

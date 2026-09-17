@@ -27,6 +27,27 @@ class BubbleLayout
   static BorderInset = 2;
 
   /**
+   * How far the engine's window layer starts inside the screen, on one axis.
+   *
+   * Windows are laid out in a box inset from the screen by a few pixels on every side, so that a
+   * window sitting flush against the edge still has room for the frame art that rings its rectangle.
+   * Anything parented to that layer therefore draws that far in from where its own coordinates claim;
+   * anything parented to the scene draws exactly where it says.
+   *
+   * A floating message is placed against a character, and characters are drawn on the map - which is
+   * scene-parented and knows nothing about the box. So a message window has to hand the inset back,
+   * or every bubble in the game sits that far off the speaker it is pointing at.
+   * @param {number} screenSize How big the screen is on this axis.
+   * @param {number} boxSize How big the window box is on the same axis.
+   * @returns {number} How far in the window layer begins.
+   */
+  static windowInset(screenSize, boxSize)
+  {
+    // both edges share the difference, which is what centres the box on the screen.
+    return (screenSize - boxSize) / 2;
+  }
+
+  /**
    * Where a bubble goes and what shape it is, given its text and who it belongs to.
    * @param {BubbleBounds} content How much room the text needs, measured from the contents origin.
    * @param {number} padding How much clear space sits between the contents and the window edge.
