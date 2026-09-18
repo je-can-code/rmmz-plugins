@@ -45,7 +45,7 @@ describe('J-Message-Chatter tag parsing (direct src import)', () =>
     globalThis.J.MESSAGE = {
       Metadata: { version: { version: () => '2.0.0' } },
       EXT: {
-        BUBBLES: { Metadata: { version: { version: () => '1.0.0' } } },
+        BUBBLES: { Metadata: { version: { version: () => '1.2.1' } } },
       },
     };
 

@@ -38,7 +38,7 @@ describe('J-Message-Chatter metadata (direct src import)', () =>
     globalThis.J.MESSAGE = {
       Metadata: { version: { version: () => '2.0.0' } },
       EXT: {
-        BUBBLES: { Metadata: { version: { version: () => '1.0.0' } } },
+        BUBBLES: { Metadata: { version: { version: () => '1.2.1' } } },
       },
     };
 
@@ -97,7 +97,7 @@ describe('J-Message-Chatter metadata (direct src import)', () =>
 
       // Act & Assert
       await expect(import(initializationPath))
-        .rejects.toThrow('Either missing J-Message-Bubbles or has a lower version than the required: 1.0.0');
+        .rejects.toThrow('Either missing J-Message-Bubbles or has a lower version than the required: 1.2.1');
     });
 
     it('throws when J-Base has not been loaded at all', async () =>
