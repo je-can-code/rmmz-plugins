@@ -49,6 +49,9 @@
  * default is enabled.
  * ============================================================================
  * CHANGELOG:
+ * - 1.0.5
+ *    The danger indicator now draws with the rest of a battler's captions, so the
+ *    time of day no longer tints it.
  * - 1.0.4
  *    Fixed the NaN check on power level running before the line that produces the
  *    NaN, and answering with a warning rather than a usable sentinel.

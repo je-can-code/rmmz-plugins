@@ -157,6 +157,10 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 3.17.0
+ *    Character captions now draw on a plane above the world, so the time of day no
+ *    longer tints a nameplate or a health bar. They still go dark with the ambient
+ *    light, which is what keeps an unlit corner hiding whoever stands in it.
  * - 3.16.1
  *    ParsableComment now admits ~ % = ? ( ) and ; so an event comment may carry
  *    message effect codes, and a sentence somebody says out loud rather than

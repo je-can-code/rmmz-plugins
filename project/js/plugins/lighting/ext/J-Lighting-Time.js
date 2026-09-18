@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.0 LIGHTING-TIME] The day and night cycle, as colour and as darkness.
+ * [v1.0.1 LIGHTING-TIME] The day and night cycle, as colour and as darkness.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -76,6 +76,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.0.1
+ *    The sky is now right on the first frame after a save load, a transfer or a
+ *    closed menu, rather than spending five seconds fading in from daylight.
  * - 1.0.0
  *    The initial release.
  * ============================================================================
@@ -177,7 +180,7 @@ J.LIGHTING.EXT.TIME = {};
 /**
 * The metadata associated with this plugin.
 */
-J.LIGHTING.EXT.TIME.Metadata = new J_LIGHTING_TIME_PluginMetadata("J-Lighting-Time", "1.0.0");
+J.LIGHTING.EXT.TIME.Metadata = new J_LIGHTING_TIME_PluginMetadata("J-Lighting-Time", "1.0.1");
 /**
 * A collection of all aliased methods for this plugin.
 */

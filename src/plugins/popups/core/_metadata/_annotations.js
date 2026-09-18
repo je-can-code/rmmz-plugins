@@ -45,6 +45,9 @@
  * Resources) build popups on top of.
  * ============================================================================
  * CHANGELOG:
+ * - 2.2.0
+ *    Damage popups now draw above everything that takes light away, so a hit
+ *    always reports itself even when whatever was hit cannot be seen.
  * - 2.1.1
  *    Routed the rejected-text-pop warning through J-Base's new Diagnostics. The
  *    prefix is now a literal rather than read from J.POPUPS.Metadata.name, so it

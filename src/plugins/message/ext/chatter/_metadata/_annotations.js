@@ -136,6 +136,8 @@
  * spoken line at bottom, or the reverse.
  * ============================================================================
  * CHANGELOG:
+ * - 1.0.3
+ *    Keeps up with a rename in J-Message-Bubbles. Nothing changes for a player.
  * - 1.0.2
  *    A character handed a new line while still saying one no longer keeps the
  *    old line on screen indefinitely.

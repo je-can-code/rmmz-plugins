@@ -90,6 +90,9 @@
  * the characters those bubbles were pointing at have stopped existing.
  * ============================================================================
  * CHANGELOG:
+ * - 1.2.1
+ *    A plugin that walks the scene calling refresh() on everything it finds no
+ *    longer crashes on a message bubble.
  * - 1.2.0
  *    A floating message now sits exactly on its speaker, and stops shifting
  *    when it hands over to the bubble it leaves behind.

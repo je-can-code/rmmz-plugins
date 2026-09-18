@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v2.1.1 POPUPS] Map text popups for JABS and beyond.
+ * [v2.2.0 POPUPS] Map text popups for JABS and beyond.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -45,6 +45,9 @@
  * Resources) build popups on top of.
  * ============================================================================
  * CHANGELOG:
+ * - 2.2.0
+ *    Damage popups now draw above everything that takes light away, so a hit
+ *    always reports itself even when whatever was hit cannot be seen.
  * - 2.1.1
  *    Routed the rejected-text-pop warning through J-Base's new Diagnostics. The
  *    prefix is now a literal rather than read from J.POPUPS.Metadata.name, so it
@@ -111,7 +114,7 @@ J.POPUPS = {};
 /**
 * The metadata associated with this plugin.
 */
-J.POPUPS.Metadata = new J_PopupsPluginMetadata("J-Popups", "2.1.1");
+J.POPUPS.Metadata = new J_PopupsPluginMetadata("J-Popups", "2.2.0");
 /**
 * Namespace for optional first-party extensions (J-Popups-ABS, J-Popups-APT, …).
 */
