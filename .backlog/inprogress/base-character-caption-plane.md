@@ -46,7 +46,12 @@ popups into the same container.
 - Preserve the existing rule the class documents at length: nothing about caption *space* stretches.
   Cancelling scale must keep behaving exactly as it does now — a nameplate at y 0 and its tier stripe
   at y 16 are one object drawn in two pieces.
-- Move J-Popups' two `this.parent.addChild(sprite)` sites onto the same container.
+- Move J-Popups' `this.parent` sites off the tilemap - **three of them, not two**: the second add
+  path at line 172 and the removal at line 248 have to travel with the first, since removing from a
+  container that no longer holds the sprite is silent and leaks every popup forever.
+- Popups get a plane of **their own**, above the ambient mask, rather than sharing the caption
+  plane. J-Popups owns it, since it owns the feature. See the ambient entry under Definition of done
+  for why the two planes ended up on opposite sides of the mask.
 - Decide depth ordering among captions. Today each one inherits its character's place in `_tilemap`,
   which sorts by y, so a nearer character's nameplate naturally draws over a farther one's. A flat
   container loses that and needs explicit sorting or an accepted overlap.
@@ -59,8 +64,17 @@ popups into the same container.
 - [ ] coverage still 100% on every touched file under `src/plugins/**`
 - [ ] in-game at midnight with J-TIME running: an enemy nameplate and HP gauge render at full
       brightness while the terrain around them is tinted
-- [ ] in-game on a map with a dark `<ambient:>`: the same captions and a damage popup stay readable
-      while the world is dark
+- [ ] in-game on a map with a dark `<ambient:>`: the captions are taken away with the world while a
+      damage popup stays readable. **This reverses the check this item originally carried**, and the
+      reason is a testplay: captions escaping the ambient mask as well as the tone turned every
+      nameplate into an enemy radar, and an unlit corner stopped hiding anything. The tone and the
+      mask are not the same kind of dark - one grades colour, the other decides what can be seen -
+      so a caption ignores the first and obeys the second. Popups are the exception and obey
+      neither, because a hit is felt rather than seen: you can tell how hard you connected with
+      something without being able to make out what you connected with
+- [ ] in-game with a light source in an otherwise dark room: an enemy standing in the light is
+      named, one standing outside it is not. The mask multiplies with holes cut for each light, so
+      this falls out of the placement rather than needing a rule of its own
 - [ ] two enemies standing one tile apart on the y axis — the nearer one's nameplate draws over the
       farther one's, as it does today
 - [ ] a character mid-`<motion:[breathe]>` and mid-`<motion:[spin]>`: its nameplate neither squashes

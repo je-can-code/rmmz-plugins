@@ -58,8 +58,11 @@ Sprite_Character.prototype.setupDangerIndicator = function()
     // create and assign the danger indicator sprite.
     this.setDangerIndicator(this.createDangerIndicatorSprite(dangerIndicatorIcon));
 
-    // add it to this sprite's tracking.
-    this.addChild(this.dangerIndicator());
+    // add it to the caption layer rather than to this sprite, because a danger rating is a reading
+    // about a battler rather than a part of it - so it belongs where the nameplate and the health
+    // bar already are, above the world and out of the screen tone.
+    this.characterOverlay()
+      .addChild(this.dangerIndicator());
   }
 };
 

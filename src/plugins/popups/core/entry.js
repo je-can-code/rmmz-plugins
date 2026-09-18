@@ -10,5 +10,6 @@ import './managers/TextPopManager.js';
 import './sprites/Sprite_MapDamage.js';
 import './sprites/Sprite_Damage.js';
 import './sprites/Sprite_Character.js';
+import './sprites/Spriteset_Map.js';
 import './objects/Game_Character.js';
 

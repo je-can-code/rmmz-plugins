@@ -173,6 +173,47 @@ describe('TimeLightingCoordinator', () =>
     });
   });
 
+  describe('declareForArrival', () =>
+  {
+    // hour 4 opens a phase, so its colour is that phase's entry exactly rather than partway into a
+    // fade - which makes it the one hour where "did it arrive" has an exact answer to compare.
+    const hourFourTone = [ -100, -100, -30, 100 ];
+
+    it('lands on the hour colour in the first composed frame', () =>
+    {
+      // Arrange
+      globalThis.$gameTime = { hours: () => 4 };
+      TimeLightingCoordinator.refreshMapSuppression();
+
+      // Act
+      TimeLightingCoordinator.declareForArrival($gameTime);
+      Graphics.frameCount += 1;
+      const result = ScreenLightingComposer.compose();
+
+      // Assert
+      // a save loaded at this hour shows this colour immediately, rather than booting bright and
+      // sinking into it over the next five seconds.
+      expect(result.tone()).toEqual(hourFourTone);
+    });
+
+    it('is still travelling on the first composed frame when the hour merely turned over', () =>
+    {
+      // Arrange - the same hour through the other door, which is what makes the case above a claim
+      // about the arrival rather than about hour 4 being easy to reach.
+      globalThis.$gameTime = { hours: () => 4 };
+      TimeLightingCoordinator.refreshMapSuppression();
+
+      // Act
+      TimeLightingCoordinator.declareForCurrentTime($gameTime);
+      Graphics.frameCount += 1;
+      const result = ScreenLightingComposer.compose();
+
+      // Assert - underway, and nowhere near there.
+      expect(result.tone()).not.toEqual(hourFourTone);
+      expect(result.tone()).not.toEqual([ 0, 0, 0, 0 ]);
+    });
+  });
+
   describe('locking', () =>
   {
     it('reports unfrozen by default', () =>

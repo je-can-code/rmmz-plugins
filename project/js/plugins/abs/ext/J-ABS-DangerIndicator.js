@@ -464,7 +464,7 @@ Sprite_Character.prototype.setupDangerIndicator = function() {
 		this.dangerIndicator().setIconIndex(dangerIndicatorIcon);
 	} else {
 		this.setDangerIndicator(this.createDangerIndicatorSprite(dangerIndicatorIcon));
-		this.addChild(this.dangerIndicator());
+		this.characterOverlay().addChild(this.dangerIndicator());
 	}
 };
 /**

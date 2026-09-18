@@ -119,6 +119,20 @@ Sprite_Character.prototype.createIncomingTextPops = function()
 };
 
 /**
+ * The plane that this character's popups are drawn on.
+ *
+ * A sprite cannot reach it by walking up its own parents, because it is deliberately not one of
+ * them - a popup is parented above the world rather than inside it. The scene is asked instead,
+ * which is the same route this plugin already takes to find a character's sprite in the first
+ * place.
+ * @returns {Sprite}
+ */
+Sprite_Character.prototype.popupPlane = function()
+{
+  return SceneManager._scene._spriteset.popupPlane();
+};
+
+/**
  * Creates a single incoming text pop.
  * @param {Map_TextPop} popup The popup data.
  */
@@ -148,7 +162,10 @@ Sprite_Character.prototype.createIncomingTextPop = function(popup)
     this.nonDamagePopSprites().push(sprite);
   }
 
-  this.parent.addChild(sprite);
+  // popups ride their own plane above everything rather than the tilemap, so a damage number is
+  // neither tinted by the hour nor taken away by the dark.
+  this.popupPlane()
+    .addChild(sprite);
   J.POPUPS.notifyPopupSpriteSpawned(character, popup, sprite);
 };
 
@@ -169,7 +186,9 @@ Sprite_Character.prototype.attachConvertedDamagePopupSprite = function(sprite, p
     this.nonDamagePopSprites().push(sprite);
   }
 
-  this.parent.addChild(sprite);
+  // the same plane the queued path parents to, so both routes land a popup in one place.
+  this.popupPlane()
+    .addChild(sprite);
   J.POPUPS.notifyPopupSpriteSpawned(this.character(), popup, sprite);
 };
 //endregion incoming subscription
@@ -245,7 +264,11 @@ Sprite_Character.prototype._removeTrackedPopSprite = function(sprite)
 {
   const character = this.character();
 
-  this.parent.removeChild(sprite);
+  // detached from whatever parented it, which must be the same container both add paths chose -
+  // removing from the wrong one is silent, because PIXI answers a non-child with null rather than
+  // an error, and the popup would simply never leave the screen.
+  this.popupPlane()
+    .removeChild(sprite);
   J.POPUPS.notifyPopupSpriteFinished(character, sprite._j._popups._sourcePopup, sprite);
   sprite.destroy();
 };

@@ -377,7 +377,7 @@ class Sprite_ChatterBubble
     this.y = solved.y;
 
     this.bubble()
-      .refresh(solved.bounds, solved.tail);
+      .drawBubble(solved.bounds, solved.tail);
   }
 }
 

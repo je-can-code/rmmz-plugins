@@ -1875,7 +1875,7 @@ var Sprite_ChatterBubble = class extends Sprite {
 		const solved = BubbleLayout.solve(this.content(), this.padding(), anchorX, anchorY, Graphics.width, Graphics.height, preferBelow);
 		this.x = solved.x;
 		this.y = solved.y;
-		this.bubble().refresh(solved.bounds, solved.tail);
+		this.bubble().drawBubble(solved.bounds, solved.tail);
 	}
 };
 

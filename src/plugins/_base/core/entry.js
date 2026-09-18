@@ -15,6 +15,7 @@ import './core/ParameterKeys.js';
 import './core/JsonEx.js';
 import './core/Bitmap.js';
 import './core/TextRasterMetrics.js';
+import './core/CaptionPlaneRoster.js';
 
 import './models/PluginVersion.js';
 import './models/PluginMetadata.js';
@@ -85,6 +86,7 @@ import './scenes/Scene_ActorFacetBase.js';
 
 import './sprites/Sprite.js';
 import './sprites/Sprite_BaseText.js';
+import './sprites/Sprite_CaptionPlane.js';
 import './sprites/Sprite_CharacterOverlay.js';
 import './sprites/Sprite_Character.js';
 import './sprites/Sprite_Face.js';
