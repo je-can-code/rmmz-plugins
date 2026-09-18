@@ -484,6 +484,7 @@ J.BASE.Aliased = {
   Sprite_Animation: new Map(),
   Sprite_Character: new Map(),
   Sprite_Damage: new Map(),
+  Spriteset_Map: new Map(),
   Window_Base: new Map(),
   Window_Command: new Map(),
   Window_Selectable: new Map(),

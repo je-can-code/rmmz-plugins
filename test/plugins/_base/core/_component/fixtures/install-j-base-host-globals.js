@@ -331,9 +331,21 @@ export function installJBaseHostGlobals(
   sandbox.Game_Actor.prototype.constructor = sandbox.Game_Actor;
   sandbox.Game_Enemy.prototype.constructor = sandbox.Game_Enemy;
 
-  // Every display object in RMMZ is a PIXI container, and J-Base's Sprite_Character attaches its
-  // overlay layer during initMembers - so a placeholder that cannot accept a child detonates at
-  // construction rather than at whatever the test was actually about.
+  // RMMZ's own `Sprite` is a function that dispatches straight into `initialize`, and every sprite
+  // subclass in this repo relies on that being how its members get set up - Sprite_CharacterOverlay
+  // and Sprite_CaptionPlane both do their entire construction there. A placeholder that skips the
+  // dispatch hands back an object whose fields were never created, which fails later and somewhere
+  // else, so the placeholder does what the engine does.
+  sandbox.Sprite = function Sprite()
+  {
+    this.initialize(...arguments);
+  };
+  sandbox.Sprite.prototype = {};
+  sandbox.Sprite.prototype.initialize = function() {};
+
+  // Every display object in RMMZ is a PIXI container, and the caption plane parents captions to
+  // itself as they arrive - so a placeholder that cannot accept a child detonates at construction
+  // rather than at whatever the test was actually about.
   sandbox.Sprite.prototype.addChild = function(child)
   {
     this.children ??= [];

@@ -16,8 +16,10 @@ Scene_Map.prototype.onMapLoaded = function()
   // find out whether this place can see the sky.
   TimeLightingCoordinator.refreshMapSuppression();
 
-  // and then say what the sky is doing, or withdraw it entirely.
-  TimeLightingCoordinator.declareForCurrentTime($gameTime);
+  // and then say what the sky is doing, or withdraw it entirely. instantly, because an arrival has
+  // no previous sky to travel from - the player was looking at a loading screen, a menu, or the
+  // inside of a different map, so the first frame they see should already be the right one.
+  TimeLightingCoordinator.declareForArrival($gameTime);
 
   // perform original logic.
   J.LIGHTING.EXT.TIME.Aliased.Scene_Map.get('onMapLoaded')

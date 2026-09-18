@@ -62,7 +62,11 @@ describe('J-ABS-Danger Sprite_Character (unit, all downstream dependencies mocke
   function buildSprite(overrides = {})
   {
     const sprite = Object.create(globalThis.Sprite_Character.prototype);
-    sprite.addChild = vi.fn();
+
+    // the indicator is parented to the caption layer rather than to the sprite, so that layer is
+    // what a test watches to see whether it was attached.
+    const characterOverlay = { addChild: vi.fn() };
+    sprite.characterOverlay = () => characterOverlay;
     sprite.canUpdate = () => true;
     sprite.isJabsBattler = () => true;
     sprite.getBattler = () => ({ id: 'battler' });
@@ -119,7 +123,8 @@ describe('J-ABS-Danger Sprite_Character (unit, all downstream dependencies mocke
 
       // Assert
       expect(globalThis.Sprite_Icon).toHaveBeenCalledWith(5);
-      expect(sprite.addChild).toHaveBeenCalledWith(sprite._j._dangerIndicator);
+      expect(sprite.characterOverlay().addChild)
+        .toHaveBeenCalledWith(sprite._j._dangerIndicator);
       expect(sprite._j._dangerIndicator.hide).toHaveBeenCalledTimes(1);
       expect(sprite._j._dangerIndicator.scale).toEqual({ x: 0.5, y: 0.5 });
       expect(sprite._j._dangerIndicator.move).toHaveBeenCalledWith(-50, 8);
@@ -132,7 +137,8 @@ describe('J-ABS-Danger Sprite_Character (unit, all downstream dependencies mocke
       sprite.getDangerIndicatorIcon = () => 5;
       sprite.setupDangerIndicator();
       globalThis.Sprite_Icon.mockClear();
-      sprite.addChild.mockClear();
+      sprite.characterOverlay()
+        .addChild.mockClear();
       sprite.getDangerIndicatorIcon = () => 9;
 
       // Act
@@ -140,7 +146,9 @@ describe('J-ABS-Danger Sprite_Character (unit, all downstream dependencies mocke
 
       // Assert
       expect(globalThis.Sprite_Icon).not.toHaveBeenCalled();
-      expect(sprite.addChild).not.toHaveBeenCalled();
+      expect(sprite.characterOverlay().addChild)
+        .not
+        .toHaveBeenCalled();
       expect(sprite._j._dangerIndicator.setIconIndex).toHaveBeenCalledWith(9);
     });
   });

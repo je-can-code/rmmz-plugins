@@ -426,7 +426,7 @@ Window_Message.prototype.updateMessageBubble = function()
   this.resizeMessageBubble(solved.x - insetX, solved.y - insetY, solved.width, solved.height);
 
   this.bubbleSprite()
-    .refresh(solved.bounds, solved.tail);
+    .drawBubble(solved.bounds, solved.tail);
 };
 
 /**

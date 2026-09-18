@@ -308,10 +308,17 @@ class Sprite_MessageBubble
    * splitting them so the body could be cached would put a seam across the tail's mouth, which is
    * the one join in the whole shape that has to be invisible. A dozen path commands per frame for a
    * single object is not the cost worth paying for that.
+   *
+   * **Deliberately not called `refresh`, and not called `redraw` either.** Both of those are engine
+   * conventions and both are no-arg everywhere the engine uses them, which makes them names that
+   * tools walk a scene tree calling blindly - VisuStella's debug menu does exactly that on close,
+   * and a no-arg call into a method that needs two arguments lands as `undefined` where geometry
+   * was expected. Giving a method that requires arguments a conventional no-arg name is an invitation
+   * for somebody else's reasonable assumption to detonate inside our code.
    * @param {BubbleBounds} bounds The box the border encloses.
    * @param {?object} tail Where the tail leaves and points, or null to draw no tail.
    */
-  refresh(bounds, tail)
+  drawBubble(bounds, tail)
   {
     // the name has to be measured before the border is drawn, because how much border to leave out
     // is a question about how wide the name turned out to be.

@@ -335,7 +335,7 @@ class Sprite_SpentBubble
     this.y = solved.y;
 
     this.bubble()
-      .refresh(solved.bounds, solved.tail);
+      .drawBubble(solved.bounds, solved.tail);
   }
 }
 

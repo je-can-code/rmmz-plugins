@@ -54,9 +54,13 @@ Sprite_Character.prototype.initMembers = function()
    */
   this._j._characterOverlay = new Sprite_CharacterOverlay();
 
-  // the layer is built and attached here rather than when something first needs it, because a
-  // caption is added partway through a character's life and would otherwise have nowhere to go.
-  this.addChild(this._j._characterOverlay);
+  // the layer is built here rather than when something first needs it, because a caption is added
+  // partway through a character's life and would otherwise have nowhere to go.
+  //
+  // it is built but not attached: the layer belongs to the spriteset's caption plane rather than to
+  // this sprite, which is what keeps captions out of the screen tone. a sprite has no idea a
+  // spriteset exists, so parenting is the plane's job and it collects this on the next frame.
+  this._j._characterOverlay.setCharacterSprite(this);
 };
 
 /**

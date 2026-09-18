@@ -26,7 +26,7 @@ globalThis.J ||= {};
   }
 
   // check to ensure we have the minimum required version of the J-Message-Bubbles plugin.
-  const requiredBubblesVersion = '1.0.0';
+  const requiredBubblesVersion = '1.2.1';
   const bubblesVersion = J.MESSAGE.EXT.BUBBLES.Metadata.version.version();
   const hasBubblesRequirement = J.BASE.Helpers.satisfies(bubblesVersion, requiredBubblesVersion);
   if (hasBubblesRequirement === false)
