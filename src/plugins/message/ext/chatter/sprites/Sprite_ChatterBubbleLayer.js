@@ -152,7 +152,7 @@ class Sprite_ChatterBubbleLayer
 
     this.removeFinishedBubbles(live);
 
-    live.forEach(([ token, session ]) => this.addMissingBubble(token, session));
+    live.forEach(([ token, session ]) => this.ensureBubble(token, session));
   }
 
   /**
@@ -185,17 +185,29 @@ class Sprite_ChatterBubbleLayer
   }
 
   /**
-   * Gives a talker a bubble if they do not already have one on this plane.
+   * Makes sure a talker has a bubble on this plane showing the line they are currently saying.
    * @param {string} token The target token of whoever is talking.
    * @param {ChatterSession} session The line they are saying.
    */
-  addMissingBubble(token, session)
+  ensureBubble(token, session)
   {
     const existing = this.bubbles()
       .get(token);
 
-    // already drawn, and its own update is what types it out and keeps it over its speaker.
-    if (existing !== undefined) return;
+    // already drawn for this very line, and its own update is what types it out and keeps it over
+    // its speaker.
+    if (existing !== undefined && existing.session() === session) return;
+
+    // a bubble is built around one session and remembers how far through it has typed, so the sprite
+    // showing this speaker's last line cannot be handed their next one - it would go on showing the
+    // old words, and would never report the new line as finished.
+    if (existing !== undefined)
+    {
+      this.removeChild(existing);
+
+      this.bubbles()
+        .delete(token);
+    }
 
     // somebody who started a new line before the last one had finished leaving. The departing bubble
     // is showing the previous line, so it goes rather than being caught and reused.

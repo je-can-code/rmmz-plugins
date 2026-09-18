@@ -318,20 +318,23 @@ class Sprite_ChatterBubble
 
     // most frames of most lines reveal nothing new, and walking ninety sprites to change nothing is
     // work the map does not need doing sixty times a second.
-    if (revealed === this.revealed()) return;
+    if (revealed !== this.revealed())
+    {
+      sprites.slice(this.revealed(), revealed)
+        .forEach(sprite =>
+        {
+          sprite.visible = true;
+        });
 
-    sprites.slice(this.revealed(), revealed)
-      .forEach(sprite =>
-      {
-        sprite.visible = true;
-      });
-
-    this.setRevealed(revealed);
+      this.setRevealed(revealed);
+    }
 
     if (revealed < sprites.length) return;
 
     // the line is all there, which is the moment its time on screen begins - the manager is counting
-    // reading time rather than total time, so a long line is not on screen for less of it.
+    // reading time rather than total time, so a long line is not on screen for less of it. Said
+    // every frame from here rather than once, because a line with nothing to type out is fully
+    // revealed on its first frame without the count ever having moved.
     session.flagRevealed();
   }
 
