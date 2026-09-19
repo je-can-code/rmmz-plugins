@@ -7575,3 +7575,72 @@ treated as 0 at the start of the range and 59 at the end (not independently conf
 ```
 This event page is only active from 9:00am to 5:00pm on day 29, month 5, year 2021 — nowhere else
 on the calendar.
+
+---
+
+## J-Weather (`src/plugins/weather/core/`)
+
+Draws the ambience of a place — rain, drifting snow, leaves on the wind, embers, motes of light in a
+dark passage. Every one of those is the same emitter carrying a different picture along a different
+path, so adding a look is a data edit in `data/config.weather.json` rather than a code change.
+
+### `<weather:PRESET>`
+
+**Applies to:**
+Maps only (Map Properties → Note)
+
+**When:**
+on arrival at the map — transfers, save loads and new games alike
+
+**Effect:**
+Draws the named preset from `data/config.weather.json`. PRESET is a name such as `rain`, `snow`,
+`fog`, `embers`, `leaves`, `motes` or `submerged`; a name nothing is configured for is reported and
+draws nothing.
+
+The tag says **nothing about how hard it is coming down**, and that is the point: strength is not a
+property of a place. The Deluge Plains are rainy at every hour of every day, and only the amount
+moves — which is the sky's business, and the sky belongs to J-Weather-Time.
+
+On a map with no sky overhead the authored look still draws — a cave full of drifting motes is not
+weatherless — and simply sits at its middle strength, since there is no sky to read.
+
+**A map's weather is resolved fresh on arrival and never carries in from the previous map.** Weather
+that travelled with the player would make a connecting corridor look different depending on which end
+they walked in from, and would force every room beside an unusual one to re-assert normality on the
+way out.
+
+```
+<weather:rain>
+```
+The Deluge Plains: rainy, at whatever strength the sky is currently at.
+
+```
+<weather:motes>
+```
+The Forlorn Basin: faint drifting lights in dark air, at their settled strength.
+
+### `<noWeather>`
+
+**Applies to:**
+Maps only (Map Properties → Note)
+
+**When:**
+on arrival at the map
+
+**Effect:**
+Nothing falls here, whatever the sky is doing. Outranks everything, including a `<weather:>` tag on
+the same map.
+
+**Deliberately rare.** An untagged map with no sky already draws nothing, so an ordinary interior
+needs no tag at all. This exists for the narrower case of somewhere that genuinely *has* sky overhead
+and still should not be rained on — a covered market, a colonnade, a courtyard under a canopy.
+
+### What an untagged map does
+
+It asks the sky. An outdoor map with no tag draws whatever the weather currently is, which is what
+stops a corridor between two rainy fields being the one dry spot in the region. An indoor map with no
+tag draws nothing, because there is no sky for it to ask.
+
+Indoor and outdoor is read from J-TIME's `<noToneChange>` rather than from a tag of this plugin's
+own. "Can you see the sky from here" is one question, and asking it twice eventually gets two
+answers.

@@ -805,6 +805,16 @@ export function installPixelAbsExtHostGlobals(sandbox = globalThis, extParams = 
   };
   JABS_Battler.prototype.updatePixelIdleWander = noop;
   JABS_Battler.prototype.smartMoveTowardCoordinates = noop;
+
+  // the formation give-up seams Ally AI hangs on every battler, which the pixel formation mover
+  // calls. Never stalled by default, so a test that says nothing about the give-up exercises the
+  // movement branches it was written for.
+  JABS_Battler.prototype.observeFormationApproach = noop;
+  JABS_Battler.prototype.clearFormationApproach = noop;
+  JABS_Battler.prototype.hasGivenUpOnFormationSlot = function()
+  {
+    return this.__givenUpOnSlot === true;
+  };
   JABS_Battler.prototype.setIdle = function(value)
   {
     this.__idle = value;

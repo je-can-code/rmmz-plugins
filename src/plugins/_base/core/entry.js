@@ -96,6 +96,7 @@ import './sprites/Sprite_Animation.js';
 import './sprites/Sprite_AnimationMV.js';
 import './sprites/Sprite_Damage.js';
 import './sprites/Sprite_Gauge.js';
+import './sprites/Spriteset_Base.js';
 import './sprites/Spriteset_Map.js';
 
 import './windows/TileMap.js';

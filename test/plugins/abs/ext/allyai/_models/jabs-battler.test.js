@@ -4,6 +4,7 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 describe('J-ABS-AllyAI JABS_Battler (unit, all downstream dependencies mocked)', () =>
 {
   let originalShouldEngage;
+  let originalInitIdleInfo;
 
   beforeAll(async () =>
   {
@@ -33,6 +34,10 @@ describe('J-ABS-AllyAI JABS_Battler (unit, all downstream dependencies mocked)',
 
     originalShouldEngage = vi.fn();
     JABS_Battler.prototype.shouldEngage = originalShouldEngage;
+
+    originalInitIdleInfo = vi.fn();
+    JABS_Battler.prototype.initIdleInfo = originalInitIdleInfo;
+
     globalThis.JABS_Battler = JABS_Battler;
 
     await import('../../../../../../src/plugins/abs/ext/allyai/_models/JABS_Battler.js');
@@ -259,6 +264,59 @@ describe('J-ABS-AllyAI JABS_Battler (unit, all downstream dependencies mocked)',
       battler.applyBattleMemories(memory);
 
       expect(applyMemory).toHaveBeenCalledWith(memory);
+    });
+  });
+
+  describe('initIdleInfo()', () =>
+  {
+    it('still performs the original idle setup', () =>
+    {
+      // Arrange
+      const battler = new globalThis.JABS_Battler();
+
+      // Act
+      battler.initIdleInfo();
+
+      // Assert
+      expect(originalInitIdleInfo).toHaveBeenCalledTimes(1);
+    });
+
+    it('seeds a formation stall tracker that starts with no attempt recorded', () =>
+    {
+      // Arrange
+      const battler = new globalThis.JABS_Battler();
+
+      // Act
+      battler.initIdleInfo();
+
+      // Assert
+      // a single observation is a fresh attempt, so one frame of patience is not yet spent.
+      battler.getFormationStall()
+        .observe(5, 10, 10, 0.05);
+      expect(battler.getFormationStall()
+        .isStalled(1)).toBe(false);
+    });
+
+    it('gives each battler a tracker of its own', () =>
+    {
+      // Arrange
+      const rupert = new globalThis.JABS_Battler();
+      const someoneElse = new globalThis.JABS_Battler();
+      rupert.initIdleInfo();
+      someoneElse.initIdleInfo();
+
+      // Act
+      // only rupert is stuck; a shared tracker would strand his neighbour too.
+      rupert.getFormationStall()
+        .observe(5, 10, 10, 0.05);
+      rupert.getFormationStall()
+        .observe(5, 10, 10, 0.05);
+
+      // Assert
+      expect(rupert.getFormationStall()
+        .isStalled(1)).toBe(true);
+      expect(someoneElse.getFormationStall()
+        .isStalled(1)).toBe(false);
     });
   });
 });

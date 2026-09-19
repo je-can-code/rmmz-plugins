@@ -273,12 +273,20 @@ describe('J-ABS-Pixelistics remaining branch coverage (direct src import)', () =
         setPixelMoveCooldown: vi.fn(),
       }, characterOverrides);
 
+      // the formation give-up seams Ally AI hangs on every battler. Counted rather than tracked,
+      // because these tests are about the pixel mover's own branches: what matters here is that it
+      // asks, and the stall behaviour itself is proven against the real tracker in Ally AI's tests.
+      let observations = 0;
+
       const ally = Object.assign({
         getCharacter: () => character,
         isDodging: () => false,
         guarding: () => false,
         canBattlerMove: () => true,
         smartMoveTowardCoordinates: vi.fn(),
+        observeFormationApproach: vi.fn(() => { observations += 1; }),
+        hasGivenUpOnFormationSlot: () => observations > 3,
+        clearFormationApproach: vi.fn(),
       }, overrides);
 
       return { ally, character };
@@ -400,6 +408,50 @@ describe('J-ABS-Pixelistics remaining branch coverage (direct src import)', () =
       expect(ally.smartMoveTowardCoordinates).not.toHaveBeenCalled();
 
       globalThis.J.ABS.EXT.ALLYAI = previousAllyAi;
+    });
+
+    it('reports every frame of an approach so the give-up can be measured', () =>
+    {
+      // Arrange
+      const { ally } = buildAlly(5, 5);
+
+      // Act
+      aiManager.moveTowardSlotIfNeeded(ally, 0, 0);
+
+      // Assert
+      expect(ally.observeFormationApproach).toHaveBeenCalledWith(Math.sqrt(50), 0, 0);
+    });
+
+    it('settles instead of stepping once the ally has given up on the slot', () =>
+    {
+      // Arrange
+      // the stub gives up after three observations; the first three therefore still move.
+      const { ally, character } = buildAlly(0.6, 0);
+      aiManager.moveTowardSlotIfNeeded(ally, 0, 0);
+      aiManager.moveTowardSlotIfNeeded(ally, 0, 0);
+      aiManager.moveTowardSlotIfNeeded(ally, 0, 0);
+      const movesBeforeGivingUp = ally.smartMoveTowardCoordinates.mock.calls.length;
+      character.stopPixelMoving.mockClear();
+
+      // Act
+      aiManager.moveTowardSlotIfNeeded(ally, 0, 0);
+
+      // Assert
+      expect(ally.smartMoveTowardCoordinates).toHaveBeenCalledTimes(movesBeforeGivingUp);
+      expect(character.stopPixelMoving).toHaveBeenCalledTimes(1);
+    });
+
+    it('spends the attempt once the ally is standing in its slot', () =>
+    {
+      // Arrange
+      const { ally } = buildAlly(0, 0);
+
+      // Act
+      aiManager.moveTowardSlotIfNeeded(ally, 0, 0);
+
+      // Assert
+      expect(ally.clearFormationApproach).toHaveBeenCalledTimes(1);
+      expect(ally.observeFormationApproach).not.toHaveBeenCalled();
     });
   });
 

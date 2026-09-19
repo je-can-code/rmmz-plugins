@@ -1230,5 +1230,37 @@ describe('J-Pixelistics Game_CharacterBase pixel movement helpers (direct src im
       expect(downTile).toBe(2);
     });
   });
+
+  describe('setPosition', () =>
+  {
+    it('keeps a fractional logical position rather than snapping it to a tile', () =>
+    {
+      // Arrange
+      const ch = new globalThis.Game_CharacterBase();
+      ch.initMembers();
+
+      // Act
+      // the two axes round in opposite directions, so a surviving Math.round cannot agree with both.
+      ch.setPosition(18.06, 10.7);
+
+      // Assert
+      expect(ch._x).toBe(18.06);
+      expect(ch._y).toBe(10.7);
+    });
+
+    it('leaves the render position identical to the logical position', () =>
+    {
+      // Arrange
+      const ch = new globalThis.Game_CharacterBase();
+      ch.initMembers();
+
+      // Act
+      ch.setPosition(18.06, 10.7);
+
+      // Assert
+      expect(ch._realX).toBe(18.06);
+      expect(ch._realY).toBe(10.7);
+    });
+  });
 });
 //endregion plugins/pixel/core/_component/game-character-base-pixel.test.js

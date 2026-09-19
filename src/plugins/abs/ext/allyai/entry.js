@@ -4,6 +4,7 @@ import './_metadata/_annotations.js';
 import './_models/JABS_AllyAI.js';
 import './_models/JABS_Battler.js';
 import './_models/JABS_Formation.js';
+import './_models/JABS_FormationStall.js';
 import './managers/JABS_AiManager.js';
 import './managers/JABS_Engine.js';
 import './managers/JABS_SkillSlotManager.js';

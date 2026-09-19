@@ -374,7 +374,25 @@ JABS_AiManager.moveTowardSlotIfNeeded = function(allyBattler, desiredX, desiredY
   const tolerance = J.ABS.EXT.ALLYAI.Metadata.FormationTolerance;
 
   // if within tolerance, do not micro-adjust.
-  if (this.isWithinTolerance(allyBattler, desiredX, desiredY, tolerance)) return;
+  if (this.isWithinTolerance(allyBattler, desiredX, desiredY, tolerance))
+  {
+    // standing in the slot spends the attempt; the next one starts from a clean history.
+    allyBattler.clearFormationApproach();
+
+    return;
+  }
+
+  // measure this frame's approach before deciding whether another step is worth issuing.
+  const distance = this.distanceToSlot(allyBattler, desiredX, desiredY);
+  allyBattler.observeFormationApproach(distance, desiredX, desiredY);
+
+  // an ally that has stopped getting closer stops trying.
+  //
+  // Issuing the move anyway is what produces the vibrating companion: the pathfinder rounds to a
+  // tile, so an ally wedged near a boundary is handed the opposite answer on alternating frames,
+  // and a move command faces its character whether or not the move succeeds. Standing still is both
+  // the correct answer to an unreachable slot and the only one that looks deliberate.
+  if (allyBattler.hasGivenUpOnFormationSlot()) return;
 
   // acquire the character once.
   const character = allyBattler.getCharacter();
@@ -400,14 +418,31 @@ JABS_AiManager.moveTowardSlotIfNeeded = function(allyBattler, desiredX, desiredY
  */
 JABS_AiManager.isWithinTolerance = function(allyBattler, targetX, targetY, tolerance)
 {
-  // compute Euclidean distance to the target point using fractional coords.
-  const chr = allyBattler.getCharacter();
-  const dx = chr.x - targetX;
-  const dy = chr.y - targetY;
-  const dist = Math.sqrt(dx * dx + dy * dy);
+  // measure how far off the slot this ally currently is.
+  const distance = this.distanceToSlot(allyBattler, targetX, targetY);
 
   // return whether or not we are close enough.
-  return dist <= tolerance;
+  return distance <= tolerance;
+};
+
+/**
+ * Measures how far an ally is from a formation slot.
+ *
+ * Euclidean over the fractional coordinates rather than over tiles, so that an ally a hair out of
+ * position is not reported as a whole tile away - and so the number shrinks smoothly as the ally
+ * walks, which is what makes it usable as a measure of progress rather than merely of arrival.
+ * @param {JABS_Battler} allyBattler The ally battler.
+ * @param {number} targetX The target x tile.
+ * @param {number} targetY The target y tile.
+ * @returns {number} The distance between the ally and the slot.
+ */
+JABS_AiManager.distanceToSlot = function(allyBattler, targetX, targetY)
+{
+  const character = allyBattler.getCharacter();
+  const dx = character.x - targetX;
+  const dy = character.y - targetY;
+
+  return Math.sqrt((dx * dx) + (dy * dy));
 };
 
 /**

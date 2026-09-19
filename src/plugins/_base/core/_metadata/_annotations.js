@@ -157,6 +157,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 3.18.0
+ *    Added Spriteset_Base#baseSprite, so a plugin can parent something inside the
+ *    screen tone rather than over it without reaching for the field directly.
  * - 3.17.0
  *    Character captions now draw on a plane above the world, so the time of day no
  *    longer tints a nameplate or a health bar. They still go dark with the ambient

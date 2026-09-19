@@ -1,0 +1,14 @@
+import './_metadata/initialization.js';
+import './core/WeatherMotion.js';
+import './core/WeatherPresets.js';
+import './core/MapWeatherResolver.js';
+import './core/WeatherVariables.js';
+import './core/WeatherAudio.js';
+import './core/PlayerTravel.js';
+import './managers/ImageManager.js';
+import './managers/WeatherAudioChannel.js';
+import './managers/AudioManager.js';
+import './managers/WeatherDirector.js';
+import './sprites/Sprite_WeatherLayer.js';
+import './sprites/Spriteset_Map.js';
+import './scenes/Scene_Map.js';
