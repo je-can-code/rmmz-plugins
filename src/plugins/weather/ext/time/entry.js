@@ -2,6 +2,7 @@ import './_metadata/initialization.js';
 import './core/SkyStates.js';
 import './core/SkyWalk.js';
 import './core/SkyForecast.js';
+import './core/ForecastWhen.js';
 import './core/SkyConfigValidator.js';
 import './core/ClimateCurves.js';
 import './core/MapWeatherResolver.js';

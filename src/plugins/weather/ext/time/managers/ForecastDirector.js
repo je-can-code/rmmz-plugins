@@ -2,6 +2,7 @@
 import ForecastDigest from './../core/ForecastDigest.js';
 import ForecastTable from './../core/ForecastTable.js';
 import ForecastVoice from './../core/ForecastVoice.js';
+import ForecastWhen from './../core/ForecastWhen.js';
 import SkyForecast from './../core/SkyForecast.js';
 import SkyStates from './../core/SkyStates.js';
 
@@ -266,20 +267,40 @@ class ForecastDirector
    *
    * The remark is null until somebody has written lines for this weather, and the window draws
    * the plain reading in that case rather than an empty space.
-   * @returns {{weather: ?{preset: string, intensity: string}, remark: ?object}}
+   * @param {Game_Time} clock The clock being read.
+   * @returns {{weather: ?{preset: string, intensity: string}, when: string, remark: ?object}}
    */
-  static readingHere()
+  static readingHere(clock)
   {
     const weather = WeatherDirector.current();
 
     return {
       weather,
+      when: ForecastDirector.whenLine(clock),
       remark: ForecastVoice.remarkFor(
         ForecastDirector.voices(),
         weather,
         ForecastDirector.partyActorIds(),
         Math.random()),
     };
+  }
+
+  /**
+   * When "now" is, in words.
+   *
+   * Built here rather than in the window so the format is testable, and so the three views cannot
+   * drift into three ways of writing a date.
+   * @returns {string} Ready for `drawTextEx`, or {@link String.empty} off the clock.
+   */
+  static whenLine(clock)
+  {
+    const phase = ForecastDirector.phaseOf(clock);
+
+    // an hour that belongs to no phase has no sensible date line either, and saying nothing is
+    // better than saying something wrong about it.
+    if (phase === SkyForecast.OffClock) return String.empty;
+
+    return ForecastWhen.nowLineOf(phase, clock.hours(), clock.minutes());
   }
 
   /**

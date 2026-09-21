@@ -1,4 +1,5 @@
 //region Window_ForecastWeek
+import ForecastWhen from './../core/ForecastWhen.js';
 import SkyForecast from './../core/SkyForecast.js';
 
 /**
@@ -74,17 +75,44 @@ class Window_ForecastWeek
    */
   dateWidth()
   {
-    return Math.floor(this.innerWidth * 0.28);
+    return this.textWidth('Wednesday 12/30') + (this.itemPadding() * 2);
   }
 
   /**
    * How wide one sampled phase's column is.
+   *
+   * **Measured from what goes in it rather than from the window.** Splitting the full width three
+   * ways puts a hundred-pixel icon-and-word in the middle of a four-hundred-pixel column, which
+   * reads as three lonely things rather than as a table - and it pushes each heading so far from
+   * the next column's contents that the eye stops connecting them.
    * @param {object} digest The week being drawn.
    * @returns {number}
    */
   cellWidth(digest)
   {
-    return Math.floor((this.innerWidth - this.dateWidth()) / digest.phases.length);
+    const widest = this.widestLookWidth();
+    const natural = widest + ImageManager.iconWidth + (this.itemPadding() * 3);
+    const available = Math.floor((this.innerWidth - this.dateWidth()) / digest.phases.length);
+
+    // never wider than the room actually available, so a narrow window still fits its columns.
+    return Math.min(natural, available);
+  }
+
+  /**
+   * How much room the longest weather name needs.
+   *
+   * Every name is measured rather than the longest being guessed at, because the names are
+   * authored in the configuration and a new one longer than any of these would otherwise be the
+   * one that overlaps its neighbour.
+   * @returns {number}
+   */
+  widestLookWidth()
+  {
+    const config = J.WEATHER.Metadata.weatherConfig;
+    const names = Object.keys(config.presets)
+      .filter(name => name.startsWith('_') === false);
+
+    return names.reduce((widest, name) => Math.max(widest, this.textWidth(name)), 0);
   }
 
   /**
@@ -114,7 +142,8 @@ class Window_ForecastWeek
     {
       const x = this.dateWidth() + (column * this.cellWidth(digest));
 
-      this.drawText(Time_Snapshot.TimesOfDayName(phaseOfDay), x, 0, this.cellWidth(digest), 'center');
+      // left, to sit over the icon that starts each cell rather than floating above its middle.
+      this.drawText(Time_Snapshot.TimesOfDayName(phaseOfDay), x, 0, this.cellWidth(digest), 'left');
     });
 
     this.resetTextColor();
@@ -151,12 +180,16 @@ class Window_ForecastWeek
    */
   dateLabel(day)
   {
-    if (day.dayOffset === 0) return 'Today';
-
     const month = SkyForecast.monthOf(day.startPhase);
     const date = SkyForecast.dayOfMonthOf(day.startPhase);
 
-    return `${month}/${date}`;
+    // today is named rather than dated, because "is that this Tuesday or next" is the one
+    // question a seven-day forecast must never make somebody ask.
+    if (day.dayOffset === 0) return `Today ${month}/${date}`;
+
+    const weekday = ForecastWhen.weekdayOf(day.startPhase);
+
+    return `${weekday} ${month}/${date}`;
   }
 
   /**

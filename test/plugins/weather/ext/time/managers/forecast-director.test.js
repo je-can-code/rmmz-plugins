@@ -502,9 +502,25 @@ describe('ForecastDirector', () =>
       globalThis.WeatherDirector.current = () => ({ preset: 'motes', intensity: 'light' });
 
       // Act.
-      const result = ForecastDirector.readingHere();
+      const result = ForecastDirector.readingHere(clockOf(0, 1, 1, 13));
 
       // Assert.
+      expect(result.weather)
+        .toEqual({ preset: 'motes', intensity: 'light' });
+    });
+
+    it('says nothing about when it is for an hour off the clock face', () =>
+    {
+      // Arrange - `setTime` can write an hour that belongs to no phase, and a date line built
+      // from one would be confidently wrong rather than merely absent.
+      globalThis.WeatherDirector.current = () => ({ preset: 'motes', intensity: 'light' });
+
+      // Act.
+      const result = ForecastDirector.readingHere(clockOf(2021, 5, 29, 47));
+
+      // Assert - the weather still reports, since it does not depend on the clock at all.
+      expect(result.when)
+        .toBe('');
       expect(result.weather)
         .toEqual({ preset: 'motes', intensity: 'light' });
     });
@@ -515,7 +531,7 @@ describe('ForecastDirector', () =>
       globalThis.WeatherDirector.current = () => null;
 
       // Act.
-      const result = ForecastDirector.readingHere();
+      const result = ForecastDirector.readingHere(clockOf(0, 1, 1, 13));
 
       // Assert.
       expect(result.weather)
@@ -529,7 +545,7 @@ describe('ForecastDirector', () =>
       globalThis.WeatherDirector.current = () => ({ preset: 'rain', intensity: 'heavy' });
 
       // Act.
-      const result = ForecastDirector.readingHere();
+      const result = ForecastDirector.readingHere(clockOf(0, 1, 1, 13));
 
       // Assert.
       expect(result.remark)
@@ -545,7 +561,7 @@ describe('ForecastDirector', () =>
       globalThis.WeatherDirector.current = () => ({ preset: 'rain', intensity: 'heavy' });
 
       // Act.
-      const result = ForecastDirector.readingHere();
+      const result = ForecastDirector.readingHere(clockOf(0, 1, 1, 13));
 
       // Assert.
       expect(result.remark)
@@ -562,7 +578,7 @@ describe('ForecastDirector', () =>
       globalThis.WeatherDirector.current = () => ({ preset: 'rain', intensity: 'heavy' });
 
       // Act.
-      const result = ForecastDirector.readingHere();
+      const result = ForecastDirector.readingHere(clockOf(0, 1, 1, 13));
 
       // Assert.
       expect(result.remark)

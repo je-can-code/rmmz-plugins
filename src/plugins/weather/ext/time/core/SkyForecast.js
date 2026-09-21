@@ -59,6 +59,12 @@ class SkyForecast
   static PhasesPerDay = 6;
 
   /**
+   * Days in a week, matching the seven `Time_Snapshot` names them.
+   * @type {number}
+   */
+  static DaysPerWeek = 7;
+
+  /**
    * The answer handed back for a date that is not on the clock.
    *
    * `TimePhases.phaseOfHour` reports an hour off the 24-hour face as `-1`, and the clock can
@@ -169,6 +175,23 @@ class SkyForecast
     const day = Math.floor(absolutePhase / SkyForecast.PhasesPerDay);
 
     return day % SkyForecast.daysPerYear();
+  }
+
+  /**
+   * Which day of the week an absolute phase falls on.
+   *
+   * Counted from the absolute day rather than the day of the *year*, so the week runs on through
+   * new year's day instead of restarting - three hundred and sixty days is not a whole number of
+   * weeks, and a calendar that quietly repeated a weekday every December would be the sort of
+   * thing somebody notices a year after it shipped.
+   * @param {number} absolutePhase The phase being asked about.
+   * @returns {number} 0 through 6, counting from Monday as `Time_Snapshot` does.
+   */
+  static dayOfWeekIdOf(absolutePhase)
+  {
+    const day = Math.floor(absolutePhase / SkyForecast.PhasesPerDay);
+
+    return day % SkyForecast.DaysPerWeek;
   }
 
   /**

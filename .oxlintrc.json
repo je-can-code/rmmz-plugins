@@ -219,6 +219,7 @@
     "ForecastPlaces": "writable",
     "ForecastTable": "writable",
     "ForecastVoice": "writable",
+    "ForecastWhen": "writable",
     "FormulaEffect": "writable",
     "FramedTarget": "writable",
     "FramedTargetConfiguration": "writable",

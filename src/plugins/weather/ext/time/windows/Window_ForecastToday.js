@@ -1,5 +1,5 @@
 //region Window_ForecastToday
-import SkyForecast from './../core/SkyForecast.js';
+import ForecastWhen from './../core/ForecastWhen.js';
 
 /**
  * How the sky over Raevula moves through a whole day.
@@ -107,13 +107,10 @@ class Window_ForecastToday
   drawDate(digest)
   {
     const { startPhase } = digest;
-    const month = SkyForecast.monthOf(startPhase);
-    const day = SkyForecast.dayOfMonthOf(startPhase);
-    const season = SkyForecast.seasonNameOf(startPhase);
 
-    this.changeTextColor(ColorManager.systemColor());
-    this.drawText(`Day ${day}, Month ${month} - ${season}`, 0, 0, this.innerWidth, 'left');
-    this.resetTextColor();
+    // `drawTextEx` because the line carries the season as J-TIME's own text code, so it arrives
+    // with the icon and colour it has everywhere else rather than being spelled out again here.
+    this.drawTextEx(ForecastWhen.dateLineOf(startPhase), 0, 0, this.innerWidth);
   }
 
   /**

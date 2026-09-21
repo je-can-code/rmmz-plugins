@@ -41,7 +41,7 @@ class Window_ForecastCommand
    */
   makeCommandList()
   {
-    const now = new WindowCommandBuilder('Right Now').setSymbol(Window_ForecastCommand.NowSymbol)
+    const now = new WindowCommandBuilder('Here and Now').setSymbol(Window_ForecastCommand.NowSymbol)
       .setHelpText('What the weather is doing where you are standing.')
       .build();
 
@@ -49,7 +49,7 @@ class Window_ForecastCommand
       .setHelpText('How the sky over Raevula moves through the rest of the day.')
       .build();
 
-    const week = new WindowCommandBuilder('The Week').setSymbol(Window_ForecastCommand.WeekSymbol)
+    const week = new WindowCommandBuilder('Next Seven Days').setSymbol(Window_ForecastCommand.WeekSymbol)
       .setHelpText('The days ahead over Raevula, at a glance.')
       .build();
 

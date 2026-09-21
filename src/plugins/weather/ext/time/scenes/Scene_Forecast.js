@@ -364,7 +364,7 @@ class Scene_Forecast
     }
 
     this.nowWindow()
-      .setReading(ForecastDirector.readingHere());
+      .setReading(ForecastDirector.readingHere($gameTime));
   }
 
   /**

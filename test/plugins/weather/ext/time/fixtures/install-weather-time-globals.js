@@ -28,6 +28,13 @@ export function installWeatherTimeGlobals(sky, sandbox = globalThis)
 
   sandbox.TimePhases = TimePhases;
 
+  // the day-of-week vocabulary belongs to J-TIME, which is a hoisted global once it has loaded.
+  sandbox.Time_Snapshot = {
+    DaysOfWeekName: dayOfWeekId => [
+      'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday',
+    ][ dayOfWeekId ],
+  };
+
   sandbox.J ||= {};
   sandbox.J.WEATHER ||= {};
   sandbox.J.WEATHER.EXT ||= {};
@@ -81,13 +88,14 @@ export function installWeatherTimeGlobals(sky, sandbox = globalThis)
  * @param {number} hours The hour, 0 through 23 - or something else, deliberately.
  * @returns {object}
  */
-export function clockOf(years, months, days, hours)
+export function clockOf(years, months, days, hours, minutes = 0)
 {
   return {
     years: () => years,
     months: () => months,
     days: () => days,
     hours: () => hours,
+    minutes: () => minutes,
   };
 }
 //endregion plugins/weather/ext/time/fixtures/install-weather-time-globals.js

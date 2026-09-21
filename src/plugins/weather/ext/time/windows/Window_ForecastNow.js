@@ -80,8 +80,24 @@ class Window_ForecastNow
 
     if (reading === null) return;
 
+    this.drawWhen(reading);
     this.drawWeather(reading);
     this.drawRemark(reading);
+  }
+
+  /**
+   * Draws when "now" is.
+   *
+   * `drawTextEx` rather than `drawText`, because the line carries the season and the time of day
+   * as J-TIME's own text codes - so both arrive with the icon and colour they have everywhere
+   * else in the game rather than being spelled out a second way here.
+   * @param {object} reading What the weather is, when it is, and who is remarking on it.
+   */
+  drawWhen(reading)
+  {
+    const { when } = reading;
+
+    this.drawTextEx(when, 0, 0, this.innerWidth);
   }
 
   /**
@@ -92,12 +108,13 @@ class Window_ForecastNow
   {
     const { weather } = reading;
     const config = J.WEATHER.Metadata.weatherConfig;
+    const y = this.lineHeight();
 
     // nothing falling is a real answer, and the commonest one indoors. The word for it is
     // authored, because it is the same word the text code drops into somebody's dialogue.
     if (weather === null)
     {
-      this.drawText(WeatherLabel.nothingFalling(config), 0, 0, this.innerWidth, 'left');
+      this.drawText(WeatherLabel.nothingFalling(config), 0, y, this.innerWidth, 'left');
 
       return;
     }
@@ -109,13 +126,13 @@ class Window_ForecastNow
     // first day rather than waiting on fifteen drawings.
     if (iconIndex === WeatherIcons.None)
     {
-      this.drawText(label, 0, 0, this.innerWidth, 'left');
+      this.drawText(label, 0, y, this.innerWidth, 'left');
 
       return;
     }
 
-    this.drawIcon(iconIndex, 0, 0);
-    this.drawText(label, ImageManager.iconWidth + this.itemPadding(), 0, this.innerWidth, 'left');
+    this.drawIcon(iconIndex, 0, y);
+    this.drawText(label, ImageManager.iconWidth + this.itemPadding(), y, this.innerWidth, 'left');
   }
 
   /**
@@ -135,7 +152,7 @@ class Window_ForecastNow
     if (remark === null) return;
 
     const speaker = $gameActors.actor(remark.who);
-    const top = this.lineHeight() * 2;
+    const top = this.lineHeight() * 3;
 
     this.drawFace(speaker.faceName(), speaker.faceIndex(), 0, top);
 
