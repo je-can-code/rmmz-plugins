@@ -45,4 +45,25 @@ J.ELEM.RegExp.StrictElementIds = /<strictElements:[ ]?(\[[\d, ]+])>/i;
 J.ELEM.RegExp.BoostElement      = /<boostElement:[ ]?(\[\d+,[ ]?-?\+?\d+])>/gi;
 J.ELEM.RegExp.PierceElement     = /<pierceElement:[ ]?(\[\d+,[ ]?\d+])>/gi;
 J.ELEM.RegExp.ThisPierceElement = /<thisPierceElement:[ ]?(\[\d+,[ ]?\d+])>/gi;
+
+/**
+ * A bonus to damage dealt against targets belonging to a particular elemental family.
+ *
+ * Unlike every other tag in this table, this one is keyed on **what the target is** rather than on
+ * what the attack is made of. The attacker never has to carry the element to benefit- studying
+ * undead makes you better at killing undead regardless of what you are swinging.
+ *
+ * <pre>
+ * Structure:
+ *  <slayer:[ELEMENT_ID, PERCENT]>
+ *
+ * Example:
+ *  <slayer:[11, 50]>
+ *
+ * Translation:
+ *  Deal 50% more damage to targets weak to element 11.
+ * </pre>
+ * @type {RegExp}
+ */
+J.ELEM.RegExp.Slayer            = /<slayer:[ ]?(\[\d+,[ ]?-?\+?\d+])>/gi;
 //endregion Introduction

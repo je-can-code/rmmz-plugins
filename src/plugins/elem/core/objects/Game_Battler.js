@@ -98,4 +98,67 @@ Game_Battler.prototype.extractElementRateBoosts = function(referenceData)
   // each <boostElement:[ELEMENT_ID, PERCENT_BOOST]> tag parses directly into a numeric tuple.
   return RPGManager.getArraysFromNotesByRegex(referenceData, J.ELEM.RegExp.BoostElement);
 };
+
+/**
+ * The slayer bonuses this battler has learned, as raw `[ELEMENT_ID, PERCENT]` tuples.
+ *
+ * Read from every note-bearing source on the battler, so a bonus can be granted by a state, a piece
+ * of equipment, a class or the battler's own row without any of those needing to know about the
+ * others. In practice these land on states and accessories.
+ * @returns {[number, number][]}
+ */
+Game_Battler.prototype.slayerBonuses = function()
+{
+  return RPGManager.getArraysFromAllNotesByRegex(this.getAllNotes(), J.ELEM.RegExp.Slayer);
+};
+
+/**
+ * Whether a target belongs to the elemental family named by an element id.
+ *
+ * Membership is read off the target's own innate element rates: something that takes extra damage
+ * from `vs Undead` is, by that fact, undead. Neutral is a rate of exactly one, so any authored
+ * weakness at all counts and no tuning threshold is needed to decide what something *is*.
+ * @param {Game_Actor|Game_Enemy} target The target whose family is in question.
+ * @param {number} elementId The element id naming the family.
+ * @returns {boolean}
+ */
+Game_Battler.prototype.isTargetInElementalFamily = function(target, elementId)
+{
+  // read the target's innate elemental profile from its database row.
+  const rates = target.databaseData()
+    .elementRates();
+
+  // a rate above neutral means this element identifies the target.
+  return rates[elementId] > 1;
+};
+
+/**
+ * The combined slayer multiplier this battler applies when striking a particular target.
+ *
+ * Every learned bonus whose family the target belongs to contributes, and they compound- two
+ * separate 50% sources against the same target produce 2.25x rather than 2x. That matches how
+ * {@link Game_Battler#elementRateBoost} and the elemental rates themselves already stack, so a
+ * player who has studied a family from two directions is never surprised by the arithmetic.
+ *
+ * Answers exactly `1` when nothing applies, which is the identity for the multiplication it feeds.
+ * @param {Game_Actor|Game_Enemy} target The target being struck.
+ * @returns {number} The multiplier to apply on top of all other damage math.
+ */
+Game_Battler.prototype.slayerMultiplierAgainst = function(target)
+{
+  // collect every slayer bonus this battler has available.
+  const bonuses = this.slayerBonuses();
+
+  // compound the bonuses whose family the target actually belongs to.
+  return bonuses.reduce((multiplier, [ elementId, percent ]) =>
+  {
+    // a bonus against a family this target is not part of contributes nothing.
+    if (this.isTargetInElementalFamily(target, elementId) === false) return multiplier;
+
+    // fold this bonus into the running product.
+    const bonusFactor = 1 + (percent / 100);
+
+    return multiplier * bonusFactor;
+  }, 1);
+};
 //endregion Game_Battler

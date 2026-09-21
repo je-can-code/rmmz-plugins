@@ -56,11 +56,15 @@ RPG_Enemy.prototype.inferredTypedElements = function()
  * Computes the list of element ids that represent this enemy’s inferred types
  * based on database element rates and naming conventions. No runtime states are considered.
  *
+ * The numeric half of this- accumulating rates and deciding which deviate far enough from neutral
+ * to be identifying- belongs to {@link RPG_BaseBattler} and is shared with anything else that needs
+ * to ask what a battler is. What stays here is the part that is specific to this project's element
+ * naming: which deviation *direction* counts depends on how the element is named.
+ *
  * Rules overview:
- * - Standard (non‑prefixed) elements with rate < ResistThreshold are alignments.
- * - Prefixed elements (`vs `, `x `, `tool-`) with rate > SlayerWeaknessThreshold are taxonomy/attributes.
- * - No cap; exclusions (names or ids) only apply to the resistance‑alignment path.
- * - Exclusions only apply to the resistance path.
+ * - Standard (non-prefixed) elements are alignments when strictly resisted.
+ * - Prefixed elements (`vs `, `x `, `tool-`) are taxonomy/attributes when strictly weak to.
+ * - No cap; exclusions (names or ids) only apply to the resistance-alignment path.
  *
  * @returns {number[]} The list of inferred element ids.
  */
@@ -69,97 +73,82 @@ RPG_Enemy.prototype.computeInferredTypedElementIds = function()
   // thresholds and exclusions from metadata.
   const resistThreshold = J.APT.EXT.TYPED.Metadata.ResistThreshold;
   const slayerThreshold = J.APT.EXT.TYPED.Metadata.SlayerWeaknessThreshold;
+
+  // the candidate ids are everything deviating far enough from neutral in either direction.
+  const candidates = this.inferredElementIds(resistThreshold, slayerThreshold);
+
+  // the rates themselves decide which direction each candidate deviated in.
+  const rates = this.elementRates();
+
+  // normalize the configured exclusions into ids and lowercased names.
+  const excludedIds = this.excludedAlignmentIds();
+  const excludedNames = this.excludedAlignmentNames();
+
+  // partition the candidates by how their element is named.
+  return candidates.filter(elementId =>
+  {
+    // resolve the element's name to learn which naming convention it follows.
+    const name = String($dataSystem.elements[elementId])
+      .trim()
+      .toLowerCase();
+
+    // a prefixed element is taxonomy, and only a weakness to it is identifying.
+    if (RPG_Enemy.isPrefixedElementName(name)) return rates[elementId] > slayerThreshold;
+
+    // an excluded element never contributes an alignment, whatever its rate.
+    if (excludedIds.has(elementId)) return false;
+    if (excludedNames.has(name)) return false;
+
+    // everything else is a standard element, where resistance is what aligns the battler.
+    return rates[elementId] < resistThreshold;
+  });
+};
+
+/**
+ * Whether an element name follows one of the prefixed naming conventions.
+ *
+ * The three prefixes all mark an element as describing *what a battler is* rather than what kind of
+ * damage it takes, which is why they are read from the weakness side instead of the resistance one.
+ * @param {string} elementName The already-lowercased, already-trimmed element name.
+ * @returns {boolean}
+ */
+RPG_Enemy.isPrefixedElementName = function(elementName)
+{
+  // slayer taxonomy, attribute tags, and tool interactions, in that order.
+  return elementName.startsWith('vs ') || elementName.startsWith('x ') || elementName.startsWith('tool-');
+};
+
+/**
+ * The configured alignment exclusions that were authored as element ids.
+ * @returns {Set<number>}
+ */
+RPG_Enemy.prototype.excludedAlignmentIds = function()
+{
   const excluded = J.APT.EXT.TYPED.Metadata.ExcludedAlignmentElements;
 
-  // normalize exclusions to sets of ids and lowercase names.
-  const excludedIds = new Set();
-  const excludedNames = new Set();
-  excluded.forEach(entry =>
-  {
-    // parse numeric ids and collect others as lowercased names.
-    const asNum = Number(entry);
-    if (Number.isFinite(asNum))
-    {
-      excludedIds.add(asNum);
-    }
-    else
-    {
-      const normalizedName = String(entry)
-        .trim()
-        .toLowerCase();
+  // an entry that parses as a number was authored as an id.
+  const ids = excluded
+    .map(entry => Number(entry))
+    .filter(entry => Number.isFinite(entry));
 
-      excludedNames.add(normalizedName);
-    }
-  });
+  return new Set(ids);
+};
 
-  // local helpers to classify element names.
-  const isSlayer = (low) => low.startsWith('vs ');
-  const isAttr = (low) => low.startsWith('x ');
-  const isTool = (low) => low.startsWith('tool-');
+/**
+ * The configured alignment exclusions that were authored as element names.
+ * @returns {Set<string>}
+ */
+RPG_Enemy.prototype.excludedAlignmentNames = function()
+{
+  const excluded = J.APT.EXT.TYPED.Metadata.ExcludedAlignmentElements;
 
-  // compute multiplicative element rates from DB traits.
-  const names = $dataSystem.elements;
-  const traits = Array.isArray(this.traits) ? this.traits : [];
-  const rates = new Array(names.length).fill(1.0);
-  for (let i = 0; i < traits.length; i++)
-  {
-    // check for element-rate trait.
-    const t = traits[i];
-    if (t && t.code === 11 /* TRAIT_ELEMENT_RATE */)
-    {
-      // multiply the rate for the target element id.
-      const eid = t.dataId;
-      rates[eid] = rates[eid] * Number(t.value);
-    }
-  }
+  // anything that did not parse as a number was authored as a name.
+  const names = excluded
+    .filter(entry => !Number.isFinite(Number(entry)))
+    .map(entry => String(entry)
+      .trim()
+      .toLowerCase());
 
-  // evaluate rules and collect ids.
-  const inferred = [];
-  for (let eid = 0; eid < names.length; eid++)
-  {
-    // acquire element name and normalized variants.
-    const rawName = names[eid];
-    if (!rawName) continue;
-    const name = String(rawName).trim();
-    const low = name.toLowerCase();
-
-    // pull the computed rate for this element id.
-    const rate = rates[eid];
-
-    // classify by naming convention.
-    const slayer = isSlayer(low);
-    const attr = isAttr(low);
-    const tool = isTool(low);
-    const prefixed = slayer || attr || tool;
-
-    // resistance-as-alignment for standard (non-prefixed) elements.
-    if (prefixed === false)
-    {
-      // skip excluded ids/names for this path.
-      if (excludedIds.has(eid)) continue;
-      if (excludedNames.has(low)) continue;
-
-      // include when strictly resistant.
-      if (rate < resistThreshold)
-      {
-        inferred.push(eid);
-      }
-    }
-
-    // slayer/attribute/tool taxonomy when strictly weak.
-    if (prefixed === true)
-    {
-      // include when strictly weak to this prefixed element.
-      if (rate > slayerThreshold)
-      {
-        inferred.push(eid);
-      }
-    }
-  }
-
-  // NOTE: no de-duplication is needed here. the loop above visits each element id exactly once and
-  // its two collection paths are mutually exclusive on `prefixed`, so an id can be appended at most
-  // one time. the ids are therefore already unique and already in element order.
-  return inferred;
+  return new Set(names);
 };
 //endregion RPG_Enemy

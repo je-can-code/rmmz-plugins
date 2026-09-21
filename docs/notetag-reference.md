@@ -718,6 +718,51 @@ rate = min(1.0, 0.0 + 0.50) = 0.50, target takes 50% fire damage.
 
 ---
 
+### `<slayer:[ELEMENT_ID, PERCENT]>`
+
+**Applies to:**
+Actors, Classes, Skills, Weapons, Armors, States, Enemies — anything reachable from the attacker's
+`getAllNotes()`
+
+**When:**
+the attacker's damage is finalized, after every other piece of damage math
+
+**Effect:**
+multiplies outgoing damage by `(1 + PERCENT/100)` when the **target belongs to the elemental family
+named by ELEMENT_ID**. Negative percents work, for a penalty.
+
+This is the one element tag keyed on *what the target is* rather than on what the attack is made of.
+The attacker does **not** need to carry ELEMENT_ID as an attack element to benefit — studying undead
+makes you better at killing undead regardless of what you are swinging. That is the whole difference
+from `<boostElement>`, which only fires when the attack itself bears the element.
+
+**Family membership** is read from the target's own database element rates: a target whose innate
+rate for ELEMENT_ID is **above 1.0** belongs to that family. Neutral is exactly 1.0, so any authored
+weakness counts and there is no threshold to tune. Runtime states and equipment are ignored — a
+battler that is briefly vulnerable to fire is not a fire creature.
+
+**Stacking:** every applicable tag compounds. Two separate `<slayer:[11, 50]>` sources against the
+same target give **2.25x**, not 2x — matching how element rates and `<boostElement>` already stack.
+
+**Position in the pipeline:** this wraps the finished damage value, so it scales elemental rates,
+critical, variance and guard alike. It is applied last, on top of everything.
+
+```
+<slayer:[11, 50]>
+```
+Deal 50% more damage to anything weak to element 11.
+
+```
+<slayer:[11, 50]>
+<slayer:[16, 25]>
+```
+On one source: +50% against element-11 targets and +25% against element-16 targets. A target that is
+both takes **1.875x**.
+
+**See also:** `<boostElement>` (keyed on the attack's elements instead), `<pierceElement>`
+
+---
+
 ## J-Proficiency (`src/plugins/prof/core/`)
 
 ### `<proficiencyBonus:NUM>`
