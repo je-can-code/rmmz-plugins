@@ -156,10 +156,18 @@ describe('WeatherPresets', () =>
 
     it('carries every knob a motion can declare through to the resolved layer', () =>
     {
-      // Arrange - a motion with every optional knob set to a value nothing else in this fixture
-      // uses. This is the guard against the whole class of bug where a knob is added to the motion
-      // model and to the config, works perfectly in its own unit tests, and is silently dropped
-      // here - which looks exactly like the feature not existing.
+      // Arrange - a motion declaring **every** knob a motion can declare, each at a value nothing
+      // else in this fixture uses. This is the guard against the whole class of bug where a knob
+      // is added to the motion model and to the config, works perfectly in its own unit tests, and
+      // is silently dropped here - which looks exactly like the feature not existing.
+      //
+      // **This fixture is the contract.** It guarded nothing for `drag` because `drag` was never
+      // added to it: the knob was authored on `streak`, read by `WeatherMotion.advance`, and lost
+      // in between, so shooting stars travelled at full pelt to the moment they vanished. A knob
+      // added to the motion model belongs in this list the same day.
+      //
+      // `becomes` is the one exception and is covered by its own cases below, because naming it
+      // here would resolve a successor and change what this is measuring.
       const everything = {
         motions: {
           kitchenSink: {
@@ -171,11 +179,21 @@ describe('WeatherPresets', () =>
             roll: 0.5,
             growth: 0.25,
             fadeIn: 8,
+            fadeOut: 9,
             staggerFrames: 60,
             margin: 280,
             entryDepth: 700,
             sway: 14,
             swayRate: 0.06,
+            life: 240,
+            lifeJitter: 90,
+            drag: 0.013,
+            tilt: 0.4,
+            stretch: 0.3,
+            lean: 0.16,
+            flip: 0.03,
+            pulse: 0.55,
+            pulseRate: 0.018,
           },
         },
       };
@@ -192,6 +210,40 @@ describe('WeatherPresets', () =>
         .toBe(14);
       expect(result.margin)
         .toBe(280);
+    });
+
+    it('carries drag through unscaled by the layer speed', () =>
+    {
+      // Arrange - a shooting star at double pace. Drag is a fraction of speed shed per frame, so
+      // unlike the wander pace it must not ride the layer's own speed: a thing burning up loses a
+      // share of whatever it had, however fast that was.
+      const burning = {
+        motions: {
+          streak: {
+            edge: 'top',
+            speedX: 6,
+            speedY: 4,
+            jitterX: 0,
+            jitterY: 0,
+            drag: 0.013,
+            roll: 0,
+            growth: 0,
+            fadeIn: 2,
+            staggerFrames: 0,
+          },
+        },
+      };
+      const layer = { motion: 'streak', asset: 'Star_01A', density: 3, speed: 200, scale: 100, blend: 'additive' };
+
+      // Act.
+      const result = WeatherPresets.resolveLayer(burning, layer);
+
+      // Assert - and the speed beside it did double, which is what makes this a claim about drag
+      // rather than about the layer not being scaled at all.
+      expect(result.drag)
+        .toBe(0.013);
+      expect(result.speedX)
+        .toBe(12);
     });
 
     it('rides the wander pace on the layer speed so a faster layer keeps its shape', () =>

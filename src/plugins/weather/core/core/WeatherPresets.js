@@ -168,6 +168,10 @@ class WeatherPresets
       lifeJitter: motion.lifeJitter,
       fadeOut: motion.fadeOut,
 
+      // a fraction of speed shed per frame, so it is unscaled by the layer's own pace: the point
+      // is that a thing burning up loses a share of whatever it had, however fast that was.
+      drag: motion.drag,
+
       // how much a picture is allowed to vary from itself, which is a property of the picture
       // rather than of how fast the layer runs.
       tilt: motion.tilt,
