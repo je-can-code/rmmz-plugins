@@ -15,6 +15,16 @@ class Window_Time
   static RowCount = 2;
 
   /**
+   * How wide a row of this window's content is.
+   *
+   * Declared for the same reason as {@link Window_Time.RowCount}: the scene sizes the window from
+   * it before any window exists to measure text with, and an extension whose line runs longer has
+   * one number to raise.
+   * @type {number}
+   */
+  static ContentWidth = 200;
+
+  /**
    * @constructor
    * @param {Rectangle} rect The shape representing this window.
    */
@@ -173,7 +183,7 @@ class Window_Time
    */
   contentWidth()
   {
-    return 200;
+    return Window_Time.ContentWidth;
   }
 
   /**

@@ -86,8 +86,9 @@ Scene_Map.prototype.buildTimeWindow = function()
  */
 Scene_Map.prototype.timeWindowRect = function()
 {
-  // defined the width of the window.
-  const width = 200;
+  // the frame sits outside the content, so a window exactly as wide as its text clips the last
+  // few characters of the longest line.
+  const width = Window_Time.ContentWidth + ($gameSystem.windowPadding() * 2);
 
   // sized to the rows it actually draws, so an extension adding one can add a row's worth of
   // height rather than guessing whether the old fixed number happened to leave room.

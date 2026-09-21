@@ -10,9 +10,14 @@
  * `Window_Time` is a hoisted global by the time this runs; J-TIME is a declared dependency of this
  * ship, so the class is there to be extended.
  */
-// the window is sized from this, and it is read when the map scene builds its rectangle - long
-// after both ships have loaded. Raising it here is what buys the third line its room.
+// the window is sized from these, and they are read when the map scene builds its rectangle -
+// long after both ships have loaded. Raising them here is what buys the third line its room.
 Window_Time.RowCount += 1;
+
+// the clock and the phase are both short; a weather line is an icon plus something as long as
+// "submerged (moderate)", which is twenty characters and does not fit in the clock's width.
+// Raised rather than replaced, so a window already widened by something else stays widened.
+Window_Time.ContentWidth = Math.max(Window_Time.ContentWidth, 340);
 
 J.WEATHER.EXT.TIME.Aliased.Window_Time.set('drawContent', Window_Time.prototype.drawContent);
 Window_Time.prototype.drawContent = function()
