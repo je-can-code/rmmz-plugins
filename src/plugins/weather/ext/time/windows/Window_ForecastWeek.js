@@ -75,7 +75,28 @@ class Window_ForecastWeek
    */
   dateWidth()
   {
-    return this.textWidth('Wednesday 12/30') + (this.itemPadding() * 2);
+    return this.dayNameWidth() + this.dayNumberWidth();
+  }
+
+  /**
+   * How wide the weekday column is.
+   *
+   * Measured from the longest weekday there is, so every date underneath starts at the same x
+   * regardless of whether the day is a Monday or a Wednesday.
+   * @returns {number}
+   */
+  dayNameWidth()
+  {
+    return this.textWidth('Wednesday') + (this.itemPadding() * 2);
+  }
+
+  /**
+   * How wide the numeric date column is.
+   * @returns {number}
+   */
+  dayNumberWidth()
+  {
+    return this.textWidth('12/30') + (this.itemPadding() * 2);
   }
 
   /**
@@ -142,8 +163,7 @@ class Window_ForecastWeek
     {
       const x = this.dateWidth() + (column * this.cellWidth(digest));
 
-      // left, to sit over the icon that starts each cell rather than floating above its middle.
-      this.drawText(Time_Snapshot.TimesOfDayName(phaseOfDay), x, 0, this.cellWidth(digest), 'left');
+      this.drawText(Time_Snapshot.TimesOfDayName(phaseOfDay), x, 0, this.cellWidth(digest), 'center');
     });
 
     this.resetTextColor();
@@ -162,7 +182,8 @@ class Window_ForecastWeek
     this.changeTextColor(index === 0
       ? ColorManager.powerUpColor()
       : ColorManager.systemColor());
-    this.drawText(this.dateLabel(day), 0, y, this.dateWidth(), 'left');
+    this.drawText(this.dayName(day), 0, y, this.dayNameWidth(), 'left');
+    this.drawText(this.dayNumber(day), this.dayNameWidth(), y, this.dayNumberWidth(), 'left');
     this.resetTextColor();
 
     day.cells.forEach((preset, column) =>
@@ -178,18 +199,26 @@ class Window_ForecastWeek
    * @param {object} day The day being labelled.
    * @returns {string}
    */
-  dateLabel(day)
+  dayName(day)
+  {
+    // today is named rather than dated, because "is that this Tuesday or next" is the one
+    // question a seven-day forecast must never make somebody ask.
+    if (day.dayOffset === 0) return 'Today';
+
+    return ForecastWhen.weekdayOf(day.startPhase);
+  }
+
+  /**
+   * The date a row falls on, as figures.
+   * @param {object} day The day being labelled.
+   * @returns {string}
+   */
+  dayNumber(day)
   {
     const month = SkyForecast.monthOf(day.startPhase);
     const date = SkyForecast.dayOfMonthOf(day.startPhase);
 
-    // today is named rather than dated, because "is that this Tuesday or next" is the one
-    // question a seven-day forecast must never make somebody ask.
-    if (day.dayOffset === 0) return `Today ${month}/${date}`;
-
-    const weekday = ForecastWhen.weekdayOf(day.startPhase);
-
-    return `${weekday} ${month}/${date}`;
+    return `${month}/${date}`;
   }
 
   /**
