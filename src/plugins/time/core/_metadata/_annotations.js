@@ -280,6 +280,13 @@
  * @desc The y coordinate of the overarching TIME window.
  * @default 0
  *
+ * @param clockIcon
+ * @parent BASEconfigs
+ * @type icon
+ * @text Clock Icon
+ * @desc The icon drawn beside the clock. The other rows take their icons from data; this one does not.
+ * @default 220
+ *
  * @param startVisible
  * @parent BASEconfigs
  * @type boolean

@@ -25,16 +25,6 @@ class Window_Time
   static ContentWidth = 200;
 
   /**
-   * The icon drawn beside the clock.
-   *
-   * RMMZ's stock hourglass, deliberately. The other two rows take their icons from data - the
-   * phase from the snapshot, the weather from its configuration - so this is the one that goes
-   * stale silently when the icon sheet is rearranged, and a named constant is somewhere to look.
-   * @type {number}
-   */
-  static ClockIcon = 220;
-
-  /**
    * @constructor
    * @param {Rectangle} rect The shape representing this window.
    */
@@ -228,7 +218,9 @@ class Window_Time
     const minutes = this.time.minutes.padZero(2);
     const hours = this.time.hours.padZero(2);
 
-    const icon = Window_Time.ClockIcon;
+    // authored rather than fixed, because the other two rows take their icons from data and this
+    // one silently becomes whatever happens to sit at its index once the icon sheet is moved.
+    const icon = J.TIME.Metadata.ClockIcon;
     const clock = `\\I[${icon}]${hours}${colon1}${minutes}${colon2}${seconds} \\}${ampm}`;
 
     this.drawTextEx(clock, 0, this.contentLineY(0), this.contentWidth());
