@@ -17,6 +17,7 @@ import './objects/Game_Event.js';
 import './objects/Game_System.js';
 import './objects/Game_Time.js';
 import './scenes/Scene_Map.js';
+import './windows/Window_Time.js';
 import './windows/Window_DebugForecast.js';
 import './windows/Window_ForecastCommand.js';
 import './windows/Window_ForecastNow.js';

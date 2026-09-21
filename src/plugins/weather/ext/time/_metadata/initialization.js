@@ -56,6 +56,7 @@ J.WEATHER.EXT.TIME.Aliased.Game_System = new Map();
 J.WEATHER.EXT.TIME.Aliased.Game_Time = new Map();
 J.WEATHER.EXT.TIME.Aliased.MapWeatherResolver = new Map();
 J.WEATHER.EXT.TIME.Aliased.Scene_Map = new Map();
+J.WEATHER.EXT.TIME.Aliased.Window_Time = new Map();
 
 /**
  * All regular expressions used by this plugin.

@@ -89,8 +89,9 @@ Scene_Map.prototype.timeWindowRect = function()
   // defined the width of the window.
   const width = 200;
 
-  // define the height of the window.
-  const height = 180;
+  // sized to the rows it actually draws, so an extension adding one can add a row's worth of
+  // height rather than guessing whether the old fixed number happened to leave room.
+  const height = this.calcWindowHeight(Window_Time.RowCount, false);
 
   // the x and y are defined by the plugin parameters.
   const x = J.TIME.Metadata.TimeWindowX;
