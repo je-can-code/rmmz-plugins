@@ -48,6 +48,19 @@ class WeatherDirector
   static #travel = new PlayerTravel();
 
   /**
+   * How many times the weather has actually become something else.
+   *
+   * **A counter rather than a flag, and the difference is a visible bug.** Something has to clear a
+   * flag, and the only thing positioned to is the emitter's own update - which runs *after* the
+   * spriteset is built. So on every ordinary arrival the sky is declared, the flag goes up, the
+   * plane is built correctly from the new weather, and then the first frame tears it down and
+   * rebuilds it again. A generation recorded at build time and compared afterwards has no such
+   * window: the number the plane was built against is the number it compares to.
+   * @type {number}
+   */
+  static #generation = 0;
+
+  /**
    * Re-reads the weather for the map the player has just arrived on.
    *
    * Called on arrival rather than on a timer, because everything it reads - the map's note, the sky -
@@ -60,8 +73,16 @@ class WeatherDirector
     WeatherDirector.#travel.forget();
 
     const declaration = MapWeatherResolver.declarationFor($dataMap);
+    const resolved = MapWeatherResolver.resolve(declaration, WeatherDirector.#sky);
 
-    WeatherDirector.#current = MapWeatherResolver.resolve(declaration, WeatherDirector.#sky);
+    // the emitter watches this number to know when it has the wrong thing on screen, so it moves
+    // only when the answer genuinely differs - never merely because it was asked again.
+    if (WeatherDirector.isSameWeather(WeatherDirector.#current, resolved) === false)
+    {
+      WeatherDirector.#generation++;
+    }
+
+    WeatherDirector.#current = resolved;
 
     const { weatherConfig } = J.WEATHER.Metadata;
 
@@ -85,6 +106,51 @@ class WeatherDirector
   {
     // hand back what the weather is doing.
     return WeatherDirector.#current;
+  }
+
+  /**
+   * Whether two resolutions describe the same weather.
+   *
+   * **Compared by value, and that is load-bearing.** `MapWeatherResolver.resolve` builds a fresh
+   * object every call, so an identity check is always false and the emitter would tear itself down
+   * and rebuild sixty times a second.
+   * @param {?{preset: string, intensity: string}} left One resolution, or null for none.
+   * @param {?{preset: string, intensity: string}} right The other, or null for none.
+   * @returns {boolean}
+   */
+  static isSameWeather(left, right)
+  {
+    // nothing and nothing are the same nothing - walking between two bare interiors is not a change.
+    if (left === null) return right === null;
+
+    if (right === null) return false;
+
+    if (left.preset !== right.preset) return false;
+
+    return left.intensity === right.intensity;
+  }
+
+  /**
+   * How many times the weather has become something else.
+   *
+   * Recorded by the emitter when it builds, and compared afterwards. See the field's own note for
+   * why this is a number rather than a flag.
+   * @returns {number}
+   */
+  static generation()
+  {
+    // hand back how many changes have happened.
+    return WeatherDirector.#generation;
+  }
+
+  /**
+   * Whether the weather has become something else since a given generation was recorded.
+   * @param {number} generation The generation the asker last built against.
+   * @returns {boolean}
+   */
+  static hasChangedSince(generation)
+  {
+    return generation !== WeatherDirector.#generation;
   }
 
   /**

@@ -7644,3 +7644,63 @@ tag draws nothing, because there is no sky for it to ask.
 Indoor and outdoor is read from J-TIME's `<noToneChange>` rather than from a tag of this plugin's
 own. "Can you see the sky from here" is one question, and asking it twice eventually gets two
 answers.
+
+---
+
+## J-Weather-Time (`src/plugins/weather/ext/time/`)
+
+Makes the weather a thing that happens rather than a property a map owns. The sky over the island
+walks between named conditions phase by phase, is rolled a year ahead so it can be read, and hands
+the answer to J-Weather to draw.
+
+### `<climate:NAME>`
+
+**Applies to:**
+Maps only (Map Properties → Note)
+
+**When:**
+on arrival at the map, and again whenever the sky moves
+
+**Effect:**
+Bends the sky's strength through a named table from the `climates` block of
+`data/config.weather.json`, instead of following it directly. A name nothing is configured for
+leaves the map following the sky unchanged.
+
+A climate exists for the one thing a `<weather:>` tag cannot say: that a place responds to the sky
+*inversely*. The Forest of Dreams is foggiest when the sky is at its **clearest**, which no amount
+of tuning the sky itself can express, because it is a statement about somewhere in particular.
+
+A table keys on either the sky's condition (`byType`) or its strength (`byIntensity`) — one or the
+other, never both — and falls back to its own `default`.
+
+**A climate only bends a look the map already authored.** `MapWeatherResolver.resolve` consults the
+strength resolver on the authored-preset branch alone, so a `<climate:>` tag on a map with no
+`<weather:>` tag of its own does nothing. That is the intended shape rather than an oversight: a
+place with a climate is a place with a character, and the climate says how the sky argues with it.
+
+```
+<weather:fog>
+<climate:dreaming>
+```
+The Forest of Dreams: foggy, and thickest on a clear day.
+
+### Event page conditions
+
+These are **Comment commands inside an event page**, in the same style as J-TIME's, rather than
+notetags on the event itself.
+
+```
+<weatherTypePage:rain>
+<weatherIntensityPage:heavy>
+<weatherIntensityRangePage:moderate-heavy>
+```
+
+**They match what is actually on screen — the resolved preset — rather than the sky's condition.**
+That is the one genuinely surprising part. A creature that comes out on clear summer nights is
+tagged `fireflies`, not `clear`, because fireflies are what a clear summer night *looks like* where
+the player is standing. It is also what the weather variable already reports, and what `presetIds`
+enumerates.
+
+Both names and numbers are accepted, matching `presetIds` and `intensityIds` in the weather config.
+Every condition on a page must pass, and vanilla's own page conditions are checked first — if those
+fail, weather cannot rescue the page.

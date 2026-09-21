@@ -47,10 +47,36 @@ Spriteset_Map.prototype.createWeatherPlane = function()
    */
   this.setWeatherPlane(new Sprite());
 
+  /**
+   * Which generation of the weather this plane was last built against.
+   * @type {number}
+   */
+  this.setWeatherGeneration(0);
+
   this.baseSprite()
     .addChild(this.weatherPlane());
 
   this.refreshWeatherLayers();
+};
+
+/**
+ * Gets the generation of the weather this plane was last built against.
+ * @returns {number} The weatherGeneration.
+ */
+Spriteset_Map.prototype.weatherGeneration = function()
+{
+  // hand back which weather this plane is currently showing.
+  return this._j._weatherGeneration;
+};
+
+/**
+ * Sets the generation of the weather this plane was last built against.
+ * @param {number} newGeneration The new weatherGeneration.
+ */
+Spriteset_Map.prototype.setWeatherGeneration = function(newGeneration)
+{
+  // assign which weather this plane is currently showing.
+  this._j._weatherGeneration = newGeneration;
 };
 
 /**
@@ -87,7 +113,78 @@ Spriteset_Map.prototype.refreshWeatherLayers = function()
 
   plane.removeChildren();
 
+  this.setWeatherGeneration(WeatherDirector.generation());
+
   WeatherDirector.layers()
-    .forEach(layer => plane.addChild(new Sprite_WeatherLayer(layer)));
+    .forEach(layer => plane.addChild(new Sprite_WeatherLayer(layer, true)));
+};
+
+/**
+ * Extends {@link Spriteset_Base.update}.<br/>
+ * Also crossfades the weather when the sky has moved underneath it.
+ *
+ * **Nothing else would ever notice.** The plane is populated once, when the spriteset is built, so
+ * without this a phase turning over mid-play changes the variables and the audio and leaves the
+ * screen showing the previous weather until the player next opens a menu.
+ */
+J.WEATHER.Aliased.Spriteset_Map.set('update', Spriteset_Map.prototype.update);
+Spriteset_Map.prototype.update = function()
+{
+  // perform original logic.
+  J.WEATHER.Aliased.Spriteset_Map.get('update')
+    .call(this);
+
+  // and then see whether what is on screen is still what the weather is.
+  this.updateWeatherLayers();
+};
+
+/**
+ * Brings the plane into line with whatever the weather has become.
+ *
+ * Clearing out the emptied layers happens first and unconditionally, because a layer retired by an
+ * earlier change is still draining while a later one arrives - three changes inside one fog's
+ * drain would otherwise leave three dead populations on the plane.
+ */
+Spriteset_Map.prototype.updateWeatherLayers = function()
+{
+  this.dropDrainedWeatherLayers();
+
+  if (WeatherDirector.hasChangedSince(this.weatherGeneration()) === false) return;
+
+  this.crossfadeWeatherLayers();
+};
+
+/**
+ * Starts the outgoing weather emptying and the incoming weather arriving.
+ *
+ * **Both populations are on the plane at once**, which is what makes this a crossfade rather than
+ * a cut - and it is also the ceiling on how heavy this can get, since for the length of one drain
+ * the screen is carrying roughly double the heaviest preset. Rain and leaves clear in seconds; fog
+ * takes a minute or two.
+ */
+Spriteset_Map.prototype.crossfadeWeatherLayers = function()
+{
+  const plane = this.weatherPlane();
+
+  this.setWeatherGeneration(WeatherDirector.generation());
+
+  plane.children.forEach(layer => layer.retire());
+
+  // built as a change rather than an arrival, so they stagger in over their own entry queue instead
+  // of settling - which would cost millions of iterations in a single frame, in front of a player.
+  WeatherDirector.layers()
+    .forEach(layer => plane.addChild(new Sprite_WeatherLayer(layer, false)));
+};
+
+/**
+ * Throws away the retired layers that have finished emptying.
+ */
+Spriteset_Map.prototype.dropDrainedWeatherLayers = function()
+{
+  const plane = this.weatherPlane();
+
+  const spent = plane.children.filter(layer => layer.isRetired() === true && layer.isDrained() === true);
+
+  spent.forEach(layer => plane.removeChild(layer));
 };
 //endregion Spriteset_Map

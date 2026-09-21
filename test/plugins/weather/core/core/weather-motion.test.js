@@ -214,6 +214,7 @@ describe('WeatherMotion', () =>
           pulsePhase: 0,
           stage: 0,
           life: 0,
+          done: false,
         });
     });
 
@@ -1753,6 +1754,50 @@ describe('WeatherMotion', () =>
       // Assert.
       expect(result)
         .toBe(600);
+    });
+  });
+
+  describe('isDrained', () =>
+  {
+    it('reports a retired population that has entirely finished', () =>
+    {
+      // Arrange.
+      const particles = [ { done: true }, { done: true }, { done: true } ];
+
+      // Act.
+      const result = WeatherMotion.isDrained(particles);
+
+      // Assert.
+      expect(result)
+        .toBe(true);
+    });
+
+    it('holds a population back while even one particle is still going', () =>
+    {
+      // Arrange - the last one, because a check that only looked at the first would pass every
+      // other case in this block. A layer thrown away with a live particle in it takes that
+      // particle off the screen mid-flight, which is the cut the crossfade exists to avoid.
+      const particles = [ { done: true }, { done: true }, { done: false } ];
+
+      // Act.
+      const result = WeatherMotion.isDrained(particles);
+
+      // Assert.
+      expect(result)
+        .toBe(false);
+    });
+
+    it('holds back a population where the first particle is the live one', () =>
+    {
+      // Arrange - the mirror of the above, so neither end can be the only one inspected.
+      const particles = [ { done: false }, { done: true }, { done: true } ];
+
+      // Act.
+      const result = WeatherMotion.isDrained(particles);
+
+      // Assert.
+      expect(result)
+        .toBe(false);
     });
   });
 });

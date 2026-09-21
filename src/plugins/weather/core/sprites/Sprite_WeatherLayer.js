@@ -59,9 +59,16 @@ class Sprite_WeatherLayer
   /**
    * Extends {@link Sprite.initialize}.<br/>
    * Also builds this layer's entire particle population.
+   *
+   * **An arrival and a change are not the same event.** Arriving somewhere should look like weather
+   * that has already been going, which costs a settling pass; that pass is affordable exactly
+   * because the map is loading anyway. A change of weather under a player who is already standing
+   * there cannot afford it - see {@link Sprite_WeatherLayer.settle} - and does not want it either,
+   * because there is a whole population already on screen for the new one to arrive through.
    * @param {object} layer A layer resolved by `WeatherPresets.resolveLayer`.
+   * @param {boolean} isArrival Whether the player is arriving, rather than the sky having moved.
    */
-  initialize(layer)
+  initialize(layer, isArrival)
   {
     // perform original logic.
     super.initialize();
@@ -71,7 +78,7 @@ class Sprite_WeatherLayer
 
     // and populate this layer, once and for all.
     this.setLayer(layer);
-    this.createParticles();
+    this.createParticles(isArrival);
   }
 
   /**
@@ -100,6 +107,16 @@ class Sprite_WeatherLayer
      * @type {object[]}
      */
     this._j._weather._particles = [];
+
+    /**
+     * Whether this layer is on its way out.
+     *
+     * A retired layer stops replacing particles that finish and simply empties, which is what makes
+     * a change of weather a crossfade rather than a cut. Nothing else about it changes - the ones
+     * still alive go on exactly as they were, and a raindrop still leaves its ripple.
+     * @type {boolean}
+     */
+    this._j._weather._retired = false;
   }
 
   /**
@@ -133,13 +150,44 @@ class Sprite_WeatherLayer
   }
 
   /**
+   * Gets whether this layer is on its way out.
+   * @returns {boolean} Whether it has been retired.
+   */
+  isRetired()
+  {
+    // hand back whether this layer is emptying.
+    return this._j._weather._retired;
+  }
+
+  /**
+   * Stops this layer replacing the particles that finish.
+   *
+   * Everything already alive carries on to its own end, including turning into whatever it becomes,
+   * so the last raindrops of a shower still land with ripples rather than blinking out mid-air.
+   */
+  retire()
+  {
+    this._j._weather._retired = true;
+  }
+
+  /**
+   * Whether this layer has finished emptying and can be thrown away.
+   * @returns {boolean}
+   */
+  isDrained()
+  {
+    return WeatherMotion.isDrained(this.particles());
+  }
+
+  /**
    * Builds the sprites and the states for this layer's whole population.
    *
    * One bitmap is shared by every particle, because they are all the same picture - a thousand rain
    * drops are a thousand draws of one 18x36 image, and loading it a thousand times would be a
    * thousand copies of it in texture memory.
+   * @param {boolean} isArrival Whether the player is arriving, rather than the sky having moved.
    */
-  createParticles()
+  createParticles(isArrival)
   {
     const layer = this.layer();
     const bitmap = ImageManager.loadWeather(layer.asset);
@@ -161,8 +209,12 @@ class Sprite_WeatherLayer
         .push(this.buildParticle());
     }
 
-    // and then run the whole thing forward, so the player arrives into weather that has already been
-    // going rather than watching it start.
+    // an arrival runs the whole thing forward, so the player walks into weather that has already
+    // been going rather than watching it start. A change of weather deliberately does not: the
+    // outgoing layer is still on screen to arrive through, and settling is far too expensive to
+    // do in front of somebody.
+    if (isArrival === false) return;
+
     this.settle();
   }
 
@@ -357,6 +409,10 @@ class Sprite_WeatherLayer
     this.particles()
       .forEach((particle, index) =>
       {
+        // a particle of a retiring layer that has already had its last turn. Advancing it would
+        // simply re-detect it as finished every frame for as long as the layer hangs around.
+        if (particle.done === true) return;
+
         const params = this.paramsFor(index);
 
         WeatherMotion.advance(particle, params);
@@ -407,6 +463,16 @@ class Sprite_WeatherLayer
       const bounds = Sprite_WeatherLayer.screenBounds();
       this.particles()[index] = WeatherMotion.succeed(particle, successor, bounds, Sprite_WeatherLayer.rolls());
       this.children[index].bitmap = ImageManager.loadWeather(successor.asset);
+
+      return;
+    }
+
+    // a retiring layer replaces nothing, which is the whole of how it empties. Note that this sits
+    // *below* the successor branch on purpose: a raindrop of an outgoing shower still splashes.
+    if (this.isRetired() === true)
+    {
+      particle.done = true;
+      this.children[index].opacity = 0;
 
       return;
     }

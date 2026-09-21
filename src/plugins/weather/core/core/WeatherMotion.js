@@ -138,7 +138,26 @@ class WeatherMotion
       // held invisible for a random part of a burst, so `power: 500` arrives as weather settling in
       // rather than as five hundred things appearing on one frame.
       stagger: Math.floor(params.staggerFrames * rolls.stagger),
+
+      // whether this one has finished for good, which only ever happens to a layer that is being
+      // retired. A living population reseats instead, forever.
+      done: false,
     };
+  }
+
+  /**
+   * Whether every particle of a population has finished for good.
+   *
+   * Asked of a retiring layer, once per frame, to find out whether it can be thrown away. A layer
+   * empties at the pace its own motion travels, so this is a slow yes for some of them: rain and
+   * leaves clear in seconds, and fog crawls at a third of a pixel a frame through a queue over a
+   * thousand deep and takes a minute or two.
+   * @param {object[]} particles The population being asked about.
+   * @returns {boolean}
+   */
+  static isDrained(particles)
+  {
+    return particles.every(particle => particle.done === true);
   }
 
   /**

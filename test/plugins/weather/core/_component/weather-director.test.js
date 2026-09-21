@@ -364,5 +364,169 @@ describe('WeatherDirector', () =>
         });
     });
   });
+
+  describe('isSameWeather', () =>
+  {
+    it('calls two bare places the same', () =>
+    {
+      // Arrange & Act.
+      const result = WeatherDirector.isSameWeather(null, null);
+
+      // Assert - walking between two interiors is not a change of weather, and treating it as one
+      // would rebuild an empty plane on every doorway.
+      expect(result)
+        .toBe(true);
+    });
+
+    it('calls a bare place and a rainy one different', () =>
+    {
+      // Arrange & Act.
+      const result = WeatherDirector.isSameWeather(null, { preset: 'rain', intensity: 'light' });
+
+      // Assert.
+      expect(result)
+        .toBe(false);
+    });
+
+    it('calls a rainy place and a bare one different', () =>
+    {
+      // Arrange - the mirror, because null on either side is a separate branch and only one of
+      // them is the one an author writes first.
+      const result = WeatherDirector.isSameWeather({ preset: 'rain', intensity: 'light' }, null);
+
+      // Assert.
+      expect(result)
+        .toBe(false);
+    });
+
+    it('calls two separately-built descriptions of one weather the same', () =>
+    {
+      // Arrange - two distinct objects holding identical values, which is exactly what the
+      // resolver produces on consecutive calls. Compared by identity these differ, and the
+      // emitter would tear itself down and rebuild sixty times a second.
+      const left = { preset: 'rain', intensity: 'moderate' };
+      const right = { preset: 'rain', intensity: 'moderate' };
+
+      // Act.
+      const result = WeatherDirector.isSameWeather(left, right);
+
+      // Assert.
+      expect(result)
+        .toBe(true);
+    });
+
+    it('notices the look changing while the strength holds', () =>
+    {
+      // Arrange.
+      const left = { preset: 'rain', intensity: 'moderate' };
+      const right = { preset: 'snow', intensity: 'moderate' };
+
+      // Act.
+      const result = WeatherDirector.isSameWeather(left, right);
+
+      // Assert.
+      expect(result)
+        .toBe(false);
+    });
+
+    it('notices the strength changing while the look holds', () =>
+    {
+      // Arrange - the case a comparison on the preset alone would miss, and the commoner of the
+      // two: the sky drifts a rung far more often than it changes condition.
+      const left = { preset: 'rain', intensity: 'moderate' };
+      const right = { preset: 'rain', intensity: 'heavy' };
+
+      // Act.
+      const result = WeatherDirector.isSameWeather(left, right);
+
+      // Assert.
+      expect(result)
+        .toBe(false);
+    });
+  });
+
+  describe('generation', () =>
+  {
+    it('moves when the weather becomes something else', () =>
+    {
+      // Arrange.
+      arriveAt('<weather:rain>');
+      WeatherDirector.refresh();
+      const before = WeatherDirector.generation();
+
+      // Act.
+      arriveAt('<weather:motes>');
+      WeatherDirector.refresh();
+
+      // Assert.
+      expect(WeatherDirector.generation())
+        .toBe(before + 1);
+    });
+
+    it('stays put when the same place is resolved again', () =>
+    {
+      // Arrange - the resolver hands back a fresh object every call, so an identity comparison
+      // would move the number here and rebuild the whole emitter on every frame that asked.
+      arriveAt('<weather:rain>');
+      WeatherDirector.refresh();
+      const before = WeatherDirector.generation();
+
+      // Act.
+      WeatherDirector.refresh();
+
+      // Assert.
+      expect(WeatherDirector.generation())
+        .toBe(before);
+    });
+
+    it('stays put walking between two places with the same weather', () =>
+    {
+      // Arrange - two different maps that happen to resolve identically, which is most of a region.
+      arriveAt('<weather:rain>');
+      WeatherDirector.refresh();
+      const before = WeatherDirector.generation();
+
+      // Act.
+      arriveAt('<weather:rain>\n<someOtherTag>');
+      WeatherDirector.refresh();
+
+      // Assert.
+      expect(WeatherDirector.generation())
+        .toBe(before);
+    });
+  });
+
+  describe('hasChangedSince', () =>
+  {
+    it('reports nothing new to a caller holding the current generation', () =>
+    {
+      // Arrange - what the emitter holds on every frame after the one it was built on.
+      arriveAt('<weather:rain>');
+      WeatherDirector.refresh();
+
+      // Act.
+      const result = WeatherDirector.hasChangedSince(WeatherDirector.generation());
+
+      // Assert.
+      expect(result)
+        .toBe(false);
+    });
+
+    it('reports a change to a caller holding an older generation', () =>
+    {
+      // Arrange.
+      arriveAt('<weather:rain>');
+      WeatherDirector.refresh();
+      const built = WeatherDirector.generation();
+
+      // Act.
+      arriveAt('<weather:motes>');
+      WeatherDirector.refresh();
+
+      // Assert.
+      expect(WeatherDirector.hasChangedSince(built))
+        .toBe(true);
+    });
+  });
 });
 //endregion plugins/weather/core/_component/weather-director.test.js
