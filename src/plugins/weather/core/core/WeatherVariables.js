@@ -99,6 +99,45 @@ class WeatherVariables
   }
 
   /**
+   * The look a declared id refers to.
+   *
+   * The mirror read backwards, for the places that receive a number and have to say what it means -
+   * a text code written by hand, or an event that computed one into a variable and wants it spelled
+   * out. Nothing about the sky is decided here; this only reads the same table {@link
+   * WeatherVariables.typeIdFor} writes from.
+   * @param {object} config The parsed contents of `config.weather.json`.
+   * @param {number} id The declared id being named.
+   * @returns {string} The preset's name, or {@link String.empty} when no preset claims that id.
+   */
+  static typeNameFor(config, id)
+  {
+    const found = Object.keys(config.presetIds)
+      .find(presetName => config.presetIds[presetName] === id);
+
+    // a number nobody claims is an authoring mistake at the place that wrote it, and the caller
+    // renders nothing rather than inventing a weather that does not exist.
+    if (found === undefined) return String.empty;
+
+    return found;
+  }
+
+  /**
+   * The strength a declared id refers to.
+   * @param {object} config The parsed contents of `config.weather.json`.
+   * @param {number} id The declared id being named.
+   * @returns {string} The rung's name, or {@link String.empty} when no rung claims that id.
+   */
+  static intensityNameFor(config, id)
+  {
+    const found = Object.keys(config.intensityIds)
+      .find(intensity => config.intensityIds[intensity] === id);
+
+    if (found === undefined) return String.empty;
+
+    return found;
+  }
+
+  /**
    * Writes the current weather into the variables events read.
    *
    * Silent when the mirror is switched off, which is how a game that does not branch on weather

@@ -27,6 +27,15 @@ class Window_ForecastCommand
   static WeekSymbol = 'forecast-week';
 
   /**
+   * How many views this window offers.
+   *
+   * Declared so the scene can size the window to its contents without building it first. Three is
+   * the whole of what a forecast is asked, and it is not a number that grows with content.
+   * @type {number}
+   */
+  static ViewCount = 3;
+
+  /**
    * Overwrites {@link #makeCommandList}.<br/>
    * Builds the three views.
    */

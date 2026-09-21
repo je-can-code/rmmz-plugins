@@ -1,5 +1,4 @@
 //region Window_ForecastWeek
-import ForecastIcons from './../core/ForecastIcons.js';
 import SkyForecast from './../core/SkyForecast.js';
 
 /**
@@ -177,20 +176,25 @@ class Window_ForecastWeek
     }
 
     const config = J.WEATHER.Metadata.weatherConfig;
-    const iconIndex = ForecastIcons.indexFor(config, preset);
+    const iconIndex = WeatherIcons.indexFor(config, preset);
 
     // a look without artwork yet draws its own name, so the week is readable from the first day
     // rather than being a row of blanks until everything is drawn.
-    if (iconIndex === ForecastIcons.None)
+    if (iconIndex === WeatherIcons.None)
     {
       this.drawText(preset, x, y, width, 'center');
 
       return;
     }
 
-    const centred = x + Math.floor((width - ImageManager.iconWidth) / 2);
+    // the name rides alongside the picture rather than replacing it. A column of bare icons asks
+    // the reader to have learned fifteen of them, and a week is exactly the screen somebody opens
+    // before they have. No strength here - this is the glanceable view.
+    const words = WeatherLabel.words(config, preset, String.empty);
+    const textWidth = width - ImageManager.iconWidth - this.itemPadding();
 
-    this.drawIcon(iconIndex, centred, y);
+    this.drawIcon(iconIndex, x, y);
+    this.drawText(words, x + ImageManager.iconWidth + this.itemPadding(), y, textWidth, 'left');
   }
 }
 

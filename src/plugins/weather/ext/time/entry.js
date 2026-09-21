@@ -5,7 +5,6 @@ import './core/SkyForecast.js';
 import './core/SkyConfigValidator.js';
 import './core/ClimateCurves.js';
 import './core/MapWeatherResolver.js';
-import './core/ForecastIcons.js';
 import './core/ForecastVoice.js';
 import './core/ForecastDigest.js';
 import './core/ForecastPlaces.js';

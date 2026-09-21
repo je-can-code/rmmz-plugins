@@ -1,6 +1,6 @@
-//region plugins/weather/ext/time/core/forecast-icons.test.js
+//region plugins/weather/core/core/weather-icons.test.js
 import { describe, expect, it } from 'vitest';
-import ForecastIcons from '../../../../../../src/plugins/weather/ext/time/core/ForecastIcons.js';
+import WeatherIcons from '../../../../../src/plugins/weather/core/core/WeatherIcons.js';
 
 /**
  * The picture a forecast draws for each look.
@@ -9,7 +9,7 @@ import ForecastIcons from '../../../../../../src/plugins/weather/ext/time/core/F
  * game has a handful, so every case below is written against a config where some are drawn and
  * some are not - which is the state this will live in for as long as it takes to draw the rest.
  */
-describe('ForecastIcons', () =>
+describe('WeatherIcons', () =>
 {
   /**
    * A config partway through being illustrated.
@@ -31,7 +31,7 @@ describe('ForecastIcons', () =>
     {
       // Arrange - snow rather than the first entry, so a lookup returning whatever it found first
       // would be visible.
-      const result = ForecastIcons.indexFor(buildConfig(), 'snow');
+      const result = WeatherIcons.indexFor(buildConfig(), 'snow');
 
       // Assert.
       expect(result)
@@ -41,7 +41,7 @@ describe('ForecastIcons', () =>
     it('reports no icon for a look that has none yet', () =>
     {
       // Arrange.
-      const result = ForecastIcons.indexFor(buildConfig(), 'fog');
+      const result = WeatherIcons.indexFor(buildConfig(), 'fog');
 
       // Assert.
       expect(result)
@@ -51,7 +51,7 @@ describe('ForecastIcons', () =>
     it('reports no icon for a look the config has never heard of', () =>
     {
       // Arrange - drawing its name is the most useful thing that can be said about it.
-      const result = ForecastIcons.indexFor(buildConfig(), 'hurricane');
+      const result = WeatherIcons.indexFor(buildConfig(), 'hurricane');
 
       // Assert.
       expect(result)
@@ -64,7 +64,7 @@ describe('ForecastIcons', () =>
     it('confirms a look that has artwork', () =>
     {
       // Act.
-      const result = ForecastIcons.hasIcon(buildConfig(), 'rain');
+      const result = WeatherIcons.hasIcon(buildConfig(), 'rain');
 
       // Assert.
       expect(result)
@@ -75,7 +75,7 @@ describe('ForecastIcons', () =>
     {
       // Arrange - zero is what an unset numeric field reads as in the editor, so it has to mean
       // the same thing as the field being absent entirely.
-      const result = ForecastIcons.hasIcon(buildConfig(), 'sakura');
+      const result = WeatherIcons.hasIcon(buildConfig(), 'sakura');
 
       // Assert.
       expect(result)
@@ -91,7 +91,7 @@ describe('ForecastIcons', () =>
       const config = buildConfig();
 
       // Act.
-      const result = ForecastIcons.missing(config);
+      const result = WeatherIcons.missing(config);
 
       // Assert - the two drawn ones are absent, and the underscore-prefixed authoring note is not
       // mistaken for a preset.
@@ -107,7 +107,7 @@ describe('ForecastIcons', () =>
       config.presets.sakura.iconIndex = 67;
 
       // Act.
-      const result = ForecastIcons.missing(config);
+      const result = WeatherIcons.missing(config);
 
       // Assert.
       expect(result)
@@ -115,4 +115,4 @@ describe('ForecastIcons', () =>
     });
   });
 });
-//endregion plugins/weather/ext/time/core/forecast-icons.test.js
+//endregion plugins/weather/core/core/weather-icons.test.js

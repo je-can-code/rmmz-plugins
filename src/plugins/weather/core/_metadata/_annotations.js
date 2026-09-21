@@ -82,6 +82,37 @@
  *
  * It outranks everything, including a <weather:> tag on the same map.
  * ============================================================================
+ * NAMING THE WEATHER IN TEXT:
+ * Use anywhere text is shown- a message, a choice, a help line, a scene:
+ *
+ * TEXT CODE FORMAT:
+ *  \weather[TYPE, INTENSITY]
+ *
+ * It becomes the weather's icon, its name, and its strength in brackets:
+ *
+ *  \weather[rain, heavy]     ->  <icon> rain (heavy)
+ *  \weather[snow]            ->  <icon> snow
+ *  \weather[1, 3]            ->  <icon> rain (heavy)
+ *  \weather[]                ->  whatever is falling on the player right now
+ *
+ * TYPE is a preset name or the number it reports as; INTENSITY is light,
+ * moderate or heavy, or its number. Both come from the same presetIds and
+ * intensityIds the map tags and the game variables already use, so a name
+ * that works in a notetag works here.
+ *
+ * INTENSITY is optional. Leave it out to name the weather on its own.
+ *
+ * THE EMPTY FORM IS THE USEFUL ONE. \weather[] reads whatever is actually
+ * falling where the player is standing, at the moment the line is drawn- so a
+ * line written once stays true forever, rather than being a guess about what
+ * the sky is doing whenever the player finally gets there. It reads the same
+ * resolution the map does, so it says fog in a foggy forest and snow on a
+ * snowy peak rather than reporting the sky over town.
+ *
+ * Somewhere nothing is falling, it says whatever `labels.nothing` in the
+ * configuration says- because the sentence it was dropped into still has to
+ * finish.
+ * ============================================================================
  * CHANGELOG:
  * - 1.0.0
  *    The initial release.

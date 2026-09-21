@@ -1,14 +1,14 @@
-//region ForecastIcons
+//region WeatherIcons
 /**
- * The picture a forecast draws for each look, when there is one.
+ * The picture that stands for each look, wherever one is written down.
  *
  * **Absence is the normal case and must stay legible.** Fifteen presets need artwork and the game
- * has a handful, so a screen that broke, blanked, or drew a placeholder box for the rest would be
- * unusable for as long as it takes to draw the others - which is exactly the period this has to
- * work through. A preset without an icon falls back to its own name, so the forecast is complete
- * from the first day and gets prettier rather than gaining features.
+ * has a handful, so anything that broke, blanked, or drew a placeholder box for the rest would be
+ * unusable for exactly as long as it takes to draw the others - which is the period this has to
+ * work through. A preset without an icon falls back to its own name, so every screen and every
+ * line of dialogue is complete from the first day and gets prettier rather than gaining features.
  */
-class ForecastIcons
+class WeatherIcons
 {
   /**
    * The icon index meaning "nothing drawn".
@@ -23,7 +23,7 @@ class ForecastIcons
    * The icon a given look is drawn with.
    * @param {object} config The parsed contents of `config.weather.json`.
    * @param {string} presetName The look being drawn.
-   * @returns {number} The icon index, or {@link ForecastIcons.None} when it has no artwork yet.
+   * @returns {number} The icon index, or {@link WeatherIcons.None} when it has no artwork yet.
    */
   static indexFor(config, presetName)
   {
@@ -31,9 +31,9 @@ class ForecastIcons
 
     // a look the config has never heard of has no icon by definition; whoever asked will draw its
     // name, which is the most useful thing that can be said about it.
-    if (preset === undefined) return ForecastIcons.None;
+    if (preset === undefined) return WeatherIcons.None;
 
-    if (preset.iconIndex === undefined) return ForecastIcons.None;
+    if (preset.iconIndex === undefined) return WeatherIcons.None;
 
     return preset.iconIndex;
   }
@@ -46,7 +46,7 @@ class ForecastIcons
    */
   static hasIcon(config, presetName)
   {
-    return ForecastIcons.indexFor(config, presetName) !== ForecastIcons.None;
+    return WeatherIcons.indexFor(config, presetName) !== WeatherIcons.None;
   }
 
   /**
@@ -62,9 +62,9 @@ class ForecastIcons
   {
     return Object.keys(config.presets)
       .filter(name => name.startsWith('_') === false)
-      .filter(name => ForecastIcons.hasIcon(config, name) === false);
+      .filter(name => WeatherIcons.hasIcon(config, name) === false);
   }
 }
 
-export default ForecastIcons;
-//endregion ForecastIcons
+export default WeatherIcons;
+//endregion WeatherIcons

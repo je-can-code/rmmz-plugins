@@ -2,6 +2,10 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import WeatherVariables from '../../../../../src/plugins/weather/core/core/WeatherVariables.js';
 
+// RMMZ's core adds this to the String constructor and nothing in a node realm does. Without it the
+// empty-string expectations below would be expectations of `undefined` instead.
+String.empty = '';
+
 /**
  * Mirroring the current weather into the variables events branch on.
  *
@@ -192,6 +196,62 @@ describe('WeatherVariables', () =>
       // Assert.
       expect(written.size)
         .toBe(0);
+    });
+  });
+
+  describe('typeNameFor', () =>
+  {
+    it('names the preset holding a declared id', () =>
+    {
+      // Arrange - four is fog and nothing else; rain and snow are present and must not answer.
+
+      // Act.
+      const result = WeatherVariables.typeNameFor(config, 4);
+
+      // Assert.
+      expect(result)
+        .toBe('fog');
+    });
+
+    it('names nothing when no preset claims that id', () =>
+    {
+      // Arrange - three sits between two declared ids without being either, so a lookup doing
+      // anything positional would land on a real preset here.
+
+      // Act.
+      const result = WeatherVariables.typeNameFor(config, 3);
+
+      // Assert.
+      expect(result)
+        .toBe('');
+    });
+  });
+
+  describe('intensityNameFor', () =>
+  {
+    it('names the rung holding a declared id', () =>
+    {
+      // Arrange.
+
+      // Act.
+      const result = WeatherVariables.intensityNameFor(config, 3);
+
+      // Assert.
+      expect(result)
+        .toBe('heavy');
+    });
+
+    it('names nothing when no rung claims that id', () =>
+    {
+      // Arrange - zero is the sentinel the mirror writes for "nothing happening", and it is not a
+      // strength anybody can be in.
+
+      // Act.
+      const result = WeatherVariables.intensityNameFor(config, 0);
+
+      // Assert.
+      expect(result)
+        .toBe('');
     });
   });
 });

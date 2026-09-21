@@ -1,5 +1,4 @@
 //region Window_ForecastToday
-import ForecastIcons from './../core/ForecastIcons.js';
 import SkyForecast from './../core/SkyForecast.js';
 
 /**
@@ -74,7 +73,7 @@ class Window_ForecastToday
    */
   rowHeight()
   {
-    return this.lineHeight() * 2;
+    return this.lineHeight();
   }
 
   /**
@@ -156,22 +155,24 @@ class Window_ForecastToday
     }
 
     const config = J.WEATHER.Metadata.weatherConfig;
-    const iconIndex = ForecastIcons.indexFor(config, sky.preset);
+    const iconIndex = WeatherIcons.indexFor(config, sky.preset);
     let textX = x;
 
-    if (iconIndex !== ForecastIcons.None)
+    if (iconIndex !== WeatherIcons.None)
     {
       this.drawIcon(iconIndex, x, y);
       textX = x + ImageManager.iconWidth + this.itemPadding();
     }
 
+    // one line rather than two: the strength belongs beside the look it describes, and the whole
+    // ecosystem spells this pairing exactly one way.
+    const words = WeatherLabel.words(config, sky.preset, sky.intensity);
+
     this.changeTextColor(isNow
       ? ColorManager.powerUpColor()
       : ColorManager.normalColor());
-    this.drawText(sky.preset, textX, y, width, 'left');
+    this.drawText(words, textX, y, width, 'left');
     this.resetTextColor();
-
-    this.drawText(sky.intensity, textX, y + this.lineHeight(), width, 'left');
   }
 }
 

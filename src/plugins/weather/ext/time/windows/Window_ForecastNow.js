@@ -1,6 +1,4 @@
 //region Window_ForecastNow
-import ForecastIcons from './../core/ForecastIcons.js';
-
 /**
  * What the weather is doing where the player is standing, said out loud.
  *
@@ -93,22 +91,23 @@ class Window_ForecastNow
   drawWeather(reading)
   {
     const { weather } = reading;
+    const config = J.WEATHER.Metadata.weatherConfig;
 
-    // nothing falling is a real answer, and the commonest one indoors.
+    // nothing falling is a real answer, and the commonest one indoors. The word for it is
+    // authored, because it is the same word the text code drops into somebody's dialogue.
     if (weather === null)
     {
-      this.drawText('Sheltered.', 0, 0, this.innerWidth, 'left');
+      this.drawText(WeatherLabel.nothingFalling(config), 0, 0, this.innerWidth, 'left');
 
       return;
     }
 
-    const config = J.WEATHER.Metadata.weatherConfig;
-    const iconIndex = ForecastIcons.indexFor(config, weather.preset);
-    const label = `${weather.preset}, ${weather.intensity}`;
+    const iconIndex = WeatherIcons.indexFor(config, weather.preset);
+    const label = WeatherLabel.words(config, weather.preset, weather.intensity);
 
     // a look without artwork yet draws its own name instead, so the screen is complete from the
     // first day rather than waiting on fifteen drawings.
-    if (iconIndex === ForecastIcons.None)
+    if (iconIndex === WeatherIcons.None)
     {
       this.drawText(label, 0, 0, this.innerWidth, 'left');
 

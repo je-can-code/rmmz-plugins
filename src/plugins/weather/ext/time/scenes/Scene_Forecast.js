@@ -245,7 +245,12 @@ class Scene_Forecast
   {
     const area = this.facetAreaRect();
 
-    return new Rectangle(area.x, area.y, this.commandColumnWidth(), area.height);
+    // sized to its three rows rather than to the column. A list window is drawn full height where
+    // it holds an unknown number of things and the player scrolls it; this holds exactly three
+    // forever, and stretching it leaves most of the screen's left edge as an empty box.
+    const height = this.calcWindowHeight(Window_ForecastCommand.ViewCount, true);
+
+    return new Rectangle(area.x, area.y, this.commandColumnWidth(), height);
   }
 
   /**

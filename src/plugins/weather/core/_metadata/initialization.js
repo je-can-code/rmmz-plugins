@@ -41,6 +41,7 @@ J.WEATHER.Aliased = {};
 J.WEATHER.Aliased.Game_Map = new Map();
 J.WEATHER.Aliased.Scene_Map = new Map();
 J.WEATHER.Aliased.Spriteset_Map = new Map();
+J.WEATHER.Aliased.Window_Base = new Map();
 
 /**
  * All regular expressions used by this plugin.
