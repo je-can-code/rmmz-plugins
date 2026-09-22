@@ -12,7 +12,7 @@ class Window_Time
    * adding a row has one number to raise rather than a height to recalculate.
    * @type {number}
    */
-  static RowCount = 2;
+  static RowCount = 1;
 
   /**
    * How wide a row of this window's content is.
@@ -173,8 +173,7 @@ class Window_Time
    */
   drawContent()
   {
-    this.drawTime();
-    this.drawTimePhase();
+    this.drawTimeAndPhase();
   };
 
   /**
@@ -200,43 +199,57 @@ class Window_Time
   }
 
   /**
-   * Draws the clock.
+   * Draws the clock and the part of the day it falls in, together.
+   *
+   * One line, because they are the same fact at two zoom levels - "00:50" and "Moontide" both
+   * answer when it is, and a reader who wants one is already looking at the other.
    */
-  drawTime()
+  drawTimeAndPhase()
   {
-    const colon1 = this.isAlternating()
+    const line = `${this.timeText()} ${this.timePhaseText()}`;
+
+    this.drawTextEx(line, 0, this.contentLineY(0), this.contentWidth());
+  }
+
+  /**
+   * The clock, as text codes.
+   *
+   * **No seconds.** The alternating colon already says the clock is running, and spelling out a
+   * figure that changes faster than anybody reads it costs four characters on the window's
+   * longest line - which is the line that decides how wide the whole thing has to be.
+   * @returns {string}
+   */
+  timeText()
+  {
+    const colon = this.isAlternating()
       ? ":"
       : " ";
-    const colon2 = this.isAlternating()
-      ? " "
-      : ":";
     const ampm = this.time.hours > 11
       ? "PM"
       : "AM";
 
-    const seconds = this.time.seconds.padZero(2);
     const minutes = this.time.minutes.padZero(2);
     const hours = this.time.hours.padZero(2);
 
-    // authored rather than fixed, because the other two rows take their icons from data and this
-    // one silently becomes whatever happens to sit at its index once the icon sheet is moved.
+    // authored rather than fixed, because the other rows take their icons from data and this one
+    // silently becomes whatever happens to sit at its index once the icon sheet is moved.
     const icon = J.TIME.Metadata.ClockIcon;
-    const clock = `\\I[${icon}]${hours}${colon1}${minutes}${colon2}${seconds} \\}${ampm}`;
 
-    this.drawTextEx(clock, 0, this.contentLineY(0), this.contentWidth());
+    return `\\I[${icon}]${hours}${colon}${minutes} \\}${ampm}`;
   }
 
   /**
-   * Draws which part of the day it is.
+   * Which part of the day it is, as text codes.
+   * @returns {string}
    */
-  drawTimePhase()
+  timePhaseText()
   {
     const {
       timeOfDayName,
       timeOfDayIcon
     } = this.time;
 
-    this.drawTextEx(`\\I[${timeOfDayIcon}]${timeOfDayName}`, 0, this.contentLineY(1), this.contentWidth());
+    return `\\I[${timeOfDayIcon}]${timeOfDayName}`;
   }
 }
 
