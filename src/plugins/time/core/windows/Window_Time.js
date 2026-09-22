@@ -235,7 +235,10 @@ class Window_Time
     // silently becomes whatever happens to sit at its index once the icon sheet is moved.
     const icon = J.TIME.Metadata.ClockIcon;
 
-    return `\\I[${icon}]${hours}${colon}${minutes} \\}${ampm}`;
+    // `\}` shrinks the font from that point on rather than for the word it precedes, so the
+    // meridiem closes with a `\{` to put it back. A fragment that is going to be concatenated
+    // has to leave the font the size it found it, or it quietly shrinks whatever follows.
+    return `\\I[${icon}]${hours}${colon}${minutes} \\}${ampm}\\{`;
   }
 
   /**
