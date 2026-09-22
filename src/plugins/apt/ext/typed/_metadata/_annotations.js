@@ -171,6 +171,12 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.2.0
+ *    Enemy typing reads prefixed elements (vs , x , tool-) from the weakness
+ *    side and standard elements from the resistance side, since a prefix marks
+ *    an element as describing what a battler is rather than what hurts it. The
+ *    rate arithmetic moved to RPG_BaseBattler so anything can ask what a
+ *    battler is.
  * - 1.1.4
  *    The aggregate details window names its aptitude sources.
  * - 1.1.3

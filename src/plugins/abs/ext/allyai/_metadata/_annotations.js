@@ -94,6 +94,11 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 3.2.0
+ *    Allies give up on a formation slot they cannot reach rather than chasing it
+ *    forever. Progress toward the slot is measured rather than time spent, so a
+ *    long walk around a wall still completes while a genuinely blocked approach
+ *    settles.
  * - 3.1.1
  *    Followers pass through terrain while the party has them hidden, so an ally nobody
  *    can see cannot strand itself on geometry nobody was shown.
