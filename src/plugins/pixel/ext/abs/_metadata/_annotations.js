@@ -90,6 +90,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.2.0
+ *    An ally that has stopped getting closer to its formation slot now stands
+ *    still instead of stepping back and forth across the same half tile.
  * - 1.1.2
  *    Simplified how the pixel battler resolves its angle and idle state.
  * - 1.1.1

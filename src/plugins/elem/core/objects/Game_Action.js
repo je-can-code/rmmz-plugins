@@ -436,4 +436,35 @@ Game_Action.prototype.healingFactor = function(targetAbsorbs)
     ? -1
     : 1;
 };
+
+/**
+ * Extends {@link #makeDamageValue}.<br/>
+ * Also applies the attacker's slayer bonus against the target's elemental family.
+ *
+ * This deliberately sits outside every other piece of damage math rather than inside the elemental
+ * calculation, because a slayer bonus is not an elemental rate: it is keyed on what the target *is*,
+ * not on what the attack is made of, and the attacker never has to carry the element to earn it.
+ * Wrapping the finished number means it scales the whole result- elemental rates, critical, variance
+ * and guard alike- which is what "I have studied these things and I am simply better at killing
+ * them" should mean.
+ */
+J.ELEM.Aliased.Game_Action.set('makeDamageValue', Game_Action.prototype.makeDamageValue);
+Game_Action.prototype.makeDamageValue = function(target, critical)
+{
+  // perform original logic.
+  const baseDamage = J.ELEM.Aliased.Game_Action.get('makeDamageValue')
+    .call(this, target, critical);
+
+  // the slayer knowledge belongs to whoever is swinging, not to the skill being swung.
+  const attacker = this.subject();
+
+  // resolve what this attacker's study of the target's family is worth against this target.
+  const slayerMultiplier = attacker.slayerMultiplierAgainst(target);
+
+  // apply it on top of the finished damage.
+  const slainDamage = baseDamage * slayerMultiplier;
+
+  // the engine hands back a rounded integer, so keep it one after scaling.
+  return Math.round(slainDamage);
+};
 //endregion Game_Action

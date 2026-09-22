@@ -49,6 +49,16 @@ class J_AllyAiPluginMetadata
     // assign formation tolerance on this instance for callers.
     this.FormationTolerance = 0.5;
 
+    // assign how much closer an ally must get to its slot for the frame to count as progress.
+    // small enough that a genuine walk always clears it, large enough that the sub-tile shuffle of
+    // a blocked ally never does.
+    this.FormationProgressEpsilon = 0.05;
+
+    // assign how many frames of getting no closer an ally endures before abandoning its slot.
+    // a second is long enough to outlast a doorway or a passing ally, and short enough that nobody
+    // watches a companion vibrate against a wall.
+    this.FormationStallFrames = 60;
+
     /**
      * All available formations that a party can take.
      * @type {JABS_Formation[]}

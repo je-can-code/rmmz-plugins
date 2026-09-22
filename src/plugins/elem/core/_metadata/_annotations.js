@@ -283,6 +283,10 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.4.0
+ *    Added <slayer:[ELEMENT_ID, PERCENT]>, a damage bonus against targets weak
+ *    to an element. Keyed on what the target is rather than what the attack is
+ *    made of, so the attacker need not carry the element to benefit.
  * - 1.3.2
  *    Routed the damage-formula failure through J-Base's new Diagnostics. It was
  *    two warnings plus a separate error; it is now one error naming

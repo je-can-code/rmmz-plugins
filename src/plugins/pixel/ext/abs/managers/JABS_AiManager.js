@@ -108,7 +108,28 @@ JABS_AiManager.moveTowardSlotIfNeeded = function(allyBattler, desiredX, desiredY
     // snap to logical to ensure no residual drift and clear any transient motion.
     chr.stopPixelMoving();
 
+    // arriving spends the attempt, so being knocked out of position later starts a fresh one.
+    allyBattler.clearFormationApproach();
+
     // do not issue a move when already within tolerance.
+    return;
+  }
+
+  // measure this frame's approach before deciding whether another step is worth issuing.
+  allyBattler.observeFormationApproach(dist, desiredX, desiredY);
+
+  // an ally that has stopped getting closer stops trying.
+  //
+  // A slot can sit a hair outside tolerance and still be unreachable - blocked on one axis by a
+  // wall while perfectly placed on the other, which lands the ally permanently inside the near ring
+  // below. Throttling turns that into a nudge every other frame rather than every frame, but it is
+  // still forever, and an ally stepping back and forth across the same half tile reads as a
+  // malfunction. Standing still is the honest answer to a slot that cannot be occupied.
+  if (allyBattler.hasGivenUpOnFormationSlot())
+  {
+    // settle rather than shuffle; a queued pixel step would carry on without a new command.
+    chr.stopPixelMoving();
+
     return;
   }
 

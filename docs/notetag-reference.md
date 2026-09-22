@@ -718,6 +718,51 @@ rate = min(1.0, 0.0 + 0.50) = 0.50, target takes 50% fire damage.
 
 ---
 
+### `<slayer:[ELEMENT_ID, PERCENT]>`
+
+**Applies to:**
+Actors, Classes, Skills, Weapons, Armors, States, Enemies — anything reachable from the attacker's
+`getAllNotes()`
+
+**When:**
+the attacker's damage is finalized, after every other piece of damage math
+
+**Effect:**
+multiplies outgoing damage by `(1 + PERCENT/100)` when the **target belongs to the elemental family
+named by ELEMENT_ID**. Negative percents work, for a penalty.
+
+This is the one element tag keyed on *what the target is* rather than on what the attack is made of.
+The attacker does **not** need to carry ELEMENT_ID as an attack element to benefit — studying undead
+makes you better at killing undead regardless of what you are swinging. That is the whole difference
+from `<boostElement>`, which only fires when the attack itself bears the element.
+
+**Family membership** is read from the target's own database element rates: a target whose innate
+rate for ELEMENT_ID is **above 1.0** belongs to that family. Neutral is exactly 1.0, so any authored
+weakness counts and there is no threshold to tune. Runtime states and equipment are ignored — a
+battler that is briefly vulnerable to fire is not a fire creature.
+
+**Stacking:** every applicable tag compounds. Two separate `<slayer:[11, 50]>` sources against the
+same target give **2.25x**, not 2x — matching how element rates and `<boostElement>` already stack.
+
+**Position in the pipeline:** this wraps the finished damage value, so it scales elemental rates,
+critical, variance and guard alike. It is applied last, on top of everything.
+
+```
+<slayer:[11, 50]>
+```
+Deal 50% more damage to anything weak to element 11.
+
+```
+<slayer:[11, 50]>
+<slayer:[16, 25]>
+```
+On one source: +50% against element-11 targets and +25% against element-16 targets. A target that is
+both takes **1.875x**.
+
+**See also:** `<boostElement>` (keyed on the attack's elements instead), `<pierceElement>`
+
+---
+
 ## J-Proficiency (`src/plugins/prof/core/`)
 
 ### `<proficiencyBonus:NUM>`
@@ -7575,3 +7620,132 @@ treated as 0 at the start of the range and 59 at the end (not independently conf
 ```
 This event page is only active from 9:00am to 5:00pm on day 29, month 5, year 2021 — nowhere else
 on the calendar.
+
+---
+
+## J-Weather (`src/plugins/weather/core/`)
+
+Draws the ambience of a place — rain, drifting snow, leaves on the wind, embers, motes of light in a
+dark passage. Every one of those is the same emitter carrying a different picture along a different
+path, so adding a look is a data edit in `data/config.weather.json` rather than a code change.
+
+### `<weather:PRESET>`
+
+**Applies to:**
+Maps only (Map Properties → Note)
+
+**When:**
+on arrival at the map — transfers, save loads and new games alike
+
+**Effect:**
+Draws the named preset from `data/config.weather.json`. PRESET is a name such as `rain`, `snow`,
+`fog`, `embers`, `leaves`, `motes` or `submerged`; a name nothing is configured for is reported and
+draws nothing.
+
+The tag says **nothing about how hard it is coming down**, and that is the point: strength is not a
+property of a place. The Deluge Plains are rainy at every hour of every day, and only the amount
+moves — which is the sky's business, and the sky belongs to J-Weather-Time.
+
+On a map with no sky overhead the authored look still draws — a cave full of drifting motes is not
+weatherless — and simply sits at its middle strength, since there is no sky to read.
+
+**A map's weather is resolved fresh on arrival and never carries in from the previous map.** Weather
+that travelled with the player would make a connecting corridor look different depending on which end
+they walked in from, and would force every room beside an unusual one to re-assert normality on the
+way out.
+
+```
+<weather:rain>
+```
+The Deluge Plains: rainy, at whatever strength the sky is currently at.
+
+```
+<weather:motes>
+```
+The Forlorn Basin: faint drifting lights in dark air, at their settled strength.
+
+### `<noWeather>`
+
+**Applies to:**
+Maps only (Map Properties → Note)
+
+**When:**
+on arrival at the map
+
+**Effect:**
+Nothing falls here, whatever the sky is doing. Outranks everything, including a `<weather:>` tag on
+the same map.
+
+**Deliberately rare.** An untagged map with no sky already draws nothing, so an ordinary interior
+needs no tag at all. This exists for the narrower case of somewhere that genuinely *has* sky overhead
+and still should not be rained on — a covered market, a colonnade, a courtyard under a canopy.
+
+### What an untagged map does
+
+It asks the sky. An outdoor map with no tag draws whatever the weather currently is, which is what
+stops a corridor between two rainy fields being the one dry spot in the region. An indoor map with no
+tag draws nothing, because there is no sky for it to ask.
+
+Indoor and outdoor is read from J-TIME's `<noToneChange>` rather than from a tag of this plugin's
+own. "Can you see the sky from here" is one question, and asking it twice eventually gets two
+answers.
+
+---
+
+## J-Weather-Time (`src/plugins/weather/ext/time/`)
+
+Makes the weather a thing that happens rather than a property a map owns. The sky over the island
+walks between named conditions phase by phase, is rolled a year ahead so it can be read, and hands
+the answer to J-Weather to draw.
+
+### `<climate:NAME>`
+
+**Applies to:**
+Maps only (Map Properties → Note)
+
+**When:**
+on arrival at the map, and again whenever the sky moves
+
+**Effect:**
+Bends the sky's strength through a named table from the `climates` block of
+`data/config.weather.json`, instead of following it directly. A name nothing is configured for
+leaves the map following the sky unchanged.
+
+A climate exists for the one thing a `<weather:>` tag cannot say: that a place responds to the sky
+*inversely*. The Forest of Dreams is foggiest when the sky is at its **clearest**, which no amount
+of tuning the sky itself can express, because it is a statement about somewhere in particular.
+
+A table keys on either the sky's condition (`byType`) or its strength (`byIntensity`) — one or the
+other, never both — and falls back to its own `default`.
+
+**A climate only bends a look the map already authored.** `MapWeatherResolver.resolve` consults the
+strength resolver on the authored-preset branch alone, so a `<climate:>` tag on a map with no
+`<weather:>` tag of its own does nothing. That is the intended shape rather than an oversight: a
+place with a climate is a place with a character, and the climate says how the sky argues with it.
+
+```
+<weather:fog>
+<climate:dreaming>
+```
+The Forest of Dreams: foggy, and thickest on a clear day.
+
+### Event page conditions
+
+These are **Comment commands inside an event page**, in the same style as J-TIME's, rather than
+notetags on the event itself.
+
+```
+<weatherTypePage:rain>
+<weatherIntensityPage:heavy>
+<weatherIntensityRangePage:moderate-heavy>
+```
+
+**They match what is actually on screen — the resolved preset — rather than the sky's condition.**
+That is the one genuinely surprising part. A creature that comes out on clear summer nights is
+tagged `fireflies`, not `clear`, because fireflies are what a clear summer night *looks like* where
+the player is standing. It is also what the weather variable already reports, and what `presetIds`
+enumerates.
+
+Both names and numbers are accepted, matching `presetIds` and `intensityIds` in the weather config.
+Every condition on a page must pass, and vanilla's own page conditions are checked first — if those
+fail, weather cannot rescue the page.

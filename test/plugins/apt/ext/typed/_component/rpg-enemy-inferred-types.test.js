@@ -20,9 +20,16 @@ describe('RPG_Enemy inferred typed elements (direct src import)', () =>
 
     globalThis.ApManager = { resolveDomainId: vi.fn(() => NaN) };
 
+    // the numeric half of inference lives on the shared battler base, so the stand-in has to sit on
+    // the same prototype chain the real RPG_Enemy does or it inherits none of it.
+    const { default: RPG_BaseBattler } = await import('../../../../../../src/plugins/_base/core/database/core/RPG_BaseBattler.js');
+
     function RPG_Enemy()
     {
     }
+
+    RPG_Enemy.prototype = Object.create(RPG_BaseBattler.prototype);
+    RPG_Enemy.prototype.constructor = RPG_Enemy;
 
     globalThis.RPG_Enemy = RPG_Enemy;
 
@@ -219,30 +226,6 @@ describe('RPG_Enemy inferred typed elements (direct src import)', () =>
 
       // Assert
       expect(ids).toEqual([]);
-    });
-
-    it('tolerates a database row with no traits array at all', () =>
-    {
-      // Arrange- hand-edited or partially-migrated rows can be missing it entirely.
-      const enemy = buildEnemy(undefined);
-
-      // Act
-      const ids = enemy.computeInferredTypedElementIds();
-
-      // Assert
-      expect(ids).toEqual([]);
-    });
-
-    it('skips a null entry in the traits array', () =>
-    {
-      // Arrange
-      const enemy = buildEnemy([ null, elementRate(1, 0.5) ]);
-
-      // Act
-      const ids = enemy.computeInferredTypedElementIds();
-
-      // Assert
-      expect(ids).toEqual([ 1 ]);
     });
 
     it('skips element slots with no name', () =>

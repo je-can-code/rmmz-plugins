@@ -1,5 +1,6 @@
 //region JABS_Battler
 import JABS_AllyAI from './JABS_AllyAI.js';
+import JABS_FormationStall from './JABS_FormationStall.js';
 /**
  * Generates a `JABS_Battler` for an actor ally bound to a follower character.
  * Uses the actor's own core configuration.
@@ -128,6 +129,81 @@ JABS_Battler.prototype.getFarDistance = function()
   const allyAI = this.getAllyAiMode();
   if (!allyAI) return JABS_Battler.farDistance;
   return allyAI.getFarDistance();
+};
+
+/**
+ * Extends {@link JABS_Battler.initIdleInfo}.<br/>
+ * Also prepares this battler to keep track of how it is faring at reaching a formation slot.
+ *
+ * Seeded alongside the rest of the idle state because that is exactly when it applies: formation
+ * keeping is what an ally does when it has nothing to fight, and the measurement is meaningless
+ * while it is engaged.
+ */
+J.ABS.EXT.ALLYAI.Aliased.JABS_Battler.set('initIdleInfo', JABS_Battler.prototype.initIdleInfo);
+JABS_Battler.prototype.initIdleInfo = function()
+{
+  // perform original logic.
+  J.ABS.EXT.ALLYAI.Aliased.JABS_Battler.get('initIdleInfo')
+    .call(this);
+
+  /**
+   * How this battler is faring at reaching its formation slot.
+   * @type {JABS_FormationStall}
+   */
+  this._formationStall = new JABS_FormationStall();
+};
+
+/**
+ * Gets how this battler is faring at reaching its formation slot.
+ * @returns {JABS_FormationStall} The tracker for this battler's current attempt.
+ */
+JABS_Battler.prototype.getFormationStall = function()
+{
+  // hand back this battler's own tracker.
+  return this._formationStall;
+};
+
+/**
+ * Records how this frame's approach toward a formation slot went.
+ *
+ * Exposed on the battler rather than left inside the AI manager because more than one manager
+ * steers an ally into formation - the pixel movement bridge replaces the tile-based mover outright
+ * - and a give-up implemented in only one of them is a give-up that never happens. Ally AI owns the
+ * knobs, so it owns the seam; whoever is doing the moving calls it.
+ * @param {number} distance How far this battler currently is from the slot.
+ * @param {number} slotX The x coordinate of the slot.
+ * @param {number} slotY The y coordinate of the slot.
+ */
+JABS_Battler.prototype.observeFormationApproach = function(distance, slotX, slotY)
+{
+  const epsilon = J.ABS.EXT.ALLYAI.Metadata.FormationProgressEpsilon;
+
+  this.getFormationStall()
+    .observe(distance, slotX, slotY, epsilon);
+};
+
+/**
+ * Whether this battler has spent long enough getting no closer to abandon its formation slot.
+ * @returns {boolean} True if the battler should stop trying to reach the slot, false otherwise.
+ */
+JABS_Battler.prototype.hasGivenUpOnFormationSlot = function()
+{
+  const stallFrames = J.ABS.EXT.ALLYAI.Metadata.FormationStallFrames;
+
+  return this.getFormationStall()
+    .isStalled(stallFrames);
+};
+
+/**
+ * Abandons this battler's current attempt at a formation slot.
+ *
+ * Called on arrival, which is the one outcome that spends an attempt outright - the next time this
+ * battler is out of position it is a new problem, even against the very same slot.
+ */
+JABS_Battler.prototype.clearFormationApproach = function()
+{
+  this.getFormationStall()
+    .reset();
 };
 
 /**

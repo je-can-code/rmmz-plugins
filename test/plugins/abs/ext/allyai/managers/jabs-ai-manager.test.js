@@ -16,9 +16,15 @@ describe('J-ABS-AllyAI JABS_AiManager (unit, all downstream dependencies stubbed
   let originalMaintainSafeDistance;
   let originalDecideAiPhase2Action;
 
+  // the real tracker rather than a double: it is a dependency-free value object, and stubbing it
+  // would let the manager's give-up gate pass on a fake that never accumulates anything.
+  let JABS_FormationStall;
+
   beforeAll(async () =>
   {
     vi.resetModules();
+
+    ({ default: JABS_FormationStall } = await import('../../../../../../src/plugins/abs/ext/allyai/_models/JABS_FormationStall.js'));
 
     globalThis.J = {
       ABS: {
@@ -31,6 +37,8 @@ describe('J-ABS-AllyAI JABS_AiManager (unit, all downstream dependencies stubbed
                 { key: 'wedge', formation: [ [ 0, 1 ], [ 1, 2 ] ] },
               ],
               FormationTolerance: 0.5,
+              FormationProgressEpsilon: 0.05,
+              FormationStallFrames: 60,
             },
           },
         },
@@ -85,7 +93,19 @@ describe('J-ABS-AllyAI JABS_AiManager (unit, all downstream dependencies stubbed
     // and a fresh object literal each call would carry fresh function references that never match.
     const targetDouble = { getX: () => 0, getY: () => 0 };
 
+    // likewise one tracker per battler, so repeated calls against the same battler accumulate the
+    // way they do in play instead of starting over on every frame.
+    const formationStall = new JABS_FormationStall();
+
     return {
+      // the same three seams the real JABS_Battler exposes, over a real tracker, so the manager's
+      // give-up is exercised rather than stubbed into always-false.
+      getFormationStall: () => formationStall,
+      observeFormationApproach: (distance, slotX, slotY) =>
+        formationStall.observe(distance, slotX, slotY, globalThis.J.ABS.EXT.ALLYAI.Metadata.FormationProgressEpsilon),
+      hasGivenUpOnFormationSlot: () =>
+        formationStall.isStalled(globalThis.J.ABS.EXT.ALLYAI.Metadata.FormationStallFrames),
+      clearFormationApproach: () => formationStall.reset(),
       isActor: () => true,
       isEnemy: () => false,
       getCharacter: () => buildCharacter(),
@@ -623,6 +643,80 @@ describe('J-ABS-AllyAI JABS_AiManager (unit, all downstream dependencies stubbed
       globalThis.JABS_AiManager.moveTowardSlotIfNeeded(battler, 5, 5);
 
       expect(battler.smartMoveTowardCoordinates).toHaveBeenCalledWith(5, 5);
+    });
+
+    it('keeps trying for the slot while the ally still has patience left', () =>
+    {
+      // Arrange
+      const stuck = buildCharacter({ x: 0, y: 0 });
+      const battler = buildBattler({ getCharacter: () => stuck });
+
+      // Act
+      for (let frame = 0; frame < 60; frame++)
+      {
+        globalThis.JABS_AiManager.moveTowardSlotIfNeeded(battler, 5, 5);
+      }
+
+      // Assert
+      expect(battler.smartMoveTowardCoordinates).toHaveBeenCalledTimes(60);
+    });
+
+    it('gives up on the slot once the ally has stopped making progress', () =>
+    {
+      // Arrange
+      const stuck = buildCharacter({ x: 0, y: 0 });
+      const battler = buildBattler({ getCharacter: () => stuck });
+
+      // Act
+      for (let frame = 0; frame < 120; frame++)
+      {
+        globalThis.JABS_AiManager.moveTowardSlotIfNeeded(battler, 5, 5);
+      }
+
+      // Assert
+      expect(battler.smartMoveTowardCoordinates).toHaveBeenCalledTimes(60);
+    });
+
+    it('never gives up on a slot the ally is still closing on', () =>
+    {
+      // Arrange
+      // the near-miss sibling of the test above: the same 120 frames, but this ally is walking.
+      const walker = buildCharacter({ x: 0, y: 0 });
+      const battler = buildBattler({ getCharacter: () => walker });
+
+      // Act
+      for (let frame = 0; frame < 120; frame++)
+      {
+        globalThis.JABS_AiManager.moveTowardSlotIfNeeded(battler, 500, 0);
+        walker.x += 1;
+      }
+
+      // Assert
+      expect(battler.smartMoveTowardCoordinates).toHaveBeenCalledTimes(120);
+    });
+
+    it('forgets a spent attempt once the ally is standing in its slot', () =>
+    {
+      // Arrange
+      // stall the ally out completely, then put it where it was trying to go.
+      const wanderer = buildCharacter({ x: 0, y: 0 });
+      const battler = buildBattler({ getCharacter: () => wanderer });
+      for (let frame = 0; frame < 120; frame++)
+      {
+        globalThis.JABS_AiManager.moveTowardSlotIfNeeded(battler, 5, 5);
+      }
+      wanderer.x = 5;
+      wanderer.y = 5;
+      globalThis.JABS_AiManager.moveTowardSlotIfNeeded(battler, 5, 5);
+
+      // Act
+      // knocked back out of position, against the very same slot it gave up on before.
+      wanderer.x = 0;
+      wanderer.y = 0;
+      globalThis.JABS_AiManager.moveTowardSlotIfNeeded(battler, 5, 5);
+
+      // Assert
+      expect(battler.smartMoveTowardCoordinates).toHaveBeenCalledTimes(61);
     });
   });
 

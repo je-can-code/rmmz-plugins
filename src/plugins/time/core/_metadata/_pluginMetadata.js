@@ -23,6 +23,9 @@ class J_TIME_PluginMetadata extends PluginMetadata
     this.TimeWindowX = Number(pp['timeWindowX']);
     this.TimeWindowY = Number(pp['timeWindowY']);
 
+    // assign the clock's icon on this instance for callers.
+    this.ClockIcon = Number(pp['clockIcon']);
+
     // assign start visible on this instance for callers.
     this.StartVisible = pp['startVisible'] === 'true';
     this.StartActivated = pp['startActivated'] === 'true';

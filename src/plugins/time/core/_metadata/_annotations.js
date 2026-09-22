@@ -201,6 +201,12 @@
  *
  * =============================================================================
  * CHANGELOG:
+ * - 2.1.0
+ *    The HUD is the clock and the phase on one line, and nothing else. The
+ *    season and the full date are gone, the seconds with them - the alternating
+ *    colon already says the clock is running. drawContent splits into named
+ *    draws and the window sizes from a declared row count, so an extension can
+ *    add a line. Added the clockIcon parameter.
  * - 2.0.0
  *    BREAKING: the day/night look moved out to J-Lighting-Time. This plugin keeps the
  *    clock, the variables, the conditionals and the HUD, and paints nothing.
@@ -279,6 +285,13 @@
  * @text Origin Y
  * @desc The y coordinate of the overarching TIME window.
  * @default 0
+ *
+ * @param clockIcon
+ * @parent BASEconfigs
+ * @type icon
+ * @text Clock Icon
+ * @desc The icon drawn beside the clock. The other rows take their icons from data; this one does not.
+ * @default 220
  *
  * @param startVisible
  * @parent BASEconfigs

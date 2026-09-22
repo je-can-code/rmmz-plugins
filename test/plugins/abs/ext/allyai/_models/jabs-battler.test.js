@@ -4,12 +4,27 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 describe('J-ABS-AllyAI JABS_Battler (unit, all downstream dependencies mocked)', () =>
 {
   let originalShouldEngage;
+  let originalInitIdleInfo;
 
   beforeAll(async () =>
   {
     vi.resetModules();
 
-    globalThis.J = { ABS: { EXT: { ALLYAI: { Aliased: { JABS_Battler: new Map() } } } } };
+    globalThis.J = {
+      ABS: {
+        EXT: {
+          ALLYAI: {
+            Aliased: { JABS_Battler: new Map() },
+            // the two knobs the formation seams read. Distinct values, so a seam reading the wrong
+            // one of them shows up as a wrong answer rather than as a coincidence.
+            Metadata: {
+              FormationProgressEpsilon: 0.05,
+              FormationStallFrames: 3,
+            },
+          },
+        },
+      },
+    };
 
     globalThis.JABS_BattlerCoreData = {
       Builder: () => ({ setBattler: vi.fn().mockReturnThis(), build: vi.fn(() => ({ built: true })) }),
@@ -33,6 +48,10 @@ describe('J-ABS-AllyAI JABS_Battler (unit, all downstream dependencies mocked)',
 
     originalShouldEngage = vi.fn();
     JABS_Battler.prototype.shouldEngage = originalShouldEngage;
+
+    originalInitIdleInfo = vi.fn();
+    JABS_Battler.prototype.initIdleInfo = originalInitIdleInfo;
+
     globalThis.JABS_Battler = JABS_Battler;
 
     await import('../../../../../../src/plugins/abs/ext/allyai/_models/JABS_Battler.js');
@@ -41,6 +60,10 @@ describe('J-ABS-AllyAI JABS_Battler (unit, all downstream dependencies mocked)',
   beforeEach(() =>
   {
     originalShouldEngage.mockReset();
+
+    // the aliased original is shared across this whole file, and several cases now seed a battler
+    // by calling the method that reaches it. Counting calls is only meaningful from zero.
+    originalInitIdleInfo.mockReset();
     globalThis.JABS_AiManager.getAlliedBattlersWithinRange.mockReset();
     globalThis.$gameParty = { isAggro: () => false };
     globalThis.$jabsEngine = { getPlayer1: vi.fn(() => ({ hasBattlerLastHit: () => false })) };
@@ -259,6 +282,203 @@ describe('J-ABS-AllyAI JABS_Battler (unit, all downstream dependencies mocked)',
       battler.applyBattleMemories(memory);
 
       expect(applyMemory).toHaveBeenCalledWith(memory);
+    });
+  });
+
+  describe('the formation seams', () =>
+  {
+    /**
+     * An ally with its idle state already seeded, which is when a formation tracker exists.
+     * @returns {object}
+     */
+    const buildIdleAlly = () =>
+    {
+      const battler = new globalThis.JABS_Battler();
+      battler.initIdleInfo();
+
+      return battler;
+    };
+
+    describe('observeFormationApproach', () =>
+    {
+      it('records a frame of no progress against the configured epsilon', () =>
+      {
+        // Arrange - the same distance twice, which is an ally pressed against a wall.
+        const ally = buildIdleAlly();
+
+        // Act.
+        ally.observeFormationApproach(5, 10, 10);
+        ally.observeFormationApproach(5, 10, 10);
+
+        // Assert - two observations, one of which opened the attempt, so one frame is spent.
+        expect(ally.hasGivenUpOnFormationSlot())
+          .toBe(false);
+        expect(ally.getFormationStall()
+          .isStalled(1))
+          .toBe(true);
+      });
+
+      it('counts progress rather than elapsed frames', () =>
+      {
+        // Arrange - an ally taking a long detour and getting steadily closer. This is the whole
+        // reason the tracker measures progress: a frame counter would give up on a legitimate
+        // walk around a lake.
+        const ally = buildIdleAlly();
+
+        // Act.
+        [ 9, 8, 7, 6, 5, 4, 3, 2 ].forEach(distance => ally.observeFormationApproach(distance, 10, 10));
+
+        // Assert - eight frames against a three-frame patience, and still trying.
+        expect(ally.hasGivenUpOnFormationSlot())
+          .toBe(false);
+      });
+
+      it('starts over when the slot itself moves', () =>
+      {
+        // Arrange - the party turns a corner and every slot shifts. An ally part-way through
+        // running out of patience against the old slot has a new problem, not a continuing one.
+        const ally = buildIdleAlly();
+        [ 5, 5, 5, 5 ].forEach(distance => ally.observeFormationApproach(distance, 10, 10));
+
+        // Act.
+        ally.observeFormationApproach(5, 12, 10);
+
+        // Assert.
+        expect(ally.hasGivenUpOnFormationSlot())
+          .toBe(false);
+      });
+    });
+
+    describe('hasGivenUpOnFormationSlot', () =>
+    {
+      it('gives up once the configured patience is spent', () =>
+      {
+        // Arrange - four identical observations against a patience of three: the first opens the
+        // attempt and the next three are the wasted frames.
+        const ally = buildIdleAlly();
+
+        // Act.
+        [ 5, 5, 5, 5 ].forEach(distance => ally.observeFormationApproach(distance, 10, 10));
+
+        // Assert.
+        expect(ally.hasGivenUpOnFormationSlot())
+          .toBe(true);
+      });
+
+      it('has not given up one frame short of the patience', () =>
+      {
+        // Arrange - the boundary, one frame below. Without this the threshold could be anything.
+        const ally = buildIdleAlly();
+
+        // Act.
+        [ 5, 5, 5 ].forEach(distance => ally.observeFormationApproach(distance, 10, 10));
+
+        // Assert.
+        expect(ally.hasGivenUpOnFormationSlot())
+          .toBe(false);
+      });
+
+      it('has not given up before anything has been observed at all', () =>
+      {
+        // Arrange - a freshly idle ally standing in its slot.
+        const ally = buildIdleAlly();
+
+        // Act & Assert.
+        expect(ally.hasGivenUpOnFormationSlot())
+          .toBe(false);
+      });
+    });
+
+    describe('clearFormationApproach', () =>
+    {
+      it('spends the attempt, so the same slot is a new problem next time', () =>
+      {
+        // Arrange - an ally that gave up, then arrived.
+        const ally = buildIdleAlly();
+        [ 5, 5, 5, 5 ].forEach(distance => ally.observeFormationApproach(distance, 10, 10));
+
+        // Act.
+        ally.clearFormationApproach();
+
+        // Assert - and the very same slot, deliberately: a reset that only forgot the distance
+        // would resume the old attempt the moment this ally fell behind again.
+        expect(ally.hasGivenUpOnFormationSlot())
+          .toBe(false);
+        ally.observeFormationApproach(5, 10, 10);
+        expect(ally.hasGivenUpOnFormationSlot())
+          .toBe(false);
+      });
+    });
+
+    it('gives every ally its own patience', () =>
+    {
+      // Arrange - one ally wedged behind scenery while another walks freely. A tracker shared
+      // across battlers would strand the one that was doing fine.
+      const stuck = buildIdleAlly();
+      const walking = buildIdleAlly();
+
+      // Act.
+      [ 5, 5, 5, 5 ].forEach(distance => stuck.observeFormationApproach(distance, 10, 10));
+      [ 9, 8, 7, 6 ].forEach(distance => walking.observeFormationApproach(distance, 10, 10));
+
+      // Assert.
+      expect(stuck.hasGivenUpOnFormationSlot())
+        .toBe(true);
+      expect(walking.hasGivenUpOnFormationSlot())
+        .toBe(false);
+    });
+  });
+
+  describe('initIdleInfo()', () =>
+  {
+    it('still performs the original idle setup', () =>
+    {
+      // Arrange
+      const battler = new globalThis.JABS_Battler();
+
+      // Act
+      battler.initIdleInfo();
+
+      // Assert
+      expect(originalInitIdleInfo).toHaveBeenCalledTimes(1);
+    });
+
+    it('seeds a formation stall tracker that starts with no attempt recorded', () =>
+    {
+      // Arrange
+      const battler = new globalThis.JABS_Battler();
+
+      // Act
+      battler.initIdleInfo();
+
+      // Assert
+      // a single observation is a fresh attempt, so one frame of patience is not yet spent.
+      battler.getFormationStall()
+        .observe(5, 10, 10, 0.05);
+      expect(battler.getFormationStall()
+        .isStalled(1)).toBe(false);
+    });
+
+    it('gives each battler a tracker of its own', () =>
+    {
+      // Arrange
+      const rupert = new globalThis.JABS_Battler();
+      const someoneElse = new globalThis.JABS_Battler();
+      rupert.initIdleInfo();
+      someoneElse.initIdleInfo();
+
+      // Act
+      // only rupert is stuck; a shared tracker would strand his neighbour too.
+      rupert.getFormationStall()
+        .observe(5, 10, 10, 0.05);
+      rupert.getFormationStall()
+        .observe(5, 10, 10, 0.05);
+
+      // Assert
+      expect(rupert.getFormationStall()
+        .isStalled(1)).toBe(true);
+      expect(someoneElse.getFormationStall()
+        .isStalled(1)).toBe(false);
     });
   });
 });

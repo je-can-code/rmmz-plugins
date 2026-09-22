@@ -6,6 +6,25 @@ class Window_Time
   extends Window_Base
 {
   /**
+   * How many rows of content this window draws.
+   *
+   * Declared so the scene can size the window without building it first, and so an extension
+   * adding a row has one number to raise rather than a height to recalculate.
+   * @type {number}
+   */
+  static RowCount = 1;
+
+  /**
+   * How wide a row of this window's content is.
+   *
+   * Declared for the same reason as {@link Window_Time.RowCount}: the scene sizes the window from
+   * it before any window exists to measure text with, and an extension whose line runs longer has
+   * one number to raise.
+   * @type {number}
+   */
+  static ContentWidth = 200;
+
+  /**
    * @constructor
    * @param {Rectangle} rect The shape representing this window.
    */
@@ -154,34 +173,87 @@ class Window_Time
    */
   drawContent()
   {
-    const colon1 = this.isAlternating()
+    this.drawTimeAndPhase();
+  };
+
+  /**
+   * How wide a line of this window's content is.
+   * @returns {number}
+   */
+  contentWidth()
+  {
+    return Window_Time.ContentWidth;
+  }
+
+  /**
+   * Where a given row of content sits.
+   *
+   * Rows are numbered rather than positioned, so anything extending this window puts its line
+   * *after* the ones already there without having to know how tall they were.
+   * @param {number} row Which row, counting from zero.
+   * @returns {number}
+   */
+  contentLineY(row)
+  {
+    return this.lineHeight() * row;
+  }
+
+  /**
+   * Draws the clock and the part of the day it falls in, together.
+   *
+   * One line, because they are the same fact at two zoom levels - "00:50" and "Moontide" both
+   * answer when it is, and a reader who wants one is already looking at the other.
+   */
+  drawTimeAndPhase()
+  {
+    const line = `${this.timeText()} ${this.timePhaseText()}`;
+
+    this.drawTextEx(line, 0, this.contentLineY(0), this.contentWidth());
+  }
+
+  /**
+   * The clock, as text codes.
+   *
+   * **No seconds.** The alternating colon already says the clock is running, and spelling out a
+   * figure that changes faster than anybody reads it costs four characters on the window's
+   * longest line - which is the line that decides how wide the whole thing has to be.
+   * @returns {string}
+   */
+  timeText()
+  {
+    const colon = this.isAlternating()
       ? ":"
       : " ";
-    const colon2 = this.isAlternating()
-      ? " "
-      : ":";
     const ampm = this.time.hours > 11
       ? "PM"
       : "AM";
-    const lh = this.lineHeight();
 
-    const seconds = this.time.seconds.padZero(2);
     const minutes = this.time.minutes.padZero(2);
     const hours = this.time.hours.padZero(2);
-    const {timeOfDayName} = this.time;
-    const {timeOfDayIcon} = this.time;
-    const seasonName = this.time.seasonOfTheYearName;
-    const seasonIcon = this.time.seasonOfTheYearIcon;
 
-    const days = this.time.days.padZero(2);
-    const months = this.time.months.padZero(2);
-    const years = this.time.years.padZero(4);
+    // authored rather than fixed, because the other rows take their icons from data and this one
+    // silently becomes whatever happens to sit at its index once the icon sheet is moved.
+    const icon = J.TIME.Metadata.ClockIcon;
 
-    this.drawTextEx(`\\I[2784]${hours}${colon1}${minutes}${colon2}${seconds} \\}${ampm}`, 0, lh * 0, 200);
-    this.drawTextEx(`\\I[${timeOfDayIcon}]${timeOfDayName}`, 0, lh * 1, 200);
-    this.drawTextEx(`\\I[${seasonIcon}]${seasonName}`, 0, lh * 2, 200);
-    this.drawTextEx(`${years}/${months}/${days}`, 0, lh * 3, 200);
-  };
+    // `\}` shrinks the font from that point on rather than for the word it precedes, so the
+    // meridiem closes with a `\{` to put it back. A fragment that is going to be concatenated
+    // has to leave the font the size it found it, or it quietly shrinks whatever follows.
+    return `\\I[${icon}]${hours}${colon}${minutes} \\}${ampm}\\{`;
+  }
+
+  /**
+   * Which part of the day it is, as text codes.
+   * @returns {string}
+   */
+  timePhaseText()
+  {
+    const {
+      timeOfDayName,
+      timeOfDayIcon
+    } = this.time;
+
+    return `\\I[${timeOfDayIcon}]${timeOfDayName}`;
+  }
 }
 
 export default Window_Time;

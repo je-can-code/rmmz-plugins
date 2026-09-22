@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.2.1 PIXEL] Enables sub-tile (pixel-accurate) movement on the map.
+ * [v1.3.0 PIXEL] Enables sub-tile (pixel-accurate) movement on the map.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -46,6 +46,12 @@
  * entirely plugin-parameter driven.
  * ============================================================================
  * CHANGELOG:
+ * - 1.3.0
+ *    setPosition no longer rounds a character onto the tile grid. Under pixel
+ *    movement the logical and real coordinates are the same position, so
+ *    rounding one of them left the pair disagreeing with nothing in flight to
+ *    reconcile them - which anything measuring distance travelled read as
+ *    motion that never stopped.
  * - 1.2.1
  *    Fixed a page-level move route pausing for its frequency after every pixel
  *    step instead of once per command.
@@ -220,7 +226,7 @@ J.PIXEL.EXT ||= {};
 /**
 * The metadata associated with this plugin.
 */
-J.PIXEL.Metadata = new JPixelistics_PluginMetadata("J-Pixelistics", "1.2.1");
+J.PIXEL.Metadata = new JPixelistics_PluginMetadata("J-Pixelistics", "1.3.0");
 /**
 * A collection of all aliased methods for this plugin.
 */
@@ -1461,6 +1467,31 @@ Game_CharacterBase.prototype.occupiedTileX = function() {
 */
 Game_CharacterBase.prototype.occupiedTileY = function() {
 	return Math.floor(this.y + Math.min(this.getCollisionPivotY(), 1 - 1e-6));
+};
+/**
+* Overwrites {@link Game_CharacterBase.setPosition}.<br/>
+* Places a character at a continuous position instead of snapping its logical coordinates onto the
+* tile grid.
+*
+* Vanilla rounds `_x`/`_y` here because a tile-based character only ever stands on a whole tile, and
+* `_realX`/`_realY` are the pair that carry the in-between while a step animates. Pixel movement
+* inverts that relationship: `_x` is itself the continuous position, and every frame of movement
+* writes `_realX` to match it exactly. Rounding one of the pair and not the other therefore leaves
+* them disagreeing by up to half a tile with nothing still in flight to reconcile them, and nothing
+* closes the gap until the character walks far enough to be placed by movement again.
+*
+* A standing disagreement between the two is read as motion by anything measuring how far a
+* character travelled this frame, and as a body trailing its own sprite by anything drawing from the
+* collision pivot. Both are wrong the instant a character is placed anywhere other than a whole tile
+* - which under pixel movement is almost everywhere.
+* @param {number} x The x coordinate to place this character at, in tiles.
+* @param {number} y The y coordinate to place this character at, in tiles.
+*/
+Game_CharacterBase.prototype.setPosition = function(x, y) {
+	this.setX(x);
+	this.setY(y);
+	this.setRealX(x);
+	this.setRealY(y);
 };
 /**
 * Overwrites {@link Game_CharacterBase.pos}.<br/>
