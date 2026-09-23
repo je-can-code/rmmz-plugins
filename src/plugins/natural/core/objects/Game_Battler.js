@@ -15,7 +15,14 @@ Game_Battler.prototype.initMembers = function()
 
 //region properties
 /**
- * Initializes the natural growth parameters for this battler.
+ * Initializes the natural growth parameters for this battler.<br/>
+ * Every parameter's natural state lives in four tables keyed by that parameter's registry key, so a
+ * parameter bound to natural growth has somewhere to keep its buffs and growths without anything here
+ * having to name it. A key nothing has buffed or grown is simply absent from a table, and reads as zero.
+ *
+ * Every amount is held in the numbers its tags were authored in- the ones the status screen shows- and
+ * only converted into the parameter's own units when a bonus is finally resolved. A lifesteal growth
+ * of `1.5` per level is therefore stored as `1.5` and not as the `0.015` the engine will add.
  */
 Game_Battler.prototype.initNaturalGrowthParameters = function()
 {
@@ -30,124 +37,33 @@ Game_Battler.prototype.initNaturalGrowthParameters = function()
   this._j._natural ||= {};
 
   /**
-   * The permanent flat bonus for max tp.
-   * @type {number}
+   * The flat bonus each parameter's buff tags currently grant, keyed by registry key.<br/>
+   * A cache rather than a record: it is rebuilt from scratch whenever this battler's note sources
+   * change, which is how a buff disappears the moment its equipment or state does.
+   * @type {Record<string, number>}
    */
-  this._j._natural._maxTpGrowthPlus = 0;
+  this._j._natural._buffPlus = {};
 
   /**
-   * The permanent multiplier bonus for max tp.
-   * @type {number}
+   * The percent bonus each parameter's buff tags currently grant, keyed by registry key.<br/>
+   * Rebuilt alongside the flat buffs, for the same reason.
+   * @type {Record<string, number>}
    */
-  this._j._natural._maxTpGrowthRate = 0;
+  this._j._natural._buffRate = {};
 
   /**
-   * The cache of the temporary flat bonus for max tp.
-   * @type {number}
+   * The flat bonus each parameter has permanently grown by, keyed by registry key.<br/>
+   * Accrued once per level gained, and never given back.
+   * @type {Record<string, number>}
    */
-  this._j._natural._maxTpBuffPlus = 0;
+  this._j._natural._growthPlus = {};
 
   /**
-   * The cache of the temporary multiplier bonus for max tp.
-   * @type {number}
+   * The percent bonus each parameter has permanently grown by, keyed by registry key.<br/>
+   * Accrued alongside the flat growth, for the same reason.
+   * @type {Record<string, number>}
    */
-  this._j._natural._maxTpBuffRate = 0;
-
-  /**
-   * The permanent flat bonus for HAR.
-   * @type {number}
-   */
-  this._j._natural._harGrowthPlus = 0;
-
-  /**
-   * The permanent multiplier bonus for HAR.
-   * @type {number}
-   */
-  this._j._natural._harGrowthRate = 0;
-
-  /**
-   * The cache of the temporary flat bonus for HAR.
-   * @type {number}
-   */
-  this._j._natural._harBuffPlus = 0;
-
-  /**
-   * The cache of the temporary multiplier bonus for HAR.
-   * @type {number}
-   */
-  this._j._natural._harBuffRate = 0;
-
-  /**
-   * The permanent flat bonuses for each of the base parameters.
-   * @type {[number, number, number, number, number, number, number, number]}
-   */
-  this._j._natural._bParamsGrowthPlus = [ 0, 0, 0, 0, 0, 0, 0, 0 ];
-
-  /**
-   * The permanent multiplier bonuses for each of the base parameters.
-   * @type {[number, number, number, number, number, number, number, number]}
-   */
-  this._j._natural._bParamsGrowthRate = [ 0, 0, 0, 0, 0, 0, 0, 0 ];
-
-  /**
-   * The cache of temporary flat bonuses for each of the base parameters.
-   * @type {[number, number, number, number, number, number, number, number]}
-   */
-  this._j._natural._bParamsBuffPlus = [ 0, 0, 0, 0, 0, 0, 0, 0 ];
-
-  /**
-   * The cache of temporary multiplier bonuses for each of the base parameters.
-   * @type {[number, number, number, number, number, number, number, number]}
-   */
-  this._j._natural._bParamsBuffRate = [ 0, 0, 0, 0, 0, 0, 0, 0 ];
-
-  /**
-   * The permanent flat bonuses for each of the sp-parameters.
-   * @type {[number, number, number, number, number, number, number, number, number, number]}
-   */
-  this._j._natural._sParamsGrowthPlus = [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ];
-
-  /**
-   * The permanent multiplier bonuses for each of the sp-parameters.
-   * @type {[number, number, number, number, number, number, number, number, number, number]}
-   */
-  this._j._natural._sParamsGrowthRate = [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ];
-
-  /**
-   * The cache of temporary flat bonuses for each of the sp-parameters.
-   * @type {[number, number, number, number, number, number, number, number, number, number]}
-   */
-  this._j._natural._sParamsBuffPlus = [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ];
-
-  /**
-   * The cache of temporary multiplier bonuses for each of the sp-parameters.
-   * @type {[number, number, number, number, number, number, number, number, number, number]}
-   */
-  this._j._natural._sParamsBuffRate = [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ];
-
-  /**
-   * The permanent flat bonuses for each of the ex-parameters.
-   * @type {[number, number, number, number, number, number, number, number, number, number]}
-   */
-  this._j._natural._xParamsGrowthPlus = [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ];
-
-  /**
-   * The permanent multiplier bonuses for each of the ex-parameters.
-   * @type {[number, number, number, number, number, number, number, number, number, number]}
-   */
-  this._j._natural._xParamsGrowthRate = [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ];
-
-  /**
-   * The cache of temporary flat bonuses for each of the ex-parameters.
-   * @type {[number, number, number, number, number, number, number, number, number, number]}
-   */
-  this._j._natural._xParamsBuffPlus = [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ];
-
-  /**
-   * The cache of temporary multiplier bonuses for each of the ex-parameters.
-   * @type {[number, number, number, number, number, number, number, number, number, number]}
-   */
-  this._j._natural._xParamsBuffRate = [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ];
+  this._j._natural._growthRate = {};
 
   /**
    * The amount of additional exp to gain. Only affects experience gained from an enemy's defeat.
@@ -168,415 +84,145 @@ Game_Battler.prototype.initNaturalGrowthParameters = function()
   this._j._natural._sdpsPlus = 0;
 };
 
-//region max tp
+//region tables
 /**
- * Gets the permanent flat bonus for max tp.
- * @returns {number}
+ * Gets the table of flat buffs, keyed by registry key.
+ * @returns {Record<string, number>}
  */
-Game_Battler.prototype.maxTpGrowthPlus = function()
+Game_Battler.prototype.naturalBuffPlusTable = function()
 {
-  return this._j._natural._maxTpGrowthPlus;
+  return this._j._natural._buffPlus;
 };
 
 /**
- * Modifies the permanent flat bonus for max tp by a given amount.
- * @param {number} amount The amount to modify the bonus by.
+ * Replaces the table of flat buffs.
+ * @param {Record<string, number>} table The new table, keyed by registry key.
  */
-Game_Battler.prototype.modMaxTpGrowthPlus = function(amount)
+Game_Battler.prototype.setNaturalBuffPlusTable = function(table)
 {
-  this._j._natural._maxTpGrowthPlus += amount;
+  this._j._natural._buffPlus = table;
 };
 
 /**
- * Gets the permanent multiplicative bonus for max tp.
- * @returns {number}
+ * Gets the table of percent buffs, keyed by registry key.
+ * @returns {Record<string, number>}
  */
-Game_Battler.prototype.maxTpGrowthRate = function()
+Game_Battler.prototype.naturalBuffRateTable = function()
 {
-  return this._j._natural._maxTpGrowthRate;
+  return this._j._natural._buffRate;
 };
 
 /**
- * Modifies the permanent multiplicative bonus for max tp by a given amount.
- * @param {number} amount The amount to modify the bonus by.
+ * Replaces the table of percent buffs.
+ * @param {Record<string, number>} table The new table, keyed by registry key.
  */
-Game_Battler.prototype.modMaxTpGrowthRate = function(amount)
+Game_Battler.prototype.setNaturalBuffRateTable = function(table)
 {
-  this._j._natural._maxTpGrowthRate += amount;
+  this._j._natural._buffRate = table;
 };
 
 /**
- * Gets the temporary flat bonus for max tp.
- * @returns {number}
+ * Gets the table of flat growths, keyed by registry key.
+ * @returns {Record<string, number>}
  */
-Game_Battler.prototype.maxTpBuffPlus = function()
+Game_Battler.prototype.naturalGrowthPlusTable = function()
 {
-  return this._j._natural._maxTpBuffPlus;
+  return this._j._natural._growthPlus;
 };
 
 /**
- * Modifies the temporary flat bonus for max tp by a given amount.
- * @param {number} amount The amount to modify the bonus by.
+ * Gets the table of percent growths, keyed by registry key.
+ * @returns {Record<string, number>}
  */
-Game_Battler.prototype.setMaxTpBuffPlus = function(amount)
+Game_Battler.prototype.naturalGrowthRateTable = function()
 {
-  this._j._natural._maxTpBuffPlus = amount;
+  return this._j._natural._growthRate;
+};
+//endregion tables
+
+//region per parameter
+/**
+ * Gets the flat buff a parameter's buff tags currently grant this battler.
+ * @param {string} parameterKey The registry key of the parameter.
+ * @returns {number} The buff, or zero when nothing is buffing the parameter.
+ */
+Game_Battler.prototype.naturalBuffPlus = function(parameterKey)
+{
+  return this.naturalBuffPlusTable()[parameterKey] ?? 0;
 };
 
 /**
- * Gets the temporary multiplicative bonus for max tp.
- * @returns {number}
+ * Sets the flat buff a parameter's buff tags currently grant this battler.
+ * @param {string} parameterKey The registry key of the parameter.
+ * @param {number} amount The flat buff, in the numbers the tags were authored in.
  */
-Game_Battler.prototype.maxTpBuffRate = function()
+Game_Battler.prototype.setNaturalBuffPlus = function(parameterKey, amount)
 {
-  return this._j._natural._maxTpBuffRate;
+  this.naturalBuffPlusTable()[parameterKey] = amount;
 };
 
 /**
- * Modifies the temporary multiplicative bonus for max tp by a given amount.
- * @param {number} amount The amount to modify the bonus by.
+ * Gets the percent buff a parameter's buff tags currently grant this battler.
+ * @param {string} parameterKey The registry key of the parameter.
+ * @returns {number} The buff, or zero when nothing is buffing the parameter.
  */
-Game_Battler.prototype.setMaxTpBuffRate = function(amount)
+Game_Battler.prototype.naturalBuffRate = function(parameterKey)
 {
-  this._j._natural._maxTpBuffRate = amount;
-};
-//endregion max tp
-
-//region har
-/**
- * Gets the permanent flat bonus for HAR.
- * @returns {number}
- */
-Game_Battler.prototype.harGrowthPlus = function()
-{
-  return this._j._natural._harGrowthPlus;
+  return this.naturalBuffRateTable()[parameterKey] ?? 0;
 };
 
 /**
- * Modifies the permanent flat bonus for HAR by a given amount.
- * @param {number} amount The amount to modify the bonus by.
+ * Sets the percent buff a parameter's buff tags currently grant this battler.
+ * @param {string} parameterKey The registry key of the parameter.
+ * @param {number} amount The percent buff, as a whole percent.
  */
-Game_Battler.prototype.modHarGrowthPlus = function(amount)
+Game_Battler.prototype.setNaturalBuffRate = function(parameterKey, amount)
 {
-  this._j._natural._harGrowthPlus += amount;
+  this.naturalBuffRateTable()[parameterKey] = amount;
 };
 
 /**
- * Gets the permanent multiplicative bonus for HAR.
- * @returns {number}
+ * Gets the flat bonus this battler has permanently grown a parameter by.
+ * @param {string} parameterKey The registry key of the parameter.
+ * @returns {number} The growth, or zero when the parameter has never grown.
  */
-Game_Battler.prototype.harGrowthRate = function()
+Game_Battler.prototype.naturalGrowthPlus = function(parameterKey)
 {
-  return this._j._natural._harGrowthRate;
+  return this.naturalGrowthPlusTable()[parameterKey] ?? 0;
 };
 
 /**
- * Modifies the permanent multiplicative bonus for HAR by a given amount.
- * @param {number} amount The amount to modify the bonus by.
+ * Grows the flat bonus of a parameter by a given amount.<br/>
+ * Modified rather than assigned, because growth is the running total of every level ever gained.
+ * @param {string} parameterKey The registry key of the parameter.
+ * @param {number} amount The amount to grow by, in the numbers the tags were authored in.
  */
-Game_Battler.prototype.modHarGrowthRate = function(amount)
+Game_Battler.prototype.modNaturalGrowthPlus = function(parameterKey, amount)
 {
-  this._j._natural._harGrowthRate += amount;
+  this.naturalGrowthPlusTable()[parameterKey] = this.naturalGrowthPlus(parameterKey) + amount;
 };
 
 /**
- * Gets the temporary flat bonus for HAR.
- * @returns {number}
+ * Gets the percent bonus this battler has permanently grown a parameter by.
+ * @param {string} parameterKey The registry key of the parameter.
+ * @returns {number} The growth, or zero when the parameter has never grown.
  */
-Game_Battler.prototype.harBuffPlus = function()
+Game_Battler.prototype.naturalGrowthRate = function(parameterKey)
 {
-  return this._j._natural._harBuffPlus;
+  return this.naturalGrowthRateTable()[parameterKey] ?? 0;
 };
 
 /**
- * Modifies the temporary flat bonus for HAR by a given amount.
- * @param {number} amount The amount to modify the bonus by.
+ * Grows the percent bonus of a parameter by a given amount.<br/>
+ * Modified rather than assigned, for the same reason as the flat growth.
+ * @param {string} parameterKey The registry key of the parameter.
+ * @param {number} amount The amount to grow by, as a whole percent.
  */
-Game_Battler.prototype.setHarBuffPlus = function(amount)
+Game_Battler.prototype.modNaturalGrowthRate = function(parameterKey, amount)
 {
-  this._j._natural._harBuffPlus = amount;
+  this.naturalGrowthRateTable()[parameterKey] = this.naturalGrowthRate(parameterKey) + amount;
 };
-
-/**
- * Gets the temporary multiplicative bonus for HAR.
- * @returns {number}
- */
-Game_Battler.prototype.harBuffRate = function()
-{
-  return this._j._natural._harBuffRate;
-};
-
-/**
- * Modifies the temporary multiplicative bonus for HAR by a given amount.
- * @param {number} amount The amount to modify the bonus by.
- */
-Game_Battler.prototype.setHarBuffRate = function(amount)
-{
-  this._j._natural._harBuffRate = amount;
-};
-
-/**
- * Extends the `har` getter defined by J.BASE.<br/>
- * Layers temporary buffs on top of the notetag+SDP base factor. Growth is layered
- * further on top of this by {@link Game_Actor}, which is why this capture/redefine
- * happens here rather than being folded into a single combined getter.
- */
-J.NATURAL.Aliased.Game_Battler.set('har', Object.getOwnPropertyDescriptor(Game_Battler.prototype, 'har').get);
-Object.defineProperty(Game_Battler.prototype, 'har', {
-  get: function()
-  {
-    const baseParam = J.NATURAL.Aliased.Game_Battler.get('har').call(this);
-    return baseParam + this.getHarBuff(baseParam);
-  },
-  configurable: true,
-});
-//endregion har
-
-//region b-params
-/**
- * Gets the permanent flat bonus for a base parameter of the given id.
- * @param {number} paramId The id of the parameter.
- * @returns {number}
- */
-Game_Battler.prototype.bParamGrowthPlus = function(paramId)
-{
-  return this.bParamsGrowthPlus()[paramId] ?? 0;
-};
-
-/**
- * Modifies the permanent flat bonus value of the given id by a given amount.
- * @param {number} paramId The id of the parameter.
- * @param {number} amount The amount to modify the parameter by.
- */
-Game_Battler.prototype.modBparamGrowthPlus = function(paramId, amount)
-{
-  this.bParamsGrowthPlus()[paramId] += amount;
-};
-
-/**
- * Gets the permanent multiplier bonus for a base parameter of the given id.
- * @param {number} paramId The id of the parameter.
- * @returns {number}
- */
-Game_Battler.prototype.bParamGrowthRate = function(paramId)
-{
-  return this.bParamsGrowthRate()[paramId] ?? 0;
-};
-
-/**
- * Modifies the permanent multiplier bonus value of the given id by a given amount.
- * @param {number} paramId The id of the parameter.
- * @param {number} amount The amount to modify the parameter by.
- */
-Game_Battler.prototype.modBparamGrowthRate = function(paramId, amount)
-{
-  this.bParamsGrowthRate()[paramId] += amount;
-};
-
-/**
- * Gets the temporary flat bonus for a base parameter of the given id.
- * @param {number} paramId The id of the parameter.
- * @returns {number}
- */
-Game_Battler.prototype.bParamBuffPlus = function(paramId)
-{
-  return this.bParamsBuffPlus()[paramId] ?? 0;
-};
-
-/**
- * Modifies the temporary flat bonus value of the given id by a given amount.
- * @param {number} paramId The id of the parameter.
- * @param {number} amount The amount to modify the parameter by.
- */
-Game_Battler.prototype.setBparamBuffPlus = function(paramId, amount)
-{
-  this.bParamsBuffPlus()[paramId] = amount;
-};
-
-/**
- * Gets the temporary multiplier bonus for a base parameter of the given id.
- * @param {number} paramId The id of the parameter.
- * @returns {number}
- */
-Game_Battler.prototype.bParamBuffRate = function(paramId)
-{
-  return this.bParamsBuffRate()[paramId] ?? 0;
-};
-
-/**
- * Modifies the temporary multiplier bonus value of the given id by a given amount.
- * @param {number} paramId The id of the parameter.
- * @param {number} amount The amount to modify the parameter by.
- */
-Game_Battler.prototype.setBparamBuffRate = function(paramId, amount)
-{
-  this.bParamsBuffRate()[paramId] = amount;
-};
-//endregion b-params
-
-//region s-params
-/**
- * Gets the permanent flat bonus for a base parameter of the given id.
- * @param {number} paramId The id of the parameter.
- * @returns {number}
- */
-Game_Battler.prototype.sParamGrowthPlus = function(paramId)
-{
-  return this.sParamsGrowthPlus()[paramId] ?? 0;
-};
-
-/**
- * Modifies the permanent flat bonus value of the given id by a given amount.
- * @param {number} paramId The id of the parameter.
- * @param {number} amount The amount to modify the parameter by.
- */
-Game_Battler.prototype.modSparamGrowthPlus = function(paramId, amount)
-{
-  this.sParamsGrowthPlus()[paramId] += amount;
-};
-
-/**
- * Gets the permanent multiplier bonus for a base parameter of the given id.
- * @param {number} paramId The id of the parameter.
- * @returns {number}
- */
-Game_Battler.prototype.sParamGrowthRate = function(paramId)
-{
-  return this.sParamsGrowthRate()[paramId] ?? 0;
-};
-
-/**
- * Modifies the permanent multiplier bonus value of the given id by a given amount.
- * @param {number} paramId The id of the parameter.
- * @param {number} amount The amount to modify the parameter by.
- */
-Game_Battler.prototype.modSparamGrowthRate = function(paramId, amount)
-{
-  this.sParamsGrowthRate()[paramId] += amount;
-};
-
-/**
- * Gets the temporary flat bonus for a base parameter of the given id.
- * @param {number} paramId The id of the parameter.
- * @returns {number}
- */
-Game_Battler.prototype.sParamBuffPlus = function(paramId)
-{
-  return this.sParamsBuffPlus()[paramId] ?? 0;
-};
-
-/**
- * Modifies the temporary flat bonus value of the given id by a given amount.
- * @param {number} paramId The id of the parameter.
- * @param {number} amount The amount to modify the parameter by.
- */
-Game_Battler.prototype.setSparamBuffPlus = function(paramId, amount)
-{
-  this.sParamsBuffPlus()[paramId] = amount;
-};
-
-/**
- * Gets the temporary multiplier bonus for a base parameter of the given id.
- * @param {number} paramId The id of the parameter.
- * @returns {number}
- */
-Game_Battler.prototype.sParamBuffRate = function(paramId)
-{
-  return this.sParamsBuffRate()[paramId] ?? 0;
-};
-
-/**
- * Modifies the temporary multiplier bonus value of the given id by a given amount.
- * @param {number} paramId The id of the parameter.
- * @param {number} amount The amount to modify the parameter by.
- */
-Game_Battler.prototype.setSparamBuffRate = function(paramId, amount)
-{
-  this.sParamsBuffRate()[paramId] = amount;
-};
-//endregion s-params
-
-//region x-params
-/**
- * Gets the permanent flat bonus for a base parameter of the given id.
- * @param {number} paramId The id of the parameter.
- * @returns {number}
- */
-Game_Battler.prototype.xParamGrowthPlus = function(paramId)
-{
-  return this.xParamsGrowthPlus()[paramId] ?? 0;
-};
-
-/**
- * Modifies the permanent flat bonus value of the given id by a given amount.
- * @param {number} paramId The id of the parameter.
- * @param {number} amount The amount to modify the parameter by.
- */
-Game_Battler.prototype.modXparamGrowthPlus = function(paramId, amount)
-{
-  this.xParamsGrowthPlus()[paramId] += amount;
-};
-
-/**
- * Gets the permanent multiplier bonus for a base parameter of the given id.
- * @param {number} paramId The id of the parameter.
- * @returns {number}
- */
-Game_Battler.prototype.xParamGrowthRate = function(paramId)
-{
-  return this.xParamsGrowthRate()[paramId] ?? 0;
-};
-
-/**
- * Modifies the permanent multiplier bonus value of the given id by a given amount.
- * @param {number} paramId The id of the parameter.
- * @param {number} amount The amount to modify the parameter by.
- */
-Game_Battler.prototype.modXparamGrowthRate = function(paramId, amount)
-{
-  this.xParamsGrowthRate()[paramId] += amount;
-};
-
-/**
- * Gets the temporary flat bonus for a x parameter of the given id.
- * @param {number} paramId The id of the parameter.
- * @returns {number}
- */
-Game_Battler.prototype.xParamBuffPlus = function(paramId)
-{
-  return this.xParamsBuffPlus()[paramId] ?? 0;
-};
-
-/**
- * Modifies the temporary flat bonus value of the given id by a given amount.
- * @param {number} paramId The id of the parameter.
- * @param {number} amount The amount to modify the parameter by.
- */
-Game_Battler.prototype.setXparamBuffPlus = function(paramId, amount)
-{
-  this.xParamsBuffPlus()[paramId] = amount;
-};
-
-/**
- * Gets the temporary multiplier bonus for a x parameter of the given id.
- * @param {number} paramId The id of the parameter.
- * @returns {number}
- */
-Game_Battler.prototype.xParamBuffRate = function(paramId)
-{
-  return this.xParamsBuffRate()[paramId] ?? 0;
-};
-
-/**
- * Modifies the temporary multiplier bonus value of the given id by a given amount.
- * @param {number} paramId The id of the parameter.
- * @param {number} amount The amount to modify the parameter by.
- */
-Game_Battler.prototype.setXparamBuffRate = function(paramId, amount)
-{
-  this.xParamsBuffRate()[paramId] = amount;
-};
-//endregion x-params
+//endregion per parameter
 
 //region rewards
 /**
@@ -599,6 +245,7 @@ Game_Battler.prototype.setExpPlus = function(expPlus)
 
 /**
  * Gets the bonus to rewarded gold.
+ * @returns {number}
  */
 Game_Battler.prototype.goldPlus = function()
 {
@@ -634,20 +281,160 @@ Game_Battler.prototype.setSdpsPlus = function(sdpsPlus)
 //endregion rewards
 //endregion properties
 
+//region resolving bonuses
+/**
+ * Extends {@link #naturalBonus}.<br/>
+ * Adds this battler's buffs and growths for a bound parameter, resolved against that parameter's base.
+ * This is how every plugin-owned parameter receives its natural bonus: its owner adds this wherever it
+ * assembles the value, and never has to know whether this plugin is installed.
+ * @param {string} parameterKey The registry key of the parameter being assembled.
+ * @returns {number}
+ */
+J.NATURAL.Aliased.Game_Battler.set('naturalBonus', Game_Battler.prototype.naturalBonus);
+Game_Battler.prototype.naturalBonus = function(parameterKey)
+{
+  // perform original logic.
+  const otherBonuses = J.NATURAL.Aliased.Game_Battler.get('naturalBonus')
+    .call(this, parameterKey);
+
+  // find the binding first, so a parameter folded in but never bound is loud even while it is zero.
+  const binding = ParameterRegistry.naturalBinding(parameterKey);
+
+  // a parameter nothing is buffing or growing adds nothing, and never needs its base resolved.
+  if (this.hasNaturalBonus(parameterKey) === false) return otherBonuses;
+
+  // resolve the parameter's own value before natural bonuses, which its rate tags are a percent of.
+  const base = binding.getBase(this);
+
+  // add this battler's natural bonus on top of whatever else was contributed.
+  return otherBonuses + this.naturalBonusAgainst(parameterKey, base);
+};
+
+/**
+ * Resolves the natural bonus for one of the engine's own parameters, whose assembly this plugin wraps.<br/>
+ * Those wrappers already hold the engine's base when they get here, so the bonus is resolved against it
+ * directly rather than through {@link #naturalBonus}, which would have to ask the engine for it again.
+ * @param {string|null} parameterKey The registry key the engine id translates to, or null for an id
+ * outside the engine's own set.
+ * @param {number} base The engine's value for the parameter before natural bonuses.
+ * @returns {number}
+ */
+Game_Battler.prototype.engineNaturalBonus = function(parameterKey, base)
+{
+  // an id outside the engine's own set names no parameter natural growth knows.
+  if (parameterKey === null) return 0;
+
+  // a parameter nothing is buffing or growing adds nothing.
+  if (this.hasNaturalBonus(parameterKey) === false) return 0;
+
+  // resolve the bonus against the base the wrapper already has in hand.
+  return this.naturalBonusAgainst(parameterKey, base);
+};
+
+/**
+ * Whether anything is currently buffing or has ever grown a parameter on this battler.
+ * @param {string} parameterKey The registry key of the parameter.
+ * @returns {boolean}
+ */
+Game_Battler.prototype.hasNaturalBonus = function(parameterKey)
+{
+  return this.naturalBuffPlus(parameterKey) !== 0
+    || this.naturalBuffRate(parameterKey) !== 0
+    || this.naturalGrowthPlus(parameterKey) !== 0
+    || this.naturalGrowthRate(parameterKey) !== 0;
+};
+
+/**
+ * Resolves this battler's natural bonus for a parameter against a known base.<br/>
+ * Tags are authored in the numbers the status screen shows, while the parameter itself may be stored as
+ * a fraction of them, so the base is lifted into those display numbers, the tags are applied there, and
+ * only the finished bonus is brought back down. Lifting the base too, rather than only shrinking the
+ * result, is what keeps a rate tag a percent of the base a person actually reads.
+ *
+ * Buffs and growths are each resolved against the same base and then summed, so neither compounds on
+ * the other- a buff does not grow with level, and a growth does not swell when a state is applied.
+ * @param {string} parameterKey The registry key of the parameter.
+ * @param {number} base The parameter's own value before natural bonuses, in its own units.
+ * @returns {number} The bonus, in the parameter's own units.
+ */
+Game_Battler.prototype.naturalBonusAgainst = function(parameterKey, base)
+{
+  // how many display units one unit of this parameter is worth.
+  const scale = ParameterRegistry.get(parameterKey)
+    .displayScale();
+
+  // lift the base into the numbers the tags were written in.
+  const displayBase = base * scale;
+
+  // resolve the temporary bonus from whatever is buffing the parameter right now.
+  const buffPlus = this.naturalBuffPlus(parameterKey);
+  const buffRate = this.naturalBuffRate(parameterKey);
+  const buffBonus = this.calculatePlusRate(displayBase, buffPlus, buffRate);
+
+  // resolve the permanent bonus from everything the parameter has grown by.
+  const growthPlus = this.naturalGrowthPlus(parameterKey);
+  const growthRate = this.naturalGrowthRate(parameterKey);
+  const growthBonus = this.calculatePlusRate(displayBase, growthPlus, growthRate);
+
+  // bring the finished bonus back down into the parameter's own units.
+  return (buffBonus + growthBonus) / scale;
+};
+
+/**
+ * The base a parameter's tags see as `b`, in the numbers those tags are written in.<br/>
+ * This is the same base a rate tag is a percent of, lifted into display units so a formula such as
+ * `b * 0.1` means a tenth of the value the status screen shows.
+ * @param {string} parameterKey The registry key of the parameter.
+ * @returns {number}
+ */
+Game_Battler.prototype.naturalDisplayBase = function(parameterKey)
+{
+  // the binding knows how to find the parameter's own value before natural bonuses.
+  const binding = ParameterRegistry.naturalBinding(parameterKey);
+  const base = binding.getBase(this);
+
+  // lift that value into the numbers the tags were authored in.
+  const scale = ParameterRegistry.get(parameterKey)
+    .displayScale();
+
+  return base * scale;
+};
+
+/**
+ * Calculates the combination of base parameter value, param plus, and param rate.
+ * This can be overridden if alternative calculations is desired.
+ * @param {number} baseValue The base value of the parameter.
+ * @param {number} paramPlus The flat bonus value of the parameter.
+ * @param {number} paramRate The multiplier bonus value of the parameter.
+ * @returns {number} The calculated result.
+ */
+Game_Battler.prototype.calculatePlusRate = function(baseValue, paramPlus, paramRate)
+{
+  // determine the modified buff rate.
+  const paramFactor = ((paramRate + 100) / 100);
+
+  // determine the modified base parameter.
+  const paramBase = (baseValue + paramPlus);
+
+  // remove the value of base param since it is added at the end.
+  return (paramBase * paramFactor) - baseValue;
+};
+//endregion resolving bonuses
+
+//region refreshing buffs
 /**
  * Refreshes both plus/rate buffs for all parameters.
  */
 Game_Battler.prototype.refreshAllParameterBuffs = function()
 {
-  // clear all the current buffs.
+  // start from empty, so a parameter whose last buff source was removed reads nothing.
   this.clearAllParameterBuffs();
 
-  // refresh them one by one.
-  this.refreshMaxTpBuffs();
-  this.refreshHarBuffs();
-  this.refreshBParamBuffs();
-  this.refreshSParamBuffs();
-  this.refreshXParamBuffs();
+  // resolve the buffs of every parameter bound to natural growth.
+  ParameterRegistry.naturallyBoundKeys()
+    .forEach(parameterKey => this.refreshParameterBuffs(parameterKey));
+
+  // refresh the battle reward bonuses, which only an enemy carries.
   this.refreshRewardBonuses();
 };
 
@@ -656,208 +443,45 @@ Game_Battler.prototype.refreshAllParameterBuffs = function()
  */
 Game_Battler.prototype.clearAllParameterBuffs = function()
 {
-  // zero everything out.
-  this.setMaxTpBuffPlus(0);
-  this.setMaxTpBuffRate(0);
-  this.setHarBuffPlus(0);
-  this.setHarBuffRate(0);
-  this.setBParamsBuffPlus([ 0, 0, 0, 0, 0, 0, 0, 0 ]);
-  this.setBParamsBuffRate([ 0, 0, 0, 0, 0, 0, 0, 0 ]);
-  this.setSParamsBuffPlus([ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ]);
-  this.setSParamsBuffRate([ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ]);
-  this.setXParamsBuffPlus([ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ]);
-  this.setXParamsBuffRate([ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ]);
+  // empty both buff tables.
+  this.setNaturalBuffPlusTable({});
+  this.setNaturalBuffRateTable({});
+
+  // zero out the reward bonuses.
   this.setExpPlus(0);
   this.setGoldPlus(0);
   this.setSdpsPlus(0);
 };
 
 /**
- * Refreshes both max tp plus/rate buffs.
+ * Resolves the buff tags of one parameter into this battler's buff tables.<br/>
+ * Only a parameter something is actually buffing gets an entry, which keeps the tables down to what
+ * matters and leaves a saved battler readable at a glance.
+ * @param {string} parameterKey The registry key of the parameter.
  */
-Game_Battler.prototype.refreshMaxTpBuffs = function()
+Game_Battler.prototype.refreshParameterBuffs = function(parameterKey)
 {
-  // get the base max tp for this battler.
-  const baseParam = this.getBaseMaxTp();
+  // the tags this parameter answers to, and what those tags see as their base.
+  const binding = ParameterRegistry.naturalBinding(parameterKey);
+  const base = this.naturalDisplayBase(parameterKey);
 
-  // destructure out the plus and rate structures for buffs.
-  const [ plusStructure, rateStructure, , ] = this.getRegexForMaxTp();
+  // evaluate every flat buff formula this battler carries for the parameter.
+  const buffPlus = this.naturalParamBuff(binding.buffPlus, base);
 
-  // determine buff plus for this param.
-  const buffPlus = this.naturalParamBuff(plusStructure, baseParam);
-
-  // determine buff rate for this param.
-  const buffRate = this.naturalParamBuff(rateStructure, baseParam);
-
-  // set the max tp buff flat modifier to this amount.
-  this.setMaxTpBuffPlus(buffPlus);
-
-  // set the max tp buff rate modifier to this amount.
-  this.setMaxTpBuffRate(buffRate);
-};
-
-/**
- * Refreshes both HAR plus/rate buffs.
- */
-Game_Battler.prototype.refreshHarBuffs = function()
-{
-  // get the pre-natural HAR value (notetag factor + SDP bonus) for this battler. J-SDP is
-  // optional, and even when present it only panels actors- enemies never gain from panels, so
-  // both conditions have to hold before the bonus can be asked for.
-  const sdpBonus = (J.SDP && this.isActor())
-    ? this.getSdpBonusForParameterKey('har', 1)
-    : 0;
-  const baseParam = this.baseHarFactor() + sdpBonus;
-
-  // destructure out the plus and rate structures for buffs.
-  const [ plusStructure, rateStructure, , ] = this.getRegexForHar();
-
-  // determine buff plus for this param.
-  const buffPlus = this.naturalParamBuff(plusStructure, baseParam);
-
-  // determine buff rate for this param.
-  const buffRate = this.naturalParamBuff(rateStructure, baseParam);
-
-  // set the HAR buff flat modifier to this amount.
-  this.setHarBuffPlus(buffPlus);
-
-  // set the HAR buff rate modifier to this amount.
-  this.setHarBuffRate(buffRate);
-};
-
-/**
- * Retrieves the four regular RegExps governing HAR buffs and growths.
- * @returns {[RegExp, RegExp, RegExp, RegExp]} The [buffplus, buffrate, growthplus, growthrate] regex structures.
- */
-Game_Battler.prototype.getRegexForHar = function()
-{
-  return [
-    J.NATURAL.RegExp.HarBuffPlus,
-    J.NATURAL.RegExp.HarBuffRate,
-    J.NATURAL.RegExp.HarGrowthPlus,
-    J.NATURAL.RegExp.HarGrowthRate, ];
-};
-
-/**
- * Get the current amount of HAR bonuses added from buffs.
- * @param {number} baseParam The base parameter value.
- * @returns {number}
- */
-Game_Battler.prototype.getHarBuff = function(baseParam)
-{
-  // determine buff plus for HAR.
-  const buffPlus = this.harBuffPlus();
-
-  // determine buff rate for HAR.
-  const buffRate = this.harBuffRate();
-
-  // don't calculate if we don't have anything.
-  if (!buffPlus && !buffRate) return 0;
-
-  // return result.
-  return this.calculatePlusRate(baseParam, buffPlus, buffRate);
-};
-
-/**
- * Refreshes both base parameter plus/rate buffs.
- */
-J.NATURAL.Aliased.Game_Battler.set('paramBase', Game_Battler.prototype.paramBase);
-Game_Battler.prototype.refreshBParamBuffs = function()
-{
-  // a collection of known base parameter ids.
-  const paramIds = Game_BattlerBase.knownBaseParameterIds();
-
-  // iterate over all of the known base parameter ids.
-  paramIds.forEach(paramId =>
+  // record it, when there is anything to record.
+  if (buffPlus !== 0)
   {
-    // get original value.
-    // perform original logic.
-    const baseParam = J.NATURAL.Aliased.Game_Battler.get('paramBase')
-      .call(this, paramId);
+    this.setNaturalBuffPlus(parameterKey, buffPlus);
+  }
 
-    // determine the structure for this parameter.
-    const [ plusStructure, rateStructure ] = this.getRegexByParamId(paramId);
+  // evaluate every percent buff formula this battler carries for the parameter.
+  const buffRate = this.naturalParamBuff(binding.buffRate, base);
 
-    // determine buff plus for this param.
-    const buffPlus = this.naturalParamBuff(plusStructure, baseParam);
-
-    // determine buff rate for this param; divided by 100 because calculateBParamBuff scales by baseParam.
-    const buffRate = (this.naturalParamBuff(rateStructure, baseParam) / 100);
-
-    // set the b-param buff flat modifier to this amount.
-    this.setBparamBuffPlus(paramId, buffPlus);
-
-    // set the b-param buff rate modifier to this amount.
-    this.setBparamBuffRate(paramId, buffRate);
-  }, this);
-};
-
-/**
- * Refreshes both ex-parameter plus/rate buffs.
- */
-J.NATURAL.Aliased.Game_Battler.set('xparam', Game_Battler.prototype.xparam);
-Game_Battler.prototype.refreshXParamBuffs = function()
-{
-  // a collection of known ex parameter ids.
-  const paramIds = Game_BattlerBase.knownExParameterIds();
-
-  // iterate over all of the known ex parameter ids.
-  paramIds.forEach(paramId =>
+  // record it, when there is anything to record.
+  if (buffRate !== 0)
   {
-    // get original value.
-    // perform original logic.
-    const baseParam = J.NATURAL.Aliased.Game_Battler.get('xparam')
-      .call(this, paramId);
-
-    // determine the structure for this parameter.
-    const [ plusStructure, rateStructure ] = this.getRegexByExParamId(paramId);
-
-    // determine buff plus for this param- divided by 100 because its fractional.
-    const buffPlus = (this.naturalParamBuff(plusStructure, baseParam) / 100);
-
-    // determine buff rate for this param; stored as raw percent for calculatePlusRate.
-    const buffRate = this.naturalParamBuff(rateStructure, baseParam);
-
-    // set the x-param buff flat modifier to this amount.
-    this.setXparamBuffPlus(paramId, buffPlus);
-
-    // set the x-param buff rate modifier to this amount.
-    this.setXparamBuffRate(paramId, buffRate);
-  }, this);
-};
-
-/**
- * Refreshes both sp-parameter plus/rate buffs.
- */
-J.NATURAL.Aliased.Game_Battler.set('sparam', Game_Battler.prototype.sparam);
-Game_Battler.prototype.refreshSParamBuffs = function()
-{
-  // a collection of known sp parameter ids.
-  const paramIds = Game_BattlerBase.knownSpParameterIds();
-
-  // iterate over all of the known sp parameter ids.
-  paramIds.forEach(paramId =>
-  {
-    // get original value.
-    // perform original logic.
-    const baseParam = J.NATURAL.Aliased.Game_Battler.get('sparam')
-      .call(this, paramId);
-
-    // determine the structure for this parameter.
-    const [ plusStructure, rateStructure ] = this.getRegexBySpParamId(paramId);
-
-    // determine buff plus for this param- divided by 100 because its fractional.
-    const buffPlus = (this.naturalParamBuff(plusStructure, baseParam) / 100);
-
-    // determine buff rate for this param; stored as raw percent for calculatePlusRate.
-    const buffRate = this.naturalParamBuff(rateStructure, baseParam);
-
-    // set the s-param buff flat modifier to this amount.
-    this.setSparamBuffPlus(paramId, buffPlus);
-
-    // set the s-param buff rate modifier to this amount.
-    this.setSparamBuffRate(paramId, buffRate);
-  }, this);
+    this.setNaturalBuffRate(parameterKey, buffRate);
+  }
 };
 
 /**
@@ -885,198 +509,7 @@ Game_Battler.prototype.naturalParamBuff = function(structure, baseParam)
   // return the calculated sum (0 if nothing found).
   return total;
 };
-
-/**
- * Translates a base parameter id into its corresponding RegExp buff plus and rate structures.
- * @param {number} paramId The parameter id to find the RegExp structures for.
- * @returns {[RegExp, RegExp]} The relevant RegExp structures for this parameter id.
- */
-Game_Battler.prototype.getRegexByParamId = function(paramId)
-{
-  switch (paramId)
-  {
-    case 0:
-      return [ J.NATURAL.RegExp.MaxLifeBuffPlus, J.NATURAL.RegExp.MaxLifeBuffRate ];
-    case 1:
-      return [ J.NATURAL.RegExp.MaxMagiBuffPlus, J.NATURAL.RegExp.MaxMagiBuffRate ];
-    case 2:
-      return [ J.NATURAL.RegExp.PowerBuffPlus, J.NATURAL.RegExp.PowerBuffRate ];
-    case 3:
-      return [ J.NATURAL.RegExp.DefenseBuffPlus, J.NATURAL.RegExp.DefenseBuffRate ];
-    case 4:
-      return [ J.NATURAL.RegExp.ForceBuffPlus, J.NATURAL.RegExp.ForceBuffRate ];
-    case 5:
-      return [ J.NATURAL.RegExp.ResistBuffPlus, J.NATURAL.RegExp.ResistBuffRate ];
-    case 6:
-      return [ J.NATURAL.RegExp.SpeedBuffPlus, J.NATURAL.RegExp.SpeedBuffRate ];
-    case 7:
-      return [ J.NATURAL.RegExp.LuckBuffPlus, J.NATURAL.RegExp.LuckBuffRate ];
-    default:
-      return null;
-  }
-};
-
-/**
- * Translates a ex-parameter id into its corresponding RegExp buff plus and rate structures.
- * @param {number} xParamId The ex-parameter id to find the RegExp structures for.
- * @returns {[RegExp, RegExp]} The relevant RegExp structures for this parameter id.
- */
-Game_Battler.prototype.getRegexByExParamId = function(xParamId)
-{
-  switch (xParamId)
-  {
-    case 0:
-      return [ J.NATURAL.RegExp.HitBuffPlus, J.NATURAL.RegExp.HitBuffRate ];
-    case 1:
-      return [ J.NATURAL.RegExp.EvadeBuffPlus, J.NATURAL.RegExp.EvadeBuffRate ];
-    case 2:
-      return [ J.NATURAL.RegExp.CritChanceBuffPlus, J.NATURAL.RegExp.CritChanceBuffRate ];
-    case 3:
-      return [ J.NATURAL.RegExp.CritEvadeBuffPlus, J.NATURAL.RegExp.CritEvadeBuffRate ];
-    case 4:
-      return [ J.NATURAL.RegExp.MagiEvadeBuffPlus, J.NATURAL.RegExp.MagiEvadeBuffRate ];
-    case 5:
-      return [ J.NATURAL.RegExp.MagiReflectBuffPlus, J.NATURAL.RegExp.MagiReflectBuffRate ];
-    case 6:
-      return [ J.NATURAL.RegExp.CounterBuffPlus, J.NATURAL.RegExp.CounterBuffRate ];
-    case 7:
-      return [ J.NATURAL.RegExp.LifeRegenBuffPlus, J.NATURAL.RegExp.LifeRegenBuffRate ];
-    case 8:
-      return [ J.NATURAL.RegExp.MagiRegenBuffPlus, J.NATURAL.RegExp.MagiRegenBuffRate ];
-    case 9:
-      return [ J.NATURAL.RegExp.TechRegenBuffPlus, J.NATURAL.RegExp.TechRegenBuffRate ];
-    default:
-      return null;
-  }
-};
-
-/**
- * Translates a sp-parameter id into its corresponding RegExp buff plus and rate structures.
- * @param {number} sParamId The sp-parameter id to find the RegExp structures for.
- * @returns {[RegExp, RegExp]} The relevant RegExp structures for this parameter id.
- */
-Game_Battler.prototype.getRegexBySpParamId = function(sParamId)
-{
-  switch (sParamId)
-  {
-    case 0:
-      return [ J.NATURAL.RegExp.AggroBuffPlus, J.NATURAL.RegExp.AggroBuffRate ];
-    case 1:
-      return [ J.NATURAL.RegExp.ParryBuffPlus, J.NATURAL.RegExp.ParryBuffRate ];
-    case 2:
-      return [ J.NATURAL.RegExp.HealingBuffPlus, J.NATURAL.RegExp.HealingBuffRate ];
-    case 3:
-      return [ J.NATURAL.RegExp.ItemFxBuffPlus, J.NATURAL.RegExp.ItemFxBuffRate ];
-    case 4:
-      return [ J.NATURAL.RegExp.MagiCostRateBuffPlus, J.NATURAL.RegExp.MagiCostRateBuffRate ];
-    case 5:
-      return [ J.NATURAL.RegExp.TechCostRateBuffPlus, J.NATURAL.RegExp.TechCostRateBuffRate ];
-    case 6:
-      return [ J.NATURAL.RegExp.PhysDmgRateBuffPlus, J.NATURAL.RegExp.PhysDmgRateBuffRate ];
-    case 7:
-      return [ J.NATURAL.RegExp.MagiDmgRateBuffPlus, J.NATURAL.RegExp.MagiDmgRateBuffRate ];
-    case 8:
-      return [ J.NATURAL.RegExp.FloorDmgRateBuffPlus, J.NATURAL.RegExp.FloorDmgRateBuffRate ];
-    case 9:
-      return [ J.NATURAL.RegExp.ExpGainRateBuffPlus, J.NATURAL.RegExp.ExpGainRateBuffRate ];
-    default:
-      return null;
-  }
-};
-
-/**
- * Gets all natural growths for this base parameter.
- * @param {number} paramId The parameter id in question.
- * @param {number} baseParam The base parameter.
- * @returns {number} The added value of the `baseParam` + `paramBuff` + `paramGrowth`.
- */
-// eslint-disable-next-line no-unused-vars
-Game_Battler.prototype.getParamBaseNaturalBonuses = function(paramId, baseParam)
-{
-  // this is intended to be implemented in subclasses.
-  Diagnostics.warn(__PLUGIN_NAME__, `leveraged a Game_Battler subclass that isn't recognized by this plugin.`, this);
-  return 0;
-};
-
-/**
- * Gets the temporary buff for a given base param for this battler.
- * @param {number} paramId The b param id.
- * @param {number} baseParam The base value of the parameter in question.
- * @returns {number} The calculated buff amount for this parameter.
- */
-Game_Battler.prototype.calculateBParamBuff = function(paramId, baseParam)
-{
-  // get the plus rate for this param.
-  const buffPlus = this.bParamBuffPlus(paramId);
-
-  // already stored as a fraction (naturalParamBuff / 100) — do not divide again.
-  const buffRate = this.bParamBuffRate(paramId);
-
-  // calculate the result into a variable for debugging.
-  return (baseParam * buffRate) + buffPlus;
-};
-
-/**
- * Gets the calculated buff for a given ex-param for this battler.
- * @param {number} paramId The ex param id.
- * @param {number} baseParam The base value of the parameter in question.
- * @returns {number} The calculated buff amount for this parameter.
- */
-Game_Battler.prototype.calculateExParamBuff = function(paramId, baseParam)
-{
-  // determine buff plus for this param.
-  const buffPlus = this.xParamBuffPlus(paramId);
-
-  // determine buff rate for this param.
-  const buffRate = this.xParamBuffRate(paramId);
-
-  // don't calculate if we don't have anything.
-  if (!buffPlus && !buffRate) return 0;
-
-  // return result.
-  return this.calculatePlusRate(baseParam, buffPlus, buffRate);
-};
-
-/**
- * Gets the calculated buff for a given sp-param for this battler.
- * @param {number} paramId The sp param id.
- * @param {number} baseParam The base value of the parameter in question.
- * @returns {number} The calculated buff amount for this parameter.
- */
-Game_Battler.prototype.calculateSpParamBuff = function(paramId, baseParam)
-{
-  // determine buff plus for this param.
-  const buffPlus = this.sParamBuffPlus(paramId);
-
-  // determine buff rate for this param.
-  const buffRate = this.sParamBuffRate(paramId);
-
-  // don't calculate if we don't have anything.
-  if (!buffPlus && !buffRate) return 0;
-
-  // return result.
-  return this.calculatePlusRate(baseParam, buffPlus, buffRate);
-};
-
-/**
- * Calculates the combination of base parameter value, param plus, and param rate.
- * This can be overridden if alternative calculations is desired.
- * @param {number} baseValue The base value of the parameter.
- * @param {number} paramPlus The flat bonus value of the parameter.
- * @param {number} paramRate The multiplier bonus value of the parameter.
- * @returns {number} The calculated result.
- */
-Game_Battler.prototype.calculatePlusRate = function(baseValue, paramPlus, paramRate)
-{
-  // determine the modified buff rate.
-  const paramFactor = ((paramRate + 100) / 100);
-
-  // determine the modified base parameter.
-  const paramBase = (baseValue + paramPlus);
-
-  // remove the value of base param since it is added at the end.
-  return (paramBase * paramFactor) - baseValue;
-};
+//endregion refreshing buffs
 
 //region max tp
 /**
@@ -1096,266 +529,31 @@ Game_Battler.prototype.maxTp = function()
  */
 Game_Battler.prototype.actualMaxTp = function()
 {
-  // get the base max tp defined
+  // the max tech this battler has before any natural bonus.
+  const baseMaxTp = this.maxTpBeforeNatural();
+
+  // add whatever natural buffs and growths are bound to max tech.
+  const naturalBonus = this.naturalBonus('mtp');
+
+  // return result.
+  return (baseMaxTp + naturalBonus);
+};
+
+/**
+ * The max tech this battler has before natural bonuses: the configured base plus every `<maxTp>` tag.<br/>
+ * This is the base max tech's natural tags see, and what its rate tags are a percent of.
+ * @returns {number}
+ */
+Game_Battler.prototype.maxTpBeforeNatural = function()
+{
+  // get the base max tp defined.
   const baseParam = this.getBaseMaxTp();
 
   // get the bonuses to max tp.
   const baseBonusParam = this.getBaseMaxTpBonuses();
 
-  // get all bonuses to max tp from natural bonuses.
-  const maxTpNaturalBonuses = this.maxTpNaturalBonuses();
-
-  // return result.
-  return (baseParam + baseBonusParam + maxTpNaturalBonuses);
-};
-
-/**
- * This is exclusively for access to the natural growth values, without the base max tp value added.
- * @returns {number}
- */
-Game_Battler.prototype.maxTpNaturalBonuses = function()
-{
-  // get the base max tp for this battler.
-  const baseParam = this.getBaseMaxTp();
-
-  // get the bonuses to max tp.
-  const baseBonusParam = this.getBaseMaxTpBonuses();
-
-  // calculate base max tp including bonuses.
-  const baseMaxTp = (baseParam + baseBonusParam);
-
-  // return the calculated natural bonuses.
-  return this.getMaxTpNaturalBonuses(baseMaxTp);
-};
-
-/**
- * Gets all natural bonuses for max tp.
- * @param {number} baseParam The base max tp value.
- * @returns {number} The natural bonuses applied.
- */
-Game_Battler.prototype.getMaxTpNaturalBonuses = function(baseParam)
-{
-  // return the natural growth buffs currently applied.
-  return this.getMaxTpBuff(baseParam);
-};
-
-/**
- * Retrieves the four regular RegExps governing max tp buffs and growths.
- * @returns {[RegExp, RegExp, RegExp, RegExp]} The [buffplus, buffrate, growthplus, growthrate] regex structures.
- */
-Game_Battler.prototype.getRegexForMaxTp = function()
-{
-  return [
-    J.NATURAL.RegExp.MaxTechBuffPlus,
-    J.NATURAL.RegExp.MaxTechBuffRate,
-    J.NATURAL.RegExp.MaxTechGrowthPlus,
-    J.NATURAL.RegExp.MaxTechGrowthRate, ];
-};
-
-/**
- * Get the current amount of max tp bonuses added from buffs.
- * @param {number} baseParam The base parameter value.
- * @returns {number}
- */
-Game_Battler.prototype.getMaxTpBuff = function(baseParam)
-{
-  // determine buff plus for max tp.
-  const buffPlus = this.maxTpBuffPlus();
-
-  // determine buff rate for max tp.
-  const buffRate = this.maxTpBuffRate();
-
-  // don't calculate if we don't have anything.
-  if (!buffPlus && !buffRate) return 0;
-
-  // return result.
-  return this.calculatePlusRate(baseParam, buffPlus, buffRate);
+  // return the combination.
+  return (baseParam + baseBonusParam);
 };
 //endregion max tp
-
-//region properties
-/**
- * Gets the b params growth plus.
- * @returns {[number, number, number, number, number, number, number, number]} The bParamsGrowthPlus.
- */
-Game_Battler.prototype.bParamsGrowthPlus = function()
-{
-  // hand back the b params growth plus.
-  return this._j._natural._bParamsGrowthPlus;
-};
-
-/**
- * Gets the b params growth rate.
- * @returns {[number, number, number, number, number, number, number, number]} The bParamsGrowthRate.
- */
-Game_Battler.prototype.bParamsGrowthRate = function()
-{
-  // hand back the b params growth rate.
-  return this._j._natural._bParamsGrowthRate;
-};
-
-/**
- * Gets the b params buff plus.
- * @returns {[number, number, number, number, number, number, number, number]} The bParamsBuffPlus.
- */
-Game_Battler.prototype.bParamsBuffPlus = function()
-{
-  // hand back the b params buff plus.
-  return this._j._natural._bParamsBuffPlus;
-};
-
-/**
- * Sets the b params buff plus.
- * @param {[number, number, number, number, number, number, number, number]} newBParamsBuffPlus The new value.
- */
-Game_Battler.prototype.setBParamsBuffPlus = function(newBParamsBuffPlus)
-{
-  // assign the b params buff plus.
-  this._j._natural._bParamsBuffPlus = newBParamsBuffPlus;
-};
-
-/**
- * Gets the b params buff rate.
- * @returns {[number, number, number, number, number, number, number, number]} The bParamsBuffRate.
- */
-Game_Battler.prototype.bParamsBuffRate = function()
-{
-  // hand back the b params buff rate.
-  return this._j._natural._bParamsBuffRate;
-};
-
-/**
- * Sets the b params buff rate.
- * @param {[number, number, number, number, number, number, number, number]} newBParamsBuffRate The new value.
- */
-Game_Battler.prototype.setBParamsBuffRate = function(newBParamsBuffRate)
-{
-  // assign the b params buff rate.
-  this._j._natural._bParamsBuffRate = newBParamsBuffRate;
-};
-
-/**
- * Gets the s params growth plus.
- * @returns {[number, number, number, number, number, number, number, number, number, number]} The sParamsGrowthPlus.
- */
-Game_Battler.prototype.sParamsGrowthPlus = function()
-{
-  // hand back the s params growth plus.
-  return this._j._natural._sParamsGrowthPlus;
-};
-
-/**
- * Gets the s params growth rate.
- * @returns {[number, number, number, number, number, number, number, number, number, number]} The sParamsGrowthRate.
- */
-Game_Battler.prototype.sParamsGrowthRate = function()
-{
-  // hand back the s params growth rate.
-  return this._j._natural._sParamsGrowthRate;
-};
-
-/**
- * Gets the s params buff plus.
- * @returns {[number, number, number, number, number, number, number, number, number, number]} The sParamsBuffPlus.
- */
-Game_Battler.prototype.sParamsBuffPlus = function()
-{
-  // hand back the s params buff plus.
-  return this._j._natural._sParamsBuffPlus;
-};
-
-/**
- * Sets the s params buff plus.
- * @param {[number, number, number, number, number, number, number, number, number, number]} newSParamsBuffPlus
- * The new sParamsBuffPlus.
- */
-Game_Battler.prototype.setSParamsBuffPlus = function(newSParamsBuffPlus)
-{
-  // assign the s params buff plus.
-  this._j._natural._sParamsBuffPlus = newSParamsBuffPlus;
-};
-
-/**
- * Gets the s params buff rate.
- * @returns {[number, number, number, number, number, number, number, number, number, number]} The sParamsBuffRate.
- */
-Game_Battler.prototype.sParamsBuffRate = function()
-{
-  // hand back the s params buff rate.
-  return this._j._natural._sParamsBuffRate;
-};
-
-/**
- * Sets the s params buff rate.
- * @param {[number, number, number, number, number, number, number, number, number, number]} newSParamsBuffRate
- * The new sParamsBuffRate.
- */
-Game_Battler.prototype.setSParamsBuffRate = function(newSParamsBuffRate)
-{
-  // assign the s params buff rate.
-  this._j._natural._sParamsBuffRate = newSParamsBuffRate;
-};
-
-/**
- * Gets the x params growth plus.
- * @returns {[number, number, number, number, number, number, number, number, number, number]} The xParamsGrowthPlus.
- */
-Game_Battler.prototype.xParamsGrowthPlus = function()
-{
-  // hand back the x params growth plus.
-  return this._j._natural._xParamsGrowthPlus;
-};
-
-/**
- * Gets the x params growth rate.
- * @returns {[number, number, number, number, number, number, number, number, number, number]} The xParamsGrowthRate.
- */
-Game_Battler.prototype.xParamsGrowthRate = function()
-{
-  // hand back the x params growth rate.
-  return this._j._natural._xParamsGrowthRate;
-};
-
-/**
- * Gets the x params buff plus.
- * @returns {[number, number, number, number, number, number, number, number, number, number]} The xParamsBuffPlus.
- */
-Game_Battler.prototype.xParamsBuffPlus = function()
-{
-  // hand back the x params buff plus.
-  return this._j._natural._xParamsBuffPlus;
-};
-
-/**
- * Sets the x params buff plus.
- * @param {[number, number, number, number, number, number, number, number, number, number]} newXParamsBuffPlus
- * The new xParamsBuffPlus.
- */
-Game_Battler.prototype.setXParamsBuffPlus = function(newXParamsBuffPlus)
-{
-  // assign the x params buff plus.
-  this._j._natural._xParamsBuffPlus = newXParamsBuffPlus;
-};
-
-/**
- * Gets the x params buff rate.
- * @returns {[number, number, number, number, number, number, number, number, number, number]} The xParamsBuffRate.
- */
-Game_Battler.prototype.xParamsBuffRate = function()
-{
-  // hand back the x params buff rate.
-  return this._j._natural._xParamsBuffRate;
-};
-
-/**
- * Sets the x params buff rate.
- * @param {[number, number, number, number, number, number, number, number, number, number]} newXParamsBuffRate
- * The new xParamsBuffRate.
- */
-Game_Battler.prototype.setXParamsBuffRate = function(newXParamsBuffRate)
-{
-  // assign the x params buff rate.
-  this._j._natural._xParamsBuffRate = newXParamsBuffRate;
-};
-//endregion properties
 //endregion Game_Battler

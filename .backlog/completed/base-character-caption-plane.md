@@ -1,3 +1,8 @@
+---
+completed: 2026-09-18
+ship: J-Base 3.17.0 (#119)
+---
+
 # Character caption plane
 
 ## Source

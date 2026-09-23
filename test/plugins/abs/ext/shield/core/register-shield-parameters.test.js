@@ -22,8 +22,31 @@ describe('J-ABS-Shield ShieldParameterRegistration (unit, all downstream depende
     globalThis.IconManager = { sar: vi.fn(() => 967), ser: vi.fn(() => 968) };
     globalThis.ParameterGroups = { SUPPORT: 'support' };
     globalThis.ParameterFormat = { MULTIPLIER_PERCENT: 'multiplier-percent' };
-    globalThis.ParameterRegistry = { register: vi.fn() };
+    globalThis.ParameterRegistry = { register: vi.fn(), bindNatural: vi.fn() };
     globalThis.SdpParameterBinding = { byKey: vi.fn((key, fallback) => ({ key, fallback })) };
+
+    // the real binding model, which is plain data and needs nothing of its own.
+    ({ default: globalThis.NaturalParameterBinding } = await import('../../../../../../src/plugins/_base/core/models/NaturalParameterBinding.js'));
+
+    // stand-in tags, each its own object, so a binding can be checked by identity against the right one.
+    globalThis.J = {
+      ABS: {
+        EXT: {
+          SHIELD: {
+            RegExp: {
+              ShieldAmplificationBuffPlus: /<sarBuffPlus>/,
+              ShieldAmplificationBuffRate: /<sarBuffRate>/,
+              ShieldAmplificationGrowthPlus: /<sarGrowthPlus>/,
+              ShieldAmplificationGrowthRate: /<sarGrowthRate>/,
+              ShieldEffectivenessBuffPlus: /<serBuffPlus>/,
+              ShieldEffectivenessBuffRate: /<serBuffRate>/,
+              ShieldEffectivenessGrowthPlus: /<serGrowthPlus>/,
+              ShieldEffectivenessGrowthRate: /<serGrowthRate>/,
+            },
+          },
+        },
+      },
+    };
 
     globalThis.ParameterDefinition = {
       Builder: () =>
@@ -52,7 +75,21 @@ describe('J-ABS-Shield ShieldParameterRegistration (unit, all downstream depende
   {
     captures = [];
     globalThis.ParameterRegistry.register.mockReset();
+    globalThis.ParameterRegistry.bindNatural.mockReset();
   });
+
+  /**
+   * Finds the natural binding registerAll attached to one key.
+   * @param {string} key The registry key the binding was attached to.
+   * @returns {NaturalParameterBinding}
+   */
+  function boundNatural(key)
+  {
+    const { calls } = globalThis.ParameterRegistry.bindNatural.mock;
+    const [ , binding ] = calls.find(([ boundKey ]) => boundKey === key);
+
+    return binding;
+  }
 
   describe('registerAll', () =>
   {
@@ -108,6 +145,40 @@ describe('J-ABS-Shield ShieldParameterRegistration (unit, all downstream depende
 
       expect(captures[0].sdpBinding.fallback()).toBe(1);
       expect(captures[1].sdpBinding.fallback()).toBe(1);
+    });
+
+    it.each([
+      [ 'sar', 'ShieldAmplification' ],
+      [ 'ser', 'ShieldEffectiveness' ],
+    ])('binds %s natural growth to its own four tags', (key, prefix) =>
+    {
+      // Arrange- both shield stats are bound in one pass, so a crossed wire picks up the other's tags.
+      const { RegExp: tags } = globalThis.J.ABS.EXT.SHIELD;
+
+      // Act
+      ShieldParameterRegistration.registerAll();
+
+      // Assert
+      const binding = boundNatural(key);
+      expect(binding.buffPlus).toBe(tags[`${prefix}BuffPlus`]);
+      expect(binding.buffRate).toBe(tags[`${prefix}BuffRate`]);
+      expect(binding.growthPlus).toBe(tags[`${prefix}GrowthPlus`]);
+      expect(binding.growthRate).toBe(tags[`${prefix}GrowthRate`]);
+    });
+
+    it.each([
+      [ 'sar', 1.25 ],
+      [ 'ser', 0.75 ],
+    ])('grows %s against the factor its own tags produce', (key, expected) =>
+    {
+      // Arrange- the battler answers differently per shield stat, so the right base is visible.
+      const battler = { baseSarFactor: () => 1.25, baseSerFactor: () => 0.75 };
+
+      // Act
+      ShieldParameterRegistration.registerAll();
+
+      // Assert
+      expect(boundNatural(key).getBase(battler)).toBe(expected);
     });
   });
 });

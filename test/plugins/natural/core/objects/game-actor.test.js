@@ -3,19 +3,22 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   installNaturalHostGlobals,
-  notetagNameOf,
+  installParameterCatalog,
+  registerShippedNaturalParameters,
   setPluginContextToJBase,
   setPluginContextToJNatural,
 } from '../../_component/fixtures/install-natural-host-globals.js';
 
 /**
- * Actors are the only battler type that accrues permanent growth, so everything here is the second
- * layer stacked on top of the buffs Game_Battler already resolved. Growth accumulates for every
- * level gained and is deliberately never lost on level-down, which is why the growth totals are
- * modified rather than assigned - the same reason the buff equivalents are assigned rather than
- * modified. Getting those two backwards would either erase progression or compound it every frame.
+ * Actors are the only battler type that grows, so this is where level-up turns growth tags into the
+ * running totals every parameter reads. The engine's own parameters are wrapped here too, each one
+ * adding its natural bonus onto the value the engine computed- and an id the engine uses that natural
+ * growth has no key for must pass through exactly as the engine made it.
+ *
+ * The fixture's engine answers 10 for every base parameter, 0.25 for every ex-parameter and 1 for
+ * every sp-parameter, which makes every wrapper's contribution observable as an exact number.
  */
-describe('J-NaturalGrowth Game_Actor growths (direct src import)', () =>
+describe('J-NaturalGrowth Game_Actor (direct src import)', () =>
 {
   beforeAll(async () =>
   {
@@ -30,12 +33,15 @@ describe('J-NaturalGrowth Game_Actor growths (direct src import)', () =>
 
     await import('../../../../../src/plugins/_base/core/objects/Game_BattlerBase.js');
     await import('../../../../../src/plugins/_base/core/objects/Game_Battler.js');
-    await import('../../../../../src/plugins/_base/core/objects/Game_Actor.js');
+
+    await installParameterCatalog();
 
     setPluginContextToJNatural();
     await import('../../../../../src/plugins/natural/core/_metadata/initialization.js');
     await import('../../../../../src/plugins/natural/core/objects/Game_Battler.js');
     await import('../../../../../src/plugins/natural/core/objects/Game_Actor.js');
+
+    await registerShippedNaturalParameters();
   });
 
   let actor;
@@ -44,514 +50,284 @@ describe('J-NaturalGrowth Game_Actor growths (direct src import)', () =>
   {
     actor = new globalThis.Game_Actor();
     actor.initMembers();
+    actor.getAllNotes = function()
+    {
+      return this.__notes ?? [];
+    };
   });
 
-  //region max tp growth
-  describe('getMaxTpGrowth', () =>
+  /**
+   * Swaps one of this plugin's captured originals for a spy for the length of a test.
+   * @param {string} methodName The aliased method whose original to replace.
+   * @param {Function} spy The stand-in original.
+   * @returns {Function} Restores the real original.
+   */
+  function stubOriginal(methodName, spy)
   {
-    it('reports no growth on an actor that has gained none', () =>
-    {
-      // Arrange: a level-one actor with no growth tags has nothing to add, and the short
-      // circuit spares every max tp read the arithmetic.
-      // Act
-      const result = actor.getMaxTpGrowth(100);
+    const original = globalThis.J.NATURAL.Aliased.Game_Actor.get(methodName);
+    globalThis.J.NATURAL.Aliased.Game_Actor.set(methodName, spy);
 
-      // Assert
-      expect(result).toBe(0);
-    });
+    return () => globalThis.J.NATURAL.Aliased.Game_Actor.set(methodName, original);
+  }
 
-    it('computes growth from an accumulated flat bonus', () =>
+  //region lifecycle
+  describe('setup', () =>
+  {
+    it('performs the original logic, then refreshes every parameter buff', () =>
     {
       // Arrange
-      actor.modMaxTpGrowthPlus(15);
+      const original = vi.fn();
+      const restore = stubOriginal('setup', original);
+      actor.refreshAllParameterBuffs = vi.fn();
 
       // Act
-      const result = actor.getMaxTpGrowth(100);
+      actor.setup(3);
 
       // Assert
-      expect(result).toBeCloseTo(15, 10);
-    });
+      expect(original).toHaveBeenCalledWith(3);
+      expect(actor.refreshAllParameterBuffs).toHaveBeenCalledTimes(1);
 
-    it('compounds accumulated flat and rate growth', () =>
-    {
-      // Arrange
-      actor.modMaxTpGrowthPlus(20);
-      actor.modMaxTpGrowthRate(10);
-
-      // Act
-      const result = actor.getMaxTpGrowth(100);
-
-      // Assert
-      expect(result).toBeCloseTo(32, 10);
+      restore();
     });
   });
 
-  describe('getMaxTpNaturalBonuses', () =>
+  describe('onBattlerDataChange', () =>
   {
-    it('sums buff and growth rather than letting one shadow the other', () =>
-    {
-      // Arrange: buffs come and go with equipment and states while growth is permanent, so an
-      // actor carrying both must receive both.
-      actor.setMaxTpBuffPlus(10);
-      actor.modMaxTpGrowthPlus(25);
-
-      // Act
-      const result = actor.getMaxTpNaturalBonuses(100);
-
-      // Assert
-      expect(result).toBeCloseTo(35, 10);
-    });
-
-    it('reports only the growth when nothing is buffed', () =>
+    it('performs the original logic, then refreshes every parameter buff', () =>
     {
       // Arrange
-      actor.modMaxTpGrowthPlus(25);
+      const original = vi.fn();
+      const restore = stubOriginal('onBattlerDataChange', original);
+      actor.refreshAllParameterBuffs = vi.fn();
 
       // Act
-      const result = actor.getMaxTpNaturalBonuses(100);
+      actor.onBattlerDataChange();
 
       // Assert
-      expect(result).toBeCloseTo(25, 10);
+      expect(original).toHaveBeenCalledTimes(1);
+      expect(actor.refreshAllParameterBuffs).toHaveBeenCalledTimes(1);
+
+      restore();
     });
   });
 
   describe('maxTp', () =>
   {
-    it('includes accumulated growth in the reported max tp', () =>
+    it('reports the calculated max tech rather than the engine default', () =>
     {
       // Arrange
-      const before = actor.maxTp();
-      actor.modMaxTpGrowthPlus(12);
+      actor.actualMaxTp = () => 137;
 
-      // Act
-      const after = actor.maxTp();
-
-      // Assert
-      expect(after - before).toBeCloseTo(12, 10);
+      // Act & Assert
+      expect(actor.maxTp()).toBe(137);
     });
   });
-  //endregion max tp growth
+  //endregion lifecycle
 
-  //region har growth
-  describe('getHarGrowth', () =>
+  //region engine parameters
+  describe('paramBase', () =>
   {
-    it('reports no growth on an actor that has gained none', () =>
+    it('adds the natural bonus of the base parameter the id names', () =>
     {
-      // Arrange & Act
-      const result = actor.getHarGrowth(100);
+      // Arrange: atk is id 2; a def buff is present too and must not be the one that lands.
+      actor.setNaturalBuffPlus('atk', 7);
+      actor.setNaturalBuffPlus('def', 50);
 
-      // Assert
-      expect(result).toBe(0);
+      // Act & Assert
+      expect(actor.paramBase(2)).toBe(17);
     });
 
-    it('computes growth from an accumulated flat bonus', () =>
+    it('passes an id outside the engine\'s eight through exactly as the engine made it', () =>
+    {
+      // Arrange: every real key carries a buff, so any bonus at all would show.
+      actor.setNaturalBuffPlus('atk', 7);
+
+      // Act & Assert
+      expect(actor.paramBase(8)).toBe(10);
+    });
+  });
+
+  describe('paramBaseBeforeNatural', () =>
+  {
+    it('reports the engine\'s base without any natural bonus', () =>
     {
       // Arrange
-      actor.modHarGrowthPlus(8);
+      actor.setNaturalBuffPlus('atk', 7);
 
-      // Act
-      const result = actor.getHarGrowth(100);
+      // Act & Assert
+      expect(actor.paramBaseBeforeNatural(2)).toBe(10);
+    });
+  });
 
-      // Assert
-      expect(result).toBeCloseTo(8, 10);
+  describe('xparam', () =>
+  {
+    it('adds the natural bonus of the ex-parameter the id names, scaled from its percent', () =>
+    {
+      // Arrange: hit is id 0; an eva buff is present too and must not be the one that lands.
+      actor.setNaturalBuffPlus('hit', 100);
+      actor.setNaturalBuffPlus('eva', 50);
+
+      // Act & Assert
+      expect(actor.xparam(0)).toBeCloseTo(1.25, 10);
     });
 
-    it('compounds accumulated flat and rate growth', () =>
+    it('passes an id outside the engine\'s ten through exactly as the engine made it', () =>
     {
       // Arrange
-      actor.modHarGrowthPlus(20);
-      actor.modHarGrowthRate(10);
+      actor.setNaturalBuffPlus('hit', 100);
 
-      // Act
-      const result = actor.getHarGrowth(100);
-
-      // Assert
-      expect(result).toBeCloseTo(32, 10);
+      // Act & Assert
+      expect(actor.xparam(10)).toBe(0.25);
     });
   });
 
-  describe('har getter', () =>
+  describe('xparamBeforeNatural', () =>
   {
-    it('layers growth on top of the buff-inclusive value from Game_Battler', () =>
-    {
-      // Arrange: the actor getter chains onto the battler getter rather than replacing it, so
-      // an actor carrying both a buff and a growth receives both.
-      const base = actor.har;
-      actor.setHarBuffPlus(3);
-      actor.modHarGrowthPlus(5);
-
-      // Act
-      const layered = actor.har;
-
-      // Assert
-      expect(layered - base).toBeCloseTo(8, 10);
-    });
-
-    it('leaves HAR untouched on an actor with neither buff nor growth', () =>
+    it('reports the engine\'s value without any natural bonus', () =>
     {
       // Arrange
-      const first = actor.har;
+      actor.setNaturalBuffPlus('hit', 100);
 
-      // Act
-      const second = actor.har;
-
-      // Assert
-      expect(second).toBe(first);
+      // Act & Assert
+      expect(actor.xparamBeforeNatural(0)).toBe(0.25);
     });
   });
-  //endregion har growth
 
-  //region base parameter growth
-  describe('getBparamGrowth', () =>
+  describe('sparam', () =>
   {
-    it('reports no growth for a parameter the actor has gained none in', () =>
+    it('adds the natural bonus of the sp-parameter the id names, scaled from its percent', () =>
     {
-      // Arrange & Act
-      const result = actor.getBparamGrowth(0, 100);
+      // Arrange: tgr is id 0; a grd buff is present too and must not be the one that lands.
+      actor.setNaturalBuffPlus('tgr', 200);
+      actor.setNaturalBuffPlus('grd', 50);
 
-      // Assert
-      expect(result).toBe(0);
+      // Act & Assert
+      expect(actor.sparam(0)).toBeCloseTo(3, 10);
     });
 
-    it('compounds accumulated flat and rate growth for a base parameter', () =>
+    it('passes an id outside the engine\'s ten through exactly as the engine made it', () =>
     {
       // Arrange
-      actor.modBparamGrowthPlus(0, 20);
-      actor.modBparamGrowthRate(0, 10);
+      actor.setNaturalBuffPlus('tgr', 200);
 
-      // Act
-      const result = actor.getBparamGrowth(0, 100);
-
-      // Assert
-      expect(result).toBeCloseTo(32, 10);
-    });
-
-    it('keeps each parameter growth independent of the others', () =>
-    {
-      // Arrange: growth is tracked per parameter, so buffing power must not leak into defense.
-      actor.modBparamGrowthPlus(2, 30);
-
-      // Act
-      const untouched = actor.getBparamGrowth(3, 100);
-
-      // Assert
-      expect(untouched).toBe(0);
+      // Act & Assert
+      expect(actor.sparam(10)).toBe(1);
     });
   });
 
-  describe('paramBaseNaturalBonuses', () =>
+  describe('sparamBeforeNatural', () =>
   {
-    it('contributes nothing for a parameter id with no regex mapping', () =>
-    {
-      // Arrange: without a regex pair there is no tag to read growth from, so there is nothing
-      // to contribute rather than an error to raise.
-      // Act
-      const result = actor.paramBaseNaturalBonuses(99);
-
-      // Assert
-      expect(result).toBe(0);
-    });
-  });
-
-  /**
-   * The growth tables mirror the buff tables on {@link Game_Battler}, one pair of notetags per
-   * parameter id. Pinning the pair's identity rather than its length is what makes the mapping
-   * load-bearing: every case returns two elements, so a case resolving to the neighbouring
-   * parameter's tags would satisfy a length check just as well as the correct answer.
-   */
-  describe('getGrowthRegexByBparamId', () =>
-  {
-    it.each([
-      [ 0, 'mhpGrowthPlus', 'mhpGrowthRate' ],
-      [ 1, 'mmpGrowthPlus', 'mmpGrowthRate' ],
-      [ 2, 'atkGrowthPlus', 'atkGrowthRate' ],
-      [ 3, 'defGrowthPlus', 'defGrowthRate' ],
-      [ 4, 'matGrowthPlus', 'matGrowthRate' ],
-      [ 5, 'mdfGrowthPlus', 'mdfGrowthRate' ],
-      [ 6, 'agiGrowthPlus', 'agiGrowthRate' ],
-      [ 7, 'lukGrowthPlus', 'lukGrowthRate' ],
-    ])('resolves base param %i to the %s / %s tag pair', (paramId, plusTag, rateTag) =>
-    {
-      // Arrange & Act
-      const [ plusStructure, rateStructure ] = actor.getGrowthRegexByBparamId(paramId);
-
-      // Assert
-      expect(notetagNameOf(plusStructure)).toBe(plusTag);
-      expect(notetagNameOf(rateStructure)).toBe(rateTag);
-    });
-
-    it('resolves nothing for a base param id outside the eight', () =>
-    {
-      // Arrange & Act
-      const structures = actor.getGrowthRegexByBparamId(8);
-
-      // Assert
-      expect(structures).toBeNull();
-    });
-  });
-  //endregion base parameter growth
-
-  //region ex and sp parameter growth
-  describe('getXparamGrowth', () =>
-  {
-    it('reports no growth for an ex-parameter the actor has gained none in', () =>
-    {
-      // Arrange & Act
-      const result = actor.getXparamGrowth(0, 100);
-
-      // Assert
-      expect(result).toBe(0);
-    });
-
-    it('compounds accumulated flat and rate growth for an ex-parameter', () =>
+    it('reports the engine\'s value without any natural bonus', () =>
     {
       // Arrange
-      actor.modXparamGrowthPlus(0, 20);
-      actor.modXparamGrowthRate(0, 10);
+      actor.setNaturalBuffPlus('tgr', 200);
 
-      // Act
-      const result = actor.getXparamGrowth(0, 100);
-
-      // Assert
-      expect(result).toBeCloseTo(32, 10);
+      // Act & Assert
+      expect(actor.sparamBeforeNatural(0)).toBe(1);
     });
   });
+  //endregion engine parameters
 
-  describe('getSparamGrowth', () =>
+  //region growth
+  describe('levelUp', () =>
   {
-    it('reports no growth for an sp-parameter the actor has gained none in', () =>
-    {
-      // Arrange & Act
-      const result = actor.getSparamGrowth(0, 100);
-
-      // Assert
-      expect(result).toBe(0);
-    });
-
-    it('compounds accumulated flat and rate growth for an sp-parameter', () =>
+    it('performs the original logic, then applies this level\'s growths', () =>
     {
       // Arrange
-      actor.modSparamGrowthPlus(0, 20);
-      actor.modSparamGrowthRate(0, 10);
+      const original = vi.fn();
+      const restore = stubOriginal('levelUp', original);
+      actor.applyNaturalGrowths = vi.fn();
 
       // Act
-      const result = actor.getSparamGrowth(0, 100);
+      actor.levelUp();
 
       // Assert
-      expect(result).toBeCloseTo(32, 10);
+      expect(original).toHaveBeenCalledTimes(1);
+      expect(actor.applyNaturalGrowths).toHaveBeenCalledTimes(1);
+
+      restore();
     });
   });
-  //endregion ex and sp parameter growth
 
-  //region regex mappings without a match
-  describe('regex mappings without a match', () =>
+  describe('applyNaturalGrowths', () =>
   {
-    it('contributes no ex-parameter bonus for an id with no regex mapping', () =>
+    it('grows every bound parameter by its own tags, once', () =>
     {
-      // Arrange: there are exactly ten ex-parameters; anything beyond has no tag to read.
+      // Arrange: an engine parameter and J-NaturalGrowth's own max tech, bound by the same registry.
+      actor.__notes = [ { note: '<atkGrowthPlus:[5]>\n<mtpGrowthPlus:[12]>' } ];
+
       // Act
-      const result = actor.xparamNaturalBonuses(99);
+      actor.applyNaturalGrowths();
 
       // Assert
-      expect(result).toBe(0);
-    });
-
-    it('contributes no sp-parameter bonus for an id with no regex mapping', () =>
-    {
-      // Arrange & Act
-      const result = actor.sparamNaturalBonuses(99);
-
-      // Assert
-      expect(result).toBe(0);
-    });
-
-    it.each([
-      [ 0, 'hitGrowthPlus', 'hitGrowthRate' ],
-      [ 1, 'evaGrowthPlus', 'evaGrowthRate' ],
-      [ 2, 'criGrowthPlus', 'criGrowthRate' ],
-      [ 3, 'cevGrowthPlus', 'cevGrowthRate' ],
-      [ 4, 'mevGrowthPlus', 'mevGrowthRate' ],
-      [ 5, 'mrfGrowthPlus', 'mrfGrowthRate' ],
-      [ 6, 'cntGrowthPlus', 'cntGrowthRate' ],
-      [ 7, 'hrgGrowthPlus', 'hrgGrowthRate' ],
-      [ 8, 'mrgGrowthPlus', 'mrgGrowthRate' ],
-      [ 9, 'trgGrowthPlus', 'trgGrowthRate' ],
-    ])('resolves ex-param %i to the %s / %s tag pair', (paramId, plusTag, rateTag) =>
-    {
-      // Arrange & Act
-      const [ plusStructure, rateStructure ] = actor.getGrowthRegexByXparamId(paramId);
-
-      // Assert
-      expect(notetagNameOf(plusStructure)).toBe(plusTag);
-      expect(notetagNameOf(rateStructure)).toBe(rateTag);
-    });
-
-    it('resolves no ex-param growth regex for an id outside the ten', () =>
-    {
-      // Arrange & Act
-      const structures = actor.getGrowthRegexByXparamId(10);
-
-      // Assert
-      expect(structures).toBeNull();
-    });
-
-    it.each([
-      [ 0, 'tgrGrowthPlus', 'tgrGrowthRate' ],
-      [ 1, 'grdGrowthPlus', 'grdGrowthRate' ],
-      [ 2, 'recGrowthPlus', 'recGrowthRate' ],
-      [ 3, 'phaGrowthPlus', 'phaGrowthRate' ],
-      [ 4, 'mcrGrowthPlus', 'mcrGrowthRate' ],
-      [ 5, 'tcrGrowthPlus', 'tcrGrowthRate' ],
-      [ 6, 'pdrGrowthPlus', 'pdrGrowthRate' ],
-      [ 7, 'mdrGrowthPlus', 'mdrGrowthRate' ],
-      [ 8, 'fdrGrowthPlus', 'fdrGrowthRate' ],
-      [ 9, 'exrGrowthPlus', 'exrGrowthRate' ],
-    ])('resolves sp-param %i to the %s / %s tag pair', (paramId, plusTag, rateTag) =>
-    {
-      // Arrange & Act
-      const [ plusStructure, rateStructure ] = actor.getGrowthRegexBySparamId(paramId);
-
-      // Assert
-      expect(notetagNameOf(plusStructure)).toBe(plusTag);
-      expect(notetagNameOf(rateStructure)).toBe(rateTag);
-    });
-
-    it('resolves no sp-param growth regex for an id outside the ten', () =>
-    {
-      // Arrange & Act
-      const structures = actor.getGrowthRegexBySparamId(10);
-
-      // Assert
-      expect(structures).toBeNull();
+      expect(actor.naturalGrowthPlus('atk')).toBe(5);
+      expect(actor.naturalGrowthPlus('mtp')).toBe(12);
     });
   });
-  //endregion regex mappings without a match
 
-  //region fractional parameter scaling
-  describe('growth tags on fractional parameters', () =>
+  describe('applyNaturalGrowth', () =>
   {
-    /**
-     * Applies growth to an actor carrying a single notetag.
-     * @param {string} note The note text driving this step.
-     * @param {string} method The growth application method to invoke.
-     * @returns {Game_Actor}
-     */
-    function applyGrowthFromNote(note, method)
+    it('adds the flat growth the notes carry onto the running total', () =>
     {
-      const tagged = new globalThis.Game_Actor();
-      tagged.initMembers();
-      tagged.getAllNotes = () => [ { note } ];
-      tagged[method]();
-
-      return tagged;
-    }
-
-    it('reads an ex-parameter growth tag as whole percents', () =>
-    {
-      // Arrange & Act: ex-parameters live on a 0-1 scale, so a tag asking for five percent has
-      // to land as 0.05 rather than as a flat 5, which would be five hundred percent - per level.
-      const tagged = applyGrowthFromNote('<hitGrowthPlus:[5]>', 'applyNaturalXparamGrowths');
-
-      // Assert
-      expect(tagged.xParamGrowthPlus(0)).toBeCloseTo(0.05, 10);
-    });
-
-    it('reads an sp-parameter growth tag as whole percents', () =>
-    {
-      // Arrange & Act
-      const tagged = applyGrowthFromNote('<tgrGrowthPlus:[5]>', 'applyNaturalSparamGrowths');
-
-      // Assert
-      expect(tagged.sParamGrowthPlus(0)).toBeCloseTo(0.05, 10);
-    });
-
-    it('leaves base parameter growth unscaled, since those are whole numbers already', () =>
-    {
-      // Arrange & Act: max life is a raw integer, so ten means ten points and must not be
-      // divided the way the fractional parameters are.
-      const tagged = applyGrowthFromNote('<mhpGrowthPlus:[10]>', 'applyNaturalBparamGrowths');
-
-      // Assert
-      expect(tagged.bParamGrowthPlus(0)).toBeCloseTo(10, 10);
-    });
-
-    it('matches the buff tag of the same value on the same parameter', () =>
-    {
-      // Arrange: the whole point of the scaling is that an author writing five means five
-      // percent whichever family of tag they reach for.
-      const grown = applyGrowthFromNote('<hitGrowthPlus:[5]>', 'applyNaturalXparamGrowths');
-      const buffed = applyGrowthFromNote('<hitBuffPlus:[5]>', 'refreshXParamBuffs');
+      // Arrange: a level already gained.
+      actor.modNaturalGrowthPlus('atk', 5);
+      actor.__notes = [ { note: '<atkGrowthPlus:[5]>' } ];
 
       // Act
-      const growthBonus = grown.getXparamGrowth(0, 0.95);
-      const buffBonus = buffed.calculateExParamBuff(0, 0.95);
+      actor.applyNaturalGrowth('atk');
 
       // Assert
-      expect(growthBonus).toBeCloseTo(buffBonus, 10);
+      expect(actor.naturalGrowthPlus('atk')).toBe(10);
     });
-  });
-  //endregion fractional parameter scaling
 
-  //region applying growth
-  describe('applyNaturalHarGrowths', () =>
-  {
-    it('folds an SDP bonus into the HAR value growth is calculated against', () =>
+    it('records no flat entry when the notes carry no flat growth', () =>
     {
-      // Arrange: growth formulas are based off the pre-natural HAR, so a panel-granted HAR has
-      // to be visible to the formula rather than being bolted on afterwards.
-      const previousSdp = globalThis.J.SDP;
-      globalThis.J.SDP = {};
-      let observedBase = null;
-      actor.getSdpBonusForParameterKey = () => 7;
-      actor.naturalParamBuff = (_structure, baseParam) =>
-      {
-        observedBase = baseParam;
-
-        return 0;
-      };
+      // Arrange: a rate growth is present, so the growth ran and chose not to write the flat one.
+      actor.__notes = [ { note: '<atkGrowthRate:[10]>' } ];
 
       // Act
-      actor.applyNaturalHarGrowths();
+      actor.applyNaturalGrowth('atk');
 
       // Assert
-      expect(observedBase).toBeCloseTo(actor.baseHarFactor() + 7, 10);
-
-      // restore the bare-global namespace rather than leaking it into later tests in this file.
-      globalThis.J.SDP = previousSdp;
+      expect(actor.naturalGrowthPlusTable()).toEqual({});
     });
 
-    it('uses the bare HAR factor when SDP is not installed', () =>
+    it('adds the percent growth the notes carry onto the running total', () =>
     {
       // Arrange
-      let observedBase = null;
-      actor.naturalParamBuff = (_structure, baseParam) =>
-      {
-        observedBase = baseParam;
-
-        return 0;
-      };
+      actor.__notes = [ { note: '<atkGrowthRate:[10]>' } ];
 
       // Act
-      actor.applyNaturalHarGrowths();
+      actor.applyNaturalGrowth('atk');
 
       // Assert
-      expect(observedBase).toBeCloseTo(actor.baseHarFactor(), 10);
+      expect(actor.naturalGrowthRate('atk')).toBe(10);
     });
 
-    it('accumulates growth across repeated applications, one per level gained', () =>
+    it('records no percent entry when the notes carry no percent growth', () =>
     {
-      // Arrange: growth is permanent and additive, so levelling twice must grant twice - and
-      // must never be lost, which is exactly why these accumulate instead of being assigned.
-      actor.naturalParamBuff = () => 4;
+      // Arrange: a flat growth is present, so the growth ran and chose not to write the percent one.
+      actor.__notes = [ { note: '<atkGrowthPlus:[5]>' } ];
 
       // Act
-      actor.applyNaturalHarGrowths();
-      actor.applyNaturalHarGrowths();
+      actor.applyNaturalGrowth('atk');
 
       // Assert
-      expect(actor.harGrowthPlus()).toBeCloseTo(8, 10);
+      expect(actor.naturalGrowthRateTable()).toEqual({});
+    });
+
+    it('gives the formulas the parameter\'s engine base as b', () =>
+    {
+      // Arrange: atk's engine base is 10, so a tenth of it is 1.
+      actor.__notes = [ { note: '<atkGrowthPlus:[b * 0.1]>' } ];
+
+      // Act
+      actor.applyNaturalGrowth('atk');
+
+      // Assert
+      expect(actor.naturalGrowthPlus('atk')).toBeCloseTo(1, 10);
     });
   });
-  //endregion applying growth
+  //endregion growth
 });
 //endregion plugins/natural/core/objects/game-actor.test.js

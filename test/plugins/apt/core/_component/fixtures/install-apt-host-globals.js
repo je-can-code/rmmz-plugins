@@ -19,9 +19,9 @@ import { installPluginManagerWithParams } from '../../../../../setup/install-plu
  */
 export async function installAptHostGlobals(sandbox = globalThis, aptPluginParameterStrings = {})
 {
-  // J-Aptitude's boot check requires J-Base to report a version satisfying >= 3.2.0; the shared
+  // J-Aptitude's boot check requires J-Base to report a version satisfying >= 3.19.0; the shared
   // fixture's default ('0.0.0-test') would fail that check, so set it before installing.
-  sandbox.__PLUGIN_VERSION__ ??= '3.2.0';
+  sandbox.__PLUGIN_VERSION__ ??= '3.19.0';
 
   // lay down the shared RMMZ placeholder constructors, $data arrays, and engine singletons.
   installJBaseHostGlobals(sandbox);

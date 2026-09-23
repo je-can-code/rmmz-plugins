@@ -23,6 +23,16 @@ class ShieldParameterRegistration
 
     ParameterRegistry.register(shieldAbsorptionRate);
 
+    // shield amplification grows against the factor its own tags produce.
+    const shieldAbsorptionNatural = new NaturalParameterBinding(
+      J.ABS.EXT.SHIELD.RegExp.ShieldAmplificationBuffPlus,
+      J.ABS.EXT.SHIELD.RegExp.ShieldAmplificationBuffRate,
+      J.ABS.EXT.SHIELD.RegExp.ShieldAmplificationGrowthPlus,
+      J.ABS.EXT.SHIELD.RegExp.ShieldAmplificationGrowthRate,
+      battler => battler.baseSarFactor());
+
+    ParameterRegistry.bindNatural('sar', shieldAbsorptionNatural);
+
     const shieldEfficiencyRate = ParameterDefinition.Builder()
       .key('ser')
       .group(ParameterGroups.SUPPORT)
@@ -36,6 +46,16 @@ class ShieldParameterRegistration
       .build();
 
     ParameterRegistry.register(shieldEfficiencyRate);
+
+    // shield effectiveness grows against the factor its own tags produce.
+    const shieldEfficiencyNatural = new NaturalParameterBinding(
+      J.ABS.EXT.SHIELD.RegExp.ShieldEffectivenessBuffPlus,
+      J.ABS.EXT.SHIELD.RegExp.ShieldEffectivenessBuffRate,
+      J.ABS.EXT.SHIELD.RegExp.ShieldEffectivenessGrowthPlus,
+      J.ABS.EXT.SHIELD.RegExp.ShieldEffectivenessGrowthRate,
+      battler => battler.baseSerFactor());
+
+    ParameterRegistry.bindNatural('ser', shieldEfficiencyNatural);
   }
 }
 

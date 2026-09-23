@@ -30,6 +30,9 @@ describe('Game_BattlerBase / Game_Battler lst/mst/tst + onHeal (resources ext/ab
     baseOnHeal = vi.fn();
     Game_Battler.prototype.onHeal = baseOnHeal;
 
+    // J-Base's seam answers zero until J-NaturalGrowth fills it in.
+    Game_Battler.prototype.naturalBonus = () => 0;
+
     globalThis.Game_BattlerBase = Game_BattlerBase;
     globalThis.Game_Battler = Game_Battler;
     globalThis.J = { RESOURCES: { EXT: { ABS: {
@@ -138,6 +141,27 @@ describe('Game_BattlerBase / Game_Battler lst/mst/tst + onHeal (resources ext/ab
       // Act & Assert
       expect(battler.tst).toBeCloseTo(0.25);
       expect(battler.getSdpBonusForParameterKey).toHaveBeenCalledWith('tst', 1);
+    });
+
+    it.each([
+      [ 'lst', 'Lifesteal', 0.165 ],
+      [ 'mst', 'Manasteal', 0.17 ],
+      [ 'tst', 'Techsteal', 0.175 ],
+    ])('layers %s\'s own natural bonus onto its rate, already in rate units', (key, tag, expected) =>
+    {
+      // Arrange- each drain stat has its own natural bonus, so borrowing a sibling's would show.
+      const battler = new globalThis.Game_Battler();
+      battler.getAllNotes = () => [];
+      globalThis.RPGManager.getSumFromAllNotesByRegex.mockImplementation((_notes, regexp) =>
+        (regexp === globalThis.J.RESOURCES.EXT.ABS.RegExp[tag] ? 15 : 0));
+      const naturalBonuses = { lst: 0.015, mst: 0.02, tst: 0.025 };
+      battler.naturalBonus = parameterKey => naturalBonuses[parameterKey];
+
+      // Act
+      const result = battler[key];
+
+      // Assert
+      expect(result).toBeCloseTo(expected, 10);
     });
   });
 

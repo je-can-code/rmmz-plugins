@@ -1,7 +1,13 @@
 //region plugins/natural/_component/game-battler.test.js
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { installNaturalHostGlobals, setPluginContextToJBase, setPluginContextToJNatural } from './fixtures/install-natural-host-globals.js';
+import {
+  installNaturalHostGlobals,
+  installParameterCatalog,
+  registerShippedNaturalParameters,
+  setPluginContextToJBase,
+  setPluginContextToJNatural,
+} from './fixtures/install-natural-host-globals.js';
 
 describe('J-NaturalGrowth Game_Battler (direct src import)', () =>
 {
@@ -20,15 +26,19 @@ describe('J-NaturalGrowth Game_Battler (direct src import)', () =>
     await import('../../../../src/plugins/_base/core/objects/Game_Battler.js');
     await import('../../../../src/plugins/_base/core/objects/Game_Actor.js');
 
+    await installParameterCatalog();
+
     setPluginContextToJNatural();
     await import('../../../../src/plugins/natural/core/_metadata/initialization.js');
 
     // patches globalThis.Game_Battler.prototype/Game_Actor.prototype directly, no vm involved.
     await import('../../../../src/plugins/natural/core/objects/Game_Battler.js');
     await import('../../../../src/plugins/natural/core/objects/Game_Actor.js');
+
+    await registerShippedNaturalParameters();
   });
 
-  it('runs patched initMembers and exposes zeroed natural growth via battler getters', () =>
+  it('runs patched initMembers and starts every natural table empty with the rewards at zero', () =>
   {
     // Arrange
     const battler = new globalThis.Game_Battler();
@@ -37,24 +47,14 @@ describe('J-NaturalGrowth Game_Battler (direct src import)', () =>
     battler.initMembers();
 
     // Assert
-    expect(battler.maxTpGrowthPlus()).toBe(0);
-    expect(battler.maxTpGrowthRate()).toBe(0);
-    expect(battler.maxTpBuffPlus()).toBe(0);
-    expect(battler.maxTpBuffRate()).toBe(0);
-
-    for (let paramId = 0; paramId < 8; paramId++)
-    {
-      expect(battler.bParamGrowthPlus(paramId)).toBe(0);
-      expect(battler.bParamGrowthRate(paramId)).toBe(0);
-    }
-
-    expect(battler.xParamGrowthPlus(0)).toBe(0);
-    expect(battler.sParamGrowthPlus(0)).toBe(0);
-    expect(battler.expPlus()).toBe(0);
-    expect(battler.goldPlus()).toBe(0);
+    expect(battler.naturalBuffPlusTable()).toEqual({});
+    expect(battler.naturalBuffRateTable()).toEqual({});
+    expect(battler.naturalGrowthPlusTable()).toEqual({});
+    expect(battler.naturalGrowthRateTable()).toEqual({});
+    expect([ battler.expPlus(), battler.goldPlus(), battler.sdpsPlus() ]).toEqual([ 0, 0, 0 ]);
   });
 
-  it('refreshAllParameterBuffs fills buff getters from notes; clearAllParameterBuffs clears buffs but not growth', () =>
+  it('refreshAllParameterBuffs fills buffs from notes; clearAllParameterBuffs clears buffs but not growth', () =>
   {
     // Arrange
     const actor = new globalThis.Game_Actor();
@@ -65,15 +65,15 @@ describe('J-NaturalGrowth Game_Battler (direct src import)', () =>
     actor.refreshAllParameterBuffs();
 
     // Assert
-    expect(actor.bParamBuffPlus(2)).toBe(4);
+    expect(actor.naturalBuffPlus('atk')).toBe(4);
 
     actor.__testNoteSources = [ { note: '<atkGrowthPlus:[6]>' } ];
     actor.levelUp();
-    expect(actor.bParamGrowthPlus(2)).toBe(6);
+    expect(actor.naturalGrowthPlus('atk')).toBe(6);
 
     actor.clearAllParameterBuffs();
-    expect(actor.bParamBuffPlus(2)).toBe(0);
-    expect(actor.bParamGrowthPlus(2)).toBe(6);
+    expect(actor.naturalBuffPlus('atk')).toBe(0);
+    expect(actor.naturalGrowthPlus('atk')).toBe(6);
   });
 });
 //endregion plugins/natural/_component/game-battler.test.js

@@ -35,6 +35,9 @@ describe('J-ABS-Shield Game_Battler (unit, all downstream dependencies mocked)',
     Game_Battler.prototype.initMembers = originalInitMembers;
     Game_Battler.prototype.onBattlerDataChange = originalOnBattlerDataChange;
     Game_Battler.prototype.getAllNotes = () => [];
+
+    // J-Base's seam answers zero until J-NaturalGrowth fills it in.
+    Game_Battler.prototype.naturalBonus = () => 0;
     globalThis.Game_BattlerBase = Game_BattlerBase;
     globalThis.Game_Battler = Game_Battler;
 
@@ -132,6 +135,32 @@ describe('J-ABS-Shield Game_Battler (unit, all downstream dependencies mocked)',
       const battler = buildBattler();
       battler.baseSerFactor = () => 1.2;
       expect(battler.ser).toBe(1.2);
+    });
+
+    it('sar layers on the natural bonus bound to sar, already in factor units', () =>
+    {
+      // Arrange- the bonus answers only for sar, so reading ser's would show up as the wrong total.
+      const battler = buildBattler({ naturalBonus: key => (key === 'sar' ? 0.015 : 7) });
+      battler.baseSarFactor = () => 1.5;
+
+      // Act
+      const result = battler.sar;
+
+      // Assert
+      expect(result).toBeCloseTo(1.515, 10);
+    });
+
+    it('ser layers on the natural bonus bound to ser, already in factor units', () =>
+    {
+      // Arrange- the bonus answers only for ser, so reading sar's would show up as the wrong total.
+      const battler = buildBattler({ naturalBonus: key => (key === 'ser' ? 0.05 : 7) });
+      battler.baseSerFactor = () => 1.2;
+
+      // Act
+      const result = battler.ser;
+
+      // Assert
+      expect(result).toBeCloseTo(1.25, 10);
     });
   });
 

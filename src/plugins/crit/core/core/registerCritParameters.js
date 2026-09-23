@@ -26,6 +26,16 @@ class CritParameterRegistration
 
     ParameterRegistry.register(criticalDamageMultiplier);
 
+    // crit damage grows against the base multiplier every battler starts from.
+    const criticalDamageNatural = new NaturalParameterBinding(
+      J.CRIT.RegExp.CritDamageMultiplierBuffPlus,
+      J.CRIT.RegExp.CritDamageMultiplierBuffRate,
+      J.CRIT.RegExp.CritDamageMultiplierGrowthPlus,
+      J.CRIT.RegExp.CritDamageMultiplierGrowthRate,
+      battler => battler.baseCriticalMultiplier());
+
+    ParameterRegistry.bindNatural('cdm', criticalDamageNatural);
+
     const criticalToleranceRate = ParameterDefinition.Builder()
       .key('ctr')
       .group(ParameterGroups.PRECISION)
@@ -42,6 +52,16 @@ class CritParameterRegistration
       .build();
 
     ParameterRegistry.register(criticalToleranceRate);
+
+    // crit tolerance grows against the base reduction every battler starts from.
+    const criticalToleranceNatural = new NaturalParameterBinding(
+      J.CRIT.RegExp.CritTakenRateBuffPlus,
+      J.CRIT.RegExp.CritTakenRateBuffRate,
+      J.CRIT.RegExp.CritTakenRateGrowthPlus,
+      J.CRIT.RegExp.CritTakenRateGrowthRate,
+      battler => battler.baseCriticalReduction());
+
+    ParameterRegistry.bindNatural('ctr', criticalToleranceNatural);
   }
 }
 

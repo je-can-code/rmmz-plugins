@@ -27,6 +27,81 @@ export function notetagNameOf(structure)
 }
 
 /**
+ * Hangs J-Base's real parameter catalog off the sandbox and empties it.<br/>
+ * J-NaturalGrowth reaches the registry, the binding model and the engine's key table as bare globals
+ * in the shipped bundle, because J-Base always loads first; this puts the same classes where it will
+ * look for them. The catalog is static state, so it is emptied here to give every suite a clean slate.
+ * @param {object} [sandbox] Defaults to `globalThis`.
+ * @returns {Promise<object>} The catalog classes (registry, definition, format, keys and binding), for
+ * tests to build with.
+ */
+export async function installParameterCatalog(sandbox = globalThis)
+{
+  const { default: ParameterRegistry } = await import('../../../../../src/plugins/_base/core/core/ParameterRegistry.js');
+  const { default: ParameterDefinition } = await import('../../../../../src/plugins/_base/core/models/ParameterDefinition.js');
+  const { default: ParameterFormat } = await import('../../../../../src/plugins/_base/core/core/ParameterFormat.js');
+  const { default: ParameterKeys } = await import('../../../../../src/plugins/_base/core/core/ParameterKeys.js');
+  const { default: NaturalParameterBinding } = await import('../../../../../src/plugins/_base/core/models/NaturalParameterBinding.js');
+
+  sandbox.ParameterRegistry = ParameterRegistry;
+  sandbox.ParameterDefinition = ParameterDefinition;
+  sandbox.ParameterFormat = ParameterFormat;
+  sandbox.ParameterKeys = ParameterKeys;
+  sandbox.NaturalParameterBinding = NaturalParameterBinding;
+
+  ParameterRegistry._definitions.clear();
+  ParameterRegistry._groupCache.clear();
+  ParameterRegistry._naturalBindings.clear();
+
+  return { ParameterRegistry, ParameterDefinition, ParameterFormat, ParameterKeys, NaturalParameterBinding };
+}
+
+/**
+ * Builds the catalog the shipped game builds at boot: J-Base registers the engine's parameters, then
+ * J-NaturalGrowth binds its tags to them. Requires {@link installParameterCatalog} and J-NaturalGrowth's
+ * initialization to have run, since the bindings reference that plugin's own regex table.
+ */
+export async function registerShippedNaturalParameters()
+{
+  const { default: VanillaParameterRegistration } = await import('../../../../../src/plugins/_base/core/core/registerVanillaParameters.js');
+  const { default: NaturalParameterRegistration } = await import('../../../../../src/plugins/natural/core/core/registerNaturalParameters.js');
+
+  VanillaParameterRegistration.registerAll();
+  NaturalParameterRegistration.registerAll();
+}
+
+/**
+ * Registers one parameter and binds natural growth to it, the way a plugin that owns a parameter does
+ * from its own `register*Parameters.js`.
+ * @param {string} key The registry key.
+ * @param {string} format The display format, which decides how the tags scale into the stored value.
+ * @param {RegExp[]} tags The buff-plus, buff-rate, growth-plus and growth-rate tags.
+ * @param {function(Game_Battler): number} getBase Resolves the parameter's value before natural bonuses.
+ */
+export function registerOwnedParameter(key, format, tags, getBase)
+{
+  const [ buffPlus, buffRate, growthPlus, growthRate ] = tags;
+
+  const definition = new globalThis.ParameterDefinition(
+    key,
+    'combat',
+    0,
+    () => key,
+    () => [],
+    () => 0,
+    () => 0,
+    format,
+    'none',
+    battler => battler[key],
+    null,
+  );
+  globalThis.ParameterRegistry.register(definition);
+
+  const binding = new globalThis.NaturalParameterBinding(buffPlus, buffRate, growthPlus, growthRate, getBase);
+  globalThis.ParameterRegistry.bindNatural(key, binding);
+}
+
+/**
  * `__PLUGIN_NAME__`/`__PLUGIN_VERSION__` are bare identifiers read once, at import time, by
  * _base/_metadata/initialization.js.
  * @param {object} [sandbox] Defaults to `globalThis`.

@@ -9,10 +9,11 @@ import {
 
 /**
  * Actors are where reward bonuses actually come from - notetags on their equipment and states, SDP
- * panels they have ranked, and permanent growth accrued per level. The two multipliers are
- * assembled the same way and differ only in which tag and which panel key they read, so they share
- * an assembler; the drop side then layers natural growth on top, which gold has no equivalent of.
- * Every battler exposes `gdr`/`dor` so enemies can be asked the same question and answer zero.
+ * panels they have ranked, and natural buffs and growths. The two multipliers are assembled the same
+ * way and differ only in which tag and which key they read, so they share an assembler. Natural bonuses
+ * arrive from J-Base's seam already in factor units, which is why they join after the percent-points
+ * are scaled down rather than before. Every battler exposes `gdr`/`dor` so enemies can be asked the
+ * same question and answer zero.
  */
 describe('J-DropsControl Game_Actor (direct src import)', () =>
 {
@@ -30,24 +31,6 @@ describe('J-DropsControl Game_Actor (direct src import)', () =>
     await import('../../../../../src/plugins/_base/core/objects/Game_BattlerBase.js');
     await import('../../../../../src/plugins/_base/core/objects/Game_Battler.js');
 
-    // stand in for what J-NaturalGrowth contributes, so the growth path can be driven.
-    globalThis.Game_Battler.prototype.initNaturalGrowthParameters = function()
-    {
-      this._j ||= {};
-      this._j._natural ||= {};
-    };
-    globalThis.Game_Battler.prototype.calculatePlusRate = function(baseValue, paramPlus, paramRate)
-    {
-      return ((baseValue + paramPlus) * ((paramRate + 100) / 100)) - baseValue;
-    };
-    globalThis.Game_Actor.prototype.applyNaturalCustomGrowths = function()
-    {
-    };
-    globalThis.Game_Actor.prototype.naturalParamBuff = function()
-    {
-      return this.__growthPerLevel ?? 0;
-    };
-
     setPluginContextToJDrops();
     await import('../../../../../src/plugins/drops/core/_metadata/initialization.js');
     await import('../../../../../src/plugins/drops/core/objects/Game_Battler.js');
@@ -55,18 +38,14 @@ describe('J-DropsControl Game_Actor (direct src import)', () =>
   });
 
   let actor;
-  let previousNatural;
   let previousSdp;
 
   beforeEach(() =>
   {
-    previousNatural = globalThis.J.NATURAL;
     previousSdp = globalThis.J.SDP;
-    globalThis.J.NATURAL = {};
 
     actor = new globalThis.Game_Actor();
     actor.initMembers();
-    actor.initNaturalGrowthParameters();
     actor.getAllNotes = function()
     {
       return this.__notes ?? [];
@@ -74,18 +53,17 @@ describe('J-DropsControl Game_Actor (direct src import)', () =>
   });
 
   /**
-   * Restores the bare-global namespaces so a scenario that toggles one cannot leak into the next.
+   * Restores the bare-global SDP namespace so a scenario that toggles it cannot leak into the next.
    */
   function restoreNamespaces()
   {
-    globalThis.J.NATURAL = previousNatural;
     globalThis.J.SDP = previousSdp;
   }
 
   //region multiplier assembly
   describe('rewardMultiplierFactor', () =>
   {
-    it('contributes nothing from an actor carrying no tags or panels', () =>
+    it('contributes nothing from an actor carrying no tags, panels or natural bonuses', () =>
     {
       // Arrange
       globalThis.J.SDP = undefined;
@@ -111,6 +89,8 @@ describe('J-DropsControl Game_Actor (direct src import)', () =>
 
       // Assert
       expect(result).toBeCloseTo(0.2, 10);
+
+      restoreNamespaces();
     });
 
     it('sums panel bonuses with notetag bonuses before scaling', () =>
@@ -134,13 +114,31 @@ describe('J-DropsControl Game_Actor (direct src import)', () =>
     {
       // Arrange: J-SDP is optional, and its bonus accessor only exists when it is present.
       globalThis.J.SDP = undefined;
+      actor.getSdpBonusForParameterKey = () => 999;
       actor.__notes = [ { note: '<dropMultiplier:20>' } ];
 
       // Act
-      const act = () => actor.rewardMultiplierFactor(globalThis.J.DROPS.RegExp.DropMultiplier, 'dor');
+      const result = actor.rewardMultiplierFactor(globalThis.J.DROPS.RegExp.DropMultiplier, 'dor');
+
+      // Assert: the panel's 999 never reached the factor.
+      expect(result).toBeCloseTo(0.2, 10);
+
+      restoreNamespaces();
+    });
+
+    it('adds the natural bonus bound to the multiplier\'s own key after the scaling, not before it', () =>
+    {
+      // Arrange: a natural bonus of 0.1 is already a factor. Summed with the percent-points before the
+      // divide it would come out as 0.001; the other key's bonus must not be picked up at all.
+      globalThis.J.SDP = undefined;
+      actor.__notes = [ { note: '<dropMultiplier:20>' } ];
+      actor.naturalBonus = key => (key === 'dor' ? 0.1 : 7);
+
+      // Act
+      const result = actor.rewardMultiplierFactor(globalThis.J.DROPS.RegExp.DropMultiplier, 'dor');
 
       // Assert
-      expect(act).not.toThrow();
+      expect(result).toBeCloseTo(0.3, 10);
 
       restoreNamespaces();
     });
@@ -178,27 +176,85 @@ describe('J-DropsControl Game_Actor (direct src import)', () =>
 
       restoreNamespaces();
     });
+
+    it('takes the natural bonus bound to gdr rather than the one bound to dor', () =>
+    {
+      // Arrange
+      globalThis.J.SDP = undefined;
+      actor.__notes = [ { note: '<goldMultiplier:30>' } ];
+      actor.naturalBonus = key => (key === 'gdr' ? 0.05 : 0.5);
+
+      // Act
+      const result = actor.getGoldMultiplier();
+
+      // Assert
+      expect(result).toBeCloseTo(0.35, 10);
+
+      restoreNamespaces();
+    });
   });
 
   describe('getDropMultiplierBonus', () =>
   {
-    it('adds natural growth on top of the assembled factor', () =>
+    it('takes the natural bonus bound to dor rather than the one bound to gdr', () =>
     {
-      // Arrange: growth is the part gold has no counterpart for.
+      // Arrange
       globalThis.J.SDP = undefined;
       actor.__notes = [ { note: '<dropMultiplier:20>' } ];
-      actor.modDorPlus(10);
+      actor.naturalBonus = key => (key === 'dor' ? 0.1 : 0.5);
 
       // Act
       const result = actor.getDropMultiplierBonus();
 
       // Assert
-      expect(result).toBeCloseTo(10.2, 10);
+      expect(result).toBeCloseTo(0.3, 10);
 
       restoreNamespaces();
     });
   });
   //endregion multiplier assembly
+
+  //region natural bases
+  describe('baseGoldMultiplier', () =>
+  {
+    it('reports the gold tags alone as a factor, leaving out panels and natural bonuses', () =>
+    {
+      // Arrange: a drop tag, a panel and a natural bonus are all present, and none of them belong.
+      globalThis.J.SDP = {};
+      actor.getSdpBonusForParameterKey = () => 5;
+      actor.naturalBonus = () => 0.1;
+      actor.__notes = [ { note: '<goldMultiplier:30>\n<dropMultiplier:70>' } ];
+
+      // Act
+      const result = actor.baseGoldMultiplier();
+
+      // Assert
+      expect(result).toBeCloseTo(0.3, 10);
+
+      restoreNamespaces();
+    });
+  });
+
+  describe('baseDropMultiplier', () =>
+  {
+    it('reports the drop tags alone as a factor, leaving out panels and natural bonuses', () =>
+    {
+      // Arrange: a gold tag, a panel and a natural bonus are all present, and none of them belong.
+      globalThis.J.SDP = {};
+      actor.getSdpBonusForParameterKey = () => 5;
+      actor.naturalBonus = () => 0.1;
+      actor.__notes = [ { note: '<goldMultiplier:30>\n<dropMultiplier:70>' } ];
+
+      // Act
+      const result = actor.baseDropMultiplier();
+
+      // Assert
+      expect(result).toBeCloseTo(0.7, 10);
+
+      restoreNamespaces();
+    });
+  });
+  //endregion natural bases
 
   //region battler-wide properties
   describe('gdr and dor properties', () =>
@@ -241,68 +297,5 @@ describe('J-DropsControl Game_Actor (direct src import)', () =>
     });
   });
   //endregion battler-wide properties
-
-  //region growth application
-  describe('applyNaturalCustomGrowths', () =>
-  {
-    it('accrues drop rate growth on level up', () =>
-    {
-      // Arrange
-      actor.__growthPerLevel = 3;
-
-      // Act
-      actor.applyNaturalCustomGrowths();
-
-      // Assert
-      expect(actor.dorPlus()).toBeCloseTo(3, 10);
-
-      restoreNamespaces();
-    });
-
-    it('accrues nothing when natural growth is not installed', () =>
-    {
-      // Arrange: without that plugin there is no growth model for drop rate to participate in.
-      actor.__growthPerLevel = 3;
-      globalThis.J.NATURAL = undefined;
-
-      // Act
-      actor.applyNaturalCustomGrowths();
-
-      // Assert
-      expect(actor.dorPlus()).toBe(0);
-
-      restoreNamespaces();
-    });
-
-    it('accumulates across repeated level ups', () =>
-    {
-      // Arrange: growth is permanent and additive, so two levels grant twice.
-      actor.__growthPerLevel = 3;
-
-      // Act
-      actor.applyNaturalCustomGrowths();
-      actor.applyNaturalCustomGrowths();
-
-      // Assert
-      expect(actor.dorPlus()).toBeCloseTo(6, 10);
-
-      restoreNamespaces();
-    });
-
-    it('accrues the rate growth alongside the flat one', () =>
-    {
-      // Arrange
-      actor.__growthPerLevel = 4;
-
-      // Act
-      actor.applyNaturalDorGrowths();
-
-      // Assert
-      expect(actor.dorRate()).toBeCloseTo(4, 10);
-
-      restoreNamespaces();
-    });
-  });
-  //endregion growth application
 });
 //endregion plugins/drops/core/objects/game-actor.test.js

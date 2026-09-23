@@ -39,22 +39,17 @@ Game_Battler.prototype.initResourcesMembers = function()
 };
 
 /**
- * HP cost reduction in decimal percent space (0 = none).
+ * HP cost reduction in decimal percent space (0 = none).<br/>
+ * The mirror image of {@link #hcrFactor}: whatever share of the cost that factor removes.
  */
 Object.defineProperty(Game_Battler.prototype, 'hcr', {
   get: function()
   {
-    return Math.max(0, (100 - this._j._hcr) / 100);
+    return Math.max(0, 1 - this.hcrFactor());
   },
   configurable: true,
 });
 
-/**
- * Gets the hp cost reduction factor for this battler.
- * This is the normalized fractional amount used in the math for hp cost reduction.
- * Floored at zero — a negative factor would let ResourceManager's hp cost calculations go
- * negative, which would refund hp on cast instead of just reducing the cost to free.
- */
 /**
  * Gets the raw hp-cost-reduction percentage as stored (100 means no reduction).
  *
@@ -68,10 +63,33 @@ Game_Battler.prototype.hcrPercent = function()
   return this._j._hcr;
 };
 
+/**
+ * The hp cost factor this battler's own `<hcr>` tags produce, before natural bonuses.<br/>
+ * This is what life cost's natural tags see as their base.
+ * @returns {number}
+ */
+Game_Battler.prototype.baseHcrFactor = function()
+{
+  return this.hcrPercent() / 100;
+};
+
+/**
+ * Gets the hp cost reduction factor for this battler.
+ * This is the normalized fractional amount used in the math for hp cost reduction.
+ * Floored at zero — a negative factor would let ResourceManager's hp cost calculations go
+ * negative, which would refund hp on cast instead of just reducing the cost to free.
+ * @returns {number}
+ */
 Game_Battler.prototype.hcrFactor = function()
 {
-  const hrcFactor = Math.max(0, this.hcrPercent() / 100);
-  return hrcFactor;
+  // start from the factor this battler's own tags produce.
+  const baseFactor = this.baseHcrFactor();
+
+  // layer on whatever natural buffs and growths are bound to life cost.
+  const naturalBonus = this.naturalBonus('hcr');
+
+  // never let the factor go negative, or a cost would refund hp.
+  return Math.max(0, baseFactor + naturalBonus);
 };
 
 /**

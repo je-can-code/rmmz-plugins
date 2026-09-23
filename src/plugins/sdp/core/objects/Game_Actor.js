@@ -287,22 +287,49 @@ Object.defineProperty(Game_Actor.prototype, 'sdpMultiplier', {
     // initializing with base 100, representing 1x.
     const multiplier = 100;
 
-    // get all the objects to scan for possible sdp multipliers.
-    const objectsToCheck = this.getAllNotes();
-
-    // get the vision multiplier from anything this battler has available.
-    const sdpMultiplierBonus = RPGManager.getSumFromAllNotesByRegex(objectsToCheck, J.SDP.RegExp.SdpMultiplier);
+    // get the multiplier bonus from anything this battler has available.
+    const sdpMultiplierBonus = this.sdpMultiplierTagBonus();
 
     // add SDP panel bonuses (percent-points, same unit as sdpMultiplierBonus).
     const sdpPanelBonus = this.getSdpBonusForParameterKey
       ? this.getSdpBonusForParameterKey('sdr', 1)
       : 0;
 
-    // return the factor form by dividing by 100 (all values are percent-points).
-    return ((multiplier + sdpMultiplierBonus + sdpPanelBonus) / 100);
+    // take the factor form by dividing by 100 (all values are percent-points).
+    const factor = ((multiplier + sdpMultiplierBonus + sdpPanelBonus) / 100);
+
+    // layer on whatever natural buffs and growths are bound to the SDP multiplier, already a factor.
+    const naturalBonus = this.naturalBonus('sdr');
+
+    return factor + naturalBonus;
   },
   configurable: true,
 });
+
+/**
+ * Sums the percent-points this actor's notes add to the SDP points multiplier.
+ * @returns {number}
+ */
+Game_Actor.prototype.sdpMultiplierTagBonus = function()
+{
+  // get all the objects to scan for possible sdp multipliers.
+  const objectsToCheck = this.getAllNotes();
+
+  // sum the multiplier bonus across all of them.
+  return RPGManager.getSumFromAllNotesByRegex(objectsToCheck, J.SDP.RegExp.SdpMultiplier);
+};
+
+/**
+ * Overwrites {@link Game_BattlerBase#baseSdpMultiplier}.<br/>
+ * The SDP points multiplier this actor's own tags produce, as a factor. This is what the SDP
+ * multiplier's natural tags see as their base.
+ * @returns {number}
+ */
+Game_Actor.prototype.baseSdpMultiplier = function()
+{
+  // a neutral hundred percent, plus whatever the tags add.
+  return (100 + this.sdpMultiplierTagBonus()) / 100;
+};
 
 /**
  * Ranks up this actor's panel by key.

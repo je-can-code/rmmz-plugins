@@ -1,6 +1,7 @@
 //region plugins/prof/core/core/_component/register-prof-parameters-direct.test.js
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import NaturalParameterBinding from '../../../../../../src/plugins/_base/core/models/NaturalParameterBinding.js';
 import ParameterDefinition from '../../../../../../src/plugins/_base/core/models/ParameterDefinition.js';
 import ParameterFormat from '../../../../../../src/plugins/_base/core/core/ParameterFormat.js';
 import ParameterGroups from '../../../../../../src/plugins/_base/core/core/ParameterGroups.js';
@@ -21,7 +22,9 @@ describe('ProfParameterRegistration.registerAll (prof core, direct src import)',
     vi.resetModules();
     ParameterRegistry._definitions.clear();
     ParameterRegistry._groupCache.clear();
+    ParameterRegistry._naturalBindings.clear();
 
+    globalThis.NaturalParameterBinding = NaturalParameterBinding;
     globalThis.ParameterDefinition = ParameterDefinition;
     globalThis.ParameterGroups = ParameterGroups;
     globalThis.ParameterFormat = ParameterFormat;
@@ -32,7 +35,18 @@ describe('ProfParameterRegistration.registerAll (prof core, direct src import)',
       proficiencyDescription: () => [ 'prof-line1', 'prof-line2' ],
     };
     globalThis.IconManager = { proficiencyBoost: () => 972 };
-    globalThis.J = {};
+
+    // stand-in tags, each its own object, so a binding can be checked by identity against the right one.
+    globalThis.J = {
+      PROF: {
+        RegExp: {
+          ProficiencyBonusBuffPlus: /<profBuffPlus>/,
+          ProficiencyBonusBuffRate: /<profBuffRate>/,
+          ProficiencyBonusGrowthPlus: /<profGrowthPlus>/,
+          ProficiencyBonusGrowthRate: /<profGrowthRate>/,
+        },
+      },
+    };
 
     const { default: ProfParameterRegistration } =
       await import('../../../../../../src/plugins/prof/core/core/registerProfParameters.js');
@@ -42,6 +56,7 @@ describe('ProfParameterRegistration.registerAll (prof core, direct src import)',
 
   afterEach(() =>
   {
+    delete globalThis.NaturalParameterBinding;
     delete globalThis.ParameterDefinition;
     delete globalThis.ParameterGroups;
     delete globalThis.ParameterFormat;
@@ -52,6 +67,7 @@ describe('ProfParameterRegistration.registerAll (prof core, direct src import)',
     delete globalThis.J;
     ParameterRegistry._definitions.clear();
     ParameterRegistry._groupCache.clear();
+    ParameterRegistry._naturalBindings.clear();
   });
 
   it('registers in the FATE group at sort order 4', () =>
@@ -86,6 +102,34 @@ describe('ProfParameterRegistration.registerAll (prof core, direct src import)',
     const actor = { baseSkillProficiencyAmount: () => 7 };
 
     expect(definition.sdpBinding.getBaseForSdp(actor)).toBe(7);
+  });
+
+  it('binds natural growth to the four proficiency bonus tags', () =>
+  {
+    // Arrange- four distinct stand-ins, so a transposed pair would be caught.
+    const { RegExp: tags } = globalThis.J.PROF;
+
+    // Act
+    const binding = ParameterRegistry.naturalBinding('prof');
+
+    // Assert
+    expect(binding.buffPlus).toBe(tags.ProficiencyBonusBuffPlus);
+    expect(binding.buffRate).toBe(tags.ProficiencyBonusBuffRate);
+    expect(binding.growthPlus).toBe(tags.ProficiencyBonusGrowthPlus);
+    expect(binding.growthRate).toBe(tags.ProficiencyBonusGrowthRate);
+  });
+
+  it('grows against the bonus the proficiency tags produce, not the finished bonus', () =>
+  {
+    // Arrange- the finished bonus would include natural bonuses, which are what the base feeds.
+    const battler = { baseProficiencyBonus: () => 2, prof: 9 };
+    const binding = ParameterRegistry.naturalBinding('prof');
+
+    // Act
+    const result = binding.getBase(battler);
+
+    // Assert
+    expect(result).toBe(2);
   });
 });
 //endregion plugins/prof/core/core/_component/register-prof-parameters-direct.test.js

@@ -93,6 +93,52 @@ describe('Game_BattlerBase / Game_Battler / Game_Troop aptitude additions (direc
       // (100 + 0 + 10) / 100
       expect(actor.apr).toBe(1.1);
     });
+
+    it('layers on the natural bonus bound to apr, already in factor units', () =>
+    {
+      // Arrange- the bonus answers only for apr, so asking for any other key would miss it.
+      const actor = buildActor();
+      actor.getAllNotes = () => [ { note: '<aptMultiplier:25>' } ];
+      actor.naturalBonus = key => (key === 'apr' ? 0.05 : 3);
+
+      // Act
+      const result = actor.apr;
+
+      // Assert
+      expect(result).toBeCloseTo(1.3, 10);
+    });
+
+    it('keeps the natural bonus out of the cache, so growth shows without waiting for a data change', () =>
+    {
+      // Arrange- warm the cache first, then grow.
+      const actor = buildActor();
+      actor.getAllNotes = () => [ { note: '<aptMultiplier:25>' } ];
+      // eslint-disable-next-line no-unused-expressions
+      actor.apr;
+      actor.naturalBonus = key => (key === 'apr' ? 0.05 : 3);
+
+      // Act
+      const result = actor.apr;
+
+      // Assert
+      expect(actor.getCachedApr()).toBe(1.25);
+      expect(result).toBeCloseTo(1.3, 10);
+    });
+  });
+
+  describe('Game_BattlerBase#baseAptFactor', () =>
+  {
+    it('answers the neutral factor for a battler that earns no aptitude', () =>
+    {
+      // Arrange
+      const battler = new globalThis.Game_BattlerBase();
+
+      // Act
+      const result = battler.baseAptFactor();
+
+      // Assert
+      expect(result).toBe(1);
+    });
   });
 
   describe('Game_Battler#apPoints', () =>

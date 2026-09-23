@@ -150,6 +150,9 @@ describe('Game_Actor ext/sdp augments (direct src import)', () =>
     StubGameActor.prototype.maxTp = baseMaxTp;
     StubGameActor.prototype.actorId = vi.fn(() => 1);
     StubGameActor.prototype.getAllNotes = vi.fn(() => []);
+
+    // J-Base's seam answers zero until J-NaturalGrowth fills it in.
+    StubGameActor.prototype.naturalBonus = () => 0;
     globalThis.Game_Actor = StubGameActor;
 
     await import('../../../../../src/plugins/sdp/core/objects/Game_Actor.js');
@@ -679,6 +682,39 @@ describe('Game_Actor ext/sdp augments (direct src import)', () =>
 
       // Assert
       expect(result).toEqual(1);
+    });
+
+    it('layers the natural bonus bound to sdr on top, already in factor units', () =>
+    {
+      // Arrange- the bonus answers only for sdr, so asking for any other key would miss it.
+      const actor = makeActor();
+      RPGManager.getSumFromAllNotesByRegex.mockReturnValue(25);
+      actor.naturalBonus = key => (key === 'sdr' ? 0.1 : 4);
+
+      // Act
+      const result = actor.sdpMultiplier;
+
+      // Assert
+      expect(result).toBeCloseTo(1.35, 10);
+    });
+  });
+
+  describe('baseSdpMultiplier', () =>
+  {
+    it('reports the factor the tags alone produce, leaving out panels and natural bonuses', () =>
+    {
+      // Arrange- a panel and a natural bonus are both present, and neither belongs in the base.
+      const actor = makeActor();
+      RPGManager.getSumFromAllNotesByRegex.mockReturnValue(25);
+      J.SDP.Metadata.panelsMap.set('a', makePanel({}, 75));
+      actor._j._sdp._ranks.push(makeRanking('a', { currentRank: 1 }));
+      actor.naturalBonus = () => 0.1;
+
+      // Act
+      const result = actor.baseSdpMultiplier();
+
+      // Assert
+      expect(result).toBe(1.25);
     });
   });
 

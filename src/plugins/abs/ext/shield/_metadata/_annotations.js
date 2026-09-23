@@ -344,7 +344,19 @@
  * They are mostly just states, so work with them as you would any other state.
  *
  * ============================================================================
+ * NATURAL GROWTH:
+ * With J-NaturalGrowth also installed, shield amplification (sar) and shield
+ * effectiveness (ser) accept its buff and growth tags. Amounts are percents,
+ * like <sar:25> above: <sarGrowthPlus:[1.5]> grants +1.5% per level.
+ *
+ * TAG FORMAT:
+ *  <(sar|ser)(Buff|Growth)(Plus|Rate):[FORMULA]>
+ * See J-NaturalGrowth for how Buff/Growth and Plus/Rate behave.
+ * ============================================================================
  * CHANGELOG:
+ * - 1.2.0
+ *    Added natural growth tags for shield amplification (sar) and shield
+ *    effectiveness (ser).
  * - 1.1.3
  *    The shield gauge now hangs off the character overlay, so it keeps its own size
  *    and stays put through whatever the battler beneath it is animating.

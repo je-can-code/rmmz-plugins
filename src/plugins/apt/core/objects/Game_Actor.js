@@ -48,7 +48,7 @@ Game_Actor.prototype.initAptitudeMembers = function()
   this._j._aptitude._learned = {};
 
   /**
-   * The cached result of the {@link #apr} property getter.
+   * The cached result of {@link #baseAptFactor}, the tag-driven half of the {@link #apr} property.
    * Null when the cache is cold; invalidated by {@link #onBattlerDataChange}.
    * @type {number|null}
    */

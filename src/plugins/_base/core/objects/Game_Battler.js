@@ -497,6 +497,24 @@ Game_Battler.prototype.gainTp = function(value)
   if (value > 0) this.onHeal(J.BASE.Resource.TP, value);
 };
 
+//region natural bonuses
+/**
+ * The bonus natural buffs and growths add to one registered parameter, in that parameter's own units.<br/>
+ * This is the one piece of natural growth a parameter's owner writes itself: wherever it assembles the
+ * parameter's value, it adds this. J-Base has no natural growth of its own, so nothing is added here;
+ * J-NaturalGrowth extends it to resolve whatever tags were bound to the key. Because the answer is
+ * simply zero when that plugin is absent, every owner can call this without first asking whether it is
+ * installed, and without caring which of the two plugins happened to load first.
+ * @param {string} parameterKey The registry key of the parameter being assembled.
+ * @returns {number}
+ */
+// eslint-disable-next-line no-unused-vars
+Game_Battler.prototype.naturalBonus = function(parameterKey)
+{
+  return 0;
+};
+//endregion natural bonuses
+
 //region HAR
 Object.defineProperties(Game_BattlerBase.prototype, {
   /**
@@ -520,6 +538,9 @@ Object.defineProperty(Game_Battler.prototype, 'har', {
     {
       factor += this.getSdpBonusForParameterKey('har', 1);
     }
+
+    // layer on whatever natural buffs and growths are bound to healing amplification.
+    factor += this.naturalBonus('har');
 
     return factor;
   },

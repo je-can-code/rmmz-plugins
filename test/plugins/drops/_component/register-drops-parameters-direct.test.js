@@ -1,6 +1,7 @@
 //region plugins/drops/_component/register-drops-parameters-direct.test.js
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import NaturalParameterBinding from '../../../../src/plugins/_base/core/models/NaturalParameterBinding.js';
 import ParameterDefinition from '../../../../src/plugins/_base/core/models/ParameterDefinition.js';
 import ParameterDisplayPolicy from '../../../../src/plugins/_base/core/core/ParameterDisplayPolicy.js';
 import ParameterFormat from '../../../../src/plugins/_base/core/core/ParameterFormat.js';
@@ -22,7 +23,9 @@ describe('DropsParameterRegistration.registerAll (drops core, direct src import)
     vi.resetModules();
     ParameterRegistry._definitions.clear();
     ParameterRegistry._groupCache.clear();
+    ParameterRegistry._naturalBindings.clear();
 
+    globalThis.NaturalParameterBinding = NaturalParameterBinding;
     globalThis.ParameterDefinition = ParameterDefinition;
     globalThis.ParameterDisplayPolicy = ParameterDisplayPolicy;
     globalThis.ParameterGroups = ParameterGroups;
@@ -36,7 +39,22 @@ describe('DropsParameterRegistration.registerAll (drops core, direct src import)
       dropRateDescription: () => [ 'dor-line1', 'dor-line2' ],
     };
     globalThis.IconManager = { goldRate: () => 970, dropRate: () => 971 };
-    globalThis.J = {};
+
+    // stand-in tags, each its own object, so a binding can be checked by identity against the right one.
+    globalThis.J = {
+      DROPS: {
+        RegExp: {
+          GoldRateBuffPlus: /<gdrBuffPlus>/,
+          GoldRateBuffRate: /<gdrBuffRate>/,
+          GoldRateGrowthPlus: /<gdrGrowthPlus>/,
+          GoldRateGrowthRate: /<gdrGrowthRate>/,
+          DropRateBuffPlus: /<dorBuffPlus>/,
+          DropRateBuffRate: /<dorBuffRate>/,
+          DropRateGrowthPlus: /<dorGrowthPlus>/,
+          DropRateGrowthRate: /<dorGrowthRate>/,
+        },
+      },
+    };
 
     const { default: DropsParameterRegistration } =
       await import('../../../../src/plugins/drops/core/core/registerDropsParameters.js');
@@ -46,6 +64,7 @@ describe('DropsParameterRegistration.registerAll (drops core, direct src import)
 
   afterEach(() =>
   {
+    delete globalThis.NaturalParameterBinding;
     delete globalThis.ParameterDefinition;
     delete globalThis.ParameterDisplayPolicy;
     delete globalThis.ParameterGroups;
@@ -57,6 +76,7 @@ describe('DropsParameterRegistration.registerAll (drops core, direct src import)
     delete globalThis.J;
     ParameterRegistry._definitions.clear();
     ParameterRegistry._groupCache.clear();
+    ParameterRegistry._naturalBindings.clear();
   });
 
   describe('gdr', () =>
@@ -95,6 +115,34 @@ describe('DropsParameterRegistration.registerAll (drops core, direct src import)
 
       expect(definition.sdpBinding.getBaseForSdp(actor)).toBe(1);
     });
+
+    it('binds natural growth to the four gold rate tags', () =>
+    {
+      // Arrange- dor's tags are bound in the same pass, so a crossed wire would pick up one of those.
+      const { RegExp: tags } = globalThis.J.DROPS;
+
+      // Act
+      const binding = ParameterRegistry.naturalBinding('gdr');
+
+      // Assert
+      expect(binding.buffPlus).toBe(tags.GoldRateBuffPlus);
+      expect(binding.buffRate).toBe(tags.GoldRateBuffRate);
+      expect(binding.growthPlus).toBe(tags.GoldRateGrowthPlus);
+      expect(binding.growthRate).toBe(tags.GoldRateGrowthRate);
+    });
+
+    it('grows against the gold multiplier its own tags produce', () =>
+    {
+      // Arrange- the battler answers differently for gold and drops, so the right base is visible.
+      const battler = { baseGoldMultiplier: () => 0.3, baseDropMultiplier: () => 0.7 };
+      const binding = ParameterRegistry.naturalBinding('gdr');
+
+      // Act
+      const result = binding.getBase(battler);
+
+      // Assert
+      expect(result).toBe(0.3);
+    });
   });
 
   describe('dor', () =>
@@ -132,6 +180,34 @@ describe('DropsParameterRegistration.registerAll (drops core, direct src import)
       const actor = {};
 
       expect(definition.sdpBinding.getBaseForSdp(actor)).toBe(1);
+    });
+
+    it('binds natural growth to the four drop rate tags', () =>
+    {
+      // Arrange- gdr's tags are bound in the same pass, so a crossed wire would pick up one of those.
+      const { RegExp: tags } = globalThis.J.DROPS;
+
+      // Act
+      const binding = ParameterRegistry.naturalBinding('dor');
+
+      // Assert
+      expect(binding.buffPlus).toBe(tags.DropRateBuffPlus);
+      expect(binding.buffRate).toBe(tags.DropRateBuffRate);
+      expect(binding.growthPlus).toBe(tags.DropRateGrowthPlus);
+      expect(binding.growthRate).toBe(tags.DropRateGrowthRate);
+    });
+
+    it('grows against the drop multiplier its own tags produce', () =>
+    {
+      // Arrange- the battler answers differently for gold and drops, so the right base is visible.
+      const battler = { baseGoldMultiplier: () => 0.3, baseDropMultiplier: () => 0.7 };
+      const binding = ParameterRegistry.naturalBinding('dor');
+
+      // Act
+      const result = binding.getBase(battler);
+
+      // Assert
+      expect(result).toBe(0.7);
     });
   });
 });

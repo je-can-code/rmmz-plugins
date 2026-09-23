@@ -1,127 +1,5 @@
 //region Game_Battler
 /**
- * Extends `.initNaturalGrowthParameters()` to include the new critical damage parameters as growth-ready.
- */
-J.CRIT.Aliased.Game_Battler.set('initNaturalGrowthParameters', Game_Battler.prototype.initNaturalGrowthParameters);
-Game_Battler.prototype.initNaturalGrowthParameters = function()
-{
-  // short circuit if not using the natural growths plugin.
-  if (!J.NATURAL) return;
-
-  // perform original logic.
-  J.CRIT.Aliased.Game_Battler.get('initNaturalGrowthParameters')
-    .call(this);
-
-  /**
-   * The J object where all my additional properties live.
-   */
-  this._j ||= {};
-
-  /**
-   * A grouping of all properties associated with natural growth.
-   */
-  this._j._natural ||= {};
-
-  /**
-   * The permanent flat bonus for CDM.
-   * @type {number}
-   */
-  this._j._natural._cdmPlus = 0;
-
-  /**
-   * The permanent multiplier bonus for CDR.
-   * @type {number}
-   */
-  this._j._natural._cdmRate = 0;
-
-  /**
-   * The permanent flat bonus for CTR.
-   * @type {number}
-   */
-  this._j._natural._ctrPlus = 0;
-
-  /**
-   * The permanent multiplier bonus for CTR.
-   * @type {number}
-   */
-  this._j._natural._ctrRate = 0;
-};
-
-//region properties
-/**
- * Gets the permanent flat bonus for CDM.
- * @returns {number}
- */
-Game_Battler.prototype.cdmPlus = function()
-{
-  return this._j._natural._cdmPlus;
-};
-
-/**
- * Modifies the permanent flat bonus for CDM.
- * @param {number} amount The amount to modify the bonus by.
- */
-Game_Battler.prototype.modCdmPlus = function(amount)
-{
-  this._j._natural._cdmPlus += amount;
-};
-
-/**
- * Gets the permanent multiplicative bonus for CDM.
- * @returns {number}
- */
-Game_Battler.prototype.cdmRate = function()
-{
-  return this._j._natural._cdmRate;
-};
-
-/**
- * Modifies the permanent multiplicative bonus for CDM.
- * @param {number} amount The amount to modify the bonus by.
- */
-Game_Battler.prototype.modCdmRate = function(amount)
-{
-  this._j._natural._cdmRate += amount;
-};
-
-/**
- * Gets the current growths applied to CTR plus.
- * @returns {number}
- */
-Game_Battler.prototype.ctrPlus = function()
-{
-  return this._j._natural._ctrPlus;
-};
-
-/**
- * Modifies the permanent flat bonus for CTR.
- * @param {number} amount The amount to modify the bonus by.
- */
-Game_Battler.prototype.modCtrPlus = function(amount)
-{
-  this._j._natural._ctrPlus += amount;
-};
-
-/**
- * Gets the current growths applied to CTR rate.
- * @returns {number}
- */
-Game_Battler.prototype.ctrRate = function()
-{
-  return this._j._natural._ctrRate;
-};
-
-/**
- * Modifies the permanent multiplicative bonus for CTR.
- * @param {number} amount The amount to modify the bonus by.
- */
-Game_Battler.prototype.modCtrRate = function(amount)
-{
-  this._j._natural._ctrRate += amount;
-};
-//endregion properties
-
-/**
  * Extends {@link Game_BattlerBase#baseCriticalMultiplier}.<br/>
  * Adds any `<critMultiplierBase:NUM>` notetag contributions on top of the plugin-configured
  * floor value inherited from {@link Game_BattlerBase}, instead of replacing it outright-
@@ -160,17 +38,17 @@ Game_Battler.prototype.criticalDamageMultiplier = function()
   // sum together all cdm values across the notes.
   const cdmBonuses = this.getCriticalDamageMultiplier();
 
-  // grab all natural bonuses for cdm.
-  const cdmNaturalBonuses = this.cdmNaturalBonuses();
-
   // grab all sdp bonuses for cdm.
   const cdmSdpBonuses = this.critSdpBonuses(0, this.baseCriticalMultiplier());
 
   // calculate the factor for the CDM.
-  const cdmFactor = (cdmBonuses + cdmNaturalBonuses + cdmSdpBonuses) / 100;
+  const cdmFactor = (cdmBonuses + cdmSdpBonuses) / 100;
+
+  // layer on whatever natural buffs and growths are bound to cdm, which arrive already as a factor.
+  const cdmNaturalBonus = this.naturalBonus('cdm');
 
   // return the factor.
-  return cdmFactor;
+  return cdmFactor + cdmNaturalBonus;
 };
 
 /**
@@ -187,82 +65,6 @@ Game_Battler.prototype.getCriticalDamageMultiplier = function()
 
   // return the sum of all bonuses.
   return cdmBonuses;
-};
-
-/**
- * Gets all natural bonuses for cdm, excluding the base cdm itself.
- * @returns {number}
- */
-Game_Battler.prototype.cdmNaturalBonuses = function()
-{
-  // short circuit if we aren't using the natural growths plugin.
-  if (!J.NATURAL) return 0;
-
-  // calculate the natural buffs for this parameter.
-  const cdmBuffs = this.cdmNaturalBuffs();
-
-  // calculate the natural growths for this parameter.
-  const cdmGrowths = this.cdmNaturalGrowths();
-
-  // sum together the two natural bonuses.
-  return (cdmBuffs + cdmGrowths);
-};
-
-/**
- * Calculates the buffs for critical damage multipliers.
- * @returns {number}
- */
-Game_Battler.prototype.cdmNaturalBuffs = function()
-{
-  // grab everything with notes.
-  const objectsToCheck = this.getAllNotes();
-
-  // grab the base parameter value.
-  const baseParam = this.baseCriticalMultiplier();
-
-  // sum together all the cdm buff pluses across the notes.
-  const cdmBuffPlus = RPGManager.getResultsFromAllNotesByRegex(
-    objectsToCheck,
-    J.CRIT.RegExp.CritDamageMultiplierBuffPlus,
-    baseParam,
-    this
-  );
-
-  // sum together all the cdm buff rates across the notes.
-  const cdmBuffRate = RPGManager.getResultsFromAllNotesByRegex(
-    objectsToCheck,
-    J.CRIT.RegExp.CritDamageMultiplierBuffRate,
-    baseParam,
-    this
-  );
-
-  // don't calculate if we don't have anything.
-  if (!cdmBuffPlus && !cdmBuffRate) return 0;
-
-  // return result.
-  return this.calculatePlusRate(baseParam, cdmBuffPlus, cdmBuffRate);
-};
-
-/**
- * Calculates the growths associated with critical damage multipliers.
- * @returns {number}
- */
-Game_Battler.prototype.cdmNaturalGrowths = function()
-{
-  // grab the base param for calculations.
-  const baseCdm = this.baseCriticalMultiplier();
-
-  // get the current plus growth for cdm.
-  const growthPlus = this.cdmPlus();
-
-  // get the current rate growth for cdm.
-  const growthRate = this.cdmRate();
-
-  // don't calculate if we don't have anything.
-  if (!growthPlus && !growthRate) return 0;
-
-  // calculate the result.
-  return this.calculatePlusRate(baseCdm, growthPlus, growthRate);
 };
 
 /**
@@ -304,17 +106,17 @@ Game_Battler.prototype.criticalDamageReduction = function()
   // sum together all ctr values across the notes.
   const ctrBonuses = this.getCriticalDamageReduction();
 
-  // grab all natural bonuses for ctr.
-  const ctrNaturalBonuses = this.ctrNaturalBonuses();
-
   // grab all sdp bonuses for ctr.
   const ctrSdpBonuses = this.critSdpBonuses(1, this.baseCriticalReduction());
 
   // calculate the factor for the CTR.
-  const ctrFactor = (ctrBonuses + ctrNaturalBonuses + ctrSdpBonuses) / 100;
+  const ctrFactor = (ctrBonuses + ctrSdpBonuses) / 100;
+
+  // layer on whatever natural buffs and growths are bound to ctr, which arrive already as a factor.
+  const ctrNaturalBonus = this.naturalBonus('ctr');
 
   // return the factor.
-  return ctrFactor;
+  return ctrFactor + ctrNaturalBonus;
 };
 
 /**
@@ -331,85 +133,6 @@ Game_Battler.prototype.getCriticalDamageReduction = function()
 
   // return the sum of all bonuses.
   return ctrBonuses;
-};
-
-/**
- * Gets all natural bonuses for ctr, excluding the base ctr itself.
- * @returns {number}
- */
-Game_Battler.prototype.ctrNaturalBonuses = function()
-{
-  // short circuit if we aren't using the natural growths plugin.
-  if (!J.NATURAL) return 0;
-
-  // calculate the natural buffs for this parameter.
-  const ctrBuffs = this.ctrNaturalBuffs();
-
-  // calculate the natural growths for this parameter.
-  const ctrGrowths = this.ctrNaturalGrowths();
-
-  // sum together the two natural bonuses.
-  return (ctrBuffs + ctrGrowths);
-};
-
-/**
- * Calculates the buffs for critical taken rate.
- * @returns {number}
- */
-Game_Battler.prototype.ctrNaturalBuffs = function()
-{
-  // grab everything with notes.
-  const objectsToCheck = this.getAllNotes();
-
-  // grab the base parameter value.
-  const baseParam = this.baseCriticalReduction();
-
-  // sum together all the ctr buff pluses across the notes.
-  const ctrBuffPlus = RPGManager.getResultsFromAllNotesByRegex(
-    objectsToCheck,
-    J.CRIT.RegExp.CritTakenRateBuffPlus,
-    baseParam,
-    this
-  );
-
-  // sum together all the ctr buff rates across the notes.
-  const ctrBuffRate = RPGManager.getResultsFromAllNotesByRegex(
-    objectsToCheck,
-    J.CRIT.RegExp.CritTakenRateBuffRate,
-    baseParam,
-    this
-  );
-
-  // don't calculate if we don't have anything.
-  if (!ctrBuffPlus && !ctrBuffRate) return 0;
-
-  // grab the base param for calculations.
-  const baseCtr = this.baseCriticalReduction();
-
-  // return result.
-  return this.calculatePlusRate(baseCtr, ctrBuffPlus, ctrBuffRate);
-};
-
-/**
- * Calculates the growths associated with critical taken rate.
- * @returns {number}
- */
-Game_Battler.prototype.ctrNaturalGrowths = function()
-{
-  // grab the base param for calculations.
-  const baseCtr = this.baseCriticalReduction();
-
-  // get the current plus growth for ctr.
-  const growthPlus = this.ctrPlus();
-
-  // get the current rate growth for ctr.
-  const growthRate = this.ctrRate();
-
-  // don't calculate if we don't have anything.
-  if (!growthPlus && !growthRate) return 0;
-
-  // calculate the result.
-  return this.calculatePlusRate(baseCtr, growthPlus, growthRate);
 };
 
 /**

@@ -24,6 +24,16 @@ class ResourcesAbsParameterRegistration
 
     ParameterRegistry.register(lifeSteal);
 
+    // lifesteal grows against the rate its own tags produce.
+    const lifeStealNatural = new NaturalParameterBinding(
+      J.RESOURCES.EXT.ABS.RegExp.LifestealBuffPlus,
+      J.RESOURCES.EXT.ABS.RegExp.LifestealBuffRate,
+      J.RESOURCES.EXT.ABS.RegExp.LifestealGrowthPlus,
+      J.RESOURCES.EXT.ABS.RegExp.LifestealGrowthRate,
+      battler => battler.baseLstRate());
+
+    ParameterRegistry.bindNatural('lst', lifeStealNatural);
+
     const magiSteal = ParameterDefinition.Builder()
       .key('mst')
       .group(ParameterGroups.COMBAT)
@@ -39,6 +49,16 @@ class ResourcesAbsParameterRegistration
 
     ParameterRegistry.register(magiSteal);
 
+    // manasteal grows against the rate its own tags produce.
+    const magiStealNatural = new NaturalParameterBinding(
+      J.RESOURCES.EXT.ABS.RegExp.ManastealBuffPlus,
+      J.RESOURCES.EXT.ABS.RegExp.ManastealBuffRate,
+      J.RESOURCES.EXT.ABS.RegExp.ManastealGrowthPlus,
+      J.RESOURCES.EXT.ABS.RegExp.ManastealGrowthRate,
+      battler => battler.baseMstRate());
+
+    ParameterRegistry.bindNatural('mst', magiStealNatural);
+
     const techSteal = ParameterDefinition.Builder()
       .key('tst')
       .group(ParameterGroups.COMBAT)
@@ -53,6 +73,16 @@ class ResourcesAbsParameterRegistration
       .build();
 
     ParameterRegistry.register(techSteal);
+
+    // techsteal grows against the rate its own tags produce.
+    const techStealNatural = new NaturalParameterBinding(
+      J.RESOURCES.EXT.ABS.RegExp.TechstealBuffPlus,
+      J.RESOURCES.EXT.ABS.RegExp.TechstealBuffRate,
+      J.RESOURCES.EXT.ABS.RegExp.TechstealGrowthPlus,
+      J.RESOURCES.EXT.ABS.RegExp.TechstealGrowthRate,
+      battler => battler.baseTstRate());
+
+    ParameterRegistry.bindNatural('tst', techStealNatural);
   }
 }
 

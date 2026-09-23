@@ -26,6 +26,7 @@ import './models/ExternalJsonConfigLoaderOptions.js';
 import './models/FilterCycle.js';
 import './models/GaugeOptionsBuilder.js';
 import './models/J_EventEmitter.js';
+import './models/NaturalParameterBinding.js';
 import './core/registerJBaseSerializableModels.js';
 import './models/WindowCommandBuilder.js';
 import './models/WindowGaugeOptions.js';

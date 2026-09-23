@@ -37,6 +37,12 @@ J.RESOURCES.Aliased.Game_Battler = new Map();
 J.RESOURCES.RegExp = {};
 J.RESOURCES.RegExp.HpCostReduction = /<hcr:\[([+\-*/ ().\w]+)]>/gi;
 
+// natural growth tags for hcr, bound to the parameter at boot.
+J.RESOURCES.RegExp.HpCostRateBuffPlus = /<hcrBuffPlus:\[([+\-*/ ().\w]+)]>/gi;
+J.RESOURCES.RegExp.HpCostRateBuffRate = /<hcrBuffRate:\[([+\-*/ ().\w]+)]>/gi;
+J.RESOURCES.RegExp.HpCostRateGrowthPlus = /<hcrGrowthPlus:\[([+\-*/ ().\w]+)]>/gi;
+J.RESOURCES.RegExp.HpCostRateGrowthRate = /<hcrGrowthRate:\[([+\-*/ ().\w]+)]>/gi;
+
 J.RESOURCES.RegExp.HpCostFlat = /<hp-cost:(\d+)>/gi;
 J.RESOURCES.RegExp.HpCostPercent = /<hp-cost:(\d+)%>/gi;
 J.RESOURCES.RegExp.HpCostFormula = /<hp-cost:\[([+\-*/ ().\w]+)]>/gi;

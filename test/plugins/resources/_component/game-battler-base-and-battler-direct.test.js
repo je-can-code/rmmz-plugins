@@ -52,6 +52,9 @@ describe('Game_BattlerBase / Game_Battler resource extensions (resources core, d
     Game_Battler.prototype.gainTp = vi.fn();
     Game_Battler.prototype.tcr = 1;
 
+    // J-Base's seam answers zero until J-NaturalGrowth fills it in.
+    Game_Battler.prototype.naturalBonus = () => 0;
+
     globalThis.Game_BattlerBase = Game_BattlerBase;
     globalThis.Game_Battler = Game_Battler;
 
@@ -209,7 +212,7 @@ describe('Game_BattlerBase / Game_Battler resource extensions (resources core, d
       battler.initResourcesMembers();
 
       expect(battler._j._hcr).toBe(100);
-      // hcr getter is (100 - _hcr) / 100, so a fresh battler has 0% reduction.
+      // hcr is whatever share of the cost hcrFactor removes, so a fresh battler has 0% reduction.
       expect(battler.hcr).toBe(0);
       expect(battler.hcrFactor()).toBe(1);
     });
@@ -223,6 +226,52 @@ describe('Game_BattlerBase / Game_Battler resource extensions (resources core, d
       // stored _hcr of 40 means hp costs are multiplied by 40% (hcrFactor), i.e. a 60% reduction (hcr).
       expect(battler.hcrFactor()).toBe(0.4);
       expect(battler.hcr).toBeCloseTo(0.6);
+    });
+
+    it('layers the natural bonus bound to hcr onto the cost factor, and the reduction follows it', () =>
+    {
+      // Arrange- a natural bonus of -0.1 is ten percent cheaper, as the status screen would show it.
+      const battler = new globalThis.Game_Battler();
+      battler.initResourcesMembers();
+      battler.setHcr(80);
+      battler.naturalBonus = key => (key === 'hcr' ? -0.1 : 5);
+
+      // Act
+      const factor = battler.hcrFactor();
+
+      // Assert
+      expect(factor).toBeCloseTo(0.7, 10);
+      expect(battler.hcr).toBeCloseTo(0.3, 10);
+    });
+
+    it('never lets the natural bonus push the cost factor below zero', () =>
+    {
+      // Arrange- a factor below zero would refund hp on cast.
+      const battler = new globalThis.Game_Battler();
+      battler.initResourcesMembers();
+      battler.setHcr(20);
+      battler.naturalBonus = () => -0.5;
+
+      // Act
+      const factor = battler.hcrFactor();
+
+      // Assert
+      expect(factor).toBe(0);
+    });
+
+    it('reports the tagged cost factor as its base, without any natural bonus', () =>
+    {
+      // Arrange- a natural bonus is present, and must not leak into the base it is computed from.
+      const battler = new globalThis.Game_Battler();
+      battler.initResourcesMembers();
+      battler.setHcr(80);
+      battler.naturalBonus = () => -0.1;
+
+      // Act
+      const result = battler.baseHcrFactor();
+
+      // Assert
+      expect(result).toBe(0.8);
     });
 
     it('refreshHcr subtracts each source hcr() from 100, floored at 0', () =>

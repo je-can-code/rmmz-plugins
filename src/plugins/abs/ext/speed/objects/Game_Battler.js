@@ -56,10 +56,26 @@ Object.defineProperty(Game_BattlerBase.prototype, 'msb', {
 Object.defineProperty(Game_Battler.prototype, 'msb', {
   get: function()
   {
-    return this._j._abs._speed._walkBoost;
+    // start from the boost this battler's own tags produce.
+    const walkBoost = this.walkSpeedBoost();
+
+    // layer on whatever natural buffs and growths are bound to move speed.
+    const naturalBonus = this.naturalBonus('msb');
+
+    return walkBoost + naturalBonus;
   },
   configurable: true,
 });
+
+/**
+ * Gets the walking speed boost this battler's own tags produce, before natural bonuses.<br/>
+ * This is what move speed's natural tags see as their base.
+ * @returns {number}
+ */
+Game_Battler.prototype.walkSpeedBoost = function()
+{
+  return this._j._abs._speed._walkBoost;
+};
 
 /**
  * Sets the current speed bost scale for this battler.

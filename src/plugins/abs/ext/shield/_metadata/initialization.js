@@ -7,7 +7,7 @@ globalThis.J ||= {};
 (() =>
 {
   // Check to ensure we have the minimum required version of the J-Base plugin.
-  const requiredBaseVersion = '3.2.0';
+  const requiredBaseVersion = '3.19.0';
   const hasBaseRequirement = J.BASE.Helpers.satisfies(J.BASE.Metadata.Version, requiredBaseVersion);
   if (!hasBaseRequirement)
   {
@@ -107,6 +107,18 @@ J.ABS.EXT.SHIELD.RegExp = {
 
   /** Incoming shield effectiveness (`<ser:25>` = +25%). */
   ShieldEffectiveness: /<ser:(-?\d+)>/gi,
+
+  // natural growth tags for sar, bound to the parameter at boot.
+  ShieldAmplificationBuffPlus: /<sarBuffPlus:\[([+\-*/ ().\w]+)]>/gi,
+  ShieldAmplificationBuffRate: /<sarBuffRate:\[([+\-*/ ().\w]+)]>/gi,
+  ShieldAmplificationGrowthPlus: /<sarGrowthPlus:\[([+\-*/ ().\w]+)]>/gi,
+  ShieldAmplificationGrowthRate: /<sarGrowthRate:\[([+\-*/ ().\w]+)]>/gi,
+
+  // natural growth tags for ser, bound to the parameter at boot.
+  ShieldEffectivenessBuffPlus: /<serBuffPlus:\[([+\-*/ ().\w]+)]>/gi,
+  ShieldEffectivenessBuffRate: /<serBuffRate:\[([+\-*/ ().\w]+)]>/gi,
+  ShieldEffectivenessGrowthPlus: /<serGrowthPlus:\[([+\-*/ ().\w]+)]>/gi,
+  ShieldEffectivenessGrowthRate: /<serGrowthRate:\[([+\-*/ ().\w]+)]>/gi,
 };
 
 /** Legacy SDP panel parameter ids for shield stats. */

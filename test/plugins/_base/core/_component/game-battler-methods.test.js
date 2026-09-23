@@ -781,6 +781,33 @@ describe('J-Base Game_Battler methods (direct src import)', () =>
       // Act & Assert
       expect(battler.har).toBeCloseTo(1.2);
     });
+
+    it('layers the natural bonus bound to har on top of the base and panel factors', () =>
+    {
+      // Arrange- the natural bonus answers only for har, so asking for any other key would miss it.
+      const battler = buildBattler();
+      battler.baseHarFactor = () => 1.2;
+      battler.getSdpBonusForParameterKey = () => 0.1;
+      battler.naturalBonus = key => (key === 'har' ? 0.15 : 99);
+
+      // Act & Assert
+      expect(battler.har).toBeCloseTo(1.45, 10);
+    });
+  });
+
+  describe('naturalBonus', () =>
+  {
+    it('adds nothing to any parameter, since J-Base has no natural growth of its own', () =>
+    {
+      // Arrange- a buffed-looking key, to show the answer does not depend on what is asked for.
+      const battler = buildBattler();
+
+      // Act
+      const result = battler.naturalBonus('lst');
+
+      // Assert
+      expect(result).toBe(0);
+    });
   });
 
   describe('baseHarFactor', () =>

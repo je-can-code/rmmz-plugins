@@ -1,6 +1,7 @@
 //region plugins/apt/core/_component/register-apt-parameters-direct.test.js
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import NaturalParameterBinding from '../../../../../src/plugins/_base/core/models/NaturalParameterBinding.js';
 import ParameterDefinition from '../../../../../src/plugins/_base/core/models/ParameterDefinition.js';
 import ParameterDisplayPolicy from '../../../../../src/plugins/_base/core/core/ParameterDisplayPolicy.js';
 import ParameterFormat from '../../../../../src/plugins/_base/core/core/ParameterFormat.js';
@@ -22,7 +23,9 @@ describe('AptParameterRegistration.registerAll (apt core, direct src import)', (
     vi.resetModules();
     ParameterRegistry._definitions.clear();
     ParameterRegistry._groupCache.clear();
+    ParameterRegistry._naturalBindings.clear();
 
+    globalThis.NaturalParameterBinding = NaturalParameterBinding;
     globalThis.ParameterDefinition = ParameterDefinition;
     globalThis.ParameterGroups = ParameterGroups;
     globalThis.ParameterFormat = ParameterFormat;
@@ -31,7 +34,18 @@ describe('AptParameterRegistration.registerAll (apt core, direct src import)', (
     globalThis.SdpParameterBinding = SdpParameterBinding;
     globalThis.TextManager = { aptRate: () => 'Aptitude UP', aptRateDescription: () => [ 'line1', 'line2' ] };
     globalThis.IconManager = { aptRate: () => 79 };
-    globalThis.J = {};
+
+    // stand-in tags, each its own object, so a binding can be checked by identity against the right one.
+    globalThis.J = {
+      APT: {
+        RegExp: {
+          AptRateBuffPlus: /<aprBuffPlus>/,
+          AptRateBuffRate: /<aprBuffRate>/,
+          AptRateGrowthPlus: /<aprGrowthPlus>/,
+          AptRateGrowthRate: /<aprGrowthRate>/,
+        },
+      },
+    };
 
     const { default: AptParameterRegistration } =
       await import('../../../../../src/plugins/apt/core/core/registerAptParameters.js');
@@ -41,6 +55,7 @@ describe('AptParameterRegistration.registerAll (apt core, direct src import)', (
 
   afterEach(() =>
   {
+    delete globalThis.NaturalParameterBinding;
     delete globalThis.ParameterDefinition;
     delete globalThis.ParameterGroups;
     delete globalThis.ParameterFormat;
@@ -52,6 +67,7 @@ describe('AptParameterRegistration.registerAll (apt core, direct src import)', (
     delete globalThis.J;
     ParameterRegistry._definitions.clear();
     ParameterRegistry._groupCache.clear();
+    ParameterRegistry._naturalBindings.clear();
   });
 
   it('registers apr in the FATE group with reward-rate display policy', () =>
@@ -89,6 +105,34 @@ describe('AptParameterRegistration.registerAll (apt core, direct src import)', (
     expect(definition.sdpBinding.getPanelBonus(actor, 1)).toBe(0);
     // sdpBinding.byKey('apr', () => 1) supplies a fixed getBaseForSdp of 1.
     expect(definition.sdpBinding.getBaseForSdp(actor)).toBe(1);
+  });
+
+  it('binds natural growth to the four aptitude rate tags', () =>
+  {
+    // Arrange- four distinct stand-ins, so a transposed pair would be caught.
+    const { RegExp: tags } = globalThis.J.APT;
+
+    // Act
+    const binding = ParameterRegistry.naturalBinding('apr');
+
+    // Assert
+    expect(binding.buffPlus).toBe(tags.AptRateBuffPlus);
+    expect(binding.buffRate).toBe(tags.AptRateBuffRate);
+    expect(binding.growthPlus).toBe(tags.AptRateGrowthPlus);
+    expect(binding.growthRate).toBe(tags.AptRateGrowthRate);
+  });
+
+  it('grows against the factor aptitude rate\'s own tags produce, not the finished rate', () =>
+  {
+    // Arrange- the finished rate would include natural bonuses, which are what the base feeds.
+    const battler = { baseAptFactor: () => 1.2, apr: 9 };
+    const binding = ParameterRegistry.naturalBinding('apr');
+
+    // Act
+    const result = binding.getBase(battler);
+
+    // Assert
+    expect(result).toBe(1.2);
   });
 });
 //endregion plugins/apt/core/_component/register-apt-parameters-direct.test.js

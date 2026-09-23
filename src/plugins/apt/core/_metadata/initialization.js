@@ -11,7 +11,7 @@ globalThis.J ||= {};
 (() =>
 {
   // check to ensure we have the minimum required version of the j-base plugin.
-  const requiredBaseVersion = '3.2.0';
+  const requiredBaseVersion = '3.19.0';
   const hasBaseRequirement = J.BASE.Helpers.satisfies(J.BASE.Metadata.Version, requiredBaseVersion);
   if (hasBaseRequirement === false)
   {
@@ -97,5 +97,11 @@ J.APT.RegExp.AptitudeTeachable = /<aptitude:[ ]?(\[\d+,[ ]?\d+])>/gi;
 J.APT.RegExp.ApReward = /<ap: ?(\d+)>/i;
 
 J.APT.RegExp.AptMultiplier = /<aptMultiplier:(-?\d+)>/i;
+
+// natural growth tags for apr, bound to the parameter at boot.
+J.APT.RegExp.AptRateBuffPlus = /<aprBuffPlus:\[([+\-*/ ().\w]+)]>/gi;
+J.APT.RegExp.AptRateBuffRate = /<aprBuffRate:\[([+\-*/ ().\w]+)]>/gi;
+J.APT.RegExp.AptRateGrowthPlus = /<aprGrowthPlus:\[([+\-*/ ().\w]+)]>/gi;
+J.APT.RegExp.AptRateGrowthRate = /<aprGrowthRate:\[([+\-*/ ().\w]+)]>/gi;
 
 //endregion initialization

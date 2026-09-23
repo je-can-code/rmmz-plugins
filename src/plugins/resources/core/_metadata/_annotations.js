@@ -172,7 +172,21 @@
  * Costs 2 of item 12 to cast; refuses to fire without them in stock.
  *
  * ============================================================================
+ * NATURAL GROWTH:
+ * With J-NaturalGrowth also installed, life cost (hcr) accepts its buff and
+ * growth tags. Amounts are percents that move the life cost as it is shown,
+ * so a negative amount is what makes skills cheaper- the opposite sign of
+ * <hcr:[NUM]>, which is written as a reduction:
+ * <hcrGrowthPlus:[-2]> lowers life cost by 2% per level.
+ *
+ * TAG FORMAT:
+ *  <hcr(Buff|Growth)(Plus|Rate):[FORMULA]>
+ * See J-NaturalGrowth for how Buff/Growth and Plus/Rate behave.
+ * ============================================================================
  * CHANGELOG:
+ * - 1.2.0
+ *    Added natural growth tags for life cost (hcr). A negative value makes costs
+ *    cheaper.
  * - 1.1.0
  *    Routed the _resources namespace into its own save section, so resource
  *    state lands in systems/resources.json rather than in the system blob.

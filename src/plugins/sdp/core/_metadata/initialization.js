@@ -51,5 +51,11 @@ J.SDP.RegExp = {
   SdpBonusFormula: /<sdpBonusFormula:\[(.+?)]>/i,
   SdpDropData: /<sdpDropData: ?(\[[-\w]+,[ ]?\d+])>/i,
   SdpUnlockKey: /<sdpUnlock: ?(.+)>/i,
+
+  // natural growth tags for sdr, bound to the parameter at boot.
+  SdpRateBuffPlus: /<sdrBuffPlus:\[([+\-*/ ().\w]+)]>/gi,
+  SdpRateBuffRate: /<sdrBuffRate:\[([+\-*/ ().\w]+)]>/gi,
+  SdpRateGrowthPlus: /<sdrGrowthPlus:\[([+\-*/ ().\w]+)]>/gi,
+  SdpRateGrowthRate: /<sdrGrowthRate:\[([+\-*/ ().\w]+)]>/gi,
 };
 //endregion Metadata

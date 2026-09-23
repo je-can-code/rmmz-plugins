@@ -94,13 +94,21 @@ J.DROPS.RegExp.DropUpgrade = /<dropUpgrade:[ ]?(-?\d+)>/gi;
  */
 J.DROPS.RegExp.DropQuantity = /<dropQuantity:[ ]?(-?\d+)>/gi;
 
-// natural growth tags for dor (temporary buffs).
+// natural growth tags for dor (temporary buffs), bound to the parameter at boot.
 J.DROPS.RegExp.DropRateBuffPlus = /<dorBuffPlus:\[([+\-*/ ().\w]+)]>/gi;
 J.DROPS.RegExp.DropRateBuffRate = /<dorBuffRate:\[([+\-*/ ().\w]+)]>/gi;
 
-// natural growth tags for dor (permanent growths).
+// natural growth tags for dor (permanent growths), bound to the parameter at boot.
 J.DROPS.RegExp.DropRateGrowthPlus = /<dorGrowthPlus:\[([+\-*/ ().\w]+)]>/gi;
 J.DROPS.RegExp.DropRateGrowthRate = /<dorGrowthRate:\[([+\-*/ ().\w]+)]>/gi;
+
+// natural growth tags for gdr (temporary buffs), bound to the parameter at boot.
+J.DROPS.RegExp.GoldRateBuffPlus = /<gdrBuffPlus:\[([+\-*/ ().\w]+)]>/gi;
+J.DROPS.RegExp.GoldRateBuffRate = /<gdrBuffRate:\[([+\-*/ ().\w]+)]>/gi;
+
+// natural growth tags for gdr (permanent growths), bound to the parameter at boot.
+J.DROPS.RegExp.GoldRateGrowthPlus = /<gdrGrowthPlus:\[([+\-*/ ().\w]+)]>/gi;
+J.DROPS.RegExp.GoldRateGrowthRate = /<gdrGrowthRate:\[([+\-*/ ().\w]+)]>/gi;
 
 /**
  * The collection of all aliased classes for extending.

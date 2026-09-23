@@ -128,6 +128,9 @@ Object.defineProperty(Game_Battler.prototype, 'sar', {
       factor += this.getSdpBonusForParameterKey('sar', 1);
     }
 
+    // layer on whatever natural buffs and growths are bound to shield amplification.
+    factor += this.naturalBonus('sar');
+
     return factor;
   },
   configurable: true,
@@ -142,6 +145,9 @@ Object.defineProperty(Game_Battler.prototype, 'ser', {
     {
       factor += this.getSdpBonusForParameterKey('ser', 1);
     }
+
+    // layer on whatever natural buffs and growths are bound to shield effectiveness.
+    factor += this.naturalBonus('ser');
 
     return factor;
   },

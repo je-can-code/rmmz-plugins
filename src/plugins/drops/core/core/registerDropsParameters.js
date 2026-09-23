@@ -24,6 +24,16 @@ class DropsParameterRegistration
 
     ParameterRegistry.register(goldDropRate);
 
+    // gold rate grows against the multiplier its own tags produce.
+    const goldRateNatural = new NaturalParameterBinding(
+      J.DROPS.RegExp.GoldRateBuffPlus,
+      J.DROPS.RegExp.GoldRateBuffRate,
+      J.DROPS.RegExp.GoldRateGrowthPlus,
+      J.DROPS.RegExp.GoldRateGrowthRate,
+      battler => battler.baseGoldMultiplier());
+
+    ParameterRegistry.bindNatural('gdr', goldRateNatural);
+
     const dropRate = ParameterDefinition.Builder()
       .key('dor')
       .group(ParameterGroups.FATE)
@@ -38,6 +48,16 @@ class DropsParameterRegistration
       .build();
 
     ParameterRegistry.register(dropRate);
+
+    // drop rate grows against the multiplier its own tags produce.
+    const dropRateNatural = new NaturalParameterBinding(
+      J.DROPS.RegExp.DropRateBuffPlus,
+      J.DROPS.RegExp.DropRateBuffRate,
+      J.DROPS.RegExp.DropRateGrowthPlus,
+      J.DROPS.RegExp.DropRateGrowthRate,
+      battler => battler.baseDropMultiplier());
+
+    ParameterRegistry.bindNatural('dor', dropRateNatural);
   }
 }
 

@@ -17,9 +17,28 @@ describe('J-ABS-Speed SpeedParameterRegistration (unit, all downstream dependenc
     globalThis.IconManager = { movespeed: vi.fn(() => 978) };
     globalThis.ParameterGroups = { SUPPORT: 'support' };
     globalThis.ParameterFormat = { FLAT: 'flat' };
-    globalThis.ParameterRegistry = { register: vi.fn() };
+    globalThis.ParameterRegistry = { register: vi.fn(), bindNatural: vi.fn() };
 
     globalThis.SdpParameterBinding = { byKey: vi.fn((key, fallback) => ({ key, fallback })) };
+
+    // the real binding model, which is plain data and needs nothing of its own.
+    ({ default: globalThis.NaturalParameterBinding } = await import('../../../../../../src/plugins/_base/core/models/NaturalParameterBinding.js'));
+
+    // stand-in tags, each its own object, so a binding can be checked by identity against the right one.
+    globalThis.J = {
+      ABS: {
+        EXT: {
+          SPEED: {
+            RegExp: {
+              WalkSpeedBoostBuffPlus: /<msbBuffPlus>/,
+              WalkSpeedBoostBuffRate: /<msbBuffRate>/,
+              WalkSpeedBoostGrowthPlus: /<msbGrowthPlus>/,
+              WalkSpeedBoostGrowthRate: /<msbGrowthRate>/,
+            },
+          },
+        },
+      },
+    };
 
     globalThis.ParameterDefinition = {
       Builder: () =>
@@ -46,6 +65,7 @@ describe('J-ABS-Speed SpeedParameterRegistration (unit, all downstream dependenc
   {
     captured = {};
     globalThis.ParameterRegistry.register.mockReset();
+    globalThis.ParameterRegistry.bindNatural.mockReset();
   });
 
   describe('registerAll', () =>
@@ -92,6 +112,36 @@ describe('J-ABS-Speed SpeedParameterRegistration (unit, all downstream dependenc
 
       // Assert
       expect(captured.sdpBinding.fallback()).toBe(0);
+    });
+
+    it('binds msb natural growth to the four move speed tags', () =>
+    {
+      // Arrange- four distinct stand-ins, so a transposed pair would be caught.
+      const { RegExp: tags } = globalThis.J.ABS.EXT.SPEED;
+
+      // Act
+      SpeedParameterRegistration.registerAll();
+
+      // Assert
+      const [ [ key, binding ] ] = globalThis.ParameterRegistry.bindNatural.mock.calls;
+      expect(key).toBe('msb');
+      expect(binding.buffPlus).toBe(tags.WalkSpeedBoostBuffPlus);
+      expect(binding.buffRate).toBe(tags.WalkSpeedBoostBuffRate);
+      expect(binding.growthPlus).toBe(tags.WalkSpeedBoostGrowthPlus);
+      expect(binding.growthRate).toBe(tags.WalkSpeedBoostGrowthRate);
+    });
+
+    it('grows msb against the boost its own tags produce, not the finished speed', () =>
+    {
+      // Arrange- the finished speed would include natural bonuses, which are what the base feeds.
+      const battler = { walkSpeedBoost: () => 20, msb: 99 };
+
+      // Act
+      SpeedParameterRegistration.registerAll();
+
+      // Assert
+      const [ [ , binding ] ] = globalThis.ParameterRegistry.bindNatural.mock.calls;
+      expect(binding.getBase(battler)).toBe(20);
     });
   });
 });

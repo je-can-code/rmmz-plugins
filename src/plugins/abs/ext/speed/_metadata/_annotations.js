@@ -65,7 +65,18 @@
  *  <speedBoost:30>
  * This battler's movement speed will be increased by ~40%.
  * ============================================================================
+ * NATURAL GROWTH:
+ * With J-NaturalGrowth also installed, move speed boost (msb) accepts its buff
+ * and growth tags, in the same numbers as <speedBoost:NUM> above:
+ * <msbGrowthPlus:[1]> grants +1 speed boost per level.
+ *
+ * TAG FORMAT:
+ *  <msb(Buff|Growth)(Plus|Rate):[FORMULA]>
+ * See J-NaturalGrowth for how Buff/Growth and Plus/Rate behave.
+ * ============================================================================
  * CHANGELOG:
+ * - 1.2.0
+ *    Added natural growth tags for move speed boost (msb).
  * - 1.1.1
  *    Corrected PLUGIN_NAME from J-ABS-SpeedBoosts to J-ABS-Speed, matching the
  *    name the ship has always been built and shipped under.

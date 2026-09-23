@@ -110,5 +110,54 @@ describe('J-Proficiency Game_Actor proficiency (direct src import)', () =>
     // Assert
     expect(actor.prof).toBe(3);
   });
+
+  it('layers the natural bonus bound to prof onto the tagged bonus, flat as written', () =>
+  {
+    // Arrange: the bonus answers only for prof, so asking for any other key would miss it.
+    const actor = new globalThis.Game_Actor();
+    actor.__actorDb = actorData({
+      id: 1, name: '', note: '<proficiencyBonus:3>', classId: 1, traits: [],
+    });
+    actor.initMembers();
+    actor.updateBonusSkillProficiencyGains();
+    actor.naturalBonus = key => (key === 'prof' ? 2 : 40);
+
+    // Act
+    const result = actor.prof;
+
+    // Assert
+    expect(result).toBe(5);
+  });
+
+  it('reports the tagged bonus as its base, without any natural bonus', () =>
+  {
+    // Arrange: a natural bonus is present, and must not leak into the base it is computed from.
+    const actor = new globalThis.Game_Actor();
+    actor.__actorDb = actorData({
+      id: 1, name: '', note: '<proficiencyBonus:3>', classId: 1, traits: [],
+    });
+    actor.initMembers();
+    actor.updateBonusSkillProficiencyGains();
+    actor.naturalBonus = () => 2;
+
+    // Act
+    const result = actor.baseProficiencyBonus();
+
+    // Assert
+    expect(result).toBe(3);
+  });
+
+  it('gives a battler that earns no proficiency a base of zero', () =>
+  {
+    // Arrange: an enemy carrying a proficiency tag still earns none.
+    const enemy = new globalThis.Game_Enemy();
+    enemy.getAllNotes = () => [ { note: '<proficiencyBonus:3>' } ];
+
+    // Act
+    const result = enemy.baseProficiencyBonus();
+
+    // Assert
+    expect(result).toBe(0);
+  });
 });
 //endregion plugins/prof/_component/proficiency-actor.test.js
