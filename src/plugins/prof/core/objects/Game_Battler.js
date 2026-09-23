@@ -13,6 +13,17 @@ Object.defineProperty(Game_BattlerBase.prototype, 'prof', {
 });
 
 /**
+ * The proficiency bonus a battler's own tags produce, before SDP panels or natural bonuses.<br/>
+ * Only actors earn proficiency, so every other battler answers zero. Natural growth still asks every
+ * battler for it, because buffs are refreshed on enemies too.
+ * @returns {number}
+ */
+Game_Battler.prototype.baseProficiencyBonus = function()
+{
+  return 0;
+};
+
+/**
  * Gets all skill proficiencies for this battler.
  * @returns {SkillProficiency[]}
  */

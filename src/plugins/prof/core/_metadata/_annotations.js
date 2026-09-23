@@ -151,7 +151,18 @@
  * - Increasing the proficiency can trigger rewards for the skill.
  * - Decreasing the proficiency will NOT undo rewards gained.
  * ============================================================================
+ * NATURAL GROWTH:
+ * With J-NaturalGrowth also installed, the proficiency bonus (prof) accepts
+ * its buff and growth tags, in the same flat numbers as <proficiencyBonus:NUM>:
+ * <profGrowthPlus:[1]> grants +1 proficiency per use for every level gained.
+ *
+ * TAG FORMAT:
+ *  <prof(Buff|Growth)(Plus|Rate):[FORMULA]>
+ * See J-NaturalGrowth for how Buff/Growth and Plus/Rate behave.
+ * ============================================================================
  * CHANGELOG:
+ * - 2.5.0
+ *    Added natural growth tags for proficiency bonus (prof).
  * - 2.4.3
  *    Removed the save-migration block from updateBonusSkillProficiencyGains. The
  *    field is established in initMembers, so the absent value it defended against

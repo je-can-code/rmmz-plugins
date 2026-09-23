@@ -9,7 +9,7 @@ globalThis.J ||= {};
 (() =>
 {
   // Check to ensure we have the minimum required version of the J-Base plugin.
-  const requiredBaseVersion = '3.2.0';
+  const requiredBaseVersion = '3.19.0';
   const hasBaseRequirement = J.BASE.Helpers.satisfies(J.BASE.Metadata.Version, requiredBaseVersion);
   if (!hasBaseRequirement)
   {
@@ -88,9 +88,9 @@ J.CRIT.RegExp = {
   // global (any note source on the attacker): on-crit state applications skip their own chance roll and always land.
   ForceCritProcs: /<forceCritProcs>/i,
 
-  // base functionality.
-  CritDamageReductionBase: /<critReductionBase: ?(\d+)>/gi,
-  CritDamageReduction: /<critReduction: ?(\d+)>/gi,
+  // base functionality. reductions may be negative: a debuff that makes critical hits land harder.
+  CritDamageReductionBase: /<critReductionBase: ?(-?\d+)>/gi,
+  CritDamageReduction: /<critReduction: ?(-?\d+)>/gi,
   CritDamageMultiplierBase: /<critMultiplierBase: ?(\d+)>/gi,
   CritDamageMultiplier: /<critMultiplier: ?(\d+)>/gi,
 

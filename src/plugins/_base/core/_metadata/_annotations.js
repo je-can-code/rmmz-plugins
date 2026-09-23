@@ -157,6 +157,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 3.19.0
+ *    Added natural growth bindings to the parameter registry, so any plugin can
+ *    offer growth tags for its own parameters.
  * - 3.18.0
  *    Added Spriteset_Base#baseSprite, so a plugin can parent something inside the
  *    screen tone rather than over it without reaching for the field directly.

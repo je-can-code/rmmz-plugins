@@ -422,14 +422,32 @@ Game_Actor.prototype.updateBonusSkillProficiencyGains = function()
 Object.defineProperty(Game_Actor.prototype, 'prof', {
   get: function()
   {
+    // start from the bonus this actor's own tags produce.
+    const baseBonus = this.baseProficiencyBonus();
+
     // J-SDP is optional, so its contribution is only asked for when that plugin is present.
     const sdpBonus = J.SDP
       ? this.getSdpBonusForParameterKey('prof', 1)
       : 0;
-    return this._j._proficiency._bonusSkillProficiencyGains + sdpBonus;
+
+    // add whatever natural buffs and growths are bound to the proficiency bonus.
+    const naturalBonus = this.naturalBonus('prof');
+
+    return baseBonus + sdpBonus + naturalBonus;
   },
   configurable: true,
 });
+
+/**
+ * Overwrites {@link Game_Battler#baseProficiencyBonus}.<br/>
+ * The proficiency bonus this actor's own tags produce. This is what the proficiency bonus's natural
+ * tags see as their base.
+ * @returns {number}
+ */
+Game_Actor.prototype.baseProficiencyBonus = function()
+{
+  return this.bonusSkillProficiencyGains();
+};
 
 //region properties
 /**

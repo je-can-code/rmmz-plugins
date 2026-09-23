@@ -28,5 +28,20 @@ describe('Game_BattlerBase ext/sdp augments (direct src import)', () =>
       expect(result).toEqual(1.0);
     });
   });
+
+  describe('baseSdpMultiplier', () =>
+  {
+    it('answers the neutral factor for a battler that earns no SDP points', () =>
+    {
+      // Arrange
+      const battler = new globalThis.Game_BattlerBase();
+
+      // Act
+      const result = battler.baseSdpMultiplier();
+
+      // Assert
+      expect(result).toBe(1.0);
+    });
+  });
 });
 //endregion plugins/sdp/core/objects/game-battler.test.js

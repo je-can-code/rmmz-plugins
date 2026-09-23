@@ -25,6 +25,7 @@ J.NATURAL.Aliased = {
   Game_Enemy: new Map(),
   Game_Party: new Map(),
 
+  Scene_Boot: new Map(),
   Scene_Equip: new Map(),
 
   Window_EquipItem: new Map(),

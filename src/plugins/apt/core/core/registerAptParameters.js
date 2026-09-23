@@ -23,6 +23,16 @@ class AptParameterRegistration
       .build();
 
     ParameterRegistry.register(aptitudeRate);
+
+    // aptitude rate grows against the factor its own tags produce.
+    const aptitudeRateNatural = new NaturalParameterBinding(
+      J.APT.RegExp.AptRateBuffPlus,
+      J.APT.RegExp.AptRateBuffRate,
+      J.APT.RegExp.AptRateGrowthPlus,
+      J.APT.RegExp.AptRateGrowthRate,
+      battler => battler.baseAptFactor());
+
+    ParameterRegistry.bindNatural('apr', aptitudeRateNatural);
   }
 }
 

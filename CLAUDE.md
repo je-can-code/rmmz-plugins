@@ -73,7 +73,7 @@ That is three phases, and it is more than a build:
 | Phase | What runs |
 |---|---|
 | `verify-pre-compile` | `lint`, then fifteen source gates: `verify:docs`, `no-typeof`, `no-instanceof`, `no-optional-chaining`, `no-direct-property-getset`, `no-private-before-construction`, `no-late-window-command-state`, `no-self-calling-accessors`, `no-transforming-setter-aliases`, `no-chained-call-arguments`, `no-phantom-calls`, `no-rest-parameters`, `no-sourceless-addstate`, `declared-dependencies`, `notetag-reference` |
-| `compile` | `clean:out`, then `build:all` |
+| `compile` | `clean:out`, then `build:all`, then `build:manifest` |
 | `verify-post-compile` | `verify:ships`, **the full test suite**, then `copy:to-all` |
 
 **`hotfix` is the most important command in this repo** — you can learn essentially no other command and
@@ -639,6 +639,15 @@ entries are grouped by plugin, and a tag family with several variants shares one
 table rather than one entry per variant. The plugin's own `_annotations.js` remains the authoritative
 source the entry is written from; the reference is the lookup built on top of it, and the two are
 expected to agree.
+
+**A tag whose payload names a database row also gets an id target.** Chef Adventure's data validator
+resolves every id a note names — `<drops:[a,ID,N]>` against `Armors.json`, `<passive:[…]>` against
+`States.json` — and it learns which payload value is an id, and which table it points into, from
+[`src/build-tools/notetag-id-targets.js`](src/build-tools/notetag-id-targets.js). The build publishes
+that table in `out/manifest.json`, which `hotfix` mirrors into the game beside the plugins.
+`verify:notetag-reference` fails when a tag whose glossary heading names an id placeholder
+(`STATE_ID`, `SKILL_IDS`, `ID`) has no entry, but an id hiding behind a generic placeholder
+(`<castAnimation:VAL>`) is only covered if its author adds the entry — so add it.
 
 ---
 

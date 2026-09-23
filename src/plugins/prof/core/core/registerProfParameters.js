@@ -25,6 +25,16 @@ class ProfParameterRegistration
       .build();
 
     ParameterRegistry.register(proficiencyBonus);
+
+    // proficiency bonus grows against the bonus its own tags produce.
+    const proficiencyBonusNatural = new NaturalParameterBinding(
+      J.PROF.RegExp.ProficiencyBonusBuffPlus,
+      J.PROF.RegExp.ProficiencyBonusBuffRate,
+      J.PROF.RegExp.ProficiencyBonusGrowthPlus,
+      J.PROF.RegExp.ProficiencyBonusGrowthRate,
+      battler => battler.baseProficiencyBonus());
+
+    ParameterRegistry.bindNatural('prof', proficiencyBonusNatural);
   }
 }
 

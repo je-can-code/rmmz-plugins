@@ -1,6 +1,7 @@
 //region plugins/resources/_component/register-resources-abs-parameters-direct.test.js
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import NaturalParameterBinding from '../../../../src/plugins/_base/core/models/NaturalParameterBinding.js';
 import ParameterDefinition from '../../../../src/plugins/_base/core/models/ParameterDefinition.js';
 import ParameterDisplayPolicy from '../../../../src/plugins/_base/core/core/ParameterDisplayPolicy.js';
 import ParameterFormat from '../../../../src/plugins/_base/core/core/ParameterFormat.js';
@@ -20,7 +21,9 @@ describe('ResourcesAbsParameterRegistration.registerAll (resources ext/abs, dire
     vi.resetModules();
     ParameterRegistry._definitions.clear();
     ParameterRegistry._groupCache.clear();
+    ParameterRegistry._naturalBindings.clear();
 
+    globalThis.NaturalParameterBinding = NaturalParameterBinding;
     globalThis.ParameterDefinition = ParameterDefinition;
     globalThis.ParameterGroups = ParameterGroups;
     globalThis.ParameterFormat = ParameterFormat;
@@ -36,7 +39,30 @@ describe('ResourcesAbsParameterRegistration.registerAll (resources ext/abs, dire
       tstDescription: () => [ 'tst-line' ],
     };
     globalThis.IconManager = { lst: () => 928, mst: () => 929, tst: () => 930 };
-    globalThis.J = {};
+
+    // stand-in tags, each its own object, so a binding can be checked by identity against the right one.
+    globalThis.J = {
+      RESOURCES: {
+        EXT: {
+          ABS: {
+            RegExp: {
+              LifestealBuffPlus: /<lstBuffPlus>/,
+              LifestealBuffRate: /<lstBuffRate>/,
+              LifestealGrowthPlus: /<lstGrowthPlus>/,
+              LifestealGrowthRate: /<lstGrowthRate>/,
+              ManastealBuffPlus: /<mstBuffPlus>/,
+              ManastealBuffRate: /<mstBuffRate>/,
+              ManastealGrowthPlus: /<mstGrowthPlus>/,
+              ManastealGrowthRate: /<mstGrowthRate>/,
+              TechstealBuffPlus: /<tstBuffPlus>/,
+              TechstealBuffRate: /<tstBuffRate>/,
+              TechstealGrowthPlus: /<tstGrowthPlus>/,
+              TechstealGrowthRate: /<tstGrowthRate>/,
+            },
+          },
+        },
+      },
+    };
 
     const { default: ResourcesAbsParameterRegistration } =
       await import('../../../../src/plugins/resources/ext/abs/core/registerResourcesAbsParameters.js');
@@ -46,6 +72,7 @@ describe('ResourcesAbsParameterRegistration.registerAll (resources ext/abs, dire
 
   afterEach(() =>
   {
+    delete globalThis.NaturalParameterBinding;
     delete globalThis.ParameterDefinition;
     delete globalThis.ParameterGroups;
     delete globalThis.ParameterFormat;
@@ -57,6 +84,7 @@ describe('ResourcesAbsParameterRegistration.registerAll (resources ext/abs, dire
     delete globalThis.J;
     ParameterRegistry._definitions.clear();
     ParameterRegistry._groupCache.clear();
+    ParameterRegistry._naturalBindings.clear();
   });
 
   it('registers lst, mst, and tst in the COMBAT group with distinct sort orders', () =>
@@ -132,6 +160,42 @@ describe('ResourcesAbsParameterRegistration.registerAll (resources ext/abs, dire
     {
       expect(ParameterRegistry.get(key).sdpBinding.getBaseForSdp()).toBe(1);
     });
+  });
+
+  it.each([
+    [ 'lst', 'Lifesteal' ],
+    [ 'mst', 'Manasteal' ],
+    [ 'tst', 'Techsteal' ],
+  ])('binds %s natural growth to its own four tags', (key, prefix) =>
+  {
+    // Arrange- all three drain stats are bound in one pass, so a crossed wire picks up a sibling's tags.
+    const { RegExp: tags } = globalThis.J.RESOURCES.EXT.ABS;
+
+    // Act
+    const binding = ParameterRegistry.naturalBinding(key);
+
+    // Assert
+    expect(binding.buffPlus).toBe(tags[`${prefix}BuffPlus`]);
+    expect(binding.buffRate).toBe(tags[`${prefix}BuffRate`]);
+    expect(binding.growthPlus).toBe(tags[`${prefix}GrowthPlus`]);
+    expect(binding.growthRate).toBe(tags[`${prefix}GrowthRate`]);
+  });
+
+  it.each([
+    [ 'lst', 0.05 ],
+    [ 'mst', 0.1 ],
+    [ 'tst', 0.15 ],
+  ])('grows %s against the rate its own tags produce', (key, expected) =>
+  {
+    // Arrange- the battler answers differently per drain stat, so the right base is visible.
+    const battler = { baseLstRate: () => 0.05, baseMstRate: () => 0.1, baseTstRate: () => 0.15 };
+    const binding = ParameterRegistry.naturalBinding(key);
+
+    // Act
+    const result = binding.getBase(battler);
+
+    // Assert
+    expect(result).toBe(expected);
   });
 });
 //endregion plugins/resources/_component/register-resources-abs-parameters-direct.test.js

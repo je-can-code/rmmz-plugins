@@ -147,6 +147,12 @@ Three stacked tags total above 100 — this battler takes zero bonus damage from
 treated the same as non-crits for damage purposes, though the hit is still flagged as a "critical hit"
 for other effects that key off that).
 
+```
+<critReduction:-10>
+```
+NUM may be negative. This battler's critical damage reduction drops by 10%, so critical hits against it
+land harder: a debuff rather than a defense. It stacks with the positive tags like any other amount.
+
 **See also:** `<ctrBuffPlus>` family (J-NaturalGrowths compat, below), `<critMultiplier>`
 
 ---
@@ -162,15 +168,17 @@ J-NaturalGrowths is also loaded; these follow that plugin's buff/growth pattern
 **Formula context:**
 real formula support here (unlike the `thisCrit*` tags above) —
 `a` = the battler these bonuses are being calculated for,
-`b` = the battler's base value for this parameter (`baseCriticalMultiplier()` for `cdm` tags,
-`baseCriticalReduction()` for `ctr` tags — 0.5 by default for both),
+`b` = the battler's base value for this parameter in percent (`baseCriticalMultiplier()` for `cdm`
+tags, `baseCriticalReduction()` for `ctr` tags — 0.5 by default for both, so `b` is 50),
 `v` = `$gameVariables._data`.
 
 **Effect:**
 `cdm` (crit damage multiplier) and `ctr` (crit taken rate — the same internal stat the
 `critReduction` tags above feed into, just spelled to match J-NaturalGrowths' own naming convention)
 each get Buff (temporary, lost when the source is removed) and Growth (permanent, accumulates per
-level) variants, each with Plus (flat) and Rate (percent-of-base) forms.
+level) variants, each with Plus (flat) and Rate (percent-of-base) forms. Like every J-NaturalGrowths
+tag, the amount is written in percent: `Plus` adds that many percent, and `Rate` is a percent of the
+base value above.
 
 **Watch out:** the natural-growth prefix is `ctr`, not `cdr` — there is no `cdr*` tag family. Using
 `<cdrBuffPlus:...>` (a plausible-looking guess) silently does nothing, since it doesn't match any
@@ -179,18 +187,19 @@ registered regex.
 ```
 <cdmGrowthRate:[5]>
 ```
-Gain +5% crit damage multiplier (cdm) per level, compounding as an ever-increasing bonus.
+Gain 5% of the base crit damage multiplier per level: with the default base of 50%, that is +2.5% per
+level.
 
 ```
 <ctrBuffPlus:[25]>
 ```
-Gain a flat 25 crit taken rate reduction (ctr) while this tag's source is applied; lost if the source
+Gain a flat 25% crit taken rate reduction (ctr) while this tag's source is applied; lost if the source
 is removed.
 
 ```
 <cdmGrowthPlus:[a.level * 3]>
 ```
-Gain (level × 3) crit damage multiplier (cdm) per level.
+Gain (level × 3)% crit damage multiplier (cdm) per level.
 
 **See also:** `<critMultiplier>`, `<critReduction>` (the non-Natural-Growths equivalents)
 
@@ -517,7 +526,7 @@ One fewer copy of each distinct item; a drop that yielded exactly one now yields
 
 ---
 
-### J-NaturalGrowths + SDP compat: `<dorBuffPlus>` / `<dorBuffRate>` / `<dorGrowthPlus>` / `<dorGrowthRate>`
+### J-NaturalGrowths + SDP compat: `<dorBuffPlus>` / `<dorBuffRate>` / `<dorGrowthPlus>` / `<dorGrowthRate>` / `<gdrBuffPlus>` / `<gdrBuffRate>` / `<gdrGrowthPlus>` / `<gdrGrowthRate>`
 
 **Applies to:**
 Actors, Classes, Skills, Weapons, Armors, States
@@ -527,15 +536,16 @@ J-NaturalGrowth is also loaded; silently ignored without it
 
 **Formula context:**
 `a` = the battler these bonuses are being calculated for,
-`b` = 0 (dor's base is always 0 — avoids re-entering the note lookup these formulas already live
-inside),
+`b` = the multiplier the parameter's own tags produce, in percent (the summed `<dropMultiplier>` for
+`dor` tags, the summed `<goldMultiplier>` for `gdr` tags),
 `v` = `$gameVariables._data`.
 
 **Effect:**
-a second, independent drop-rate bonus from `<dropMultiplier>` above — this one lives on its own
-registered parameter (key `dor`), is SDP-panel-earnable, and follows J-NaturalGrowths' Buff (temporary,
-lost when the source is removed) / Growth (permanent, accumulates per level) × Plus (flat) / Rate
-(percent-of-base) pattern instead of a flat additive number.
+natural growth for the two reward multipliers `<dropMultiplier>` and `<goldMultiplier>` feed (keys
+`dor` and `gdr`), following J-NaturalGrowths' Buff (temporary, lost when the source is removed) /
+Growth (permanent, accumulates per level) × Plus (flat) / Rate (percent-of-base) pattern. Amounts are
+percent, exactly like the multiplier tags: `<dorBuffPlus:[15]>` and `<dropMultiplier:15>` both grant
++15% drops.
 
 ```
 <dorGrowthPlus:[a.level * 0.5]>
@@ -547,7 +557,12 @@ Permanently gain (level × 0.5)% drop rate per level.
 ```
 Gain a flat 15% drop rate while this tag's source is applied; lost if the source is removed.
 
-**See also:** `<dropMultiplier>`
+```
+<gdrBuffRate:[50]>
+```
+Half again as much bonus gold as the battler's `<goldMultiplier>` tags grant, while applied.
+
+**See also:** `<dropMultiplier>`, `<goldMultiplier>`
 
 ---
 
@@ -1685,7 +1700,7 @@ you're past 99, this tag only controls how far past 99 you can go)
 
 ---
 
-### `<mhpGrowthCurve:[FORMULA]>` … `<lukGrowthCurve:[FORMULA]>` (8 base params) / `<mtpGrowthCurve:[FORMULA]>`
+### `<{param}GrowthCurve:[FORMULA]>` (8 base params, `mhp` … `luk`) / `<mtpGrowthCurve:[FORMULA]>`
 
 **Applies to:**
 Classes only
@@ -6710,9 +6725,9 @@ On a passive granted by cursed equipment: the wearer pulses red continuously whi
 ## J-NaturalGrowths (`src/plugins/natural/core/`)
 
 Level-based and equipment/state-based formulaic growth for every base/ex/sp parameter, plus a
-custom max-TP and HAR (Healing Rate) pair, plus enemy reward bonuses. This is one tag FORMAT
-applied across ~30 parameter shorthands — see the shorthand table below rather than a
-per-parameter entry for each.
+custom max-TP and HAR (Healing Rate) pair, plus enemy reward bonuses, plus every parameter another
+plugin binds to natural growth. This is one tag FORMAT applied across ~45 parameter shorthands — see
+the shorthand table below rather than a per-parameter entry for each.
 
 ### `<(PARAM)(Buff|Growth)(Plus|Rate):[FORMULA]>`
 
@@ -6720,7 +6735,9 @@ per-parameter entry for each.
 Actors, Classes, Skills, Weapons, Armors, Enemies, States
 
 **Formula context:**
-`a` = the battler itself, `b` = 0, `v` = `$gameVariables._data`.
+`a` = the battler itself, `b` = the parameter's own base before any natural bonus, in the same
+status-screen numbers the tag is written in (so `b` for hit is 95, not 0.95),
+`v` = `$gameVariables._data`.
 
 **When:**
 `Buff` variants: continuously, only while the tagged object (equip/state/etc.) is active —
@@ -6730,13 +6747,20 @@ same range).
 
 **Effect:**
 `Plus` is a flat bonus added to the base parameter; `Rate` is a percent multiplier against
-`(base + all Plus bonuses)`. PARAM is one of the shorthands below:
+`(base + all Plus bonuses)`. Every amount is written in the numbers the status screen shows, never in
+the fractions RMMZ stores: `<criBuffPlus:[10]>` is +10% crit, `<lstGrowthPlus:[1.5]>` is +1.5%
+lifesteal per level, and `<atkBuffPlus:[10]>` is +10 ATK. Cost parameters (`mcr`, `tcr`, `hcr`) move
+the cost as shown, so a negative amount makes things cheaper. PARAM is one of the shorthands below:
 
 - **Base params:** `mhp`, `mmp`, `atk`, `def`, `mat`, `mdf`, `agi`, `luk`
 - **Ex params:** `hit`, `eva`, `cri`, `cev`, `mev`, `mrf`, `cnt`, `hrg`, `mrg`, `trg` (tp regen)
 - **Sp params:** `tgr` (targeting), `grd`, `rec`, `pha`, `mcr`, `tcr`, `pdr`, `mdr`, `fdr`, `exr`
-- **Custom params (require their own plugins):** `mtp` (max TP), `har` (healing rate, requires
-  J-Base 3.5.0+)
+- **Custom params (require their own plugins; plugin order does not matter):** `mtp` (max TP),
+  `har` (healing rate, requires J-Base 3.5.0+), `cdm` / `ctr` (crit damage / crit taken, J-CriticalFactors),
+  `dor` / `gdr` (drop rate / gold rate, J-DropsControl), `hcr` (life cost, J-Resources),
+  `lst` / `mst` / `tst` (lifesteal / manasteal / techsteal, J-Resources-ABS),
+  `sar` / `ser` (shield amplification / effectiveness, J-ABS-Shield), `msb` (move speed, J-ABS-Speed),
+  `apr` (aptitude rate, J-Aptitude), `prof` (proficiency bonus, J-Proficiency), `sdr` (SDP rate, J-SDP)
 
 ```
 <atkGrowthPlus:[a.level * 3]>
@@ -6746,7 +6770,12 @@ Every level gained permanently adds `(level × 3)` flat ATK.
 ```
 <exrBuffPlus:[25]>
 ```
-+25 flat experience rate while this tagged object is active — lost when removed.
++25% experience rate while this tagged object is active — lost when removed.
+
+```
+<lstGrowthPlus:[1.5]>
+```
+Every level gained permanently adds 1.5% lifesteal; ten levels is +15%.
 
 **See also:** J-CriticalFactors' equivalent `<cdmGrowthPlus>`/`<ctrGrowthPlus>` family (same
 convention, different plugin), `<baseMaxTp>`

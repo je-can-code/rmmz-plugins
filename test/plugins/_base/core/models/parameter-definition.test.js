@@ -137,6 +137,60 @@ describe('ParameterDefinition (direct src import)', () =>
     });
   });
 
+  describe('isPercentScaled', () =>
+  {
+    it('reports a fraction-held format as percent scaled', () =>
+    {
+      // Arrange
+      const definition = buildDefinition(ParameterFormat.PERCENT_SUFFIX, ParameterDisplayPolicy.NONE);
+
+      // Act
+      const result = definition.isPercentScaled();
+
+      // Assert
+      expect(result).toBe(true);
+    });
+
+    it('reports a format already held in display numbers as not percent scaled', () =>
+    {
+      // Arrange
+      const definition = buildDefinition(ParameterFormat.FLAT_LARGE, ParameterDisplayPolicy.NONE);
+
+      // Act
+      const result = definition.isPercentScaled();
+
+      // Assert
+      expect(result).toBe(false);
+    });
+  });
+
+  describe('displayScale', () =>
+  {
+    it('is a hundred for a parameter held as a fraction of what people read', () =>
+    {
+      // Arrange
+      const definition = buildDefinition(ParameterFormat.MULTIPLIER_PERCENT, ParameterDisplayPolicy.NONE);
+
+      // Act
+      const result = definition.displayScale();
+
+      // Assert
+      expect(result).toBe(100);
+    });
+
+    it('is one for a parameter already held in the numbers people read', () =>
+    {
+      // Arrange
+      const definition = buildDefinition(ParameterFormat.FLAT, ParameterDisplayPolicy.NONE);
+
+      // Act
+      const result = definition.displayScale();
+
+      // Assert
+      expect(result).toBe(1);
+    });
+  });
+
   describe('displayMagnitude', () =>
   {
     it('leaves a FLAT value unscaled', () =>

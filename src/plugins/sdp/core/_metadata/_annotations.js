@@ -365,7 +365,18 @@
  * An actor at level 50 gains an extra 25% SDP points from this source.
  *
  * ============================================================================
+ * NATURAL GROWTH:
+ * With J-NaturalGrowth also installed, the SDP multiplier (sdr) accepts its
+ * buff and growth tags. Amounts are percents, like <sdpMultiplier:NUM>:
+ * <sdrGrowthPlus:[1]> grants 1% more SDP points per level.
+ *
+ * TAG FORMAT:
+ *  <sdr(Buff|Growth)(Plus|Rate):[FORMULA]>
+ * See J-NaturalGrowth for how Buff/Growth and Plus/Rate behave.
+ * ============================================================================
  * CHANGELOG:
+ * - 4.8.0
+ *    Added natural growth tags for SDP rate (sdr).
  * - 4.7.0
  *    Mastery prose acts now break at tiers 2 and 4 rather than 3 and 9, matching a
  *    five-tier subgroup strip.

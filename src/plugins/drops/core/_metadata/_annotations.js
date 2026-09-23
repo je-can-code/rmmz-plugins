@@ -130,21 +130,23 @@
  *
  *        J-NaturalGrowth
  *
- * plugin? Well now you can! This is a second, independent drop rate bonus
- * from the flat <dropMultiplier:NUM> tag above- it lives on its own
- * registered parameter (key "dor"), can be earned from SDP panels, and
- * follows J-NaturalGrowths' own builder-like Buff/Growth tag pattern instead
- * of a flat additive number.
+ * plugin? Well now you can! Both reward multipliers- drop rate (key "dor")
+ * and gold rate (key "gdr")- accept J-NaturalGrowths' own builder-like
+ * Buff/Growth tag pattern on top of the flat <dropMultiplier:NUM> and
+ * <goldMultiplier:NUM> tags above, and can be earned from SDP panels.
  *
  * NOTE:
  * This section requires J-NaturalGrowth to be loaded. Without it, these tags
  * are silently ignored (the same as always- just nothing computes them).
+ * Where the two plugins sit in the plugin list does not matter.
+ *
+ * Every amount is a percent, exactly like the multiplier tags above, so
+ * <dorBuffPlus:[15]> and <dropMultiplier:15> both grant +15% drops.
  *
  * Formula context:
  *   a = the battler these bonuses are being calculated for
- *   b = 0 (dor's base value is always 0- there's no "base drop rate" to
- *       expose without re-triggering the getAllNotes() lookup these formulas
- *       already live inside)
+ *   b = the multiplier this battler's own tags produce, in percent (the
+ *       summed <dropMultiplier> for dor, the summed <goldMultiplier> for gdr)
  *   v = $gameVariables._data
  *
  * TAG USAGE:
@@ -160,6 +162,10 @@
  *  <dorBuffRate:[FORMULA]>
  *  <dorGrowthPlus:[FORMULA]>
  *  <dorGrowthRate:[FORMULA]>
+ *  <gdrBuffPlus:[FORMULA]>
+ *  <gdrBuffRate:[FORMULA]>
+ *  <gdrGrowthPlus:[FORMULA]>
+ *  <gdrGrowthRate:[FORMULA]>
  * Where "Buff" is temporary (lost when the tag's source is removed) and
  * "Growth" is permanent (accumulates and stays as you level).
  * Where "Plus" is a flat amount and "Rate" is a percent-of-base amount.
@@ -171,6 +177,9 @@
  *  <dorBuffPlus:[15]>
  * Gain a flat 15% drop rate while this tag's source is applied; lost if the
  * source is removed.
+ *
+ *  <gdrGrowthPlus:[2]>
+ * Permanently gain 2% more gold per level.
  *
  * Please refer to the J-NaturalGrowth documentation for more details on the
  * Buff/Growth/Plus/Rate pattern itself.
@@ -210,6 +219,10 @@
  * The party will now gain +175% gold from defeated enemies.
  * ============================================================================
  * CHANGELOG:
+ * - 2.6.0
+ *    Added natural growth tags for gold rate (gdr). Fixed drop rate growth, which
+ *    never applied when J-NaturalGrowth loaded after this plugin, and drop rate
+ *    buffs, which landed a hundred times too strong.
  * - 2.5.1
  *    Routed the static-instantiation and invalid-drop reports through J-Base's
  *    new Diagnostics, so each names J-DropsControl. The invalid-drop warning now

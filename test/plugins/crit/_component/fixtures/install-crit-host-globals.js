@@ -10,7 +10,7 @@ import PluginMetadata from '../../../../../src/plugins/_base/core/models/PluginM
 export function setPluginContextToJBase(sandbox = globalThis)
 {
   sandbox.__PLUGIN_NAME__ = 'J-Base';
-  sandbox.__PLUGIN_VERSION__ = '3.2.0';
+  sandbox.__PLUGIN_VERSION__ = '3.19.0';
 }
 
 /**
@@ -21,45 +21,6 @@ export function setPluginContextToJCrit(sandbox = globalThis)
 {
   sandbox.__PLUGIN_NAME__ = 'J-CriticalFactors';
   sandbox.__PLUGIN_VERSION__ = '1.0.0';
-}
-
-/**
- * Minimal stand-in for J-NaturalGrowth's Game_Battler.js additions that crit's own files alias/call
- * (`initNaturalGrowthParameters`, `calculatePlusRate`, `naturalParamBuff`). Ports the exact real
- * formulas rather than stubbing 0s, since several crit test assertions depend on the real math.
- * @param {object} sandbox
- */
-export function installNaturalCompanionStubs(sandbox = globalThis)
-{
-  sandbox.J.NATURAL = sandbox.J.NATURAL || {};
-
-  sandbox.Game_Battler.prototype.initNaturalGrowthParameters = function()
-  {
-  };
-
-  // natural/core/objects/Game_Battler.js extends initMembers() to call initNaturalGrowthParameters()-
-  // replicate that hook so crit's own aliased addition actually runs when an actor initializes.
-  const previousInitMembers = sandbox.Game_Battler.prototype.initMembers;
-  sandbox.Game_Battler.prototype.initMembers = function()
-  {
-    previousInitMembers.call(this);
-    this.initNaturalGrowthParameters();
-  };
-
-  sandbox.Game_Battler.prototype.calculatePlusRate = function(baseValue, paramPlus, paramRate)
-  {
-    const paramFactor = ((paramRate + 100) / 100);
-    const paramBase = (baseValue + paramPlus);
-
-    return (paramBase * paramFactor) - baseValue;
-  };
-
-  sandbox.Game_Battler.prototype.naturalParamBuff = function(structure, baseParam)
-  {
-    const objectsToCheck = this.getAllNotes();
-
-    return sandbox.RPGManager.getResultsFromAllNotesByRegex(objectsToCheck, structure, baseParam, this, false);
-  };
 }
 
 /**

@@ -56,13 +56,30 @@
  * a hand-maintained list of every parameter shorthand, which rots - and `--verbose` prints which
  * heading credited which tag so the crediting can be audited when it matters.
  *
+ * ## Tags that carry ids
+ *
+ * The same pass holds `notetag-id-targets.js` to the reference. A tag whose heading names an id
+ * placeholder - `STATE_ID`, `SKILL_IDS`, a bare `ID` - is a pointer into a database table, and Chef
+ * Adventure's data validator can only resolve the pointers that table describes. So an id-bearing tag
+ * with no entry there fails here, as does an entry for a tag that nothing declares any more. The
+ * heading is the trigger because it is the one place every tag's payload is already written down in a
+ * shape a machine can read.
+ *
+ * ## Where declarations come from
+ *
+ * `notetag-declarations.js` reads the tree, and `generate-manifest` reads it through the same module,
+ * so this gate and the manifest Chef Adventure validates against can never disagree about what a tag
+ * is. That includes the tags RMMZ parses natively into `.meta`, which declare no regex at all and
+ * still need an entry.
+ *
  * ## On trusting a green result
  *
  * A detector reporting "all clear" is indistinguishable from a detector that is quietly broken, so this
  * one states its arithmetic on every run: how many regex literals it found, how many it read as tags,
  * and how many headings it parsed. If the tag count collapses, the extractor broke rather than the tree
- * getting tidier. `--selftest` runs both controls - a planted undocumented tag that must be caught, and
- * a family-covered tag that must be credited - and is the thing to run when a result surprises you.
+ * getting tidier. `--selftest` runs the controls - a planted undocumented tag that must be caught, a
+ * family-covered tag that must be credited, every declaration style, and an id-bearing tag with no
+ * target - and is the thing to run when a result surprises you.
  *
  * Usage:
  *   node src/build-tools/verify-notetag-reference.js
@@ -71,8 +88,9 @@
  */
 import * as fs from 'fs/promises';
 import { glob } from 'glob';
-import * as acorn from 'acorn';
 import Logger, { LogStyle } from './logger.js';
+import { collectDeclaredTags, collectFromAst, parse, tagNamesFromPattern } from './notetag-declarations.js';
+import { IdTables, NotetagIdTargets } from './notetag-id-targets.js';
 
 const SRC_PLUGINS_GLOB = './src/plugins/**/*.js';
 
@@ -88,214 +106,16 @@ const REFERENCE_PATH = './docs/notetag-reference.md';
 const PLACEHOLDER_MATCHER = '[A-Za-z0-9-]+';
 
 /**
- * Parses source into an AST with location data.
- * @param {string} source The raw source text.
- * @returns {object} The parsed program.
- */
-const parse = source => acorn.parse(source, { ecmaVersion: 'latest', sourceType: 'module', locations: true });
-
-/**
- * Walks every node of an AST, invoking a visitor with each node.
- * @param {object} node The node to walk.
- * @param {(node: object) => void} visit The visitor.
- */
-function walk(node, visit)
-{
-  // anything without a type is not a node worth descending into.
-  if (!node || !node.type) return;
-
-  visit(node);
-
-  for (const key of Object.keys(node))
-  {
-    // skip the location bookkeeping acorn hangs off every node.
-    if (key === 'loc' || key === 'start' || key === 'end') continue;
-
-    const child = node[key];
-
-    // a node's children arrive either singly or in a list.
-    if (Array.isArray(child))
-    {
-      child.forEach(entry => walk(entry, visit));
-    }
-    else if (child && child.type)
-    {
-      walk(child, visit);
-    }
-  }
-}
-
-/**
- * Flattens a member expression into its dotted path segments.
- * @param {object} node The expression forming the left side of an assignment.
- * @returns {string[]} The path segments, outermost last.
- */
-function memberPath(node)
-{
-  const segments = [];
-
-  let current = node;
-
-  // unwind the chain from the tail back toward the root identifier.
-  while (current && current.type === 'MemberExpression')
-  {
-    segments.unshift(current.property.name ?? String(current.property.value));
-    current = current.object;
-  }
-
-  // the root of a well-formed chain is the namespace identifier itself.
-  if (current && current.type === 'Identifier')
-  {
-    segments.unshift(current.name);
-  }
-
-  return segments;
-}
-
-/**
- * Reads the tag name(s) a notetag regex declares, from the regex's own pattern text.
+ * Whether a heading's payload names an id, judged by its placeholder words.
  *
- * Returns several names for a pattern whose name is an alternation - `<(?:mm|minimap):…>` declares two
- * spellings of one tag, and both need an entry - and none for a regex that is not a notetag at all,
- * such as J-Base's anchored `ParsableComment` structural matcher.
- * @param {string} pattern The regex source text, without delimiters or flags.
- * @returns {string[]} Every tag name the pattern declares; empty when it declares none.
+ * A placeholder word is an uppercase run, and it names an id when `ID` or `IDS` is one of its
+ * underscore-separated parts: `STATE_ID`, `SKILL_IDS`, `ID_OR_NAME` and a bare `ID` all qualify. A word
+ * like `VALID` does not, because the test is on whole parts rather than on substrings.
+ * @param {string} payload The payload half of a heading span, after the tag name and its colon.
+ * @returns {boolean} True when the payload names at least one id.
  */
-function tagNamesFromPattern(pattern)
-{
-  // an anchored pattern is matching the shape of a note line rather than naming a tag.
-  if (pattern.startsWith('^')) return [];
-
-  // the opening bracket is sometimes escaped and sometimes not; both spellings are ordinary.
-  const body = pattern.replace(/^\\?</, '');
-
-  // the name is unchanged from the pattern text, so a bare name needs no further work.
-  const bareName = /^([A-Za-z][A-Za-z0-9-]*)/.exec(body);
-  if (bareName) return [ bareName[1] ];
-
-  // a pattern may lead with a non-capturing group listing several spellings of the same tag.
-  const alternation = /^\(\?:([A-Za-z][A-Za-z0-9|-]*)\)/.exec(body);
-  if (alternation) return alternation[1].split('|');
-
-  return [];
-}
-
-/**
- * Every notetag declared anywhere in the plugin tree.
- * @param {string[]} filePaths The plugin source files to scan.
- * @returns {Promise<{tags: Map<string, string>, regexCount: number, skipped: string[]}>} The tags by
- * name with the file each was declared in, how many regex literals were seen, and the declarations
- * that named no tag.
- */
-async function collectDeclaredTags(filePaths)
-{
-  const tags = new Map();
-  const skipped = [];
-
-  let regexCount = 0;
-
-  for (const filePath of filePaths)
-  {
-    const ast = parse(await fs.readFile(filePath, 'utf-8'));
-
-    const found = collectFromAst(ast, filePath);
-
-    regexCount += found.regexCount;
-    skipped.push(...found.skipped);
-
-    // first declaration wins; the file is only ever used to tell the author where to look.
-    found.tags.forEach((declaredIn, name) =>
-    {
-      if (tags.has(name) === false) tags.set(name, declaredIn);
-    });
-  }
-
-  return { tags, regexCount, skipped };
-}
-
-/**
- * Reads every notetag one parsed file declares.
- *
- * Split out from the file walk above so `--selftest` can feed it synthetic source and prove the
- * extractor handles both declaration styles - the miss that shape produced was silent, tripled the
- * real tag count when fixed, and is exactly the failure a green run cannot be distinguished from.
- * @param {object} ast The parsed source.
- * @param {string} filePath The path to attribute declarations to.
- * @returns {{tags: Map<string, string>, regexCount: number, skipped: string[]}} What the file declares.
- */
-function collectFromAst(ast, filePath)
-{
-  const tags = new Map();
-  const skipped = [];
-
-  let regexCount = 0;
-
-  /**
-   * Records one regex literal found in a `RegExp` table.
-   * @param {object} literal The regex literal node.
-   * @param {string} label How to name this declaration if it has to be reported.
-   */
-  const record = (literal, label) =>
-  {
-    regexCount++;
-
-    const names = tagNamesFromPattern(literal.regex.pattern);
-
-    // a regex in the table that names no tag is reported rather than dropped, so the arithmetic
-    // below stays checkable by a reader who suspects the extractor rather than the tree.
-    if (names.length === 0)
-    {
-      skipped.push(`${label} (${filePath}:${literal.loc.start.line})`);
-
-      return;
-    }
-
-    // first declaration wins; the file is only ever used to tell the author where to look.
-    names.forEach(name =>
-    {
-      if (tags.has(name) === false) tags.set(name, filePath);
-    });
-  };
-
-  walk(ast, node =>
-  {
-    if (node.type !== 'AssignmentExpression') return;
-
-    const path = memberPath(node.left);
-
-    // every notetag in this repo is declared into a `RegExp` table on its ship's namespace, so
-    // anything assigned elsewhere is some other kind of pattern and none of this gate's business.
-    const isTableMember = path.length >= 2 && path[path.length - 2] === 'RegExp';
-    const isWholeTable = path.length >= 1 && path[path.length - 1] === 'RegExp';
-
-    // style one: `J.SHIP.RegExp.SomeTag = /<someTag>/i` - one assignment per tag.
-    if (isTableMember && node.right && node.right.type === 'Literal' && node.right.regex)
-    {
-      record(node.right, path.join('.'));
-
-      return;
-    }
-
-    // style two: `J.SHIP.RegExp = { SomeTag: /<someTag>/i, … }` - the whole table at once. Both
-    // spellings are in live use across the tree, and a checker that knew only the first would
-    // silently ignore entire ships while still reporting a confident green.
-    if (isWholeTable && node.right && node.right.type === 'ObjectExpression')
-    {
-      // nested grouping objects are walked too, so the shape of the table cannot hide a tag.
-      walk(node.right, inner =>
-      {
-        if (inner.type !== 'Property') return;
-        if (!inner.value || inner.value.type !== 'Literal' || !inner.value.regex) return;
-
-        const key = inner.key.name ?? String(inner.key.value);
-
-        record(inner.value, `${path.join('.')}.${key}`);
-      });
-    }
-  });
-
-  return { tags, regexCount, skipped };
-}
+const payloadNamesAnId = payload => (payload.match(/[A-Z][A-Z_]*/g) ?? [])
+  .some(word => word.split('_').some(part => part === 'ID' || part === 'IDS'));
 
 /**
  * Turns one heading's tag name into an anchored matcher.
@@ -341,8 +161,12 @@ function headingNameToMatcher(headingName)
 
 /**
  * Every tag-name matcher the reference document publishes, by the heading it came from.
+ *
+ * Each matcher also records whether its span's payload names an id, which is what decides whether the
+ * tags it credits owe an entry in `notetag-id-targets.js`.
  * @param {string} referenceText The full reference document.
- * @returns {{heading: string, matcher: RegExp}[]} One entry per tag name named in a heading.
+ * @returns {{heading: string, matcher: RegExp, namesAnId: boolean}[]} One entry per tag name named in
+ *   a heading.
  */
 function collectReferenceMatchers(referenceText)
 {
@@ -358,11 +182,16 @@ function collectReferenceMatchers(referenceText)
 
     for (const span of spans)
     {
-      // strip the backticks and angle brackets, then drop the payload so only the name remains.
+      // strip the backticks and angle brackets, then split the name from its payload.
       const inner = span.slice(2, -2);
-      const [ name ] = inner.split(':');
+      const [ name, ...payloadParts ] = inner.split(':');
+      const payload = payloadParts.join(':');
 
-      matchers.push({ heading: heading.replace(/^### /, ''), matcher: headingNameToMatcher(name) });
+      matchers.push({
+        heading: heading.replace(/^### /, ''),
+        matcher: headingNameToMatcher(name),
+        namesAnId: payloadNamesAnId(payload),
+      });
     }
   }
 
@@ -370,20 +199,114 @@ function collectReferenceMatchers(referenceText)
 }
 
 /**
+ * Describes what is wrong with one id target, if anything.
+ *
+ * The validator on the far side trusts this table completely, so a target it cannot interpret has to
+ * fail here, where the person who wrote it is still looking at it.
+ * @param {object} target One entry from a tag's target list.
+ * @returns {string} What is wrong; empty when the target is well formed.
+ */
+function describeTargetProblem(target)
+{
+  const { position, table, reason, allowZero, acceptsName } = target;
+
+  // a position is a zero-based payload index, or the word that means "every value".
+  const isIndex = Number.isInteger(position) && position >= 0;
+  if (isIndex === false && position !== 'each') return `position must be a payload index or 'each', not ${position}.`;
+
+  // flags only ever switch something on, so anything but true is a typo waiting to be misread.
+  if (allowZero !== undefined && allowZero !== true) return 'allowZero may only be true.';
+  if (acceptsName !== undefined && acceptsName !== true) return 'acceptsName may only be true.';
+
+  // an id with no table has to say what it names instead.
+  if (table === null)
+  {
+    return (reason ?? '').length > 0
+      ? ''
+      : 'a target with no table needs a reason saying what the id names.';
+  }
+
+  // the ordinary case: one table, by name.
+  if (Object.hasOwn(IdTables, String(table))) return '';
+
+  // the dispatched case: another payload value picks the table from a list of cases.
+  const { byPosition, cases } = table;
+  if (Number.isInteger(byPosition) === false || byPosition < 0) return 'byPosition must be a payload index.';
+
+  const chosen = Object.values(cases ?? {});
+  if (chosen.length === 0) return 'a dispatched table needs at least one case.';
+
+  const unknown = chosen.filter(name => Object.hasOwn(IdTables, name) === false);
+  if (unknown.length > 0) return `names table(s) the validator does not know: ${unknown.join(', ')}.`;
+
+  return '';
+}
+
+/**
+ * Every problem with the id-target table, judged against the tree and the reference.
+ *
+ * Three ways it can be wrong: an entry for a tag nothing declares any more, an entry the validator
+ * could not interpret, and an id-bearing tag with no entry at all. The last is the one that matters,
+ * because a tag missing from this table is a pointer nobody will ever resolve.
+ * @param {Set<string>} declared Every declared tag name, whether read by regex or through `.meta`.
+ * @param {{heading: string, matcher: RegExp, namesAnId: boolean}[]} matchers Every reference matcher.
+ * @param {Object<string, object[]>} targets The id-target table.
+ * @returns {string[]} One line per problem; empty when the table is complete and well formed.
+ */
+function findIdTargetProblems(declared, matchers, targets)
+{
+  const problems = [];
+
+  Object.entries(targets).forEach(([ name, list ]) =>
+  {
+    // an entry is only as good as the tag it describes still existing.
+    if (declared.has(name) === false)
+    {
+      problems.push(`<${name}> has an id-target entry, but no plugin declares that tag.`);
+    }
+
+    // every target in the entry has to be something the validator can act on.
+    list.forEach(target =>
+    {
+      const problem = describeTargetProblem(target);
+
+      if (problem !== '') problems.push(`<${name}> id target: ${problem}`);
+    });
+  });
+
+  declared.forEach(name =>
+  {
+    // a tag only owes an entry when the heading documenting it names an id in its payload.
+    const namesAnId = matchers.some(entry => entry.namesAnId && entry.matcher.test(name));
+
+    if (namesAnId && Object.hasOwn(targets, name) === false)
+    {
+      problems.push(`<${name}> names an id in its reference heading, but has no entry in notetag-id-targets.js.`);
+    }
+  });
+
+  return problems;
+}
+
+/**
  * Reports the outcome and returns the process exit code.
- * @param {Map<string, string>} tags Every declared tag, by name.
- * @param {{heading: string, matcher: RegExp}[]} matchers Every matcher the reference publishes.
+ * @param {Map<string, string>} tags Every declared tag, by name, with the file declaring it.
+ * @param {Map<string, string>} metaKeys Every tag read through the engine's native `.meta`.
+ * @param {{heading: string, matcher: RegExp, namesAnId: boolean}[]} matchers Every reference matcher.
  * @param {number} regexCount How many regex literals were found in `RegExp` tables.
  * @param {string[]} skipped Declarations that named no tag.
  * @param {boolean} verbose Whether to print the heading that credited each documented tag.
- * @returns {number} Exit code - 0 for clean, 1 for undocumented tags.
+ * @returns {number} Exit code - 0 for clean, 1 for undocumented tags or id-target problems.
  */
-function report(tags, matchers, regexCount, skipped, verbose)
+function report(tags, metaKeys, matchers, regexCount, skipped, verbose)
 {
   const undocumented = [];
   const credits = [];
 
-  for (const [ name, filePath ] of tags)
+  // a meta-read tag is a tag like any other, and owes the glossary an entry just the same.
+  const everyTag = new Map([ ...metaKeys, ...tags ]);
+
+  for (const [ name, filePath ] of everyTag)
   {
     const credit = matchers.find(entry => entry.matcher.test(name));
 
@@ -397,9 +320,12 @@ function report(tags, matchers, regexCount, skipped, verbose)
     }
   }
 
+  const idProblems = findIdTargetProblems(new Set(everyTag.keys()), matchers, NotetagIdTargets);
+
   Logger.logAnyway(
     `notetag-reference verify: ${regexCount} regex(es) in RegExp tables, ${tags.size} tag name(s) read, `
-    + `${skipped.length} non-tag, ${matchers.length} reference matcher(s).`,
+    + `${metaKeys.size} read through .meta, ${skipped.length} non-tag, ${matchers.length} reference matcher(s), `
+    + `${Object.keys(NotetagIdTargets).length} id-bearing tag(s) mapped.`,
     LogStyle.brightCyan);
 
   // the skipped list is short and stable, so printing it costs nothing and keeps the arithmetic honest.
@@ -407,24 +333,39 @@ function report(tags, matchers, regexCount, skipped, verbose)
 
   if (verbose) credits.forEach(entry => Logger.logAnyway(entry, LogStyle.brightBlack));
 
-  if (undocumented.length === 0)
+  if (undocumented.length === 0 && idProblems.length === 0)
   {
-    Logger.logAnyway('notetag-reference verify: OK (every declared tag has an entry).', LogStyle.brightGreen);
+    Logger.logAnyway('notetag-reference verify: OK (every declared tag has an entry, every id has a table).',
+      LogStyle.brightGreen);
 
     return 0;
   }
 
-  Logger.logAnyway(
-    `notetag-reference verify FAILED: ${undocumented.length} tag(s) have no entry.`,
-    LogStyle.brightRed);
-  Logger.logAnyway('  A tag nobody can find is a tag that does not exist. Add an entry to', LogStyle.brightYellow);
-  Logger.logAnyway(`  ${REFERENCE_PATH} in this same change - what it applies to, when it fires,`, LogStyle.brightYellow);
-  Logger.logAnyway('  what it does, and a real example. Several variants of one tag share one entry.', LogStyle.brightYellow);
-
-  undocumented.forEach(({ name, filePath }) =>
+  if (undocumented.length > 0)
   {
-    Logger.logAnyway(`  • <${name}> declared in ${filePath}`, LogStyle.brightRed);
-  });
+    Logger.logAnyway(
+      `notetag-reference verify FAILED: ${undocumented.length} tag(s) have no entry.`,
+      LogStyle.brightRed);
+    Logger.logAnyway('  A tag nobody can find is a tag that does not exist. Add an entry to', LogStyle.brightYellow);
+    Logger.logAnyway(`  ${REFERENCE_PATH} in this same change - what it applies to, when it fires,`, LogStyle.brightYellow);
+    Logger.logAnyway('  what it does, and a real example. Several variants of one tag share one entry.', LogStyle.brightYellow);
+
+    undocumented.forEach(({ name, filePath }) =>
+    {
+      Logger.logAnyway(`  • <${name}> declared in ${filePath}`, LogStyle.brightRed);
+    });
+  }
+
+  if (idProblems.length > 0)
+  {
+    Logger.logAnyway(
+      `notetag-reference verify FAILED: ${idProblems.length} id-target problem(s).`,
+      LogStyle.brightRed);
+    Logger.logAnyway('  An id nobody can resolve is a reference nothing checks. Say which table it points', LogStyle.brightYellow);
+    Logger.logAnyway('  into in src/build-tools/notetag-id-targets.js, or why it points at none.', LogStyle.brightYellow);
+
+    idProblems.forEach(problem => Logger.logAnyway(`  • ${problem}`, LogStyle.brightRed));
+  }
 
   return 1;
 }
@@ -476,26 +417,60 @@ function selftest(matchers)
     failures.push(`<${substringTag}> is not credited to the same entry as <${familyTag}>.`);
   }
 
-  // control four: both declaration styles must be seen. Reading only the one-assignment-per-tag
+  // control four: every declaration style must be seen. Reading only the one-assignment-per-tag
   // spelling found a third of the tree's tags and reported a confident green over the rest, which is
-  // the single worst outcome available to a checker like this one.
+  // the single worst outcome available to a checker like this one. The array style hid eight tags
+  // authored on every class in Chef Adventure until a data validator went looking for them.
   const styles = [
-    { label: 'per-tag assignment', source: 'J.SHIP.RegExp.Thing = /<styleOneTag: ?(\\d+)>/i;' },
-    { label: 'whole-table literal', source: 'J.SHIP.RegExp = { Thing: /<styleTwoTag: ?(\\d+)>/i };' },
+    { label: 'per-tag assignment', source: 'J.SHIP.RegExp.Thing = /<styleOneTag: ?(\\d+)>/i;', expected: 1 },
+    { label: 'whole-table literal', source: 'J.SHIP.RegExp = { Thing: /<styleTwoTag: ?(\\d+)>/i };', expected: 1 },
+    { label: 'array of patterns', source: 'J.SHIP.RegExp = { Things: [ /<oneOf:(\\d+)>/i, /<twoOf:(\\d+)>/i ] };', expected: 2 },
   ];
 
-  styles.forEach(({ label, source }) =>
+  styles.forEach(({ label, source, expected }) =>
   {
     const { tags } = collectFromAst(parse(source), 'selftest');
 
-    // the expected name differs per style, so read whatever single tag came back and check it landed.
-    if (tags.size !== 1)
+    // the names differ per style, so count what came back and check every one of them landed.
+    if (tags.size !== expected)
     {
-      failures.push(`the ${label} style yielded ${tags.size} tag(s), expected exactly 1.`);
+      failures.push(`the ${label} style yielded ${tags.size} tag(s), expected exactly ${expected}.`);
     }
   });
 
-  // control five: the extractor must read a name out of each regex shape the tree actually uses.
+  // control five: a native meta read is a tag declaration, and a local variable called `meta` is not.
+  const metaSource = 'if ($dataMap.meta[\'plantedMetaTag\']) {} const x = meta.notATag;';
+  const { metaKeys } = collectFromAst(parse(metaSource), 'selftest');
+  if (metaKeys.size !== 1 || metaKeys.has('plantedMetaTag') === false)
+  {
+    failures.push(`meta reads yielded [${[ ...metaKeys.keys() ]}], expected exactly [plantedMetaTag].`);
+  }
+
+  // control six: an id-bearing tag with no target must be caught, and a mapped one must not be. The
+  // planted heading stands in for a real one so the control cannot pass on the strength of the live
+  // table happening to be complete.
+  const plantedMatchers = collectReferenceMatchers('### `<plantedIdTag:[STATE_ID, CHANCE]>`\n### `<plantedPlainTag:VAL>`');
+  const plantedDeclared = new Set([ 'plantedIdTag', 'plantedPlainTag' ]);
+  const unmapped = findIdTargetProblems(plantedDeclared, plantedMatchers, {});
+  const mapped = findIdTargetProblems(plantedDeclared, plantedMatchers, { plantedIdTag: [ { position: 0, table: 'States' } ] });
+  if (unmapped.length !== 1 || unmapped[0].includes('<plantedIdTag>') === false)
+  {
+    failures.push(`an unmapped id-bearing tag produced [${unmapped}], expected one problem naming <plantedIdTag>.`);
+  }
+
+  if (mapped.length !== 0)
+  {
+    failures.push(`a correctly mapped id-bearing tag still produced [${mapped}].`);
+  }
+
+  // control seven: a target naming a table the validator does not know must be refused.
+  const unknownTable = describeTargetProblem({ position: 0, table: 'Nonsense' });
+  if (unknownTable === '')
+  {
+    failures.push('a target naming an unknown table was accepted.');
+  }
+
+  // control eight: the extractor must read a name out of each regex shape the tree actually uses.
   const extractions = [
     { pattern: '<thisAtk: ?(-?\\d+)>', expected: [ 'thisAtk' ] },
     { pattern: '<(?:mm|minimap):(npc|loot)>', expected: [ 'mm', 'minimap' ] },
@@ -538,9 +513,9 @@ async function main()
   if (process.argv.includes('--selftest')) return selftest(matchers);
 
   const filePaths = await glob(SRC_PLUGINS_GLOB);
-  const { tags, regexCount, skipped } = await collectDeclaredTags(filePaths);
+  const { tags, metaKeys, regexCount, skipped } = await collectDeclaredTags(filePaths);
 
-  return report(tags, matchers, regexCount, skipped, process.argv.includes('--verbose'));
+  return report(tags, metaKeys, matchers, regexCount, skipped, process.argv.includes('--verbose'));
 }
 
 const exitCode = await main();

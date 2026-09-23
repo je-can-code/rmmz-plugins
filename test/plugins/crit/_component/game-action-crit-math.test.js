@@ -12,7 +12,7 @@ describe('J-CriticalFactors Game_Action crit math (direct src import)', () =>
     installJBaseHostGlobals();
 
     globalThis.__PLUGIN_NAME__ = 'J-Base';
-    globalThis.__PLUGIN_VERSION__ = '3.2.0';
+    globalThis.__PLUGIN_VERSION__ = '3.19.0';
     await import('../../../../src/plugins/_base/core/_metadata/initialization.js');
 
     ({ default: globalThis.RPGManager } = await import('../../../../src/plugins/_base/core/managers/RPGManager.js'));

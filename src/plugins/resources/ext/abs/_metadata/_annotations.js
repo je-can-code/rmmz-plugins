@@ -237,7 +237,19 @@
  *    (Momentum from healing).
  *
  * ============================================================================
+ * NATURAL GROWTH:
+ * With J-NaturalGrowth also installed, lifesteal (lst), manasteal (mst) and
+ * techsteal (tst) accept its buff and growth tags. Amounts are percents, like
+ * <lst:NUM>: <lstGrowthPlus:[1.5]> grants +1.5% lifesteal per level.
+ *
+ * TAG FORMAT:
+ *  <(lst|mst|tst)(Buff|Growth)(Plus|Rate):[FORMULA]>
+ * See J-NaturalGrowth for how Buff/Growth and Plus/Rate behave.
+ * ============================================================================
  * CHANGELOG:
+ * - 1.2.0
+ *    Added natural growth tags for lifesteal, manasteal and techsteal (lst, mst,
+ *    tst).
  * - 1.1.0
  *    Added HEAL EVENTS system with onSelf and onAlly resource cascade tags.
  *    24 notetag variants (4 triggers × 3 outputs × 2 families).

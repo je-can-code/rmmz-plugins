@@ -95,6 +95,38 @@ class ParameterDefinition
   }
 
   /**
+   * Whether this parameter is stored as a fraction but read by people as a whole number.<br/>
+   * RMMZ keeps every rate as a decimal, so a 75% chance lives as `0.75`, while the status screen and
+   * every notetag that tunes it speak in the `75` a person would say out loud. This is the one list of
+   * formats that crosses that line, which is what keeps the screen and the tags from disagreeing.
+   * @returns {boolean}
+   */
+  isPercentScaled()
+  {
+    return this.format === ParameterFormat.PERCENT
+      || this.format === ParameterFormat.PERCENT_CENTERED
+      || this.format === ParameterFormat.PERCENT_SUFFIX
+      || this.format === ParameterFormat.MULTIPLIER_PERCENT
+      || this.format === ParameterFormat.SCALED_POINTS
+      || this.format === ParameterFormat.SCALED_OFFSET
+      || this.format === ParameterFormat.REGEN_PER_SECOND;
+  }
+
+  /**
+   * How many display units one unit of this parameter's raw value is worth: 100 for a parameter held
+   * as a fraction, and 1 for one already held in the numbers people read.<br/>
+   * A number authored in display units becomes a raw value by dividing by this, and a raw value
+   * becomes a displayed one by multiplying by it.
+   * @returns {number}
+   */
+  displayScale()
+  {
+    return this.isPercentScaled()
+      ? 100
+      : 1;
+  }
+
+  /**
    * Transforms a raw battler value into the numeric magnitude shown in the UI.
    * Percent and regen formats are multiplied by 100; centered formats also subtract 100 for the delta.
    * @param {number} value The raw battler value.
@@ -102,19 +134,8 @@ class ParameterDefinition
    */
   displayMagnitude(value)
   {
-    let num = value;
-
-    if (this.format === ParameterFormat.PERCENT
-      || this.format === ParameterFormat.PERCENT_CENTERED
-      || this.format === ParameterFormat.PERCENT_SUFFIX
-      || this.format === ParameterFormat.MULTIPLIER_PERCENT
-      || this.format === ParameterFormat.SCALED_POINTS
-      || this.format === ParameterFormat.SCALED_OFFSET
-      || this.format === ParameterFormat.REGEN_PER_SECOND)
-    {
-      // regen xparams are stored as fractions; native flat (JABS regen math) is value * 100.
-      num *= 100;
-    }
+    // regen xparams are stored as fractions too; native flat (JABS regen math) is value * 100.
+    let num = value * this.displayScale();
 
     if (this.format === ParameterFormat.PERCENT_CENTERED
       || this.format === ParameterFormat.SCALED_OFFSET)
@@ -364,15 +385,8 @@ class ParameterDefinition
    */
   prettyDelta(rawDiff, actor = null)
   {
-    const isPercentScaled = this.format === ParameterFormat.PERCENT
-      || this.format === ParameterFormat.PERCENT_CENTERED
-      || this.format === ParameterFormat.PERCENT_SUFFIX
-      || this.format === ParameterFormat.MULTIPLIER_PERCENT
-      || this.format === ParameterFormat.SCALED_POINTS
-      || this.format === ParameterFormat.SCALED_OFFSET
-      || this.format === ParameterFormat.REGEN_PER_SECOND;
-
-    const num = isPercentScaled ? rawDiff * 100 : rawDiff;
+    // a difference scales exactly as the absolute values it was taken between.
+    const num = rawDiff * this.displayScale();
 
     if (this.format === ParameterFormat.REGEN_PER_SECOND)
     {

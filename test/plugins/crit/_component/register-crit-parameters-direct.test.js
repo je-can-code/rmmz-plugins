@@ -1,6 +1,7 @@
 //region plugins/crit/_component/register-crit-parameters-direct.test.js
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import NaturalParameterBinding from '../../../../src/plugins/_base/core/models/NaturalParameterBinding.js';
 import ParameterDefinition from '../../../../src/plugins/_base/core/models/ParameterDefinition.js';
 import ParameterFormat from '../../../../src/plugins/_base/core/core/ParameterFormat.js';
 import ParameterGroups from '../../../../src/plugins/_base/core/core/ParameterGroups.js';
@@ -21,7 +22,9 @@ describe('CritParameterRegistration.registerAll (crit core, direct src import)',
     vi.resetModules();
     ParameterRegistry._definitions.clear();
     ParameterRegistry._groupCache.clear();
+    ParameterRegistry._naturalBindings.clear();
 
+    globalThis.NaturalParameterBinding = NaturalParameterBinding;
     globalThis.ParameterDefinition = ParameterDefinition;
     globalThis.ParameterGroups = ParameterGroups;
     globalThis.ParameterFormat = ParameterFormat;
@@ -32,7 +35,22 @@ describe('CritParameterRegistration.registerAll (crit core, direct src import)',
       critParamDescription: id => (id === 0 ? [ 'cdm-line1', 'cdm-line2' ] : [ 'ctr-line1', 'ctr-line2' ]),
     };
     globalThis.IconManager = { critParam: id => (id === 0 ? 976 : 977) };
-    globalThis.J = {};
+
+    // stand-in tags, each its own object, so a binding can be checked by identity against the right one.
+    globalThis.J = {
+      CRIT: {
+        RegExp: {
+          CritDamageMultiplierBuffPlus: /<cdmBuffPlus>/,
+          CritDamageMultiplierBuffRate: /<cdmBuffRate>/,
+          CritDamageMultiplierGrowthPlus: /<cdmGrowthPlus>/,
+          CritDamageMultiplierGrowthRate: /<cdmGrowthRate>/,
+          CritTakenRateBuffPlus: /<ctrBuffPlus>/,
+          CritTakenRateBuffRate: /<ctrBuffRate>/,
+          CritTakenRateGrowthPlus: /<ctrGrowthPlus>/,
+          CritTakenRateGrowthRate: /<ctrGrowthRate>/,
+        },
+      },
+    };
 
     const { default: CritParameterRegistration } =
       await import('../../../../src/plugins/crit/core/core/registerCritParameters.js');
@@ -42,6 +60,7 @@ describe('CritParameterRegistration.registerAll (crit core, direct src import)',
 
   afterEach(() =>
   {
+    delete globalThis.NaturalParameterBinding;
     delete globalThis.ParameterDefinition;
     delete globalThis.ParameterGroups;
     delete globalThis.ParameterFormat;
@@ -52,6 +71,7 @@ describe('CritParameterRegistration.registerAll (crit core, direct src import)',
     delete globalThis.J;
     ParameterRegistry._definitions.clear();
     ParameterRegistry._groupCache.clear();
+    ParameterRegistry._naturalBindings.clear();
   });
 
   describe('cdm', () =>
@@ -89,6 +109,34 @@ describe('CritParameterRegistration.registerAll (crit core, direct src import)',
 
       expect(definition.sdpBinding.getBaseForSdp(actor)).toBe(0.5);
     });
+
+    it('binds natural growth to the four crit damage tags', () =>
+    {
+      // Arrange- ctr's tags are bound in the same pass, so a crossed wire would pick up one of those.
+      const { RegExp: tags } = globalThis.J.CRIT;
+
+      // Act
+      const binding = ParameterRegistry.naturalBinding('cdm');
+
+      // Assert
+      expect(binding.buffPlus).toBe(tags.CritDamageMultiplierBuffPlus);
+      expect(binding.buffRate).toBe(tags.CritDamageMultiplierBuffRate);
+      expect(binding.growthPlus).toBe(tags.CritDamageMultiplierGrowthPlus);
+      expect(binding.growthRate).toBe(tags.CritDamageMultiplierGrowthRate);
+    });
+
+    it('grows against the base crit multiplier every battler starts from', () =>
+    {
+      // Arrange- the battler answers differently for the two crit bases, so the right one is visible.
+      const battler = { baseCriticalMultiplier: () => 0.5, baseCriticalReduction: () => 0.2 };
+      const binding = ParameterRegistry.naturalBinding('cdm');
+
+      // Act
+      const result = binding.getBase(battler);
+
+      // Assert
+      expect(result).toBe(0.5);
+    });
   });
 
   describe('ctr', () =>
@@ -125,6 +173,34 @@ describe('CritParameterRegistration.registerAll (crit core, direct src import)',
       const actor = { baseCriticalReduction: () => 0.5 };
 
       expect(definition.sdpBinding.getBaseForSdp(actor)).toBe(0.5);
+    });
+
+    it('binds natural growth to the four crit taken tags', () =>
+    {
+      // Arrange- cdm's tags are bound in the same pass, so a crossed wire would pick up one of those.
+      const { RegExp: tags } = globalThis.J.CRIT;
+
+      // Act
+      const binding = ParameterRegistry.naturalBinding('ctr');
+
+      // Assert
+      expect(binding.buffPlus).toBe(tags.CritTakenRateBuffPlus);
+      expect(binding.buffRate).toBe(tags.CritTakenRateBuffRate);
+      expect(binding.growthPlus).toBe(tags.CritTakenRateGrowthPlus);
+      expect(binding.growthRate).toBe(tags.CritTakenRateGrowthRate);
+    });
+
+    it('grows against the base crit reduction every battler starts from', () =>
+    {
+      // Arrange- the battler answers differently for the two crit bases, so the right one is visible.
+      const battler = { baseCriticalMultiplier: () => 0.5, baseCriticalReduction: () => 0.2 };
+      const binding = ParameterRegistry.naturalBinding('ctr');
+
+      // Act
+      const result = binding.getBase(battler);
+
+      // Assert
+      expect(result).toBe(0.2);
     });
   });
 });

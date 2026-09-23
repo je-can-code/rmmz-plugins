@@ -22,6 +22,16 @@ class SpeedParameterRegistration
       .build();
 
     ParameterRegistry.register(moveSpeedBoost);
+
+    // move speed grows against the boost its own tags produce.
+    const moveSpeedNatural = new NaturalParameterBinding(
+      J.ABS.EXT.SPEED.RegExp.WalkSpeedBoostBuffPlus,
+      J.ABS.EXT.SPEED.RegExp.WalkSpeedBoostBuffRate,
+      J.ABS.EXT.SPEED.RegExp.WalkSpeedBoostGrowthPlus,
+      J.ABS.EXT.SPEED.RegExp.WalkSpeedBoostGrowthRate,
+      battler => battler.walkSpeedBoost());
+
+    ParameterRegistry.bindNatural('msb', moveSpeedNatural);
   }
 }
 

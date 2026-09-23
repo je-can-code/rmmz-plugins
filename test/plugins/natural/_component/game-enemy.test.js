@@ -1,7 +1,13 @@
 //region plugins/natural/_component/game-enemy.test.js
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { installNaturalHostGlobals, setPluginContextToJBase, setPluginContextToJNatural } from './fixtures/install-natural-host-globals.js';
+import {
+  installNaturalHostGlobals,
+  installParameterCatalog,
+  registerShippedNaturalParameters,
+  setPluginContextToJBase,
+  setPluginContextToJNatural,
+} from './fixtures/install-natural-host-globals.js';
 
 describe('J-NaturalGrowth Game_Enemy (direct src import)', () =>
 {
@@ -20,11 +26,15 @@ describe('J-NaturalGrowth Game_Enemy (direct src import)', () =>
     await import('../../../../src/plugins/_base/core/objects/Game_Battler.js');
     await import('../../../../src/plugins/_base/core/objects/Game_Actor.js');
 
+    await installParameterCatalog();
+
     setPluginContextToJNatural();
     await import('../../../../src/plugins/natural/core/_metadata/initialization.js');
 
     await import('../../../../src/plugins/natural/core/objects/Game_Battler.js');
     await import('../../../../src/plugins/natural/core/objects/Game_Enemy.js');
+
+    await registerShippedNaturalParameters();
   });
 
   it('setup refreshes reward bonuses from notes; exp, gold, and sdpPoints include bonuses', () =>

@@ -88,6 +88,12 @@ J.PROF.RegExp.ProficiencyBonus = /<proficiencyBonus:[ ]?(\d+)>/i;
 J.PROF.RegExp.ProficiencyGivingBlock = /<proficiencyGivingBlock>/i;
 J.PROF.RegExp.ProficiencyGainingBlock = /<proficiencyGainingBlock>/i;
 
+// natural growth tags for prof, bound to the parameter at boot.
+J.PROF.RegExp.ProficiencyBonusBuffPlus = /<profBuffPlus:\[([+\-*/ ().\w]+)]>/gi;
+J.PROF.RegExp.ProficiencyBonusBuffRate = /<profBuffRate:\[([+\-*/ ().\w]+)]>/gi;
+J.PROF.RegExp.ProficiencyBonusGrowthPlus = /<profGrowthPlus:\[([+\-*/ ().\w]+)]>/gi;
+J.PROF.RegExp.ProficiencyBonusGrowthRate = /<profGrowthRate:\[([+\-*/ ().\w]+)]>/gi;
+
 // register "p" as a formula context variable so damage formulas can use it directly.
 // the first argument is the Game_Action instance; skillProficiency() lives on it.
 Game_Action.registerFormulaContext('p', (action) => action.skillProficiency());

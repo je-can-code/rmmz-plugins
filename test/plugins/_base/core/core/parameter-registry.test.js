@@ -17,6 +17,7 @@ describe('ParameterRegistry (direct src import)', () =>
     // registry state is held on static class fields, so each test starts from a clean slate.
     ParameterRegistry._definitions.clear();
     ParameterRegistry._groupCache.clear();
+    ParameterRegistry._naturalBindings.clear();
   });
 
   /**
@@ -270,6 +271,110 @@ describe('ParameterRegistry (direct src import)', () =>
 
       // Assert- base came from resolveValue/getValue (7), not from a getBaseForSdp that doesn't exist.
       expect(result).toBe(107);
+    });
+  });
+
+  describe('bindNatural', () =>
+  {
+    it('throws when the key was never registered', () =>
+    {
+      // Arrange- a binding with nowhere to attach, since no definition exists for the key.
+      const binding = { getBase: () => 0 };
+
+      // Act
+      const attempt = () => ParameterRegistry.bindNatural('lst', binding);
+
+      // Assert
+      expect(attempt).toThrow('ParameterRegistry: cannot bind natural growth to unregistered key "lst".');
+    });
+
+    it('throws when the key already carries a natural binding', () =>
+    {
+      // Arrange
+      ParameterRegistry.register(buildDefinition('lst', 'combat', 0));
+      ParameterRegistry.bindNatural('lst', { getBase: () => 1 });
+
+      // Act
+      const attempt = () => ParameterRegistry.bindNatural('lst', { getBase: () => 2 });
+
+      // Assert
+      expect(attempt).toThrow('ParameterRegistry: duplicate natural binding for key "lst".');
+    });
+
+    it('stores the binding under its key for later lookup', () =>
+    {
+      // Arrange- a sibling key is bound too, so the lookup has to find the right one of two.
+      ParameterRegistry.register(buildDefinition('lst', 'combat', 0));
+      ParameterRegistry.register(buildDefinition('mst', 'combat', 1));
+      const lifesteal = { getBase: () => 1 };
+      const manasteal = { getBase: () => 2 };
+
+      // Act
+      ParameterRegistry.bindNatural('lst', lifesteal);
+      ParameterRegistry.bindNatural('mst', manasteal);
+
+      // Assert
+      expect(ParameterRegistry.naturalBinding('lst')).toBe(lifesteal);
+    });
+  });
+
+  describe('naturalBinding', () =>
+  {
+    it('throws for a key nothing bound, naming the key so the missing binding can be found', () =>
+    {
+      // Arrange- registered, but never bound.
+      ParameterRegistry.register(buildDefinition('lst', 'combat', 0));
+
+      // Act
+      const attempt = () => ParameterRegistry.naturalBinding('lst');
+
+      // Assert
+      expect(attempt).toThrow('ParameterRegistry: no natural binding for key "lst"; bind it with bindNatural at boot.');
+    });
+
+    it('returns the binding bound to a key', () =>
+    {
+      // Arrange
+      ParameterRegistry.register(buildDefinition('sar', 'support', 0));
+      const binding = { getBase: () => 1 };
+      ParameterRegistry.bindNatural('sar', binding);
+
+      // Act
+      const result = ParameterRegistry.naturalBinding('sar');
+
+      // Assert
+      expect(result).toBe(binding);
+    });
+  });
+
+  describe('naturallyBoundKeys', () =>
+  {
+    it('lists only the bound keys, in the order they were bound', () =>
+    {
+      // Arrange- three registered, two bound, and bound out of registration order.
+      ParameterRegistry.register(buildDefinition('lst', 'combat', 0));
+      ParameterRegistry.register(buildDefinition('mst', 'combat', 1));
+      ParameterRegistry.register(buildDefinition('tst', 'combat', 2));
+      ParameterRegistry.bindNatural('tst', { getBase: () => 0 });
+      ParameterRegistry.bindNatural('lst', { getBase: () => 0 });
+
+      // Act
+      const result = ParameterRegistry.naturallyBoundKeys();
+
+      // Assert
+      expect(result).toEqual([ 'tst', 'lst' ]);
+    });
+
+    it('lists nothing when nothing is bound', () =>
+    {
+      // Arrange
+      ParameterRegistry.register(buildDefinition('lst', 'combat', 0));
+
+      // Act
+      const result = ParameterRegistry.naturallyBoundKeys();
+
+      // Assert
+      expect(result).toEqual([]);
     });
   });
 });

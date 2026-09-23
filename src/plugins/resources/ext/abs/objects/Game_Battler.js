@@ -46,6 +46,9 @@ Object.defineProperty(Game_Battler.prototype, 'lst', {
       rate += this.getSdpBonusForParameterKey('lst', 1);
     }
 
+    // layer on whatever natural buffs and growths are bound to lifesteal.
+    rate += this.naturalBonus('lst');
+
     return rate;
   },
   configurable: true,
@@ -61,6 +64,9 @@ Object.defineProperty(Game_Battler.prototype, 'mst', {
       rate += this.getSdpBonusForParameterKey('mst', 1);
     }
 
+    // layer on whatever natural buffs and growths are bound to manasteal.
+    rate += this.naturalBonus('mst');
+
     return rate;
   },
   configurable: true,
@@ -75,6 +81,9 @@ Object.defineProperty(Game_Battler.prototype, 'tst', {
     {
       rate += this.getSdpBonusForParameterKey('tst', 1);
     }
+
+    // layer on whatever natural buffs and growths are bound to techsteal.
+    rate += this.naturalBonus('tst');
 
     return rate;
   },

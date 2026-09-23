@@ -7,7 +7,7 @@ globalThis.J ||= {};
 (() =>
 {
   // Check to ensure we have the minimum required version of the J-Base plugin.
-  const requiredBaseVersion = '3.2.0';
+  const requiredBaseVersion = '3.19.0';
   const hasBaseRequirement = J.BASE.Helpers.satisfies(J.BASE.Metadata.Version, requiredBaseVersion);
   if (!hasBaseRequirement)
   {
@@ -53,5 +53,11 @@ J.ABS.EXT.SPEED.Aliased = {
  */
 J.ABS.EXT.SPEED.RegExp = {
   WalkSpeedBoost: /<speedBoost:[ ]?([-]?\d+)>/gi,
+
+  // natural growth tags for msb, bound to the parameter at boot.
+  WalkSpeedBoostBuffPlus: /<msbBuffPlus:\[([+\-*/ ().\w]+)]>/gi,
+  WalkSpeedBoostBuffRate: /<msbBuffRate:\[([+\-*/ ().\w]+)]>/gi,
+  WalkSpeedBoostGrowthPlus: /<msbGrowthPlus:\[([+\-*/ ().\w]+)]>/gi,
+  WalkSpeedBoostGrowthRate: /<msbGrowthRate:\[([+\-*/ ().\w]+)]>/gi,
 };
 //endregion Introduction

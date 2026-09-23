@@ -61,6 +61,20 @@ J.RESOURCES.EXT.ABS.RegExp.Lifesteal = /<lst:(-?\d+)>/gi;
 J.RESOURCES.EXT.ABS.RegExp.Manasteal = /<mst:(-?\d+)>/gi;
 J.RESOURCES.EXT.ABS.RegExp.Techsteal = /<tst:(-?\d+)>/gi;
 
+// natural growth tags for lst, mst and tst, bound to each parameter at boot.
+J.RESOURCES.EXT.ABS.RegExp.LifestealBuffPlus = /<lstBuffPlus:\[([+\-*/ ().\w]+)]>/gi;
+J.RESOURCES.EXT.ABS.RegExp.LifestealBuffRate = /<lstBuffRate:\[([+\-*/ ().\w]+)]>/gi;
+J.RESOURCES.EXT.ABS.RegExp.LifestealGrowthPlus = /<lstGrowthPlus:\[([+\-*/ ().\w]+)]>/gi;
+J.RESOURCES.EXT.ABS.RegExp.LifestealGrowthRate = /<lstGrowthRate:\[([+\-*/ ().\w]+)]>/gi;
+J.RESOURCES.EXT.ABS.RegExp.ManastealBuffPlus = /<mstBuffPlus:\[([+\-*/ ().\w]+)]>/gi;
+J.RESOURCES.EXT.ABS.RegExp.ManastealBuffRate = /<mstBuffRate:\[([+\-*/ ().\w]+)]>/gi;
+J.RESOURCES.EXT.ABS.RegExp.ManastealGrowthPlus = /<mstGrowthPlus:\[([+\-*/ ().\w]+)]>/gi;
+J.RESOURCES.EXT.ABS.RegExp.ManastealGrowthRate = /<mstGrowthRate:\[([+\-*/ ().\w]+)]>/gi;
+J.RESOURCES.EXT.ABS.RegExp.TechstealBuffPlus = /<tstBuffPlus:\[([+\-*/ ().\w]+)]>/gi;
+J.RESOURCES.EXT.ABS.RegExp.TechstealBuffRate = /<tstBuffRate:\[([+\-*/ ().\w]+)]>/gi;
+J.RESOURCES.EXT.ABS.RegExp.TechstealGrowthPlus = /<tstGrowthPlus:\[([+\-*/ ().\w]+)]>/gi;
+J.RESOURCES.EXT.ABS.RegExp.TechstealGrowthRate = /<tstGrowthRate:\[([+\-*/ ().\w]+)]>/gi;
+
 // heal-event onSelf tags — when THIS battler's trigger resource is healed, cascade to output resource.
 // format: <onSelf{Trigger}Heal{Output}:[PERCENT, RANGE]> or <onSelf{Trigger}Heal{Output}:[PERCENT, RANGE, MAX_DEPTH]>
 // RANGE=0 means self only; RANGE>0 also applies to allies within that tile radius.

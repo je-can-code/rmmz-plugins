@@ -21,6 +21,9 @@ describe('J-ABS-Speed Game_Battler (unit, all downstream dependencies mocked)', 
 
     originalInitMembers = vi.fn();
     Game_Battler.prototype.initMembers = originalInitMembers;
+
+    // J-Base's seam answers zero until J-NaturalGrowth fills it in.
+    Game_Battler.prototype.naturalBonus = () => 0;
     globalThis.Game_BattlerBase = Game_BattlerBase;
     globalThis.Game_Battler = Game_Battler;
 
@@ -75,6 +78,35 @@ describe('J-ABS-Speed Game_Battler (unit, all downstream dependencies mocked)', 
 
       // Act / Assert
       expect(battler.msb).toBe(15);
+    });
+
+    it('layers on the natural bonus bound to msb, which is flat and needs no scaling', () =>
+    {
+      // Arrange- the bonus answers only for msb, so asking for any other key would miss it.
+      const battler = buildBattler({ naturalBonus: key => (key === 'msb' ? 3 : 40) });
+      battler.setWalkSpeedBoost(15);
+
+      // Act
+      const result = battler.msb;
+
+      // Assert
+      expect(result).toBe(18);
+    });
+  });
+
+  describe('walkSpeedBoost', () =>
+  {
+    it('reports the boost the tags produced, without any natural bonus', () =>
+    {
+      // Arrange- a natural bonus is present, and must not leak into the base it is computed from.
+      const battler = buildBattler({ naturalBonus: () => 3 });
+      battler.setWalkSpeedBoost(15);
+
+      // Act
+      const result = battler.walkSpeedBoost();
+
+      // Assert
+      expect(result).toBe(15);
     });
   });
 

@@ -3,7 +3,6 @@ import { beforeAll, describe, expect, it, vi } from 'vitest';
 
 import {
   installCritHostGlobals,
-  installNaturalCompanionStubs,
   setPluginContextToJBase,
   setPluginContextToJCrit,
 } from './fixtures/install-crit-host-globals.js';
@@ -25,9 +24,6 @@ describe('J-CriticalFactors Game_Battler (direct src import)', () =>
     await import('../../../../src/plugins/_base/core/objects/Game_Battler.js');
     await import('../../../../src/plugins/_base/core/objects/Game_Actor.js');
 
-    // stand-in for J-NaturalGrowth's Game_Battler.js, which crit's own Game_Battler.js aliases/calls.
-    installNaturalCompanionStubs();
-
     setPluginContextToJCrit();
     await import('../../../../src/plugins/crit/core/_metadata/initialization.js');
 
@@ -47,39 +43,6 @@ describe('J-CriticalFactors Game_Battler (direct src import)', () =>
     actor.initMembers();
     return actor;
   }
-
-  describe('initNaturalGrowthParameters', () =>
-  {
-    it('stores crit natural growth slots after initMembers when J.NATURAL is present', () =>
-    {
-      // Arrange & Act
-      const actor = buildActor();
-
-      // Assert
-      expect(actor._j._natural._cdmPlus).toBe(0);
-      expect(actor._j._natural._cdmRate).toBe(0);
-      expect(actor._j._natural._ctrPlus).toBe(0);
-      expect(actor._j._natural._ctrRate).toBe(0);
-    });
-
-    it('stores no growth slots at all when J-Natural is not installed', () =>
-    {
-      // Arrange- the slots exist to be grown by J-Natural, so without it there is nothing to grow
-      // and seeding them would leave four fields nothing ever reads or writes. Note this bails
-      // before the original too, which is correct: the original is J-Natural's own hook.
-      const savedNatural = globalThis.J.NATURAL;
-      delete globalThis.J.NATURAL;
-
-      // Act
-      const actor = buildActor();
-
-      // Assert
-      expect(actor._j._natural)
-        .toBeUndefined();
-
-      globalThis.J.NATURAL = savedNatural;
-    });
-  });
 
   describe('baseCriticalMultiplier', () =>
   {

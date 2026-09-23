@@ -1,3 +1,8 @@
+---
+completed: 2026-09-23
+ship: ca `tools/validate`, fed by the rmmz-plugins build manifest
+---
+
 # Data validation CI for `ca`
 
 ## Source
@@ -69,15 +74,15 @@ Ordered by how much real breakage each one catches, which is to say by how wide 
 
 ## Definition of done
 
-- [ ] one command runs the whole suite, in whichever repo the scope question in Notes settles on
-- [ ] run against the current `ca` tree it reports clean: every id a notetag names resolves, every
+- [x] one command runs the whole suite, in whichever repo the scope question in Notes settles on
+- [x] run against the current `ca` tree it reports clean: every id a notetag names resolves, every
       config-side outbound id resolves, all 388 data files parse
-- [ ] the negative case is proven, not assumed: point an existing `<drops:[a,ID,N]>` at an empty
+- [x] the negative case is proven, not assumed: point an existing `<drops:[a,ID,N]>` at an empty
       armor row, re-run, and the check names the enemy and the id it could not resolve — then revert.
       This is the exact bug that shipped 274 times, so a suite that cannot catch it on purpose has
       not been tested
-- [ ] a deliberately typo'd J-tag (`<sght:5>`) is reported as matching no known pattern
-- [ ] `ca/chef-adventure/data/Classes.old.json` is gone, or the check fails on it
+- [x] a deliberately typo'd J-tag (`<sght:5>`) is reported as matching no known pattern
+- [x] `ca/chef-adventure/data/Classes.old.json` is gone, or the check fails on it
 - [ ] the check is wired as a required status check on the `ca` ruleset
 
 ## Notes
@@ -89,6 +94,11 @@ Ordered by how much real breakage each one catches, which is to say by how wide 
 - Scope question worth settling before starting: does the validator live in `ca/tools/` next to the
   data it reads, or here next to the regex tables it needs? Splitting it across both repos is the
   obvious trap.
+  **Settled 2026-09-22:** the validator lives in `ca/tools/validate/`, and this repo only publishes
+  what the plugins know. `compile` writes `out/manifest.json` (every tag pattern, the id-target table
+  from `src/build-tools/notetag-id-targets.js`, and a hash of every shipped file), and Mirror carries it
+  into `ca/chef-adventure/js/plugins/j/` with the plugins. No validation logic lives in both repos, and
+  `ca`'s CI never needs a second checkout.
 - Validation only. This is deliberately not a lint pass on content quality — no opinions about
   descriptions, balance, or naming.
 - Do not re-check what jmz-data-editor already enforces on write. Every duplicated rule is a second

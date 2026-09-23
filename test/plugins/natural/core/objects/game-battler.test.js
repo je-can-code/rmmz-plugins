@@ -3,21 +3,26 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   installNaturalHostGlobals,
-  notetagNameOf,
+  installParameterCatalog,
+  registerOwnedParameter,
   setPluginContextToJBase,
   setPluginContextToJNatural,
 } from '../../_component/fixtures/install-natural-host-globals.js';
 
 /**
- * Every actor and enemy in the game reads its parameters through this layer, so the arithmetic
- * here is load-bearing for all combat math downstream. The shape to keep in mind is that these
- * methods return the *bonus* rather than the total: `calculatePlusRate` adds the flat plus, scales
- * by the rate, then subtracts the base back out, because the caller adds the base itself. Getting
- * that inversion wrong would silently double every stat in the game, so the tests below assert
- * concrete numbers rather than merely that something came back.
+ * Every parameter's natural state lives in four tables keyed by registry key, and every amount in them
+ * is held in the numbers its tags were written in. The conversion into the parameter's own units
+ * happens in exactly one place, {@link Game_Battler#naturalBonusAgainst}, driven by the parameter's
+ * registered format- so most of what is pinned here is that the tables stay keyed, sparse and
+ * separate, and that the one conversion lifts the base as well as shrinking the result.
+ *
+ * Two stand-in parameters carry the tests: `pct`, held as a fraction the way every rate is, and `flat`,
+ * held in the numbers people read. Their bases answer from the battler, so each test decides them.
  */
-describe('J-NaturalGrowth Game_Battler bonuses (direct src import)', () =>
+describe('J-NaturalGrowth Game_Battler (direct src import)', () =>
 {
+  let ParameterFormat;
+
   beforeAll(async () =>
   {
     vi.resetModules();
@@ -32,9 +37,27 @@ describe('J-NaturalGrowth Game_Battler bonuses (direct src import)', () =>
     await import('../../../../../src/plugins/_base/core/objects/Game_BattlerBase.js');
     await import('../../../../../src/plugins/_base/core/objects/Game_Battler.js');
 
+    ({ ParameterFormat } = await installParameterCatalog());
+
     setPluginContextToJNatural();
     await import('../../../../../src/plugins/natural/core/_metadata/initialization.js');
     await import('../../../../../src/plugins/natural/core/objects/Game_Battler.js');
+
+    const pctTags = [
+      /<pctBuffPlus:\[([+\-*/ ().\w]+)]>/gi,
+      /<pctBuffRate:\[([+\-*/ ().\w]+)]>/gi,
+      /<pctGrowthPlus:\[([+\-*/ ().\w]+)]>/gi,
+      /<pctGrowthRate:\[([+\-*/ ().\w]+)]>/gi,
+    ];
+    registerOwnedParameter('pct', ParameterFormat.PERCENT_SUFFIX, pctTags, battler => battler.__pctBase);
+
+    const flatTags = [
+      /<flatBuffPlus:\[([+\-*/ ().\w]+)]>/gi,
+      /<flatBuffRate:\[([+\-*/ ().\w]+)]>/gi,
+      /<flatGrowthPlus:\[([+\-*/ ().\w]+)]>/gi,
+      /<flatGrowthRate:\[([+\-*/ ().\w]+)]>/gi,
+    ];
+    registerOwnedParameter('flat', ParameterFormat.FLAT, flatTags, battler => battler.__flatBase);
   });
 
   let battler;
@@ -43,575 +66,657 @@ describe('J-NaturalGrowth Game_Battler bonuses (direct src import)', () =>
   {
     battler = new globalThis.Game_Battler();
     battler.initMembers();
+    battler.__pctBase = 0.5;
+    battler.__flatBase = 10;
+    battler.getAllNotes = function()
+    {
+      return this.__notes ?? [];
+    };
   });
 
-  //region calculatePlusRate
+  //region setup
+  describe('initMembers', () =>
+  {
+    it('performs the original logic, then seeds the natural tables', () =>
+    {
+      // Arrange: the fixture's original initMembers resets the state list, which is the proof it ran.
+      const fresh = new globalThis.Game_Battler();
+
+      // Act
+      fresh.initMembers();
+
+      // Assert
+      expect(fresh._states).toEqual([]);
+      expect(fresh.naturalGrowthPlusTable()).toEqual({});
+    });
+  });
+
+  describe('initNaturalGrowthParameters', () =>
+  {
+    it('builds the namespaces on a battler that has none yet', () =>
+    {
+      // Arrange
+      const bare = Object.create(globalThis.Game_Battler.prototype);
+
+      // Act
+      bare.initNaturalGrowthParameters();
+
+      // Assert
+      expect(bare.naturalBuffPlusTable()).toEqual({});
+      expect(bare.naturalBuffRateTable()).toEqual({});
+      expect(bare.naturalGrowthPlusTable()).toEqual({});
+      expect(bare.naturalGrowthRateTable()).toEqual({});
+      expect([ bare.expPlus(), bare.goldPlus(), bare.sdpsPlus() ]).toEqual([ 0, 0, 0 ]);
+    });
+
+    it('keeps the namespaces other plugins already built, and resets only its own fields', () =>
+    {
+      // Arrange: another plugin's slice of _j, and a stray field on _natural, both predating this call.
+      const bare = Object.create(globalThis.Game_Battler.prototype);
+      bare._j = { _other: { kept: true }, _natural: { _stray: 3, _growthPlus: { pct: 9 } } };
+
+      // Act
+      bare.initNaturalGrowthParameters();
+
+      // Assert
+      expect(bare._j._other).toEqual({ kept: true });
+      expect(bare._j._natural._stray).toBe(3);
+      expect(bare.naturalGrowthPlusTable()).toEqual({});
+    });
+  });
+  //endregion setup
+
+  //region per parameter
+  describe('naturalBuffPlus / setNaturalBuffPlus', () =>
+  {
+    it('reads back the buff recorded for a parameter, and only for that one', () =>
+    {
+      // Arrange: a sibling parameter is buffed too, so the read has to pick its own key.
+      battler.setNaturalBuffPlus('pct', 5);
+      battler.setNaturalBuffPlus('flat', 8);
+
+      // Act
+      const result = battler.naturalBuffPlus('pct');
+
+      // Assert
+      expect(result).toBe(5);
+    });
+
+    it('reads zero for a parameter nothing is buffing', () =>
+    {
+      // Arrange: a sibling carries a buff, which must not be what answers.
+      battler.setNaturalBuffPlus('flat', 8);
+
+      // Act
+      const result = battler.naturalBuffPlus('pct');
+
+      // Assert
+      expect(result).toBe(0);
+    });
+  });
+
+  describe('naturalBuffRate / setNaturalBuffRate', () =>
+  {
+    it('reads back the buff recorded for a parameter, and only for that one', () =>
+    {
+      // Arrange
+      battler.setNaturalBuffRate('pct', 15);
+      battler.setNaturalBuffRate('flat', 40);
+
+      // Act
+      const result = battler.naturalBuffRate('pct');
+
+      // Assert
+      expect(result).toBe(15);
+    });
+
+    it('reads zero for a parameter nothing is buffing', () =>
+    {
+      // Arrange
+      battler.setNaturalBuffRate('flat', 40);
+
+      // Act
+      const result = battler.naturalBuffRate('pct');
+
+      // Assert
+      expect(result).toBe(0);
+    });
+  });
+
+  describe('naturalGrowthPlus / modNaturalGrowthPlus', () =>
+  {
+    it('accumulates growth from zero, since it is the total of every level gained', () =>
+    {
+      // Arrange & Act
+      battler.modNaturalGrowthPlus('pct', 1.5);
+      battler.modNaturalGrowthPlus('pct', 1.5);
+
+      // Assert
+      expect(battler.naturalGrowthPlus('pct')).toBe(3);
+    });
+
+    it('reads zero for a parameter that has never grown, even while a sibling has', () =>
+    {
+      // Arrange
+      battler.modNaturalGrowthPlus('flat', 2);
+
+      // Act
+      const result = battler.naturalGrowthPlus('pct');
+
+      // Assert
+      expect(result).toBe(0);
+    });
+  });
+
+  describe('naturalGrowthRate / modNaturalGrowthRate', () =>
+  {
+    it('accumulates growth from zero, since it is the total of every level gained', () =>
+    {
+      // Arrange & Act
+      battler.modNaturalGrowthRate('pct', 10);
+      battler.modNaturalGrowthRate('pct', 5);
+
+      // Assert
+      expect(battler.naturalGrowthRate('pct')).toBe(15);
+    });
+
+    it('reads zero for a parameter that has never grown, even while a sibling has', () =>
+    {
+      // Arrange
+      battler.modNaturalGrowthRate('flat', 20);
+
+      // Act
+      const result = battler.naturalGrowthRate('pct');
+
+      // Assert
+      expect(result).toBe(0);
+    });
+  });
+
+  describe('table setters', () =>
+  {
+    it('replace the whole buff tables, which is how a refresh drops a removed buff', () =>
+    {
+      // Arrange
+      battler.setNaturalBuffPlus('pct', 5);
+      battler.setNaturalBuffRate('pct', 15);
+
+      // Act
+      battler.setNaturalBuffPlusTable({ flat: 1 });
+      battler.setNaturalBuffRateTable({ flat: 2 });
+
+      // Assert
+      expect([ battler.naturalBuffPlus('pct'), battler.naturalBuffPlus('flat') ]).toEqual([ 0, 1 ]);
+      expect([ battler.naturalBuffRate('pct'), battler.naturalBuffRate('flat') ]).toEqual([ 0, 2 ]);
+    });
+  });
+  //endregion per parameter
+
+  //region rewards
+  describe('reward bonuses', () =>
+  {
+    it('reads back the experience bonus it was given', () =>
+    {
+      // Arrange & Act
+      battler.setExpPlus(25);
+
+      // Assert
+      expect(battler.expPlus()).toBe(25);
+    });
+
+    it('reads back the gold bonus it was given', () =>
+    {
+      // Arrange & Act
+      battler.setGoldPlus(10);
+
+      // Assert
+      expect(battler.goldPlus()).toBe(10);
+    });
+
+    it('reads back the SDP bonus it was given', () =>
+    {
+      // Arrange & Act
+      battler.setSdpsPlus(3);
+
+      // Assert
+      expect(battler.sdpsPlus()).toBe(3);
+    });
+  });
+  //endregion rewards
+
+  //region resolving bonuses
+  describe('naturalBonus', () =>
+  {
+    it('throws for a parameter nothing bound, even while it has nothing to add', () =>
+    {
+      // Arrange: an owner that folds natural bonuses in without binding would otherwise read zero forever.
+      // Act
+      const attempt = () => battler.naturalBonus('unbound');
+
+      // Assert
+      expect(attempt).toThrow('ParameterRegistry: no natural binding for key "unbound"; bind it with bindNatural at boot.');
+    });
+
+    it('passes the other contributors\' bonus through untouched when nothing is buffing or growing', () =>
+    {
+      // Arrange: another plugin's contribution comes back from the original, and the base is never asked for.
+      const original = globalThis.J.NATURAL.Aliased.Game_Battler.get('naturalBonus');
+      globalThis.J.NATURAL.Aliased.Game_Battler.set('naturalBonus', () => 0.25);
+      Object.defineProperty(battler, '__pctBase', {
+        get: () =>
+        {
+          throw new Error('base was resolved');
+        },
+      });
+
+      // Act
+      const result = battler.naturalBonus('pct');
+
+      // Assert
+      expect(result).toBe(0.25);
+
+      globalThis.J.NATURAL.Aliased.Game_Battler.set('naturalBonus', original);
+    });
+
+    it('adds this battler\'s bonus, resolved against the bound base, on top of the other contributors\'', () =>
+    {
+      // Arrange: a flat 5 on a percent-held parameter is 0.05, plus the original's 0.25.
+      const original = globalThis.J.NATURAL.Aliased.Game_Battler.get('naturalBonus');
+      globalThis.J.NATURAL.Aliased.Game_Battler.set('naturalBonus', () => 0.25);
+      battler.setNaturalBuffPlus('pct', 5);
+
+      // Act
+      const result = battler.naturalBonus('pct');
+
+      // Assert
+      expect(result).toBeCloseTo(0.3, 10);
+
+      globalThis.J.NATURAL.Aliased.Game_Battler.set('naturalBonus', original);
+    });
+  });
+
+  describe('engineNaturalBonus', () =>
+  {
+    it('adds nothing for an engine id that translates to no key', () =>
+    {
+      // Arrange: a buff exists on a real key, so a zero here can only come from the missing key.
+      battler.setNaturalBuffPlus('flat', 5);
+
+      // Act
+      const result = battler.engineNaturalBonus(null, 10);
+
+      // Assert
+      expect(result).toBe(0);
+    });
+
+    it('adds nothing for a parameter nothing is buffing or growing', () =>
+    {
+      // Arrange: a sibling is buffed, and must not be what answers.
+      battler.setNaturalBuffPlus('pct', 5);
+
+      // Act
+      const result = battler.engineNaturalBonus('flat', 10);
+
+      // Assert
+      expect(result).toBe(0);
+    });
+
+    it('resolves the bonus against the base it was handed rather than asking the binding for one', () =>
+    {
+      // Arrange: the bound base is 10, so a rate of 50% against it would be 5- against 40 it is 20.
+      battler.setNaturalBuffRate('flat', 50);
+
+      // Act
+      const result = battler.engineNaturalBonus('flat', 40);
+
+      // Assert
+      expect(result).toBe(20);
+    });
+  });
+
+  describe('hasNaturalBonus', () =>
+  {
+    it('is true when only a flat buff is present', () =>
+    {
+      // Arrange
+      battler.setNaturalBuffPlus('pct', 1);
+
+      // Act & Assert
+      expect(battler.hasNaturalBonus('pct')).toBe(true);
+    });
+
+    it('is true when only a percent buff is present', () =>
+    {
+      // Arrange
+      battler.setNaturalBuffRate('pct', 1);
+
+      // Act & Assert
+      expect(battler.hasNaturalBonus('pct')).toBe(true);
+    });
+
+    it('is true when only a flat growth is present', () =>
+    {
+      // Arrange
+      battler.modNaturalGrowthPlus('pct', 1);
+
+      // Act & Assert
+      expect(battler.hasNaturalBonus('pct')).toBe(true);
+    });
+
+    it('is true when only a percent growth is present', () =>
+    {
+      // Arrange
+      battler.modNaturalGrowthRate('pct', 1);
+
+      // Act & Assert
+      expect(battler.hasNaturalBonus('pct')).toBe(true);
+    });
+
+    it('is false for a parameter with none of the four, even while a sibling has all of them', () =>
+    {
+      // Arrange
+      battler.setNaturalBuffPlus('flat', 1);
+      battler.setNaturalBuffRate('flat', 1);
+      battler.modNaturalGrowthPlus('flat', 1);
+      battler.modNaturalGrowthRate('flat', 1);
+
+      // Act & Assert
+      expect(battler.hasNaturalBonus('pct')).toBe(false);
+    });
+  });
+
+  describe('naturalBonusAgainst', () =>
+  {
+    it('brings a flat bonus on a percent-held parameter down into the fraction the engine stores', () =>
+    {
+      // Arrange: 1.5, as a class growth is authored, on a parameter held as a fraction.
+      battler.modNaturalGrowthPlus('pct', 1.5);
+
+      // Act
+      const result = battler.naturalBonusAgainst('pct', 0.05);
+
+      // Assert
+      expect(result).toBeCloseTo(0.015, 10);
+    });
+
+    it('takes a percent rate of the base as displayed, not of the fraction the engine stores', () =>
+    {
+      // Arrange: 20% of a base of 0.5, which the screen shows as 50.
+      battler.setNaturalBuffRate('pct', 20);
+
+      // Act
+      const result = battler.naturalBonusAgainst('pct', 0.5);
+
+      // Assert: 20% of 50 is 10 points, which is 0.1 of the stored fraction.
+      expect(result).toBeCloseTo(0.1, 10);
+    });
+
+    it('leaves a parameter held in display numbers unscaled', () =>
+    {
+      // Arrange
+      battler.setNaturalBuffPlus('flat', 4);
+      battler.setNaturalBuffRate('flat', 50);
+
+      // Act
+      const result = battler.naturalBonusAgainst('flat', 10);
+
+      // Assert: (10 + 4) * 1.5 - 10.
+      expect(result).toBe(11);
+    });
+
+    it('resolves buffs and growths each against the base and sums them, so neither compounds the other', () =>
+    {
+      // Arrange: a 50% buff rate and a flat growth of 4, on a base of 10.
+      battler.setNaturalBuffRate('flat', 50);
+      battler.modNaturalGrowthPlus('flat', 4);
+
+      // Act
+      const result = battler.naturalBonusAgainst('flat', 10);
+
+      // Assert: 5 from the buff plus 4 from the growth- not the 7 a rate applied over the growth would give.
+      expect(result).toBe(9);
+    });
+  });
+
+  describe('naturalDisplayBase', () =>
+  {
+    it('lifts a percent-held parameter\'s base into the numbers its tags are written in', () =>
+    {
+      // Arrange
+      battler.__pctBase = 0.05;
+
+      // Act
+      const result = battler.naturalDisplayBase('pct');
+
+      // Assert
+      expect(result).toBeCloseTo(5, 10);
+    });
+
+    it('hands back a parameter held in display numbers as it is', () =>
+    {
+      // Arrange
+      battler.__flatBase = 12;
+
+      // Act
+      const result = battler.naturalDisplayBase('flat');
+
+      // Assert
+      expect(result).toBe(12);
+    });
+  });
+
   describe('calculatePlusRate', () =>
   {
-    it('returns only the bonus, with the base subtracted back out', () =>
-    {
-      // Arrange: base 100 with a flat +20 and a +10% rate resolves to a 132 total, of which
-      // 32 is the bonus this method is responsible for reporting.
-      // Act
-      const result = battler.calculatePlusRate(100, 20, 10);
-
-      // Assert
-      expect(result).toBeCloseTo(32, 10);
-    });
-
-    it('applies the rate to the flat bonus as well as to the base', () =>
-    {
-      // Arrange: the flat bonus is folded in before scaling, which is what makes plus and rate
-      // compound rather than stack independently.
-      // Act
-      const result = battler.calculatePlusRate(100, 100, 100);
-
-      // Assert: (100 + 100) * 2 - 100 = 300.
-      expect(result).toBeCloseTo(300, 10);
-    });
-
-    it('reports a flat bonus untouched when the rate is neutral', () =>
+    it('applies the rate to the base and the flat bonus together, returning only the difference', () =>
     {
       // Arrange & Act
-      const result = battler.calculatePlusRate(50, 7, 0);
+      const result = battler.calculatePlusRate(100, 10, 20);
 
-      // Assert
-      expect(result).toBeCloseTo(7, 10);
-    });
-
-    it('reports a negative bonus for a rate below neutral', () =>
-    {
-      // Arrange: a debuff rate has to be able to pull the parameter below its base.
-      // Act
-      const result = battler.calculatePlusRate(100, 0, -25);
-
-      // Assert
-      expect(result).toBeCloseTo(-25, 10);
-    });
-
-    it('reports no bonus at all when both parts are neutral', () =>
-    {
-      // Arrange & Act
-      const result = battler.calculatePlusRate(100, 0, 0);
-
-      // Assert
-      expect(result).toBeCloseTo(0, 10);
+      // Assert: (100 + 10) * 1.2 - 100.
+      expect(result).toBe(32);
     });
   });
-  //endregion calculatePlusRate
+  //endregion resolving bonuses
 
-  //region har
-  describe('HAR accessors', () =>
+  //region refreshing buffs
+  describe('refreshAllParameterBuffs', () =>
   {
-    it('starts every HAR bonus at zero', () =>
+    it('drops a buff whose source is gone and records the ones still present', () =>
     {
-      // Arrange & Act & Assert
-      expect([
-        battler.harGrowthPlus(),
-        battler.harGrowthRate(),
-        battler.harBuffPlus(),
-        battler.harBuffRate(),
-      ]).toEqual([ 0, 0, 0, 0 ]);
-    });
-
-    it('accumulates the permanent flat bonus, since growth is gained per level', () =>
-    {
-      // Arrange & Act: two levels each granting the same growth.
-      battler.modHarGrowthPlus(5);
-      battler.modHarGrowthPlus(5);
-
-      // Assert
-      expect(battler.harGrowthPlus()).toBe(10);
-    });
-
-    it('accumulates the permanent multiplicative bonus', () =>
-    {
-      // Arrange & Act
-      battler.modHarGrowthRate(3);
-      battler.modHarGrowthRate(4);
-
-      // Assert
-      expect(battler.harGrowthRate()).toBe(7);
-    });
-
-    it('replaces the temporary flat bonus rather than accumulating it', () =>
-    {
-      // Arrange: buffs are recalculated wholesale each refresh, so setting must overwrite -
-      // accumulating would make every refresh inflate the buff further.
-      battler.setHarBuffPlus(5);
+      // Arrange: a stale buff on pct from before the note changed, and a live one on flat.
+      battler.setNaturalBuffPlus('pct', 99);
+      battler.__notes = [ { note: '<flatBuffPlus:[3]>' } ];
 
       // Act
-      battler.setHarBuffPlus(8);
+      battler.refreshAllParameterBuffs();
 
       // Assert
-      expect(battler.harBuffPlus()).toBe(8);
+      expect(battler.naturalBuffPlus('pct')).toBe(0);
+      expect(battler.naturalBuffPlus('flat')).toBe(3);
     });
 
-    it('replaces the temporary multiplicative bonus rather than accumulating it', () =>
+    it('refreshes the reward bonuses too', () =>
     {
       // Arrange
-      battler.setHarBuffRate(5);
+      battler.refreshRewardBonuses = function()
+      {
+        this.setExpPlus(11);
+      };
 
       // Act
-      battler.setHarBuffRate(8);
+      battler.refreshAllParameterBuffs();
 
       // Assert
-      expect(battler.harBuffRate()).toBe(8);
+      expect(battler.expPlus()).toBe(11);
     });
   });
 
-  describe('getHarBuff', () =>
+  describe('clearAllParameterBuffs', () =>
   {
-    it('reports no bonus while no HAR buff is applied', () =>
-    {
-      // Arrange: the short-circuit spares every parameter read the arithmetic when nothing
-      // is buffed, which is the overwhelmingly common case.
-      // Act
-      const result = battler.getHarBuff(100);
-
-      // Assert
-      expect(result).toBe(0);
-    });
-
-    it('computes the bonus from a flat HAR buff alone', () =>
+    it('empties both buff tables and zeroes the rewards, but leaves growth alone', () =>
     {
       // Arrange
-      battler.setHarBuffPlus(10);
+      battler.setNaturalBuffPlus('pct', 5);
+      battler.setNaturalBuffRate('pct', 15);
+      battler.modNaturalGrowthPlus('pct', 2);
+      battler.setExpPlus(1);
+      battler.setGoldPlus(2);
+      battler.setSdpsPlus(3);
 
       // Act
-      const result = battler.getHarBuff(100);
+      battler.clearAllParameterBuffs();
 
       // Assert
-      expect(result).toBeCloseTo(10, 10);
+      expect(battler.naturalBuffPlusTable()).toEqual({});
+      expect(battler.naturalBuffRateTable()).toEqual({});
+      expect([ battler.expPlus(), battler.goldPlus(), battler.sdpsPlus() ]).toEqual([ 0, 0, 0 ]);
+      expect(battler.naturalGrowthPlus('pct')).toBe(2);
     });
+  });
 
-    it('computes the bonus from a rate HAR buff alone', () =>
+  describe('refreshParameterBuffs', () =>
+  {
+    it('records a flat buff the notes carry', () =>
     {
       // Arrange
-      battler.setHarBuffRate(50);
+      battler.__notes = [ { note: '<pctBuffPlus:[4]>' } ];
 
       // Act
-      const result = battler.getHarBuff(100);
+      battler.refreshParameterBuffs('pct');
 
       // Assert
-      expect(result).toBeCloseTo(50, 10);
+      expect(battler.naturalBuffPlusTable()).toEqual({ pct: 4 });
     });
 
-    it('compounds a flat and rate HAR buff together', () =>
+    it('records no flat entry when the notes carry none', () =>
+    {
+      // Arrange: a rate buff is present, so the refresh ran and chose not to write the flat one.
+      battler.__notes = [ { note: '<pctBuffRate:[10]>' } ];
+
+      // Act
+      battler.refreshParameterBuffs('pct');
+
+      // Assert
+      expect(battler.naturalBuffPlusTable()).toEqual({});
+    });
+
+    it('records a percent buff the notes carry', () =>
     {
       // Arrange
-      battler.setHarBuffPlus(20);
-      battler.setHarBuffRate(10);
+      battler.__notes = [ { note: '<pctBuffRate:[10]>' } ];
 
       // Act
-      const result = battler.getHarBuff(100);
+      battler.refreshParameterBuffs('pct');
 
       // Assert
-      expect(result).toBeCloseTo(32, 10);
+      expect(battler.naturalBuffRateTable()).toEqual({ pct: 10 });
+    });
+
+    it('records no percent entry when the notes carry none', () =>
+    {
+      // Arrange: a flat buff is present, so the refresh ran and chose not to write the percent one.
+      battler.__notes = [ { note: '<pctBuffPlus:[4]>' } ];
+
+      // Act
+      battler.refreshParameterBuffs('pct');
+
+      // Assert
+      expect(battler.naturalBuffRateTable()).toEqual({});
+    });
+
+    it('gives the formulas the parameter\'s base in display numbers as b', () =>
+    {
+      // Arrange: a base of 0.5 is 50 on the screen, and a tenth of that is 5.
+      battler.__pctBase = 0.5;
+      battler.__notes = [ { note: '<pctBuffPlus:[b * 0.1]>' } ];
+
+      // Act
+      battler.refreshParameterBuffs('pct');
+
+      // Assert
+      expect(battler.naturalBuffPlus('pct')).toBeCloseTo(5, 10);
     });
   });
 
-  describe('har getter', () =>
+  describe('refreshRewardBonuses', () =>
   {
-    it('layers the buff on top of the pre-natural HAR value', () =>
-    {
-      // Arrange: the getter chains onto whatever J-Base already resolved, so the buff is
-      // additive to that rather than replacing it.
-      const baseHar = battler.har;
-      battler.setHarBuffPlus(3);
-
-      // Act
-      const buffedHar = battler.har;
-
-      // Assert
-      expect(buffedHar - baseHar).toBeCloseTo(3, 10);
-    });
-
-    it('leaves HAR untouched while nothing is buffed', () =>
+    it('changes nothing on a battler that is not an enemy', () =>
     {
       // Arrange
-      const baseHar = battler.har;
+      battler.setExpPlus(5);
 
       // Act
-      const unbuffedHar = battler.har;
+      battler.refreshRewardBonuses();
 
       // Assert
-      expect(unbuffedHar).toBe(baseHar);
+      expect(battler.expPlus()).toBe(5);
     });
   });
-  //endregion har
 
-  //region regex lookups
-  /**
-   * Each of these three tables maps a parameter id onto the pair of notetags that parameter reads
-   * its buff from. Asserting the pair's identity rather than its length is what makes the mapping
-   * load-bearing: every case returns two elements, so a `case` that resolved to the neighbouring
-   * parameter's tags - silently buffing defense from an attack tag - would satisfy a length check
-   * exactly as well as the correct answer does.
-   */
-  describe('regex lookups by parameter id', () =>
+  describe('naturalParamBuff', () =>
   {
-    it.each([
-      [ 0, 'mhpBuffPlus', 'mhpBuffRate' ],
-      [ 1, 'mmpBuffPlus', 'mmpBuffRate' ],
-      [ 2, 'atkBuffPlus', 'atkBuffRate' ],
-      [ 3, 'defBuffPlus', 'defBuffRate' ],
-      [ 4, 'matBuffPlus', 'matBuffRate' ],
-      [ 5, 'mdfBuffPlus', 'mdfBuffRate' ],
-      [ 6, 'agiBuffPlus', 'agiBuffRate' ],
-      [ 7, 'lukBuffPlus', 'lukBuffRate' ],
-    ])('resolves base param %i to the %s / %s tag pair', (paramId, plusTag, rateTag) =>
+    it('sums every matching formula across every note source', () =>
     {
-      // Arrange & Act
-      const [ plusStructure, rateStructure ] = battler.getRegexByParamId(paramId);
-
-      // Assert
-      expect(notetagNameOf(plusStructure)).toBe(plusTag);
-      expect(notetagNameOf(rateStructure)).toBe(rateTag);
-    });
-
-    it('resolves nothing for a base param id outside the eight', () =>
-    {
-      // Arrange: there are exactly eight base parameters, so anything else is a caller error
-      // and must not silently resolve to some other parameter's regex.
-      // Act
-      const structures = battler.getRegexByParamId(8);
-
-      // Assert
-      expect(structures).toBeNull();
-    });
-
-    it.each([
-      [ 0, 'hitBuffPlus', 'hitBuffRate' ],
-      [ 1, 'evaBuffPlus', 'evaBuffRate' ],
-      [ 2, 'criBuffPlus', 'criBuffRate' ],
-      [ 3, 'cevBuffPlus', 'cevBuffRate' ],
-      [ 4, 'mevBuffPlus', 'mevBuffRate' ],
-      [ 5, 'mrfBuffPlus', 'mrfBuffRate' ],
-      [ 6, 'cntBuffPlus', 'cntBuffRate' ],
-      [ 7, 'hrgBuffPlus', 'hrgBuffRate' ],
-      [ 8, 'mrgBuffPlus', 'mrgBuffRate' ],
-      [ 9, 'trgBuffPlus', 'trgBuffRate' ],
-    ])('resolves ex-param %i to the %s / %s tag pair', (paramId, plusTag, rateTag) =>
-    {
-      // Arrange & Act
-      const [ plusStructure, rateStructure ] = battler.getRegexByExParamId(paramId);
-
-      // Assert
-      expect(notetagNameOf(plusStructure)).toBe(plusTag);
-      expect(notetagNameOf(rateStructure)).toBe(rateTag);
-    });
-
-    it('resolves nothing for an ex-param id outside the ten', () =>
-    {
-      // Arrange & Act
-      const structures = battler.getRegexByExParamId(10);
-
-      // Assert
-      expect(structures).toBeNull();
-    });
-
-    it.each([
-      [ 0, 'tgrBuffPlus', 'tgrBuffRate' ],
-      [ 1, 'grdBuffPlus', 'grdBuffRate' ],
-      [ 2, 'recBuffPlus', 'recBuffRate' ],
-      [ 3, 'phaBuffPlus', 'phaBuffRate' ],
-      [ 4, 'mcrBuffPlus', 'mcrBuffRate' ],
-      [ 5, 'tcrBuffPlus', 'tcrBuffRate' ],
-      [ 6, 'pdrBuffPlus', 'pdrBuffRate' ],
-      [ 7, 'mdrBuffPlus', 'mdrBuffRate' ],
-      [ 8, 'fdrBuffPlus', 'fdrBuffRate' ],
-      [ 9, 'exrBuffPlus', 'exrBuffRate' ],
-    ])('resolves sp-param %i to the %s / %s tag pair', (paramId, plusTag, rateTag) =>
-    {
-      // Arrange & Act
-      const [ plusStructure, rateStructure ] = battler.getRegexBySpParamId(paramId);
-
-      // Assert
-      expect(notetagNameOf(plusStructure)).toBe(plusTag);
-      expect(notetagNameOf(rateStructure)).toBe(rateTag);
-    });
-
-    it('resolves nothing for an sp-param id outside the ten', () =>
-    {
-      // Arrange & Act
-      const structures = battler.getRegexBySpParamId(10);
-
-      // Assert
-      expect(structures).toBeNull();
-    });
-  });
-  //endregion regex lookups
-
-  //region out-of-range parameter access
-  describe('out-of-range parameter access', () =>
-  {
-    it.each([
-      [ 'bParamGrowthPlus', 8 ],
-      [ 'bParamGrowthRate', 8 ],
-      [ 'bParamBuffPlus', 8 ],
-      [ 'bParamBuffRate', 8 ],
-      [ 'sParamGrowthPlus', 10 ],
-      [ 'sParamGrowthRate', 10 ],
-      [ 'sParamBuffPlus', 10 ],
-      [ 'sParamBuffRate', 10 ],
-      [ 'xParamGrowthPlus', 10 ],
-      [ 'xParamGrowthRate', 10 ],
-      [ 'xParamBuffPlus', 10 ],
-      [ 'xParamBuffRate', 10 ],
-    ])('%s yields no bonus for an id past the end of its table', (accessor, outOfRangeId) =>
-    {
-      // Arrange: the bonus tables are fixed-length, and every one of these feeds directly into
-      // parameter arithmetic. An undefined escaping here would turn the parameter into NaN
-      // rather than merely being wrong, so the absent case has to answer with a real zero.
-      // Act
-      const result = battler[accessor](outOfRangeId);
-
-      // Assert
-      expect(result).toBe(0);
-    });
-  });
-  //endregion out-of-range parameter access
-
-  //region buff calculations
-  describe('calculateExParamBuff', () =>
-  {
-    it('reports no bonus while the ex-param carries no buff', () =>
-    {
-      // Arrange & Act
-      const result = battler.calculateExParamBuff(0, 100);
-
-      // Assert
-      expect(result).toBe(0);
-    });
-
-    it('computes the bonus once the ex-param is buffed', () =>
-    {
-      // Arrange
-      battler.setXparamBuffPlus(0, 20);
-      battler.setXparamBuffRate(0, 10);
+      // Arrange: two sources, plus a sibling parameter's tag that must not be counted.
+      battler.__notes = [ { note: '<flatBuffPlus:[3]>' }, { note: '<flatBuffPlus:[1 + 1]>\n<pctBuffPlus:[50]>' } ];
+      const { buffPlus } = globalThis.ParameterRegistry.naturalBinding('flat');
 
       // Act
-      const result = battler.calculateExParamBuff(0, 100);
+      const result = battler.naturalParamBuff(buffPlus, 0);
 
-      // Assert
-      expect(result).toBeCloseTo(32, 10);
+      // Assert: 3 + (1 + 1).
+      expect(result).toBe(5);
     });
   });
-
-  describe('calculateSpParamBuff', () =>
-  {
-    it('reports no bonus while the sp-param carries no buff', () =>
-    {
-      // Arrange & Act
-      const result = battler.calculateSpParamBuff(0, 100);
-
-      // Assert
-      expect(result).toBe(0);
-    });
-
-    it('computes the bonus once the sp-param is buffed', () =>
-    {
-      // Arrange
-      battler.setSparamBuffPlus(0, 20);
-      battler.setSparamBuffRate(0, 10);
-
-      // Act
-      const result = battler.calculateSpParamBuff(0, 100);
-
-      // Assert
-      expect(result).toBeCloseTo(32, 10);
-    });
-  });
-  //endregion buff calculations
+  //endregion refreshing buffs
 
   //region max tp
-  describe('max tp', () =>
+  describe('maxTp', () =>
   {
-    it('reports no natural bonus while max tp is unbuffed', () =>
-    {
-      // Arrange & Act
-      const result = battler.getMaxTpBuff(100);
-
-      // Assert
-      expect(result).toBe(0);
-    });
-
-    it('computes the max tp bonus from a flat buff', () =>
+    it('reports the calculated max tech', () =>
     {
       // Arrange
-      battler.setMaxTpBuffPlus(15);
+      battler.actualMaxTp = () => 120;
 
-      // Act
-      const result = battler.getMaxTpBuff(100);
-
-      // Assert
-      expect(result).toBeCloseTo(15, 10);
+      // Act & Assert
+      expect(battler.maxTp()).toBe(120);
     });
 
-    it('compounds flat and rate max tp buffs', () =>
+    it('never reports a negative max tech', () =>
     {
       // Arrange
-      battler.setMaxTpBuffPlus(20);
-      battler.setMaxTpBuffRate(10);
+      battler.actualMaxTp = () => -15;
 
-      // Act
-      const result = battler.getMaxTpBuff(100);
-
-      // Assert
-      expect(result).toBeCloseTo(32, 10);
+      // Act & Assert
+      expect(battler.maxTp()).toBe(0);
     });
+  });
 
-    it('routes the natural bonus through the buffed base max tp', () =>
+  describe('actualMaxTp', () =>
+  {
+    it('adds the natural bonus bound to max tech onto its base', () =>
+    {
+      // Arrange: the bonus answers only for mtp.
+      battler.maxTpBeforeNatural = () => 100;
+      battler.naturalBonus = key => (key === 'mtp' ? 12 : 99);
+
+      // Act & Assert
+      expect(battler.actualMaxTp()).toBe(112);
+    });
+  });
+
+  describe('maxTpBeforeNatural', () =>
+  {
+    it('combines the configured base with every tag that raises it', () =>
     {
       // Arrange
-      battler.setMaxTpBuffPlus(10);
+      battler.getBaseMaxTp = () => 100;
+      battler.getBaseMaxTpBonuses = () => 25;
 
-      // Act
-      const bonuses = battler.maxTpNaturalBonuses();
-
-      // Assert
-      expect(bonuses).toBeCloseTo(10, 10);
-    });
-
-    it('adds the natural bonus onto the base when reporting actual max tp', () =>
-    {
-      // Arrange
-      const unbuffed = battler.actualMaxTp();
-      battler.setMaxTpBuffPlus(10);
-
-      // Act
-      const buffed = battler.actualMaxTp();
-
-      // Assert
-      expect(buffed - unbuffed).toBeCloseTo(10, 10);
-    });
-
-    it('never reports a negative max tp, however steep the debuff', () =>
-    {
-      // Arrange: a debuff large enough to drive the total below zero would otherwise hand the
-      // engine a negative resource cap, which breaks every gauge that reads it.
-      battler.setMaxTpBuffPlus(-9999);
-
-      // Act
-      const result = battler.maxTp();
-
-      // Assert
-      expect(result).toBe(0);
+      // Act & Assert
+      expect(battler.maxTpBeforeNatural()).toBe(125);
     });
   });
   //endregion max tp
-
-  //region sdp interplay
-  describe('refreshHarBuffs', () =>
-  {
-    /**
-     * Runs a HAR buff refresh and reports the base the formula was handed.
-     * @param {Game_Battler} subject The battler driving this step.
-     * @returns {number} The base parameter the formula received.
-     */
-    function observedHarBase(subject)
-    {
-      let observed = null;
-      subject.naturalParamBuff = (_structure, baseParam) =>
-      {
-        observed = baseParam;
-
-        return 0;
-      };
-      subject.refreshHarBuffs();
-
-      return observed;
-    }
-
-    it('folds an SDP bonus into the pre-natural HAR base for an actor when SDP is installed', () =>
-    {
-      // Arrange: HAR buffs are formula-driven off a base that already includes the notetag
-      // factor and any SDP contribution, so a panel-granted HAR has to be visible to the
-      // formula rather than being added on afterwards.
-      const previousSdp = globalThis.J.SDP;
-      globalThis.J.SDP = {};
-      battler.isActor = () => true;
-      battler.getSdpBonusForParameterKey = () => 7;
-
-      // Act
-      const observed = observedHarBase(battler);
-
-      // Assert
-      expect(observed).toBeCloseTo(battler.baseHarFactor() + 7, 10);
-
-      // restore the bare-global namespace rather than leaking it into later tests in this file.
-      globalThis.J.SDP = previousSdp;
-    });
-
-    it('asks nothing of SDP for an enemy, which panels never apply to', () =>
-    {
-      // Arrange: panels are an actor-only system, so the bonus accessor only exists on actors.
-      // Asking an enemy for it would throw the moment its data changed.
-      const previousSdp = globalThis.J.SDP;
-      globalThis.J.SDP = {};
-      battler.isActor = () => false;
-
-      // Act
-      const observed = observedHarBase(battler);
-
-      // Assert
-      expect(observed).toBeCloseTo(battler.baseHarFactor(), 10);
-
-      // restore the bare-global namespace.
-      globalThis.J.SDP = previousSdp;
-    });
-
-    it('uses the bare HAR factor when SDP is not installed', () =>
-    {
-      // Arrange: J-SDP is optional, so its absence must leave the base untouched rather than
-      // poisoning the formula input.
-      battler.isActor = () => true;
-
-      // Act
-      const observed = observedHarBase(battler);
-
-      // Assert
-      expect(observed).toBeCloseTo(battler.baseHarFactor(), 10);
-    });
-  });
-  //endregion sdp interplay
-
-  //region subclass contract
-  describe('getParamBaseNaturalBonuses', () =>
-  {
-    it('contributes nothing from the base battler, which has no growth model of its own', () =>
-    {
-      // Arrange: actors and enemies each implement this; a bare battler reaching it means some
-      // other subclass slipped through, so it contributes nothing rather than guessing.
-      const warn = vi.spyOn(console, 'warn')
-        .mockImplementation(() => {});
-
-      // Act
-      const result = battler.getParamBaseNaturalBonuses(0, 100);
-
-      // Assert
-      expect(result).toBe(0);
-
-      // restore manually so the spy cannot leak into whichever test runs next in this file.
-      warn.mockRestore();
-    });
-
-    it('warns about the unrecognized subclass rather than failing silently', () =>
-    {
-      // Arrange
-      const warn = vi.spyOn(console, 'warn')
-        .mockImplementation(() => {});
-
-      // Act
-      battler.getParamBaseNaturalBonuses(0, 100);
-
-      // Assert
-      expect(warn).toHaveBeenCalled();
-
-      warn.mockRestore();
-    });
-  });
-  //endregion subclass contract
 });
 //endregion plugins/natural/core/objects/game-battler.test.js

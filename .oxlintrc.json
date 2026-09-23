@@ -521,6 +521,8 @@
     "MotionTargetResolver": "writable",
     "MotionTypeRegistry": "writable",
     "MoveStateRemovalManager": "writable",
+    "NaturalParameterBinding": "writable",
+    "NaturalParameterRegistration": "writable",
     "NoteResolver": "writable",
     "OmniCategory": "writable",
     "OmniConditional": "writable",

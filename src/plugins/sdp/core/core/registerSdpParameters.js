@@ -23,6 +23,16 @@ class SdpParameterRegistration
       .build();
 
     ParameterRegistry.register(sdpMultiplier);
+
+    // the SDP multiplier grows against the factor its own tags produce.
+    const sdpMultiplierNatural = new NaturalParameterBinding(
+      J.SDP.RegExp.SdpRateBuffPlus,
+      J.SDP.RegExp.SdpRateBuffRate,
+      J.SDP.RegExp.SdpRateGrowthPlus,
+      J.SDP.RegExp.SdpRateGrowthRate,
+      battler => battler.baseSdpMultiplier());
+
+    ParameterRegistry.bindNatural('sdr', sdpMultiplierNatural);
   }
 }
 

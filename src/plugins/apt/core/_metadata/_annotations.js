@@ -128,7 +128,18 @@
  *   tune progression alongside EXP.
  *
  * ============================================================================
+ * NATURAL GROWTH:
+ * With J-NaturalGrowth also installed, aptitude rate (apr) accepts its buff
+ * and growth tags. Amounts are percents, like <aptMultiplier:NUM>:
+ * <aprGrowthPlus:[2]> grants 2% more AP per level.
+ *
+ * TAG FORMAT:
+ *  <apr(Buff|Growth)(Plus|Rate):[FORMULA]>
+ * See J-NaturalGrowth for how Buff/Growth and Plus/Rate behave.
+ * ============================================================================
  * CHANGELOG:
+ * - 1.5.0
+ *    Added natural growth tags for aptitude rate (apr).
  * - 1.4.0
  *    Added ApManager#resolveDisplaySourceByKey, so a display can name where an
  *    aptitude gain came from.

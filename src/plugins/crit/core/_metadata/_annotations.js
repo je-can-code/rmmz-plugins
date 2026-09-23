@@ -163,6 +163,10 @@
  * will NOT take any bonus damage from critical hits. All critical hits will
  * be the same as non-critical hits. However, for the sake of other possible
  * effects, the attack will still be classified as a "critical hit".
+ *
+ *  <critReduction:-10>
+ * NUM may be negative. This lowers the battler's critical damage reduction by
+ * 10%, so critical hits against them land harder- a debuff, not a defense.
  * ============================================================================
  * NATURAL GROWTH + CRITICAL DAMAGE MULTIPLIERS/REDUCTIONS:
  * Have you ever wanted to permanently grow your CDM/CDR stats along with your
@@ -174,9 +178,9 @@
  * pattern already established by the natural growths plugin, you too can start
  * growing your CDR and CDM by flat or rate multipliers as you level up!
  *
- * NOTE ABOUT NATURAL "BUFFS" FOR CDM/CDR:
- * Unlike other natural buffs, cdm/cdr are not tracked and only used during the
- * calculation of a critical hit.
+ * NOTE ABOUT UNITS:
+ * Like every J-NaturalGrowths tag, the amounts are percents: a "Plus" of 10
+ * adds 10% to the stat, and a "Rate" of 10 adds 10% of the base value below.
  *
  * TAG USAGE:
  * - Actors
@@ -198,25 +202,24 @@
  * Where [FORMULA] is a real formula this time (unlike the thisCritChance/
  * thisCritMultiplier tags above)- it runs through the standard evaluator with:
  *   a = the battler these bonuses are being calculated for
- *   b = the battler's base value for this parameter (baseCriticalMultiplier()
- *       for cdm tags, baseCriticalReduction() for ctr tags- 0.5 by default
- *       for both)
+ *   b = the battler's base value for this parameter, in percent
+ *       (baseCriticalMultiplier() for cdm tags, baseCriticalReduction() for
+ *       ctr tags- 0.5 by default for both, so b is 50)
  *   v = $gameVariables._data
  *
  * EXAMPLE:
  *  <cdmGrowthRate:[5]>
- * Gain +5% crit damage multiplier (cdm) per level.
- * This would result in gaining an ever-increasing amount of crit damage
- * multiplier per level.
+ * Gain 5% of the base crit damage multiplier (cdm) per level- with the
+ * default base of 50%, that is +2.5% per level.
  *
  *  <ctrBuffPlus:[25]>
- * Gain a flat 25 crit taken rate reduction (ctr) while this tag is applied to
- * this battler.
+ * Gain a flat 25% crit taken rate reduction (ctr) while this tag is applied
+ * to this battler.
  * This would be lost if the object this tag lived on was removed.
  *
  *  <cdmGrowthPlus:[a.level * 3]>
- * Gain (the battler's level multiplied by 3) crit damage multiplier (cdm) per
- * level.
+ * Gain (the battler's level multiplied by 3)% crit damage multiplier (cdm)
+ * per level.
  * This would result in gaining an ever-increasing amount of crit damage
  * multiplier per level.
  *
@@ -517,6 +520,10 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.4.0
+ *    critReduction and critReductionBase accept negative values, so a debuff can
+ *    make critical hits land harder. Fixed the Rate variants of the cdm and ctr
+ *    growth tags.
  * - 1.3.1
  *    The percent factor parser no longer pre-checks for a missing or blank plugin
  *    parameter. Such a value stringifies into something unparseable, which the

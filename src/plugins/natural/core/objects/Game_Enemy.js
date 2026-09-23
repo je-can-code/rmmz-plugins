@@ -45,168 +45,104 @@ Game_Enemy.prototype.maxTp = function()
 
 //region b params
 /**
- * Extends `.paramBase()` to include any additional growth bonuses as part of the base.
+ * Extends `.paramBase()` to include any natural buffs as part of the base.<br/>
+ * Enemies never level, so the growth half of their natural bonus is always empty.
  */
 J.NATURAL.Aliased.Game_Enemy.set('paramBase', Game_Enemy.prototype.paramBase);
 Game_Enemy.prototype.paramBase = function(paramId)
 {
-  // get original value.
-  // perform original logic.
-  const baseParam = J.NATURAL.Aliased.Game_Enemy.get('paramBase')
-    .call(this, paramId);
+  // start from the engine's own base for this parameter.
+  const baseParam = this.paramBaseBeforeNatural(paramId);
 
-  // determine the structure for this parameter.
-  const paramBaseNaturalBonuses = this.paramBaseNaturalBonuses(paramId);
+  // translate the engine's id into the key its natural tags are bound to.
+  const parameterKey = ParameterKeys.bparamKey(paramId);
+
+  // add whatever this enemy is buffed by.
+  const naturalBonus = this.engineNaturalBonus(parameterKey, baseParam);
 
   // return result.
-  return (baseParam + paramBaseNaturalBonuses);
+  return (baseParam + naturalBonus);
 };
 
 /**
- * This is exclusively for access to the natural growth values, without the base parameter value added.
- * @param {number} paramId The parameter id in question.
+ * The engine's base for a base parameter, before any natural bonus.<br/>
+ * This is what a base parameter's natural tags see as their base.
+ * @param {number} paramId The id of the base parameter.
  * @returns {number}
  */
-Game_Enemy.prototype.paramBaseNaturalBonuses = function(paramId)
+Game_Enemy.prototype.paramBaseBeforeNatural = function(paramId)
 {
-  // determine the structure for this parameter.
-  const structures = this.getRegexByParamId(paramId);
-
-  // if there is no regexp, then don't try to do things.
-  if (!structures) return 0;
-
-  // get original value.
   // perform original logic.
-  const baseParam = J.NATURAL.Aliased.Game_Enemy.get('paramBase')
+  return J.NATURAL.Aliased.Game_Enemy.get('paramBase')
     .call(this, paramId);
-
-  // destructure into the plus and rate regexp structures.
-  const paramNaturalBonuses = this.getParamBaseNaturalBonuses(paramId, baseParam);
-
-  // return result.
-  return (paramNaturalBonuses);
-};
-
-/**
- * Gets all natural growths for this base parameter.
- * Enemies only have buffs.
- * @param {number} paramId The parameter id in question.
- * @param {number} baseParam The base parameter.
- * @returns {number} The added value of the `baseParam` + `paramBuff` + `paramGrowth`.
- */
-Game_Enemy.prototype.getParamBaseNaturalBonuses = function(paramId, baseParam)
-{
-  // determine temporary buff for this param.
-  return this.calculateBParamBuff(paramId, baseParam);
 };
 //endregion b params
 
 //region ex params
 /**
- * Extends `.xparam()` to include any additional growth bonuses.
+ * Extends `.xparam()` to include any natural buffs.
  */
 J.NATURAL.Aliased.Game_Enemy.set('xparam', Game_Enemy.prototype.xparam);
 Game_Enemy.prototype.xparam = function(xparamId)
 {
-  // get original value.
-  // perform original logic.
-  const baseParam = J.NATURAL.Aliased.Game_Enemy.get('xparam')
-    .call(this, xparamId);
+  // start from the engine's own value for this parameter.
+  const baseParam = this.xparamBeforeNatural(xparamId);
 
-  // determine the structure for this parameter.
-  const xparamNaturalBonuses = this.xparamNaturalBonuses(xparamId);
+  // translate the engine's id into the key its natural tags are bound to.
+  const parameterKey = ParameterKeys.xparamKey(xparamId);
+
+  // add whatever this enemy is buffed by.
+  const naturalBonus = this.engineNaturalBonus(parameterKey, baseParam);
 
   // return result.
-  return (baseParam + xparamNaturalBonuses);
+  return (baseParam + naturalBonus);
 };
 
 /**
- * This is exclusively for access to the natural growth values, without the ex-parameter value added.
- * @param {number} xparamId The parameter id in question.
+ * The engine's value for an ex-parameter, before any natural bonus.<br/>
+ * This is what an ex-parameter's natural tags see as their base.
+ * @param {number} xparamId The id of the ex-parameter.
  * @returns {number}
  */
-Game_Enemy.prototype.xparamNaturalBonuses = function(xparamId)
+Game_Enemy.prototype.xparamBeforeNatural = function(xparamId)
 {
-  // get original value.
   // perform original logic.
-  const baseParam = J.NATURAL.Aliased.Game_Enemy.get('xparam')
+  return J.NATURAL.Aliased.Game_Enemy.get('xparam')
     .call(this, xparamId);
-
-  // determine the structure for this parameter.
-  const structures = this.getRegexByExParamId(xparamId);
-
-  // if there is no regexp, then don't try to do things.
-  if (!structures) return 0;
-
-  // destructure into the plus and rate regexp structures.
-  return this.getXparamNaturalBonuses(xparamId, baseParam);
-};
-
-/**
- * Gets all natural growths for this ex-parameter.
- * @param {number} xparamId The parameter id in question.
- * @param {number} baseParam The base parameter.
- * @returns {number} The added value of the `baseParam` + `paramBuff` + `paramGrowth`.
- */
-Game_Enemy.prototype.getXparamNaturalBonuses = function(xparamId, baseParam)
-{
-  // determine temporary buff for this param.
-  return this.calculateExParamBuff(xparamId, baseParam);
 };
 //endregion ex params
 
 //region sp params
 /**
- * Extends `.sparam()` to include any additional growth bonuses.
+ * Extends `.sparam()` to include any natural buffs.
  */
 J.NATURAL.Aliased.Game_Enemy.set('sparam', Game_Enemy.prototype.sparam);
 Game_Enemy.prototype.sparam = function(sparamId)
 {
-  // get original value.
-  // perform original logic.
-  const baseParam = J.NATURAL.Aliased.Game_Enemy.get('sparam')
-    .call(this, sparamId);
+  // start from the engine's own value for this parameter.
+  const baseParam = this.sparamBeforeNatural(sparamId);
 
-  // determine the structure for this parameter.
-  const sparamNaturalBonuses = this.sparamNaturalBonuses(sparamId);
+  // translate the engine's id into the key its natural tags are bound to.
+  const parameterKey = ParameterKeys.sparamKey(sparamId);
+
+  // add whatever this enemy is buffed by.
+  const naturalBonus = this.engineNaturalBonus(parameterKey, baseParam);
 
   // return result.
-  return (baseParam + sparamNaturalBonuses);
+  return (baseParam + naturalBonus);
 };
 
 /**
- * This is exclusively for access to the natural growth values, without the sp-parameter value added.
- * @param {number} sparamId The parameter id in question.
+ * The engine's value for an sp-parameter, before any natural bonus.<br/>
+ * This is what an sp-parameter's natural tags see as their base.
+ * @param {number} sparamId The id of the sp-parameter.
  * @returns {number}
  */
-Game_Enemy.prototype.sparamNaturalBonuses = function(sparamId)
+Game_Enemy.prototype.sparamBeforeNatural = function(sparamId)
 {
-  // get original value.
   // perform original logic.
-  const baseParam = J.NATURAL.Aliased.Game_Enemy.get('sparam')
+  return J.NATURAL.Aliased.Game_Enemy.get('sparam')
     .call(this, sparamId);
-
-  // determine the structure for this parameter.
-  const structures = this.getRegexBySpParamId(sparamId);
-
-  // if there is no regexp, then don't try to do things.
-  if (!structures) return 0;
-
-  // destructure into the plus and rate regexp structures.
-  return this.getSparamNaturalBonuses(sparamId, baseParam);
-};
-
-/**
- * Gets all natural growths for this sp-parameter.
- * Enemies only have buffs.
- * @param {number} sparamId The parameter id in question.
- * @param {number} baseParam The base parameter.
- * @returns {number} The added value of the `baseParam` + `paramBuff` + `paramGrowth`.
- */
-Game_Enemy.prototype.getSparamNaturalBonuses = function(sparamId, baseParam)
-{
-  // determine temporary buff for this param.
-  return this.calculateSpParamBuff(sparamId, baseParam);
 };
 //endregion sp params
 

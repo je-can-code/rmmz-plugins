@@ -15,7 +15,7 @@ describe('J-CriticalFactors metadata (direct src import)', () =>
     globalThis.PluginManager = { parameters: () => ({}) };
 
     globalThis.__PLUGIN_NAME__ = 'J-Base';
-    globalThis.__PLUGIN_VERSION__ = '3.2.0';
+    globalThis.__PLUGIN_VERSION__ = '3.19.0';
     await import('../../../../src/plugins/_base/core/_metadata/initialization.js');
 
     globalThis.__PLUGIN_NAME__ = 'J-CriticalFactors';
@@ -216,6 +216,30 @@ describe('J-CriticalFactors metadata (direct src import)', () =>
 
       // Assert
       expect(first[1]).toBe('40');
+    });
+
+    it('captures a negative crit reduction, which makes critical hits land harder', () =>
+    {
+      // Arrange
+      const { CritDamageReduction } = globalThis.J.CRIT.RegExp;
+
+      // Act
+      const [ first ] = [ ...'<critReduction:-10>'.matchAll(CritDamageReduction) ];
+
+      // Assert
+      expect(first[1]).toBe('-10');
+    });
+
+    it('captures a negative base crit reduction the same way', () =>
+    {
+      // Arrange
+      const { CritDamageReductionBase } = globalThis.J.CRIT.RegExp;
+
+      // Act
+      const [ first ] = [ ...'<critReductionBase:-25>'.matchAll(CritDamageReductionBase) ];
+
+      // Assert
+      expect(first[1]).toBe('-25');
     });
 
     it('captures a formula expression from a crit damage growth tag', () =>

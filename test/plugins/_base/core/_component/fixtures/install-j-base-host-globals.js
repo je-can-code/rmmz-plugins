@@ -377,6 +377,12 @@ export function installJBaseHostGlobals(
     this._states = [];
   };
 
+  // J-Base's natural bonus seam, which every parameter owner adds into its value. It is laid down here
+  // rather than left to J-Base's Game_Battler.js because in the shipped game J-Base always loads before
+  // any owner does, so an owner under test should find the seam answering zero exactly as it would there.
+  // A test that imports J-Base's real Game_Battler.js simply replaces this with the identical original.
+  sandbox.Game_Battler.prototype.naturalBonus = () => 0;
+
   sandbox.$dataActors = [];
   sandbox.$dataClasses = [];
   sandbox.$dataSkills = [];
