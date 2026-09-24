@@ -16,6 +16,7 @@ describe('J-ABS Game_Event (unit, all downstream dependencies mocked)', () =>
   let JABS_BattlerRole_ctor;
   let originalFindProperPageIndex;
   let originalPage;
+  let originalClearPageSettings;
 
   beforeAll(async () =>
   {
@@ -80,10 +81,12 @@ describe('J-ABS Game_Event (unit, all downstream dependencies mocked)', () =>
     // Game_Event.prototype[key] later would NOT affect the aliased original already captured at import time.
     originalFindProperPageIndex = vi.fn(() => 0);
     originalPage = vi.fn(() => 'the-page');
+    originalClearPageSettings = vi.fn();
     [ 'initMembers', 'event', 'refresh', 'setupPageSettings' ]
       .forEach(key => { Game_Event.prototype[key] = function() {}; });
     Game_Event.prototype.findProperPageIndex = originalFindProperPageIndex;
     Game_Event.prototype.page = originalPage;
+    Game_Event.prototype.clearPageSettings = originalClearPageSettings;
     // vanilla accessor the abs layer reads through.
     Game_Event.prototype.eventId = function() { return this._eventId; };
 
@@ -390,6 +393,117 @@ describe('J-ABS Game_Event (unit, all downstream dependencies mocked)', () =>
 
       expect(event.setupPage).not.toHaveBeenCalled();
     });
+
+    it('leaves the page exactly where it was when the change is deferred', () =>
+    {
+      // Arrange
+      const event = buildEvent({ findProperPageIndex: () => 2, _pageIndex: 0, deferPageChange: vi.fn(() => true) });
+      const transformSpy = vi.spyOn(event, 'transformBattler').mockImplementation(() => {});
+
+      // Act
+      event.jabsEventRefresh();
+
+      // Assert
+      expect(event.deferPageChange).toHaveBeenCalledWith(2);
+      expect(event.pageIndex()).toEqual(0);
+      expect(event.setupPage).not.toHaveBeenCalled();
+      expect(transformSpy).not.toHaveBeenCalled();
+    });
+
+    it('announces the page it left behind once the change has been applied', () =>
+    {
+      // Arrange
+      const event = buildEvent({ findProperPageIndex: () => 2, _pageIndex: 1, onPageChanged: vi.fn() });
+      vi.spyOn(event, 'transformBattler').mockImplementation(() => {});
+
+      // Act
+      event.jabsEventRefresh();
+
+      // Assert
+      expect(event.pageIndex()).toEqual(2);
+      expect(event.onPageChanged).toHaveBeenCalledWith(1);
+    });
+  });
+
+  describe('respawnAnimationId()', () =>
+  {
+    it('plays the animation written on the page over the one in the enemy\'s note', () =>
+    {
+      // Arrange- the enemy note carries a decoy animation that must lose to the comment.
+      const enemy = { respawnAnimationId: vi.fn(() => 99) };
+      const event = buildEvent({
+        getRespawnAnimationOverrides: () => 12,
+        getJabsBattler: () => ({ getBattler: () => enemy }),
+      });
+
+      // Act
+      const animationId = event.respawnAnimationId();
+
+      // Assert
+      expect(animationId).toEqual(12);
+      expect(enemy.respawnAnimationId).not.toHaveBeenCalled();
+    });
+
+    it('falls back to whatever the enemy decides when the page says nothing', () =>
+    {
+      // Arrange
+      const event = buildEvent({
+        getRespawnAnimationOverrides: () => null,
+        getJabsBattler: () => ({ getBattler: () => ({ respawnAnimationId: () => 99 }) }),
+      });
+
+      // Act
+      const animationId = event.respawnAnimationId();
+
+      // Assert
+      expect(animationId).toEqual(99);
+    });
+
+    it('honours a page that asks for no animation at all rather than falling through', () =>
+    {
+      // Arrange- zero is an answer, not an absence, so the enemy's note must never be consulted.
+      const event = buildEvent({
+        getRespawnAnimationOverrides: () => 0,
+        getJabsBattler: () => ({ getBattler: () => ({ respawnAnimationId: () => 99 }) }),
+      });
+
+      // Act
+      const animationId = event.respawnAnimationId();
+
+      // Assert
+      expect(animationId).toEqual(0);
+    });
+  });
+
+  describe('deferPageChange()', () =>
+  {
+    it('never holds a page back on its own', () =>
+    {
+      // Arrange
+      const event = buildEvent();
+
+      // Act
+      const deferred = event.deferPageChange(3);
+
+      // Assert
+      expect(deferred).toEqual(false);
+    });
+  });
+
+  describe('onPageChanged()', () =>
+  {
+    it('is an empty seam that leaves the event untouched', () =>
+    {
+      // Arrange
+      const event = buildEvent({ _pageIndex: 4 });
+
+      // Act
+      const result = event.onPageChanged(1);
+
+      // Assert
+      expect(result).toBeUndefined();
+      expect(event.pageIndex()).toEqual(4);
+    });
   });
 
   describe('page()', () =>
@@ -457,6 +571,24 @@ describe('J-ABS Game_Event (unit, all downstream dependencies mocked)', () =>
       event.setupPageSettings();
 
       expect(parseSpy).toHaveBeenCalled();
+    });
+  });
+
+  describe('clearPageSettings()', () =>
+  {
+    it('forgets the battler data the lost page described, after the original logic', () =>
+    {
+      // Arrange
+      const event = buildEvent();
+      event.setBattlerCoreData({ battlerId: () => 5 });
+
+      // Act
+      event.clearPageSettings();
+
+      // Assert
+      expect(event.getBattlerCoreData()).toBeNull();
+      expect(event.isJabsBattler()).toEqual(false);
+      expect(originalClearPageSettings.mock.contexts).toContain(event);
     });
   });
   //endregion initialization

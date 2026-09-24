@@ -1,5 +1,6 @@
 //region Sprite_MapGauge
 import Sprite_Icon from './Sprite_Icon.js';
+import GaugeTrail from '../models/GaugeTrail.js';
 
 /**
  * The sprite for displaying a gauge on a character's sprite.
@@ -7,17 +8,36 @@ import Sprite_Icon from './Sprite_Icon.js';
 class Sprite_MapGauge
   extends Sprite_Gauge
 {
+  /**
+   * The resources whose gauges show recent change with a trail: a red chunk draining after a loss, a green
+   * chunk filling in after a gain. These are the ones that get spent and restored- a gauge that only ever
+   * fills, like a cast or a charge, has no change worth showing.<br/>
+   * An extension whose gauge should trail too adds its status type here.
+   * @type {string[]}
+   */
+  static TrailingStatusTypes = [ 'hp', 'mp', 'tp' ];
 
   //region properties
   /**
    * Gets the gauge.
    * @returns {{_bitmapWidth: number, _bitmapHeight: number, _gaugeHeight: number, _label: string,
-   * _value: number|null, _iconIndex: number, _iconSprite: Sprite|null, _activated: boolean}} The gauge.
+   * _value: number|null, _iconIndex: number, _iconSprite: Sprite|null, _activated: boolean,
+   * _trail: GaugeTrail}} The gauge.
    */
   gauge()
   {
     // hand back the gauge.
     return this._gauge;
+  }
+
+  /**
+   * Gets the trail that shows recent change on this gauge.
+   * @returns {GaugeTrail}
+   */
+  gaugeTrail()
+  {
+    // hand back the trail.
+    return this.gauge()._trail;
   }
   //endregion properties
 
@@ -119,6 +139,12 @@ class Sprite_MapGauge
      * @type {boolean}
      */
     this._gauge._activated = true;
+
+    /**
+     * The trail that shows recent change on this gauge, for the gauges that show it.
+     * @type {GaugeTrail}
+     */
+    this._gauge._trail = new GaugeTrail();
   }
 
   //region properties
@@ -404,6 +430,132 @@ class Sprite_MapGauge
 
   //endregion update
 
+  //region trail
+  /**
+   * Whether this gauge shows recent change with a trail. See {@link Sprite_MapGauge.TrailingStatusTypes}.
+   * @returns {boolean}
+   */
+  usesTrail()
+  {
+    return Sprite_MapGauge.TrailingStatusTypes.includes(this.getStatusType());
+  }
+
+  /**
+   * Extends {@link Sprite_Gauge#setup}.<br/>
+   * A different battler or resource is a fresh gauge, so its trail starts over from whatever it first shows.
+   * The same pair again is not: the target frame asks for it on every hit, and a trail cleared each time would
+   * never get to drain. The engine's setup ends by updating the bitmap, so the trail is cleared ahead of it.
+   * @param {Game_Battler} battler The battler to show.
+   * @param {string} statusType The resource to show, such as "hp".
+   */
+  setup(battler, statusType)
+  {
+    // decide whether this is a new gauge before the engine records the new pair.
+    const isFreshGauge = battler !== this.getBattler() || statusType !== this.getStatusType();
+
+    // a fresh gauge's trail forgets the last battler, so its first value is shown as it is.
+    if (isFreshGauge)
+    {
+      this.gaugeTrail()
+        .clear();
+    }
+
+    // perform original logic.
+    super.setup(battler, statusType);
+
+    // the engine's setup already recorded the value, so nothing reads as changed- draw the fresh gauge outright.
+    if (isFreshGauge)
+    {
+      this.redraw();
+    }
+  }
+
+  /**
+   * Extends {@link Sprite_Gauge#updateBitmap}.<br/>
+   * A gauge that trails leaves the engine's easing behind entirely: its trail decides what the bar shows.
+   */
+  updateBitmap()
+  {
+    // gauges that don't trail keep the engine's own update.
+    if (!this.usesTrail())
+    {
+      super.updateBitmap();
+      return;
+    }
+
+    // everything else follows its trail.
+    this.updateTrail();
+  }
+
+  /**
+   * Feeds the trail this frame's value and redraws whenever there is something new to see.
+   */
+  updateTrail()
+  {
+    // nothing bound to the gauge means nothing to follow.
+    const value = this.currentValue();
+    if (isNaN(value)) return;
+
+    // grab the max to measure the value against.
+    const maxValue = this.currentMaxValue();
+
+    // tell whether anything changed, and whether the trail was still moving, before the trail steps- the frame
+    // it settles on has to be drawn too, or the last sliver of trail would stay on screen.
+    const hasChanged = value !== this.value() || maxValue !== this.maxValue();
+    const wasMoving = !this.gaugeTrail()
+      .isSettled();
+
+    // keep the engine's own record of the value current, for anything else that reads it.
+    this.setValue(value);
+    this.setMaxValue(maxValue);
+
+    // move the trail one frame along.
+    this.gaugeTrail()
+      .track(value, maxValue);
+
+    // only spend a redraw when there is something new to show.
+    if (hasChanged || wasMoving)
+    {
+      this.redraw();
+    }
+  }
+
+  /**
+   * The color of the trail right now: the gain color while a gain fills in, and the loss color otherwise.
+   * @returns {string}
+   */
+  trailColor()
+  {
+    // grab which way the gauge is moving.
+    const trend = this.gaugeTrail()
+      .trend();
+
+    // a gain fills in with the gain color.
+    if (trend === GaugeTrail.Trends.Gain) return this.trailGainColor();
+
+    // anything else trailing is a loss, draining in the loss color.
+    return this.trailLossColor();
+  }
+
+  /**
+   * The color a loss drains in: the engine's power-down red, the same red a debuff's square uses.
+   * @returns {string}
+   */
+  trailLossColor()
+  {
+    return ColorManager.powerDownColor();
+  }
+
+  /**
+   * The color a gain fills in with: the engine's power-up green, the same green a buff's square uses.
+   * @returns {string}
+   */
+  trailGainColor()
+  {
+    return ColorManager.powerUpColor();
+  }
+  //endregion trail
+
   //region draw
   drawIcon()
   {
@@ -486,6 +638,75 @@ class Sprite_MapGauge
         }
       }
     }
+  }
+
+  /**
+   * Extends {@link Sprite_Gauge#drawGaugeRect}.<br/>
+   * A gauge that trails draws its trail between the backdrop and the fill; any other gauge draws as the engine
+   * does.
+   * @param {number} x The x coordinate.
+   * @param {number} y The y coordinate.
+   * @param {number} width The width of the gauge.
+   * @param {number} height The height of the gauge.
+   */
+  drawGaugeRect(x, y, width, height)
+  {
+    // gauges that don't trail draw as the engine does.
+    if (!this.usesTrail())
+    {
+      super.drawGaugeRect(x, y, width, height);
+      return;
+    }
+
+    // everything else draws its trail.
+    this.drawTrailingGaugeRect(x, y, width, height);
+  }
+
+  /**
+   * Draws a trailing gauge: the backdrop, then the chunk of recent change from the fill's edge out to the
+   * trail's, then the fill over the top. Loss or gain, the chunk sits between the two ends- only its color says
+   * which it is.
+   * @param {number} x The x coordinate.
+   * @param {number} y The y coordinate.
+   * @param {number} width The width of the gauge.
+   * @param {number} height The height of the gauge.
+   */
+  drawTrailingGaugeRect(x, y, width, height)
+  {
+    // grab the trail whose ends are being drawn.
+    const trail = this.gaugeTrail();
+
+    // the engine draws a gauge with nothing valid to show- tp outside battle, unless it is kept- as empty, and
+    // so does this.
+    const isShown = this.isValid();
+    const fillRate = isShown
+      ? trail.fillRate()
+      : 0;
+    const trailRate = isShown
+      ? trail.trailRate()
+      : 0;
+
+    // the fill and the trail sit inside the same one-pixel border the engine draws its fill within.
+    const innerWidth = width - 2;
+    const innerHeight = height - 2;
+    const fillWidth = Math.floor(innerWidth * fillRate);
+    const trailWidth = Math.floor(innerWidth * trailRate);
+
+    // the backdrop.
+    const backColor = this.gaugeBackColor();
+    this.bitmap.fillRect(x, y, width, height, backColor);
+
+    // the chunk of recent change, from the fill's edge out to the trail's- when there is any to see.
+    if (trailWidth > fillWidth)
+    {
+      const trailColor = this.trailColor();
+      this.bitmap.fillRect(x + 1 + fillWidth, y + 1, trailWidth - fillWidth, innerHeight, trailColor);
+    }
+
+    // the fill, over the top.
+    const fillColor1 = this.gaugeColor1();
+    const fillColor2 = this.gaugeColor2();
+    this.bitmap.gradientFillRect(x + 1, y + 1, fillWidth, innerHeight, fillColor1, fillColor2);
   }
 
   /**

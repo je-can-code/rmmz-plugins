@@ -2,7 +2,7 @@
 
 ## Source
 
-- `src/plugins/abs/core/managers/JABS_Engine.js` (~4.9k lines — instance fields for runtime flags + orchestration)
+- `src/plugins/abs/core/managers/JABS_Engine.js` (~6.2k lines as of 2026-09-23 — instance fields for runtime flags + orchestration)
 - `src/plugins/abs/core/managers/JABS_AiManager.js` (already **static** battler registry / spatial index)
 - `src/plugins/abs/core/managers/DataManager.js` (`globalThis.$jabsEngine = new JABS_Engine()`)
 - Hundreds of `$jabsEngine` call sites across ABS, extensions, HUD, SDP, Pixel, Regions, Popups, …
@@ -73,6 +73,11 @@ Phased, because the item is. Each phase is checkable on its own.
 **Phase 2**
 - [ ] `grep -rn '\$jabsEngine' src/plugins/ --include=*.js` returns nothing outside `_annotations.js`
       changelog text, and the name is gone from `LEGACY_GLOBAL_THIS_PROPERTIES`
+- [ ] Chef Adventure's data no longer names it either: from `ca`,
+      `grep -l '\$jabsEngine' chef-adventure/data/*.json` returns nothing. Its map event scripts
+      called `$jabsEngine.forceMapAction` 230 times across 22 maps as of 2026-09-22, plus two
+      `getPlayer1`, so the migration includes a scripted `$jabsEngine.` → `JABS_Engine.` rewrite of
+      those Script commands, and a grep of `src/plugins/` alone undercounts it
 - [ ] in-game: fight on one map, transfer mid-combat, fight again. Request latches are false after
       the transfer and no action, loot, or hitbox overlay from the first map renders on the second.
       Static fields leaking between maps is the failure mode the static flip introduces, and it does
@@ -86,5 +91,6 @@ Phased, because the item is. Each phase is checkable on its own.
 ## Notes
 
 - **Not** multi-engine — still one map-wide director; static ≠ multiple instances.
-- Pairs with: `abs-input-controller-registry.md`, `abs-action-map-bootstrap-refactor.md`, `game-enemies-factory-rename.md`, `game-system-j-namespace-save-slice.md`, `jabs-database-tags-editor-first.md`, `jabs-engine-loot-action-director.md`, `cached-actions-map.md`.
+- Pairs with: `abs-input-controller-registry.md`, `abs-action-map-bootstrap-refactor.md`, `game-enemies-factory-rename.md`, `jabs-engine-loot-action-director.md`, `cached-actions-map.md`, and the completed [`game-system-j-namespace-save-slice.md`](../completed/game-system-j-namespace-save-slice.md) and [`jabs-database-tags-editor-first.md`](../completed/jabs-database-tags-editor-first.md).
+- `game-system-j-namespace-save-slice.md` was closed with its Phase 1 undone: `absEnabled` is still a class field on the engine, and `DataManager.createGameObjects` builds a new engine on every new game and every load, so the flag resets to `true` each time. Phase 1 above is now its only home. Chef Adventure never runs Enable JABS or Disable JABS, so nothing has been lost to it yet.
 - Defer until SDP mastery / current ABS feature train allows a deliberate breaking window — label explicitly **JABS 5.0** in PR titles when execution starts.

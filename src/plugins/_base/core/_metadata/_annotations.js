@@ -157,6 +157,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 3.20.0
+ *    Map gauges now leave a trail. A loss leaves the lost amount behind in red to
+ *    drain away, and a gain shows in green ahead of the bar as it fills in.
  * - 3.19.0
  *    Added natural growth bindings to the parameter registry, so any plugin can
  *    offer growth tags for its own parameters.

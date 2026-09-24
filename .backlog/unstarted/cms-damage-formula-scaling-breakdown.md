@@ -26,7 +26,7 @@ Player-facing skill detail today shows one **Raw Damage** number by evaluating t
 
 ## Work
 
-1. **Convention doc** (short section in `.junie/guidelines.md` or `ca/docs/weapons/`): player-facing damage formulas use one top-level `-`, `a.*` offense sum, `b.*` defense sum, plain coefficients; exceptions use fallback display.
+1. **Convention doc** (a short section in `ca/docs/weapons/`, where weapon formulas are authored): player-facing damage formulas use one top-level `-`, `a.*` offense sum, `b.*` defense sum, plain coefficients; exceptions use fallback display.
 2. **`DamageFormulaBreakdown` utility** (J-Base or CMS-owned, hoisted global):
    - Parse restricted grammar (lightweight AST — not regex split on `-`).
    - Emit `{ power: [{ side:'a', param, coefficient, label }], defense: [...], flatTerms? }`.

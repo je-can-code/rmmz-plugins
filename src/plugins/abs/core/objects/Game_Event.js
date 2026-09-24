@@ -181,6 +181,12 @@ Game_Event.prototype.jabsEventRefresh = function()
   // check if the page index changed.
   if (this.pageIndex() !== newPageIndex)
   {
+    // something may want this change to wait, and will see it through itself once it is ready.
+    if (this.deferPageChange(newPageIndex) === true) return;
+
+    // remember the page being left behind, for anything that cares what the new one replaced.
+    const previousPageIndex = this.pageIndex();
+
     // update the page index.
     this.setPageIndex(newPageIndex);
 
@@ -189,7 +195,38 @@ Game_Event.prototype.jabsEventRefresh = function()
 
     // also transform the battler if applicable.
     this.transformBattler();
+
+    // the page and its battler are both settled, so announce the change.
+    this.onPageChanged(previousPageIndex);
   }
+};
+
+/**
+ * Decides whether a page change this event is about to make should be held back for now.
+ *
+ * A seam for extensions. J-ABS itself has no reason to delay a page, so a change always goes ahead
+ * here. An extension that does hold one back takes on seeing it through: nothing re-enters this
+ * refresh on its own, so it must refresh the event again once it is ready for the change to land.
+ * @param {number} newPageIndex The page this event's conditions now call for.
+ * @returns {boolean} True when the change was held back and must not be applied now.
+ */
+// eslint-disable-next-line no-unused-vars
+Game_Event.prototype.deferPageChange = function(newPageIndex)
+{
+  return false;
+};
+
+/**
+ * Announces that this event has moved to a new page and its battler has been rebuilt to match.
+ *
+ * A seam for extensions, and empty here on purpose. A previous page index of -2 is vanilla's value
+ * for an event that has never had a page, which means this change is the event being built as the
+ * map loads rather than anything happening on a map already in play.
+ * @param {number} previousPageIndex The page this event was on before the change.
+ */
+// eslint-disable-next-line no-unused-vars
+Game_Event.prototype.onPageChanged = function(previousPageIndex)
+{
 };
 
 /**
@@ -260,6 +297,30 @@ Game_Event.prototype.setupPageSettings = function()
 
   // parse the comments on the event to potentially transform it into a battler.
   this.parseEnemyComments();
+};
+
+/**
+ * Extends {@link #clearPageSettings}.<br/>
+ * Also forgets the battler that the lost page described.
+ *
+ * An event whose conditions stop matching every one of its pages is left with no page at all-
+ * a switch turning off, or a time range like `<timeRangePage:4:00-16:00>` closing. Vanilla blanks
+ * the graphic and makes it passable, but it knows nothing of the battler data parsed off the page
+ * that just went away. Left in place, that data still reads as a battler, and the refresh that
+ * follows builds a fresh one from it: invisible, walk-through, full health, and still fightable.
+ *
+ * This is the mirror of {@link #setupPageSettings} parsing that data in, so a page that leaves
+ * takes its battler with it.
+ */
+J.ABS.Aliased.Game_Event.set('clearPageSettings', Game_Event.prototype.clearPageSettings);
+Game_Event.prototype.clearPageSettings = function()
+{
+  // perform original logic.
+  J.ABS.Aliased.Game_Event.get('clearPageSettings')
+    .call(this);
+
+  // no page means no battler, so forget whatever the last page described.
+  this.initializeCoreData(null);
 };
 
 /**
@@ -642,6 +703,29 @@ Game_Event.prototype.getRespawnAnimationOverrides = function()
 
   // return what we found.
   return respawnAnimationId;
+};
+
+/**
+ * The animation this event's battler announces itself with.
+ *
+ * Resolved by the usual ladder: a comment on the event's page outranks the enemy's own note, which in
+ * turn falls back to the plugin's default. Named for respawning because that is where it began, but it
+ * is the one flourish a battler has for appearing on the map at all, so anything bringing a battler into
+ * view- or taking one out of it- may play it. Only meaningful while a battler stands on this event, since
+ * the enemy's note is read off that battler.
+ * @returns {number} The animation id, where 0 means nobody wants one.
+ */
+Game_Event.prototype.respawnAnimationId = function()
+{
+  // an animation written on the page itself wins outright.
+  const override = this.getRespawnAnimationOverrides();
+  if (override !== null) return override;
+
+  // otherwise the enemy decides, and falls back to the default on its own.
+  const enemy = this.getJabsBattler()
+    .getBattler();
+
+  return enemy.respawnAnimationId();
 };
 
 /**

@@ -1052,11 +1052,8 @@ class JABS_Engine
     // a page that no longer declares a battler has nothing to announce.
     if (!jabsBattler) return;
 
-    // grab the underlying enemy for note-based resolution.
-    const enemy = jabsBattler.getBattler();
-
     // resolve the animation by the usual ladder.
-    const animationId = freshEvent.getRespawnAnimationOverrides() ?? enemy.respawnAnimationId();
+    const animationId = freshEvent.respawnAnimationId();
 
     // an animation of zero means nobody wants one.
     if (animationId === 0) return;
@@ -3169,9 +3166,13 @@ class JABS_Engine
   /**
    * Generates an enemy and transplants it in the place of the corresponding index
    * of the eventId on the battle map.
+   *
+   * Hands back the new event, or undefined when the clone id names no event on the enemy clone map-
+   * which is reported as an error before returning.
    * @param {number} x The x coordinate of where to place the enemy on the map.
    * @param {number} y The y coordinate of where to place the enemy on the map.
    * @param {number} enemyCloneEventId The eventId from the enemy clone map identifying the enemy to clone.
+   * @returns {Game_Event|undefined}
    */
   addEnemyToMap(x, y, enemyCloneEventId)
   {

@@ -8510,7 +8510,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       const engine = new JABS_Engine();
       const freshEvent = {
         getJabsBattler: () => null,
-        getRespawnAnimationOverrides: vi.fn(),
+        respawnAnimationId: vi.fn(),
         requestAnimation: vi.fn(),
       };
 
@@ -8518,7 +8518,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       engine.processRespawnAnimation(freshEvent);
 
       // Assert- resolution never even ran.
-      expect(freshEvent.getRespawnAnimationOverrides).not.toHaveBeenCalled();
+      expect(freshEvent.respawnAnimationId).not.toHaveBeenCalled();
     });
 
     it('plays nothing when the resolved animation id is zero', () =>
@@ -8527,8 +8527,8 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       vi.useFakeTimers();
       const engine = new JABS_Engine();
       const freshEvent = {
-        getJabsBattler: () => ({ getBattler: () => ({ respawnAnimationId: () => 0 }) }),
-        getRespawnAnimationOverrides: () => null,
+        getJabsBattler: () => ({}),
+        respawnAnimationId: () => 0,
         requestAnimation: vi.fn(),
       };
 
@@ -8541,43 +8541,25 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       vi.useRealTimers();
     });
 
-    it('plays the comment-overridden animation over the enemy note animation', () =>
-    {
-      // Arrange- the enemy note carries a decoy animation that must lose to the comment.
-      vi.useFakeTimers();
-      const engine = new JABS_Engine();
-      const freshEvent = {
-        getJabsBattler: () => ({ getBattler: () => ({ respawnAnimationId: () => 99 }) }),
-        getRespawnAnimationOverrides: () => 12,
-        requestAnimation: vi.fn(),
-      };
-
-      // Act
-      engine.processRespawnAnimation(freshEvent);
-      vi.runAllTimers();
-
-      // Assert
-      expect(freshEvent.requestAnimation).toHaveBeenCalledWith(12);
-      vi.useRealTimers();
-    });
-
-    it('falls back to the enemy note animation when no comment overrides it', () =>
+    it('plays the animation the event resolves, once its sprite has had a beat to be built', () =>
     {
       // Arrange
       vi.useFakeTimers();
       const engine = new JABS_Engine();
       const freshEvent = {
-        getJabsBattler: () => ({ getBattler: () => ({ respawnAnimationId: () => 99 }) }),
-        getRespawnAnimationOverrides: () => null,
+        getJabsBattler: () => ({}),
+        respawnAnimationId: () => 12,
         requestAnimation: vi.fn(),
       };
 
       // Act
       engine.processRespawnAnimation(freshEvent);
+      const calledBeforeTheBeat = freshEvent.requestAnimation.mock.calls.length;
       vi.runAllTimers();
 
       // Assert
-      expect(freshEvent.requestAnimation).toHaveBeenCalledWith(99);
+      expect(calledBeforeTheBeat).toBe(0);
+      expect(freshEvent.requestAnimation).toHaveBeenCalledWith(12);
       vi.useRealTimers();
     });
   });

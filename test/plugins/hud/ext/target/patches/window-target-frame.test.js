@@ -24,8 +24,9 @@ describe('Window_TargetFrame afflictions patch (direct src import)', () =>
     originalUpdateTarget = vi.fn();
     StubWindowTargetFrame.prototype.initialize = originalInitialize;
     StubWindowTargetFrame.prototype.updateTarget = originalUpdateTarget;
-    StubWindowTargetFrame.prototype.hasTargetIcon = () => false;
+    StubWindowTargetFrame.prototype.targetBattlerGaugesX = () => 0;
     StubWindowTargetFrame.prototype.targetBattlerGaugesY = () => 0;
+    StubWindowTargetFrame.prototype.targetGaugeStackHeight = () => 0;
 
     vi.doMock(
       '../../../../../../src/plugins/hud/ext/target/windows/Window_TargetFrame.js',
@@ -112,52 +113,46 @@ describe('Window_TargetFrame afflictions patch (direct src import)', () =>
 
   describe('targetAfflictionLayoutSpec', () =>
   {
-    it('anchors the layout at the base indent when there is no target icon', () =>
+    it('starts the strip where the gauges start', () =>
     {
       // Arrange
-      const window = buildWindow({ hasTargetIcon: () => false, targetBattlerGaugesY: () => 10 });
+      const window = buildWindow({ targetBattlerGaugesX: () => 12 });
 
       // Act
       const layout = window.targetAfflictionLayoutSpec();
 
       // Assert
-      expect(layout.originX).toBe(32);
+      expect(layout.originX).toBe(12);
     });
 
-    it('pushes the layout right by an icon width when a target icon is drawn', () =>
+    it('tucks the strip in right under the gauges the frame is showing', () =>
     {
-      // Arrange
-      const window = buildWindow({ hasTargetIcon: () => true, targetBattlerGaugesY: () => 10 });
+      // Arrange- the gauges' top and their depth differ, so neither can stand in for the other.
+      const window = buildWindow({ targetBattlerGaugesY: () => 44, targetGaugeStackHeight: () => 28 });
 
       // Act
       const layout = window.targetAfflictionLayoutSpec();
 
       // Assert
-      expect(layout.originX).toBe(32 + 32);
+      expect(layout.originY).toBe(72);
     });
 
-    it('positions the layout below the gauge stack with a fixed offset', () =>
+    it('asks for the compact strip: one shared row of half-size icons on colored squares', () =>
     {
       // Arrange
-      const window = buildWindow({ hasTargetIcon: () => false, targetBattlerGaugesY: () => 100 });
+      const window = buildWindow();
 
       // Act
       const layout = window.targetAfflictionLayoutSpec();
 
       // Assert
-      expect(layout.originY).toBe(144);
-    });
-
-    it('sets a fixed row gap', () =>
-    {
-      // Arrange
-      const window = buildWindow({ hasTargetIcon: () => false, targetBattlerGaugesY: () => 0 });
-
-      // Act
-      const layout = window.targetAfflictionLayoutSpec();
-
-      // Assert
-      expect(layout.rowGap).toBe(24);
+      expect(layout.singleRow).toBe(true);
+      expect(layout.iconScale).toBe(0.5);
+      expect(layout.polarityBacking).toBe(true);
+      expect(layout.iconPitch).toBe(30);
+      expect(layout.timerOffsetY).toBe(5);
+      expect(layout.timerFontSizeReduction).toBe(12);
+      expect(layout.stackFontSizeReduction).toBe(12);
     });
   });
 
@@ -210,11 +205,7 @@ describe('Window_TargetFrame afflictions patch (direct src import)', () =>
       // Arrange
       const render = vi.fn();
       const battler = {};
-      const window = buildWindow({
-        _afflictionPresenter: { render },
-        hasTargetIcon: () => false,
-        targetBattlerGaugesY: () => 0,
-      });
+      const window = buildWindow({ _afflictionPresenter: { render } });
       window._j._battler = battler;
       window._j._inactivityTimer = 60;
 

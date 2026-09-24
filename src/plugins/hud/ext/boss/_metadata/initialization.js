@@ -24,6 +24,16 @@ globalThis.J ||= {};
   {
     throw new Error(`Either missing J-HUD or has a lower version than the required: ${requiredHudVersion}`);
   }
+
+  // Check to ensure we have the minimum required version of the J-HUD-TargetFrame plugin.
+  const requiredTargetFrameVersion = '2.0.0';
+  const targetFrameVersion = J.HUD.EXT.TARGET.Metadata.version.version();
+  const hasTargetFrameRequirement = J.BASE.Helpers.satisfies(targetFrameVersion, requiredTargetFrameVersion);
+  if (hasTargetFrameRequirement === false)
+  {
+    throw new Error(
+      `Either missing J-HUD-TargetFrame or has a lower version than the required: ${requiredTargetFrameVersion}`);
+  }
 })();
 //endregion version check
 
@@ -43,5 +53,6 @@ J.HUD.EXT.BOSS.Metadata = new JHudBoss_PluginMetadata(__PLUGIN_NAME__, __PLUGIN_
  */
 J.HUD.EXT.BOSS.Aliased = {};
 J.HUD.EXT.BOSS.Aliased.Hud_Manager = new Map();
+J.HUD.EXT.BOSS.Aliased.JABS_Battler = new Map();
 J.HUD.EXT.BOSS.Aliased.Scene_Map = new Map();
 //endregion Introduction

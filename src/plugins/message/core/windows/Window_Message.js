@@ -547,9 +547,22 @@ Window_Message.prototype.isFadingMessage = function()
  * letter with it. So the collapse is undone here and replaced with a fade: the window is held fully
  * open and made progressively transparent instead, which is the only way the text is still on screen
  * to leave with it.
+ *
+ * A window that was never opened declines the fade, because it has nothing on screen to fade. A Show
+ * Choices, Input Number or Select Item written without a Show Text above it starts with this window
+ * still shut, and still ends by terminating it - so fading from there would throw the empty box fully
+ * open for the whole length of the fade just to dissolve it again.
  */
 Window_Message.prototype.beginMessageFade = function()
 {
+  // the original's `close()` only raises a flag, so the openness here is still what the player saw.
+  if (this.isClosed() === true)
+  {
+    this.finishMessageFade();
+
+    return;
+  }
+
   const frames = MessageFade.frames();
 
   this.setFadeFrames(frames);

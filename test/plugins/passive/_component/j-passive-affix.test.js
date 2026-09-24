@@ -1487,25 +1487,27 @@ describe('J-Passive-Affix (direct src import)', () =>
       };
     }
 
-    describe('buildFramedTarget', () =>
+    describe('decorateFramedTarget', () =>
     {
-      it('applies the tier stripe color to the framed target name when the stripe hex is valid', () =>
+      it('applies the tier name and the tier stripe color when the stripe hex is valid', () =>
       {
         // Arrange
-        const prefixState = tierState({ isEnemyPrefix: true, tierColorHex: '#aabbcc' });
+        const prefixState = tierState({ isEnemyPrefix: true, iconIndex: 5, name: 'Prime', tierColorHex: '#aabbcc' });
         const battler = {
           isEnemy: () => true,
           getPassiveStateIds: () => [ 1 ],
           state: () => prefixState,
         };
-        const battlerLastHit = buildLastHit({ battler });
+        const framedBattler = buildLastHit({ battler });
+        const framedTarget = { name: 'Slime' };
 
         // Act
         const jabsBattlerInstance = Object.create(globalThis.JABS_Battler.prototype);
-        const framedTarget = globalThis.JABS_Battler.prototype.buildFramedTarget
-          .call(jabsBattlerInstance, battlerLastHit);
+        globalThis.JABS_Battler.prototype.decorateFramedTarget
+          .call(jabsBattlerInstance, framedTarget, framedBattler);
 
         // Assert
+        expect(framedTarget.name).toBe('Prime Slime');
         expect(framedTarget.nameColorHex).toBe('#aabbcc');
       });
 
@@ -1513,15 +1515,17 @@ describe('J-Passive-Affix (direct src import)', () =>
       {
         // Arrange- no passive states at all, so resolvePassiveTierStripeColorHex resolves to empty.
         const battler = { isEnemy: () => true, getPassiveStateIds: () => [] };
-        const battlerLastHit = buildLastHit({ battler });
+        const framedBattler = buildLastHit({ battler });
+        const framedTarget = { name: 'Slime' };
 
         // Act
         const jabsBattlerInstance = Object.create(globalThis.JABS_Battler.prototype);
-        const framedTarget = globalThis.JABS_Battler.prototype.buildFramedTarget
-          .call(jabsBattlerInstance, battlerLastHit);
+        globalThis.JABS_Battler.prototype.decorateFramedTarget
+          .call(jabsBattlerInstance, framedTarget, framedBattler);
 
         // Assert
         expect(framedTarget.nameColorHex).toBeUndefined();
+        expect(framedTarget.name).toBe('Slime');
       });
     });
 
@@ -1575,7 +1579,7 @@ describe('J-Passive-Affix (direct src import)', () =>
         expect(framedTarget.name).toBe('Slime');
       });
 
-      it('prepends the prefix name and icon, ignoring a null passive state entry along the way', () =>
+      it('prepends the prefix name and leads with its icon, ignoring a null passive state entry along the way', () =>
       {
         // Arrange
         const prefixState = tierState({ isEnemyPrefix: true, iconIndex: 5, name: 'Fierce' });
@@ -1591,10 +1595,11 @@ describe('J-Passive-Affix (direct src import)', () =>
           .call({}, framedTarget, battlerLastHit);
 
         // Assert
-        expect(framedTarget.name).toBe('\\I[5]Fierce Slime');
+        expect(framedTarget.name).toBe('Fierce Slime');
+        expect(framedTarget.nameIconIndices).toEqual([ 5 ]);
       });
 
-      it('appends the suffix name and icon after the enemy label', () =>
+      it('appends the suffix name after the enemy label and leads with its icon', () =>
       {
         // Arrange
         const suffixState = tierState({ isEnemySuffix: true, iconIndex: 6, name: 'Doom' });
@@ -1610,7 +1615,8 @@ describe('J-Passive-Affix (direct src import)', () =>
           .call({}, framedTarget, battlerLastHit);
 
         // Assert
-        expect(framedTarget.name).toBe('\\I[6]Slime of Doom');
+        expect(framedTarget.name).toBe('Slime of Doom');
+        expect(framedTarget.nameIconIndices).toEqual([ 6 ]);
       });
 
       it('applies both a prefix and a suffix, stopping the scan once both slots are filled', () =>
@@ -1633,12 +1639,14 @@ describe('J-Passive-Affix (direct src import)', () =>
           .call({}, framedTarget, battlerLastHit);
 
         // Assert
-        expect(framedTarget.name).toBe('\\I[5]\\I[6]Fierce Slime of Doom');
+        expect(framedTarget.name).toBe('Fierce Slime of Doom');
+        expect(framedTarget.nameIconIndices).toEqual([ 5, 6 ]);
       });
 
-      it('colorizes the label when J.MESSAGE is present and the prefix defines a tier hex', () =>
+      it('leaves the tier color off the name text, even with J.MESSAGE present and a tier hex defined', () =>
       {
-        // Arrange
+        // Arrange- everything a color code would need is on hand, so only the code declining to write one
+        // can keep it out. The tier color reaches the frame through nameColorHex instead.
         const savedMessage = globalThis.J.MESSAGE;
         globalThis.J.MESSAGE = {};
         const prefixState = tierState({
@@ -1656,7 +1664,8 @@ describe('J-Passive-Affix (direct src import)', () =>
           .call({}, framedTarget, battlerLastHit);
 
         // Assert
-        expect(framedTarget.name).toBe('\\I[5]\\C[7]Fierce Slime\\C[0]');
+        expect(framedTarget.name).toBe('Fierce Slime');
+        expect(framedTarget.nameIconIndices).toEqual([ 5 ]);
 
         // Cleanup
         globalThis.J.MESSAGE = savedMessage;
@@ -1681,7 +1690,8 @@ describe('J-Passive-Affix (direct src import)', () =>
           .call({}, framedTarget, battlerLastHit);
 
         // Assert- the later prefix contributes neither its name nor its icon.
-        expect(framedTarget.name).toBe('\\I[5]Fierce Slime');
+        expect(framedTarget.name).toBe('Fierce Slime');
+        expect(framedTarget.nameIconIndices).toEqual([ 5 ]);
       });
 
       it('consumes only the first suffix when two suffix states are present', () =>
@@ -1703,7 +1713,8 @@ describe('J-Passive-Affix (direct src import)', () =>
           .call({}, framedTarget, battlerLastHit);
 
         // Assert- the later suffix contributes neither its name nor its icon.
-        expect(framedTarget.name).toBe('\\I[6]Slime of Doom');
+        expect(framedTarget.name).toBe('Slime of Doom');
+        expect(framedTarget.nameIconIndices).toEqual([ 6 ]);
       });
 
       it('keeps scanning for the prefix when the suffix is found first', () =>
@@ -1725,31 +1736,8 @@ describe('J-Passive-Affix (direct src import)', () =>
           .call({}, framedTarget, battlerLastHit);
 
         // Assert- both slots land, and the icons still lead with the prefix icon.
-        expect(framedTarget.name).toBe('\\I[5]\\I[6]Fierce Slime of Doom');
-      });
-
-      it('does not colorize the label when the prefix defines no tier hex, even with J.MESSAGE present', () =>
-      {
-        // Arrange
-        const savedMessage = globalThis.J.MESSAGE;
-        globalThis.J.MESSAGE = {};
-        const prefixState = tierState({ isEnemyPrefix: true, iconIndex: 5, name: 'Fierce', tierColorHex: null });
-        const battler = {
-          getPassiveStateIds: () => [ 1 ],
-          state: () => prefixState,
-        };
-        const battlerLastHit = buildLastHit({ battler });
-        const framedTarget = { name: 'Slime' };
-
-        // Act
-        globalThis.JABS_Battler.prototype.applyPassiveTierTargetFrameDecoration
-          .call({}, framedTarget, battlerLastHit);
-
-        // Assert
-        expect(framedTarget.name).toBe('\\I[5]Fierce Slime');
-
-        // Cleanup
-        globalThis.J.MESSAGE = savedMessage;
+        expect(framedTarget.name).toBe('Fierce Slime of Doom');
+        expect(framedTarget.nameIconIndices).toEqual([ 5, 6 ]);
       });
     });
   });

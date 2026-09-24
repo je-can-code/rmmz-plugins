@@ -2,39 +2,24 @@
 if (J.HUD && J.HUD.EXT && J.HUD.EXT.TARGET)
 {
   /**
-   * Extends {@link #drawTargetLevel}.<br/>
-   * Colorizes the level text and prepends the sync icon when the target is a
-   * content-synced actor.
-   * @param {number} x The x coordinate.
-   * @param {number} y The y coordinate.
+   * Extends {@link #targetLevelColor}.<br/>
+   * A content-synced target's level reads in light blue, so the player can tell at a glance that the level on
+   * show is the synced one rather than the real one.
+   * @returns {string}
    */
-  J.LEVEL.EXT.SYNC.Aliased.Window_TargetFrame.set('drawTargetLevel', Window_TargetFrame.prototype.drawTargetLevel);
-  Window_TargetFrame.prototype.drawTargetLevel = function(x, y)
+  J.LEVEL.EXT.SYNC.Aliased.Window_TargetFrame.set('targetLevelColor', Window_TargetFrame.prototype.targetLevelColor);
+  Window_TargetFrame.prototype.targetLevelColor = function()
   {
-    // don't draw level if we can't.
-    if (!this.canDrawTargetLevel()) return;
+    // the level only draws while a battler is framed, so there is always one to ask.
+    const { _battler: battler } = this.j();
 
-    // get the battler from the target.
-    const { _battler: battler } = this._j;
+    // only an actor can be content-synced, and while it is, its level reads in light blue- the same family
+    // as the outline the party frame gives a synced level.
+    if (battler.isActor() && battler.isContentSynced()) return '#80c0ff';
 
-    // check to see if the battler is a leveled battler.
-    if (!battler.level) return;
-
-    // check whether the target is a content-synced actor.
-    const isSynced = (battler.isActor() && battler.isContentSynced());
-
-    // resolve the sync indicator icon index.
-    const iconIndex = J.LEVEL.EXT.SYNC.Metadata.syncIndicatorIconIndex;
-
-    // build the sync prefix: color code and icon when synced.
-    const colorCode = isSynced ? '\\C[6]' : '';
-    const iconPrefix = (isSynced && iconIndex > 0) ? `\\I[${iconIndex}]` : '';
-
-    // build the level string with optional sync decoration.
-    const levelString = `\\FS[14]${colorCode}${iconPrefix}Lv.${battler.level.padZero(3)}`;
-
-    // draw the decorated level string.
-    this.drawTextEx(levelString, x, y, this.targetFrameLevelColumnWidth());
+    // perform original logic.
+    return J.LEVEL.EXT.SYNC.Aliased.Window_TargetFrame.get('targetLevelColor')
+      .call(this);
   };
 }
 //endregion Window_TargetFrame

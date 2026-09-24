@@ -6,8 +6,8 @@
 - `src/plugins/abs/ext/input/managers/DataManager.js` (lazy `new JABS_StandardController()`)
 - `src/plugins/abs/ext/input/managers/JABS_Engine.js` (`$jabsController1.update()`, `setBattler` on party cycle)
 - `src/plugins/abs/ext/input/_models/JABS_Battler.js` (`setBattler`)
-- `src/plugins/abs/core/__models/JABS_InputAdapter.js` (`static controllers`, `register()`)
-- `src/plugins/abs/core/__models/JABS_BaseController.js` (auto-`register(this)` on construct)
+- `src/plugins/abs/core/models/JABS_InputAdapter.js` (`static controllers`, `register()`)
+- `src/plugins/abs/core/models/JABS_BaseController.js` (auto-`register(this)` on construct)
 
 ## Context
 
@@ -32,7 +32,7 @@ Future: tag controllers with `playerSlot` / battler uuid when `getPlayer2()` exi
 
 - Refactor input ext to use adapter registry end-to-end.
 - Remove `globalThis.$jabsController1`; shrink verify legacy allowlist.
-- Document “primary controller” convention in J-ABS input ext metadata / guidelines.
+- Document the “primary controller” convention in the J-ABS input extension's plugin help (`_annotations.js`).
 - Audit charge ext and HUD input paths that assume `$jabsEngine.getPlayer1()` — unchanged for v1, but note co-op extension point.
 
 ## Definition of done

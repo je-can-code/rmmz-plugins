@@ -17,7 +17,7 @@ globalThis.J ||= {};
     throw new Error(`Either missing J-Base or has a lower version than the required: ${requiredBaseVersion}`);
   }
 
-  const requiredAbsVersion = '4.0.0';
+  const requiredAbsVersion = '4.25.0';
   const hasAbsRequirement = J.ABS
     && J.BASE.Helpers.satisfies(J.ABS.Metadata.version.version(), requiredAbsVersion);
 

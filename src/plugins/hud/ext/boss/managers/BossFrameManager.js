@@ -26,6 +26,14 @@ class BossFrameManager
    */
   static #showBossRequest = false;
 
+  /**
+   * Whether the boss frame is meant to be on screen: shown by the last request, and not hidden since.<br/>
+   * Unlike the requests, which clear the moment the frame acts on them, this holds for as long as the boss
+   * frame stays up.
+   * @type {boolean}
+   */
+  static #bossFrameActive = false;
+
   //endregion properties
 
   /**
@@ -230,6 +238,9 @@ class BossFrameManager
   static requestHideBossFrame()
   {
     this.#hideBossRequest = true;
+
+    // from here on the boss frame is on its way out.
+    this.#bossFrameActive = false;
   }
 
   /**
@@ -258,6 +269,9 @@ class BossFrameManager
   static requestShowBossFrame()
   {
     this.#showBossRequest = true;
+
+    // from here on the boss frame is up, until something asks for it to be hidden.
+    this.#bossFrameActive = true;
   }
 
   /**
@@ -269,6 +283,57 @@ class BossFrameManager
   }
 
   //endregion show
+
+  //region active
+  /**
+   * Whether the boss frame is meant to be on screen right now.
+   * @returns {boolean}
+   */
+  static isBossFrameActive()
+  {
+    return this.#bossFrameActive;
+  }
+
+  /**
+   * Whether the boss frame is up and showing the given battler.<br/>
+   * The target frame asks this before opening for a battler: the boss frame already shows that battler's
+   * name, level, health, and afflictions, and a second frame opened for them would only stack on top of it.
+   * @param {JABS_Battler} jabsBattler The battler being asked about.
+   * @returns {boolean}
+   */
+  static isFramingBattler(jabsBattler)
+  {
+    // a boss frame on its way out, or never shown, frames nobody.
+    if (!this.isBossFrameActive()) return false;
+
+    // grab whoever the boss frame is showing.
+    const bossBattler = this.getBossGameBattler();
+
+    // with no boss assigned, there is nobody to be.
+    if (!bossBattler) return false;
+
+    // it is the same battler when it carries the same uuid.
+    return bossBattler.getUuid() === jabsBattler.getUuid();
+  }
+
+  /**
+   * Where the target frame should sit, given where it usually rests and where the boss frame ends.<br/>
+   * Both frames want the top of the screen, so while the boss frame is up, the target frame drops to just
+   * below it rather than covering it.
+   * @param {number} restingY The y the target frame sits at when no boss is framed.
+   * @param {number} bossFrameBottom The y of the boss frame's bottom edge.
+   * @returns {number}
+   */
+  static targetFrameY(restingY, bossFrameBottom)
+  {
+    // while a boss is framed, the target frame waits just below it.
+    if (this.isBossFrameActive()) return bossFrameBottom;
+
+    // otherwise it sits where it always does.
+    return restingY;
+  }
+
+  //endregion active
 
   //region privates
   /**
@@ -298,6 +363,10 @@ class BossFrameManager
 
     // build the boss's framed target.
     const framedTarget = new FramedTarget(bossBattler.name(), String.empty, 14, bossBattler, framedTargetConfiguration);
+
+    // run it through the same decoration the target frame's targets get, so whatever an extension adds to how
+    // a target is shown- a tier's name, icons, and color- shows on the boss frame too.
+    bossJabsBattler.decorateFramedTarget(framedTarget, bossJabsBattler);
 
     // return the built target.
     return framedTarget;

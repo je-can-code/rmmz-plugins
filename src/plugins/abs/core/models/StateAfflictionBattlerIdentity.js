@@ -53,6 +53,17 @@ class StateAfflictionBattlerIdentity
   {
     return `affliction-stack-${stateId}-${this.uuid}`;
   }
+
+  /**
+   * Builds the backing sprite cache key for a state id.<br/>
+   * The backing is the colored square some layouts draw behind an icon to mark it a debuff or a buff.
+   * @param {number} stateId The database state id.
+   * @returns {string}
+   */
+  buildBackingKey(stateId)
+  {
+    return `affliction-backing-${stateId}-${this.uuid}`;
+  }
 }
 
 export default StateAfflictionBattlerIdentity;

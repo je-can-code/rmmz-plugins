@@ -34,4 +34,4 @@ This is **database-ish template data**, not a per-frame game object like `$gameP
 ## Notes
 
 - Not urgent — current behavior is fine for shipping.
-- Pairs with broader `$` singleton / verify cleanup; see guidelines **J namespace bootstrap**.
+- Pairs with broader `$` singleton / verify cleanup; see `CLAUDE.md`, **The `J.*` namespace is for bootstrap only**.

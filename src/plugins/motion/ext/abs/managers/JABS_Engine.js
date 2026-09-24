@@ -1,5 +1,6 @@
 //region JABS_Engine
 import BattlerMotionCoordinator from './BattlerMotionCoordinator.js';
+import PresenceMotionCoordinator from './PresenceMotionCoordinator.js';
 
 /**
  * Extends {@link #handleDefeatedEnemy}.<br/>
@@ -57,5 +58,47 @@ JABS_Engine.prototype.postPartyCycling = function()
   // the character the player drives now stands for somebody else, so what it should be doing has
   // changed without a single state having been added or removed.
   BattlerMotionCoordinator.refreshLeaderStateMotions();
+};
+
+/**
+ * Extends {@link #processRespawnAnimation}.<br/>
+ * Also unfolds the returning battler into view, the same way a battler its page brings in does.
+ *
+ * J-ABS still plays the respawn animation itself, a beat later once the new sprite exists. This only
+ * adds the unfold beneath it, so a creature returning from the dead and one appearing at the start
+ * of its hours look like one thing.
+ */
+J.MOTION.EXT.ABS.Aliased.JABS_Engine.set('processRespawnAnimation', JABS_Engine.prototype.processRespawnAnimation);
+JABS_Engine.prototype.processRespawnAnimation = function(freshEvent)
+{
+  // perform original logic.
+  J.MOTION.EXT.ABS.Aliased.JABS_Engine.get('processRespawnAnimation')
+    .call(this, freshEvent);
+
+  // turn the returning battler to face the player.
+  PresenceMotionCoordinator.welcomeNewBattler(freshEvent);
+};
+
+/**
+ * Extends {@link #addEnemyToMap}.<br/>
+ * Also unfolds an enemy spawned onto the map into view.
+ *
+ * The Spawn Enemy command plays whatever animation it was given on its own, so like a respawn this
+ * only adds the unfold, and a spawned wave arrives the same way everything else does.
+ */
+J.MOTION.EXT.ABS.Aliased.JABS_Engine.set('addEnemyToMap', JABS_Engine.prototype.addEnemyToMap);
+JABS_Engine.prototype.addEnemyToMap = function(x, y, enemyCloneEventId)
+{
+  // perform original logic.
+  const addedEnemy = J.MOTION.EXT.ABS.Aliased.JABS_Engine.get('addEnemyToMap')
+    .call(this, x, y, enemyCloneEventId);
+
+  // a clone id that named no event spawned nothing, so there is nobody to arrive.
+  if (addedEnemy === undefined) return addedEnemy;
+
+  // turn the spawned battler to face the player.
+  PresenceMotionCoordinator.welcomeNewBattler(addedEnemy);
+
+  return addedEnemy;
 };
 //endregion JABS_Engine

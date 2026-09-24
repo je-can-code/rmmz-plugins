@@ -70,6 +70,11 @@ describe('Window_Message glyph pipeline', () =>
     $gameMessage.add(text);
 
     window.startMessage();
+
+    // `startMessage` only asks the window to open; the engine then reveals nothing until it has
+    // finished opening, so a message read out in full always sits in a fully open box.
+    window.openness = 255;
+
     window.processAllText(window.textState());
   }
 
@@ -428,6 +433,36 @@ describe('Window_Message glyph pipeline', () =>
 
       // Assert
       expect(glyphsOf(window)).toEqual([]);
+    });
+
+    it('fades out a message that was on screen when it ends', () =>
+    {
+      // Arrange
+      const window = messageWindow();
+      revealMessage(window, 'abc');
+
+      // Act
+      window.terminateMessage();
+
+      // Assert
+      expect(window.isFadingMessage()).toBe(true);
+    });
+
+    it('leaves a window that was never opened shut when a prompt without a message ends', () =>
+    {
+      // Arrange
+      // a Show Choices with no Show Text above it is started with this window still shut, and is
+      // still answered by terminating it.
+      const window = messageWindow();
+      $gameMessage.setChoices([ 'yes', 'no' ], 0, -1);
+
+      // Act
+      window.terminateMessage();
+
+      // Assert- the prompt was answered and cleared away, and the box it never used stayed shut.
+      expect($gameMessage.isChoice()).toBe(false);
+      expect(window.openness).toBe(0);
+      expect(window.isFadingMessage()).toBe(false);
     });
 
     it('empties the plane at a page break', () =>

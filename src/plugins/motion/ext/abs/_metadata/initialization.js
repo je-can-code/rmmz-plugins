@@ -26,7 +26,7 @@ globalThis.J ||= {};
   }
 
   // check to ensure we have the minimum required version of the J-ABS plugin.
-  const requiredJabsVersion = '4.16.0';
+  const requiredJabsVersion = '4.25.0';
   const hasJabsRequirement = J.BASE.Helpers.satisfies(J.ABS.Metadata.version.version(), requiredJabsVersion);
   if (hasJabsRequirement === false)
   {
@@ -50,6 +50,7 @@ J.MOTION.EXT.ABS.Metadata = new J_MOTION_ABS_PluginMetadata(__PLUGIN_NAME__, __P
  */
 J.MOTION.EXT.ABS.Aliased = {};
 J.MOTION.EXT.ABS.Aliased.Game_Battler = new Map();
+J.MOTION.EXT.ABS.Aliased.Game_Event = new Map();
 J.MOTION.EXT.ABS.Aliased.JABS_Engine = new Map();
 J.MOTION.EXT.ABS.Aliased.Sprite_Character = new Map();
 

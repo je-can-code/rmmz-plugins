@@ -25,6 +25,7 @@ import './models/BuiltWindowCommand.js';
 import './models/ExternalJsonConfigLoaderOptions.js';
 import './models/FilterCycle.js';
 import './models/GaugeOptionsBuilder.js';
+import './models/GaugeTrail.js';
 import './models/J_EventEmitter.js';
 import './models/NaturalParameterBinding.js';
 import './core/registerJBaseSerializableModels.js';

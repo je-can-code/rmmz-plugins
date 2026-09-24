@@ -48,6 +48,10 @@
  * for JABS lives at the top instead of the bottom.
  *
  * CHANGELOG:
+ * - 4.25.0
+ *    An event whose page stops applying now forgets the battler that page described,
+ *    rather than still reading as one. Added hooks for holding a page change back and
+ *    for hearing when one lands.
  * - 4.24.0
  *    Action events keep the event id they were built with, so an action can find its
  *    own data for its whole life rather than only while being constructed.

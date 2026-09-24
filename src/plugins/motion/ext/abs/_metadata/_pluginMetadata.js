@@ -2,10 +2,11 @@
 /**
  * The metadata for J-Motion-ABS.
  *
- * Death and loot pacing are read from the same external config J-Motion core uses, under their own
- * `death` and `loot` sections. Keeping them there rather than in plugin parameters means the speed
- * at which everything in the game dies or fades away is one file a designer can open, which is the
- * sort of thing that gets retuned by feel rather than by reasoning.
+ * Death, loot, and presence pacing are read from the same external config J-Motion core uses, under
+ * their own `death`, `loot`, and `presence` sections. Keeping them there rather than in plugin
+ * parameters means the speed at which everything in the game dies, fades away, arrives, or leaves is
+ * one file a designer can open, which is the sort of thing that gets retuned by feel rather than by
+ * reasoning.
  */
 class J_MOTION_ABS_PluginMetadata
   extends PluginMetadata
@@ -58,8 +59,21 @@ class J_MOTION_ABS_PluginMetadata
   };
 
   /**
+   * The arrival and departure pacing used when the config says nothing at all.
+   *
+   * Frames, and the same numbers the shipped config carries. Half a second each way: long enough to
+   * read as a battler turning to face the player or turning away, short enough that nobody is left
+   * waiting on it.
+   * @type {{arrivalDuration: number, departureDuration: number}}
+   */
+  static FALLBACK_PRESENCE = {
+    arrivalDuration: 30,
+    departureDuration: 30,
+  };
+
+  /**
    * Extends {@link #postInitialize}.<br>
-   * Reads the death and loot pacing out of the shared motion configuration.
+   * Reads the death, loot, and presence pacing out of the shared motion configuration.
    */
   postInitialize()
   {
@@ -74,6 +88,9 @@ class J_MOTION_ABS_PluginMetadata
 
     // initialize the loot pacing from configuration.
     this.initializeLootMetadata(parsedConfiguration);
+
+    // initialize the arrival and departure pacing from configuration.
+    this.initializePresenceMetadata(parsedConfiguration);
   }
 
   /**
@@ -137,6 +154,31 @@ class J_MOTION_ABS_PluginMetadata
      * @type {{min: number, max: number, interval: number}}
      */
     this.lootExpiryFlicker = { ...fallback.flicker, ...lootConfiguration.flicker };
+  }
+
+  /**
+   * Reads how long a battler takes to arrive on the map and to leave it when its page changes.
+   *
+   * A duration of zero turns that half off entirely, and the battler appears or vanishes on the
+   * frame its page changes, the way it did before either animation existed.
+   * @param {Object} parsedConfiguration The parsed motion configuration root.
+   */
+  initializePresenceMetadata(parsedConfiguration)
+  {
+    const presenceConfiguration = parsedConfiguration.presence ?? {};
+    const fallback = J_MOTION_ABS_PluginMetadata.FALLBACK_PRESENCE;
+
+    /**
+     * How many frames a battler takes to unfold into view when its page brings it onto the map.
+     * @type {number}
+     */
+    this.arrivalDuration = presenceConfiguration.arrivalDuration ?? fallback.arrivalDuration;
+
+    /**
+     * How many frames a battler takes to fold out of view before its page takes it off the map.
+     * @type {number}
+     */
+    this.departureDuration = presenceConfiguration.departureDuration ?? fallback.departureDuration;
   }
 
   /**

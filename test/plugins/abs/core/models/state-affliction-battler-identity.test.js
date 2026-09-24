@@ -4,7 +4,7 @@ import { beforeAll, describe, expect, it, vi } from 'vitest';
 /**
  * The cache identity every affliction sprite is filed under.
  *
- * Three sprites per state per battler share one uuid and differ only by their prefix, and the HUD
+ * Up to four sprites per state per battler share one uuid and differ only by their prefix, and the HUD
  * looks each of them up by the string this builds. Two battlers colliding on a key would have one
  * enemy's poison timer rendering over another's, and nothing about that failure reads as a cache
  * problem - it reads as the HUD being haunted.
@@ -55,7 +55,7 @@ describe('StateAfflictionBattlerIdentity', () =>
     });
   });
 
-  describe('the three cache keys', () =>
+  describe('the four cache keys', () =>
   {
     /**
      * Builds an identity for a named battler.
@@ -103,17 +103,35 @@ describe('StateAfflictionBattlerIdentity', () =>
         .toBe('affliction-stack-4-battler-uuid');
     });
 
-    it('keeps the three sprites of one affliction apart from each other', () =>
+    it('builds a backing key from the state and the battler', () =>
     {
-      // Arrange: all three describe the same state on the same battler and are cached side by side.
+      // Arrange
       const identity = identityFor('battler-uuid');
 
       // Act
-      const keys = [ identity.buildIconKey(4), identity.buildTimerKey(4), identity.buildStackKey(4) ];
+      const key = identity.buildBackingKey(4);
+
+      // Assert
+      expect(key)
+        .toBe('affliction-backing-4-battler-uuid');
+    });
+
+    it('keeps the four sprites of one affliction apart from each other', () =>
+    {
+      // Arrange: all four describe the same state on the same battler and are cached side by side.
+      const identity = identityFor('battler-uuid');
+
+      // Act
+      const keys = [
+        identity.buildIconKey(4),
+        identity.buildTimerKey(4),
+        identity.buildStackKey(4),
+        identity.buildBackingKey(4),
+      ];
 
       // Assert
       expect(new Set(keys).size)
-        .toBe(3);
+        .toBe(4);
     });
 
     it('keeps two battlers carrying the same state apart from each other', () =>

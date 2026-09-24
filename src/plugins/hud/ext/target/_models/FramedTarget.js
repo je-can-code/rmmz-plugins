@@ -24,6 +24,14 @@ class FramedTarget
   icon = 0;
 
   /**
+   * Icons an extension wants shown ahead of the target's name, drawn after {@link #icon}.<br/>
+   * Held apart from {@link #name} so the frame decides where they go- and what goes between them and the
+   * name- rather than finding them baked into the name's text.
+   * @type {number[]}
+   */
+  nameIconIndices = [];
+
+  /**
    * The battler data of the target.
    * @type {Game_Enemy|null}
    */

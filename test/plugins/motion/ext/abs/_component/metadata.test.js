@@ -17,17 +17,30 @@ import {
  */
 let realJ;
 
+/**
+ * The motion configuration every case in this file starts from.
+ *
+ * Built fresh on each call, because a case that empties the config has to put this back afterward
+ * and must not be handed an object an earlier case could have changed.
+ * @returns {Object} The configuration root.
+ */
+const configuredMotion = () => ({
+  death: {
+    defaultStyle: 'moderate',
+    durations: { swift: 12, moderate: 34, slow: 56 },
+  },
+  presence: {
+    arrivalDuration: 18,
+    departureDuration: 42,
+  },
+});
+
 describe('J-Motion-ABS metadata (direct src import)', () =>
 {
   beforeAll(async () =>
   {
     installMotionComponentGlobals();
-    setMotionConfig({
-      death: {
-        defaultStyle: 'moderate',
-        durations: { swift: 12, moderate: 34, slow: 56 },
-      },
-    });
+    setMotionConfig(configuredMotion());
 
     setPluginContextToJBase();
     await import('../../../../../../src/plugins/_base/core/_metadata/initialization.js');
@@ -49,7 +62,7 @@ describe('J-Motion-ABS metadata (direct src import)', () =>
 
     // J-ABS is a peer this extension gates on but does not otherwise touch here.
     globalThis.J.ABS = {
-      Metadata: { version: { version: () => '4.16.0' } },
+      Metadata: { version: { version: () => '4.25.0' } },
     };
 
     // PluginMetadata refuses a duplicate plugin name on a private static registry, so a fresh copy
@@ -88,6 +101,7 @@ describe('J-Motion-ABS metadata (direct src import)', () =>
 
       // Assert
       expect(globalThis.J.MOTION.EXT.ABS.Aliased.Game_Battler).toBeInstanceOf(Map);
+      expect(globalThis.J.MOTION.EXT.ABS.Aliased.Game_Event).toBeInstanceOf(Map);
       expect(globalThis.J.MOTION.EXT.ABS.Aliased.JABS_Engine).toBeInstanceOf(Map);
     });
   });
@@ -245,12 +259,55 @@ describe('J-Motion-ABS metadata (direct src import)', () =>
       expect(Metadata.deathDurationFor('slow')).toBe(120);
 
       // Cleanup- the config is shared across cases in this file.
-      setMotionConfig({
-        death: {
-          defaultStyle: 'moderate',
-          durations: { swift: 12, moderate: 34, slow: 56 },
-        },
-      });
+      setMotionConfig(configuredMotion());
+    });
+  });
+
+  describe('the presence pacing', () =>
+  {
+    it('reads the configured arrival and departure durations', async () =>
+    {
+      // Act
+      await importInitialization();
+      const { Metadata } = globalThis.J.MOTION.EXT.ABS;
+
+      // Assert
+      expect(Metadata.arrivalDuration).toBe(18);
+      expect(Metadata.departureDuration).toBe(42);
+    });
+
+    it('still gives arrivals and departures a pace when the config says nothing about them', async () =>
+    {
+      // Arrange
+      setMotionConfig({});
+
+      // Act
+      await importInitialization();
+      const { Metadata } = globalThis.J.MOTION.EXT.ABS;
+
+      // Assert
+      expect(Metadata.arrivalDuration).toBe(30);
+      expect(Metadata.departureDuration).toBe(30);
+
+      // Cleanup- the config is shared across cases in this file.
+      setMotionConfig(configuredMotion());
+    });
+
+    it('honours a duration of zero rather than mistaking it for a missing one', async () =>
+    {
+      // Arrange
+      setMotionConfig({ presence: { arrivalDuration: 0, departureDuration: 0 } });
+
+      // Act
+      await importInitialization();
+      const { Metadata } = globalThis.J.MOTION.EXT.ABS;
+
+      // Assert
+      expect(Metadata.arrivalDuration).toBe(0);
+      expect(Metadata.departureDuration).toBe(0);
+
+      // Cleanup- the config is shared across cases in this file.
+      setMotionConfig(configuredMotion());
     });
   });
 });

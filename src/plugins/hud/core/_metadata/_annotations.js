@@ -75,6 +75,9 @@
  * plugin-command driven.
  * ============================================================================
  * CHANGELOG:
+ * - 2.4.0
+ *    Afflictions can now sit on one shared row of smaller icons, each on a colored
+ *    square that marks it a buff or a debuff, for frames that are short on room.
  * - 2.3.0
  *    Added HudInterferenceResolver, which decides how far a frame fades while the
  *    player is standing on top of it. The geometry belongs to the family rather than
