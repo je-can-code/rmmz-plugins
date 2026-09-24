@@ -25,6 +25,10 @@
  * the player's current target, not a specially-tagged "boss".
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.0
+ *    The boss frame now has a wide gauge centered under the boss's name, with its
+ *    level above and its afflictions below. While it is up, the target frame waits
+ *    beneath it, and never opens for the boss itself.
  * - 1.0.2
  *    Routed the boss-creation failure through J-Base's new Diagnostics, so it
  *    names J-HUD-BossFrame in the console.

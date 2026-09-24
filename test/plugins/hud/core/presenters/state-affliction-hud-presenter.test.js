@@ -4,6 +4,7 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 describe('StateAfflictionHudPresenter (direct src import)', () =>
 {
   let StateAfflictionHudPresenter;
+  let StateAfflictionHudLayoutSpec;
   let StateAfflictionCollection;
   let StateAfflictionViewModel;
   let StateAfflictionBattlerIdentity;
@@ -38,6 +39,11 @@ describe('StateAfflictionHudPresenter (direct src import)', () =>
     };
     globalThis.$jabsEngine = { getJabsStatesByUuid: vi.fn() };
 
+    globalThis.ColorManager = {
+      powerUpColor: () => '#00ff00',
+      powerDownColor: () => '#ff0000',
+    };
+
     function FakeSprite()
     {
       this.visible = false;
@@ -45,6 +51,8 @@ describe('StateAfflictionHudPresenter (direct src import)', () =>
       this.x = 0;
       this.y = 0;
       this.text = String.empty;
+      this.scale = { x: 1, y: 1 };
+      this.anchor = { x: 0, y: 0 };
     }
 
     FakeSprite.prototype.setIconIndex = function(iconIndex)
@@ -91,6 +99,34 @@ describe('StateAfflictionHudPresenter (direct src import)', () =>
     Sprite_BaseText.Alignments = { Left: 'left', Center: 'center', Right: 'right' };
     globalThis.Sprite_BaseText = Sprite_BaseText;
 
+    // the colored square behind an icon is a plain sprite over a painted bitmap.
+    function Sprite(bitmap)
+    {
+      FakeSprite.call(this);
+      this.bitmap = bitmap;
+    }
+
+    Sprite.prototype = Object.create(FakeSprite.prototype);
+    globalThis.Sprite = Sprite;
+
+    function Bitmap(width, height)
+    {
+      this.width = width;
+      this.height = height;
+      this.paintOpacity = 255;
+      this.filledColor = null;
+      this.filledAtOpacity = null;
+    }
+
+    Bitmap.prototype.fillAll = function(color)
+    {
+      // remember the opacity in force at the moment of the fill, since that is the one that takes.
+      this.filledColor = color;
+      this.filledAtOpacity = this.paintOpacity;
+    };
+    globalThis.Bitmap = Bitmap;
+
+    ({ default: StateAfflictionHudLayoutSpec } = await import('../../../../../src/plugins/hud/core/models/StateAfflictionHudLayoutSpec.js'));
     ({ default: StateAfflictionHudPresenter } = await import('../../../../../src/plugins/hud/core/presenters/StateAfflictionHudPresenter.js'));
   });
 
@@ -122,6 +158,35 @@ describe('StateAfflictionHudPresenter (direct src import)', () =>
     return viewModel;
   }
 
+  /**
+   * Builds a real layout spec- two rows of full-size, bare icons unless told otherwise.
+   * @param {object} overrides Settings to change from the defaults.
+   * @returns {StateAfflictionHudLayoutSpec}
+   */
+  function buildLayoutSpec(overrides = {})
+  {
+    return Object.assign(new StateAfflictionHudLayoutSpec(), overrides);
+  }
+
+  /**
+   * Builds the compact layout: one shared row of half-size icons on colored squares.
+   * @param {object} overrides Settings to change from the compact ones.
+   * @returns {StateAfflictionHudLayoutSpec}
+   */
+  function buildCompactLayoutSpec(overrides = {})
+  {
+    return buildLayoutSpec({
+      singleRow: true,
+      iconScale: 0.5,
+      polarityBacking: true,
+      iconPitch: 30,
+      timerOffsetY: 5,
+      timerFontSizeReduction: 12,
+      stackFontSizeReduction: 12,
+      ...overrides,
+    });
+  }
+
   describe('render', () =>
   {
     it('does nothing further when the collection is empty', () =>
@@ -138,32 +203,47 @@ describe('StateAfflictionHudPresenter (direct src import)', () =>
       expect(hostWindow.addChild).not.toHaveBeenCalled();
     });
 
-    it('renders a slot for every negative and positive view model at the layout-provided coordinates', () =>
+    it('lays the debuffs along the first row and starts the buffs back at the left on a second row', () =>
     {
       // Arrange
       const presenter = new StateAfflictionHudPresenter(hostWindow, spriteCache);
       const collection = new StateAfflictionCollection();
-      collection.negative = [ makeViewModel({ stateId: 1 }) ];
-      collection.positive = [ makeViewModel({ stateId: 2 }) ];
+      collection.negative = [ makeViewModel({ stateId: 1, polarity: 'negative' }) ];
+      collection.positive = [ makeViewModel({ stateId: 2, polarity: 'positive' }) ];
       globalThis.StateAfflictionProvider.collectForBattler.mockReturnValue(collection);
       battler.state.mockReturnValue({ iconIndex: 99 });
-      const layoutSpec = {
-        slotX: vi.fn()
-          .mockReturnValue(40),
-        negativeRowY: vi.fn()
-          .mockReturnValue(10),
-        positiveRowY: vi.fn()
-          .mockReturnValue(50),
-      };
+      const layoutSpec = buildLayoutSpec({ originX: 40, originY: 10 });
+
+      // Act
+      presenter.render(battler, layoutSpec);
+
+      // Assert- the buff sits one full icon and the row gap below the debuff.
+      const debuffIcon = spriteCache.get('affliction-icon-1-uuid-1');
+      const buffIcon = spriteCache.get('affliction-icon-2-uuid-1');
+      expect([ debuffIcon.x, debuffIcon.y ]).toEqual([ 40, 10 ]);
+      expect([ buffIcon.x, buffIcon.y ]).toEqual([ 40, 50 ]);
+    });
+
+    it('continues the buffs on past every debuff when the layout shares one row', () =>
+    {
+      // Arrange- two debuffs lead, so the buff's place depends on how many came before it.
+      const presenter = new StateAfflictionHudPresenter(hostWindow, spriteCache);
+      const collection = new StateAfflictionCollection();
+      collection.negative = [
+        makeViewModel({ stateId: 1, polarity: 'negative' }),
+        makeViewModel({ stateId: 3, polarity: 'negative' }),
+      ];
+      collection.positive = [ makeViewModel({ stateId: 2, polarity: 'positive' }) ];
+      globalThis.StateAfflictionProvider.collectForBattler.mockReturnValue(collection);
+      battler.state.mockReturnValue({ iconIndex: 99 });
+      const layoutSpec = buildCompactLayoutSpec({ originX: 40, originY: 10 });
 
       // Act
       presenter.render(battler, layoutSpec);
 
       // Assert
-      const iconKeys = [ ...spriteCache.keys() ].filter(key => key.startsWith('affliction-icon-'));
-      expect(iconKeys).toHaveLength(2);
-      expect(layoutSpec.negativeRowY).toHaveBeenCalled();
-      expect(layoutSpec.positiveRowY).toHaveBeenCalled();
+      const buffIcon = spriteCache.get('affliction-icon-2-uuid-1');
+      expect([ buffIcon.x, buffIcon.y ]).toEqual([ 100, 10 ]);
     });
 
     it('hides every sprite belonging to the previous battler when the target switches', () =>
@@ -182,14 +262,7 @@ describe('StateAfflictionHudPresenter (direct src import)', () =>
         .mockReturnValueOnce(activeCollection)
         .mockReturnValueOnce(new StateAfflictionCollection());
       const presenter = new StateAfflictionHudPresenter(hostWindow, spriteCache);
-      const layoutSpec = {
-        slotX: vi.fn()
-          .mockReturnValue(0),
-        negativeRowY: vi.fn()
-          .mockReturnValue(0),
-        positiveRowY: vi.fn()
-          .mockReturnValue(0),
-      };
+      const layoutSpec = buildLayoutSpec();
 
       // render once against the previous battler to seed #lastBattler and put its icon on screen.
       presenter.render(previousBattler, layoutSpec);
@@ -375,6 +448,15 @@ describe('StateAfflictionHudPresenter (direct src import)', () =>
       expect(result).toEqual(12);
     });
 
+    it('parses a valid backing key belonging to the given uuid', () =>
+    {
+      // Arrange/Act- a backing key the parser cannot read is a colored square nothing ever hides.
+      const result = StateAfflictionHudPresenter.parseCachedStateId('affliction-backing-12-uuid-1', 'uuid-1');
+
+      // Assert
+      expect(result).toEqual(12);
+    });
+
     it('returns null for a key with an unrecognized prefix', () =>
     {
       // Arrange/Act
@@ -405,20 +487,21 @@ describe('StateAfflictionHudPresenter (direct src import)', () =>
 
   describe('renderSlot', () =>
   {
-    it('shows a timer sprite with a formatted seconds string for a non-eternal affliction', () =>
+    it('shows a timer with a formatted seconds string, centered under its icon at the layout\'s offset', () =>
     {
-      // Arrange
+      // Arrange- a half-size icon, so centering on the drawn icon and on a full one land differently.
       const presenter = new StateAfflictionHudPresenter(hostWindow, spriteCache);
       const viewModel = makeViewModel({ stateId: 1, durationFrames: 150, isEternal: false });
       battler.state.mockReturnValue({ iconIndex: 5 });
 
       // Act
-      presenter.renderSlot(battler, viewModel, 0, 0);
+      presenter.renderSlot(battler, viewModel, 40, 10, buildCompactLayoutSpec());
 
       // Assert
       const timerSprite = spriteCache.get('affliction-timer-1-uuid-1');
       expect(timerSprite.text).toEqual('2.5');
       expect(timerSprite.visible).toEqual(true);
+      expect([ timerSprite.x, timerSprite.y ]).toEqual([ 48, 15 ]);
     });
 
     it('hides the timer sprite with empty text for an eternal affliction', () =>
@@ -429,7 +512,7 @@ describe('StateAfflictionHudPresenter (direct src import)', () =>
       battler.state.mockReturnValue({ iconIndex: 5 });
 
       // Act
-      presenter.renderSlot(battler, viewModel, 0, 0);
+      presenter.renderSlot(battler, viewModel, 0, 0, buildLayoutSpec());
 
       // Assert
       const timerSprite = spriteCache.get('affliction-timer-1-uuid-1');
@@ -445,14 +528,31 @@ describe('StateAfflictionHudPresenter (direct src import)', () =>
       battler.state.mockReturnValue(null);
 
       // Act
-      presenter.renderSlot(battler, viewModel, 0, 0);
+      presenter.renderSlot(battler, viewModel, 0, 0, buildLayoutSpec());
 
       // Assert
       const iconSprite = spriteCache.get('affliction-icon-1-uuid-1');
       expect(iconSprite.iconIndex).toEqual(0);
     });
 
-    it('shows a stack sprite with the count when stacked more than once', () =>
+    it('draws the icon at the slot, at the size the layout calls for', () =>
+    {
+      // Arrange
+      const presenter = new StateAfflictionHudPresenter(hostWindow, spriteCache);
+      const viewModel = makeViewModel({ stateId: 1 });
+      battler.state.mockReturnValue({ iconIndex: 5 });
+
+      // Act
+      presenter.renderSlot(battler, viewModel, 40, 10, buildCompactLayoutSpec());
+
+      // Assert
+      const iconSprite = spriteCache.get('affliction-icon-1-uuid-1');
+      expect([ iconSprite.x, iconSprite.y ]).toEqual([ 40, 10 ]);
+      expect(iconSprite.scale).toEqual({ x: 0.5, y: 0.5 });
+      expect(iconSprite.visible).toEqual(true);
+    });
+
+    it('shows a stack sprite with the count, centered one drawn icon above, when stacked more than once', () =>
     {
       // Arrange
       const presenter = new StateAfflictionHudPresenter(hostWindow, spriteCache);
@@ -460,13 +560,13 @@ describe('StateAfflictionHudPresenter (direct src import)', () =>
       battler.state.mockReturnValue({ iconIndex: 5 });
 
       // Act
-      presenter.renderSlot(battler, viewModel, 0, 100);
+      presenter.renderSlot(battler, viewModel, 40, 100, buildCompactLayoutSpec());
 
       // Assert
       const stackSprite = spriteCache.get('affliction-stack-1-uuid-1');
       expect(stackSprite.text).toEqual('x3');
       expect(stackSprite.visible).toEqual(true);
-      expect(stackSprite.y).toEqual(100 - globalThis.ImageManager.iconHeight);
+      expect([ stackSprite.x, stackSprite.y ]).toEqual([ 48, 84 ]);
     });
 
     it('hides the stack sprite with empty text when not stacked', () =>
@@ -477,12 +577,62 @@ describe('StateAfflictionHudPresenter (direct src import)', () =>
       battler.state.mockReturnValue({ iconIndex: 5 });
 
       // Act
-      presenter.renderSlot(battler, viewModel, 0, 0);
+      presenter.renderSlot(battler, viewModel, 0, 0, buildLayoutSpec());
 
       // Assert
       const stackSprite = spriteCache.get('affliction-stack-1-uuid-1');
       expect(stackSprite.text).toEqual(String.empty);
       expect(stackSprite.visible).toEqual(false);
+    });
+
+    it('creates the colored square before the icon, so the icon is the one drawn on top', () =>
+    {
+      // Arrange
+      const presenter = new StateAfflictionHudPresenter(hostWindow, spriteCache);
+      const viewModel = makeViewModel({ stateId: 1, polarity: 'negative' });
+      battler.state.mockReturnValue({ iconIndex: 5 });
+
+      // Act
+      presenter.renderSlot(battler, viewModel, 40, 10, buildCompactLayoutSpec());
+
+      // Assert- children draw in the order they were added.
+      const parented = hostWindow.addChild.mock.calls.map(([ child ]) => child);
+      const backingOrder = parented.indexOf(spriteCache.get('affliction-backing-1-uuid-1'));
+      const iconOrder = parented.indexOf(spriteCache.get('affliction-icon-1-uuid-1'));
+      expect(backingOrder).toBeGreaterThanOrEqual(0);
+      expect(backingOrder).toBeLessThan(iconOrder);
+    });
+  });
+
+  describe('renderSlotBacking', () =>
+  {
+    it('draws no square at all when the layout leaves its icons bare', () =>
+    {
+      // Arrange
+      const presenter = new StateAfflictionHudPresenter(hostWindow, spriteCache);
+      const viewModel = makeViewModel({ stateId: 1, polarity: 'negative' });
+
+      // Act
+      presenter.renderSlotBacking(battler, viewModel, 40, 10, buildLayoutSpec());
+
+      // Assert
+      expect(spriteCache.has('affliction-backing-1-uuid-1')).toEqual(false);
+      expect(hostWindow.addChild).not.toHaveBeenCalled();
+    });
+
+    it('shows the square reaching past the icon by the padding on every side', () =>
+    {
+      // Arrange
+      const presenter = new StateAfflictionHudPresenter(hostWindow, spriteCache);
+      const viewModel = makeViewModel({ stateId: 1, polarity: 'negative' });
+
+      // Act
+      presenter.renderSlotBacking(battler, viewModel, 40, 10, buildCompactLayoutSpec({ backingPadding: 3 }));
+
+      // Assert
+      const backingSprite = spriteCache.get('affliction-backing-1-uuid-1');
+      expect([ backingSprite.x, backingSprite.y ]).toEqual([ 37, 7 ]);
+      expect(backingSprite.visible).toEqual(true);
     });
   });
 
@@ -502,6 +652,26 @@ describe('StateAfflictionHudPresenter (direct src import)', () =>
 
       // Assert
       expect(iconSprite.visible).toEqual(false);
+    });
+
+    it('hides the colored square along with the rest of the slot', () =>
+    {
+      // Arrange- a sibling slot's square has to survive, so hiding cannot be matching on more than the state.
+      const identity = StateAfflictionBattlerIdentity.fromBattler(battler);
+      const backingSprite = new globalThis.Sprite(null);
+      const siblingBackingSprite = new globalThis.Sprite(null);
+      backingSprite.show();
+      siblingBackingSprite.show();
+      spriteCache.set(identity.buildBackingKey(9), backingSprite);
+      spriteCache.set(identity.buildBackingKey(10), siblingBackingSprite);
+      const presenter = new StateAfflictionHudPresenter(hostWindow, spriteCache);
+
+      // Act
+      presenter.hideSlotSprites(identity, 9);
+
+      // Assert
+      expect(backingSprite.visible).toEqual(false);
+      expect(siblingBackingSprite.visible).toEqual(true);
     });
 
     it('does nothing when no sprites for the state id are cached', () =>
@@ -588,31 +758,32 @@ describe('StateAfflictionHudPresenter (direct src import)', () =>
   {
     it('creates, configures, caches, and parents a new timer sprite when none is cached', () =>
     {
-      // Arrange
+      // Arrange- compact sizes, so every size below had to come from the layout.
       const presenter = new StateAfflictionHudPresenter(hostWindow, spriteCache);
 
       // Act
-      const sprite = presenter.getOrCreateTimerSprite(battler, 3);
+      const sprite = presenter.getOrCreateTimerSprite(battler, 3, buildCompactLayoutSpec());
 
       // Assert
       expect(spriteCache.get('affliction-timer-3-uuid-1')).toBe(sprite);
       expect(hostWindow.addChild).toHaveBeenCalledWith(sprite);
       expect(sprite.setFontFace).toHaveBeenCalledWith('rmmz-numbers');
-      expect(sprite.setFontSize).toHaveBeenCalledWith(20);
+      expect(sprite.setFontSize).toHaveBeenCalledWith(14);
       expect(sprite.setAlignment).toHaveBeenCalledWith(globalThis.Sprite_BaseText.Alignments.Center);
-      expect(sprite.setMinWidth).toHaveBeenCalledWith(globalThis.ImageManager.iconWidth);
+      expect(sprite.setMinWidth).toHaveBeenCalledWith(16);
+      expect(sprite.anchor.x).toEqual(0.5);
     });
 
     it('reuses a cached timer sprite without reconfiguring it', () =>
     {
       // Arrange
       const presenter = new StateAfflictionHudPresenter(hostWindow, spriteCache);
-      const firstSprite = presenter.getOrCreateTimerSprite(battler, 3);
+      const firstSprite = presenter.getOrCreateTimerSprite(battler, 3, buildLayoutSpec());
       firstSprite.setFontFace.mockClear();
       hostWindow.addChild.mockClear();
 
       // Act
-      const secondSprite = presenter.getOrCreateTimerSprite(battler, 3);
+      const secondSprite = presenter.getOrCreateTimerSprite(battler, 3, buildLayoutSpec());
 
       // Assert
       expect(secondSprite).toBe(firstSprite);
@@ -625,33 +796,101 @@ describe('StateAfflictionHudPresenter (direct src import)', () =>
   {
     it('creates, configures, caches, and parents a new stack sprite when none is cached', () =>
     {
-      // Arrange
+      // Arrange- a stack reduction that differs from the timer's, so the two cannot be crossed.
       const presenter = new StateAfflictionHudPresenter(hostWindow, spriteCache);
+      const layoutSpec = buildCompactLayoutSpec({ stackFontSizeReduction: 10 });
 
       // Act
-      const sprite = presenter.getOrCreateStackSprite(battler, 3);
+      const sprite = presenter.getOrCreateStackSprite(battler, 3, layoutSpec);
 
       // Assert
       expect(spriteCache.get('affliction-stack-3-uuid-1')).toBe(sprite);
       expect(hostWindow.addChild).toHaveBeenCalledWith(sprite);
-      expect(sprite.setFontSize).toHaveBeenCalledWith(22);
+      expect(sprite.setFontSize).toHaveBeenCalledWith(16);
+      expect(sprite.setMinWidth).toHaveBeenCalledWith(16);
+      expect(sprite.anchor.x).toEqual(0.5);
     });
 
     it('reuses a cached stack sprite without reconfiguring it', () =>
     {
       // Arrange
       const presenter = new StateAfflictionHudPresenter(hostWindow, spriteCache);
-      const firstSprite = presenter.getOrCreateStackSprite(battler, 3);
+      const firstSprite = presenter.getOrCreateStackSprite(battler, 3, buildLayoutSpec());
       firstSprite.setFontSize.mockClear();
       hostWindow.addChild.mockClear();
 
       // Act
-      const secondSprite = presenter.getOrCreateStackSprite(battler, 3);
+      const secondSprite = presenter.getOrCreateStackSprite(battler, 3, buildLayoutSpec());
 
       // Assert
       expect(secondSprite).toBe(firstSprite);
       expect(secondSprite.setFontSize).not.toHaveBeenCalled();
       expect(hostWindow.addChild).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('getOrCreateBackingSprite', () =>
+  {
+    it('creates, paints, caches, and parents a hidden square just larger than the icon', () =>
+    {
+      // Arrange
+      const presenter = new StateAfflictionHudPresenter(hostWindow, spriteCache);
+      const viewModel = makeViewModel({ stateId: 3, polarity: 'negative' });
+      const layoutSpec = buildCompactLayoutSpec({ backingPadding: 3, backingOpacity: 150 });
+
+      // Act
+      const sprite = presenter.getOrCreateBackingSprite(battler, viewModel, layoutSpec);
+
+      // Assert
+      expect(spriteCache.get('affliction-backing-3-uuid-1')).toBe(sprite);
+      expect(hostWindow.addChild).toHaveBeenCalledWith(sprite);
+      expect(sprite.visible).toEqual(false);
+      expect([ sprite.bitmap.width, sprite.bitmap.height ]).toEqual([ 22, 22 ]);
+      expect(sprite.bitmap.filledColor).toEqual('#ff0000');
+      expect(sprite.bitmap.filledAtOpacity).toEqual(150);
+    });
+
+    it('reuses a cached square without painting a new one', () =>
+    {
+      // Arrange
+      const presenter = new StateAfflictionHudPresenter(hostWindow, spriteCache);
+      const viewModel = makeViewModel({ stateId: 3, polarity: 'negative' });
+      const firstSprite = presenter.getOrCreateBackingSprite(battler, viewModel, buildCompactLayoutSpec());
+      hostWindow.addChild.mockClear();
+
+      // Act
+      const secondSprite = presenter.getOrCreateBackingSprite(battler, viewModel, buildCompactLayoutSpec());
+
+      // Assert
+      expect(secondSprite).toBe(firstSprite);
+      expect(hostWindow.addChild).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('backingColor (static)', () =>
+  {
+    it('colors a buff with the power-up color', () =>
+    {
+      // Arrange
+      const viewModel = makeViewModel({ polarity: 'positive' });
+
+      // Act
+      const result = StateAfflictionHudPresenter.backingColor(viewModel);
+
+      // Assert
+      expect(result).toEqual('#00ff00');
+    });
+
+    it('colors a debuff with the power-down color', () =>
+    {
+      // Arrange
+      const viewModel = makeViewModel({ polarity: 'negative' });
+
+      // Act
+      const result = StateAfflictionHudPresenter.backingColor(viewModel);
+
+      // Assert
+      expect(result).toEqual('#ff0000');
     });
   });
 });

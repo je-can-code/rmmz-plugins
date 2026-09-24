@@ -1,38 +1,40 @@
 //region JABS_Battler
 /**
- * With {@link J.HUD.EXT.TARGET}, wraps {@link JABS_Battler#buildFramedTarget}: tier prefix/suffix text, icons,
- * optional {@link Window_Base#colorizeText} (same passive id bands as the map stripe).
+ * With {@link J.HUD.EXT.TARGET}, extends {@link JABS_Battler#decorateFramedTarget}: tier prefix/suffix text, the
+ * tier icons that lead the name, and the tier color (same passive id bands as the map stripe). The target frame
+ * and the boss frame both decorate through that hook, so a tiered enemy reads the same in either.
  */
 if (J.HUD && J.HUD.EXT.TARGET)
 {
   /**
-   * Builds {@link FramedTarget} for the HUD, then applies tier label text, icons, and optional color.
-   * @param {JABS_Battler} battlerLastHit Last-hit target for this frame.
-   * @returns {FramedTarget}
+   * Extends {@link #decorateFramedTarget}.<br/>
+   * Applies tier label text, icons, and color to a framed target.
+   * @param {FramedTarget} framedTarget The framed target to decorate in place.
+   * @param {JABS_Battler} framedBattler The battler the framed target shows.
    */
-  J.PASSIVE.EXT.AFFIX.Aliased.JABS_Battler.set('buildFramedTarget', JABS_Battler.prototype.buildFramedTarget);
-  JABS_Battler.prototype.buildFramedTarget = function(battlerLastHit)
+  J.PASSIVE.EXT.AFFIX.Aliased.JABS_Battler.set('decorateFramedTarget', JABS_Battler.prototype.decorateFramedTarget);
+  JABS_Battler.prototype.decorateFramedTarget = function(framedTarget, framedBattler)
   {
-    // perform original logic (HUD fills name, notes text, icon slot, gauge config).
-    const framedTarget = J.PASSIVE.EXT.AFFIX.Aliased.JABS_Battler.get('buildFramedTarget')
-      .call(this, battlerLastHit);
+    // perform original logic.
+    J.PASSIVE.EXT.AFFIX.Aliased.JABS_Battler.get('decorateFramedTarget')
+      .call(this, framedTarget, framedBattler);
 
     // layer passive tier presentation on top of whatever the HUD decided the base name should be.
-    this.applyPassiveTierTargetFrameDecoration(framedTarget, battlerLastHit);
+    this.applyPassiveTierTargetFrameDecoration(framedTarget, framedBattler);
 
     // derive the same stripe hex the map uses, then tint the HUD name row to match the stripe.
-    const tierStripeHex = J.PASSIVE.EXT.AFFIX.Helpers.resolvePassiveTierStripeColorHex(battlerLastHit.getBattler());
+    const tierStripeHex = J.PASSIVE.EXT.AFFIX.Helpers.resolvePassiveTierStripeColorHex(framedBattler.getBattler());
 
     if (ColorManager.isValidHexColor(tierStripeHex))
     {
       framedTarget.nameColorHex = tierStripeHex;
     }
-
-    return framedTarget;
   };
 
   /**
-   * Mutates {@link FramedTarget#name}: tier words, up to two `\\I` escapes, optional {@link Window_Base#colorizeText}.
+   * Mutates {@link FramedTarget#name} and {@link FramedTarget#nameIconIndices}: tier words on the name, and up
+   * to two tier icons ahead of it. The tier's color is not applied here- it rides on
+   * {@link FramedTarget#nameColorHex}, set by {@link #decorateFramedTarget}.
    * @param {FramedTarget} framedTarget HUD row to update in place.
    * @param {JABS_Battler} battlerLastHit Source for passive state ids.
    */
@@ -66,9 +68,6 @@ if (J.HUD && J.HUD.EXT.TARGET)
     let prefixIconIndex = null;
     let suffixIconIndex = null;
 
-    // when the tier hex is meaningful, tint the label to the nearest windowskin palette match (icons stay un-tinted).
-    let prefixTierHudMessageColorIndex = null;
-
     let displayName = framedTarget.name;
 
     for (const passiveStateId of passiveStatesIds)
@@ -83,14 +82,8 @@ if (J.HUD && J.HUD.EXT.TARGET)
         // prepend the tier state's name before whatever the HUD already chose as the visible name.
         displayName = `${state.name} ${displayName}`;
 
-        // remember which icon to draw beside the label (Window_Base understands \\I[n] escapes).
+        // remember which icon leads the name.
         prefixIconIndex = state.iconIndex;
-
-        // palette index only when the state note actually defined a tier hex (no tag => no HUD tint span).
-        if (state.tierColorHex)
-        {
-          prefixTierHudMessageColorIndex = ColorManager.colorIndexFromHex(state.tierColorHex);
-        }
 
         // flag that we already consumed the prefix slot.
         foundPrefix = true;
@@ -102,7 +95,7 @@ if (J.HUD && J.HUD.EXT.TARGET)
         // append the classic "of <state>" suffix after the enemy label.
         displayName = `${displayName} of ${state.name}`;
 
-        // second icon slot (still drawn to the left of the text because escapes lead the string).
+        // the second icon slot, drawn after the prefix's- both still ahead of the name.
         suffixIconIndex = state.iconIndex;
 
         // flag that we already consumed the suffix slot.
@@ -113,30 +106,23 @@ if (J.HUD && J.HUD.EXT.TARGET)
       if (foundPrefix === true && foundSuffix === true) break;
     }
 
-    // build optional icon escapes (two icons max: prefix tier, then suffix tier).
-    let iconEscapes = String.empty;
+    // the tier icons travel as icons of their own rather than escapes baked into the name's text, so the
+    // frame decides where they go (two at most: prefix tier, then suffix tier).
+    const nameIconIndices = [];
 
     if (prefixIconIndex !== null)
     {
-      iconEscapes += `\\I[${prefixIconIndex}]`;
+      nameIconIndices.push(prefixIconIndex);
     }
 
     if (suffixIconIndex !== null)
     {
-      iconEscapes += `\\I[${suffixIconIndex}]`;
+      nameIconIndices.push(suffixIconIndex);
     }
 
-    // label body; may gain colorizeText (\\C…\\C[0]) when the tier note sets a palette index.
-    let labeledBody = displayName;
-
-    if (J.MESSAGE && prefixTierHudMessageColorIndex !== null)
-    {
-      // \\C[n] + \\C[0] so the default name color returns after this span.
-      labeledBody = Window_Base.prototype.colorizeText(prefixTierHudMessageColorIndex, displayName);
-    }
-
-    // icons first, then label; drawTextEx consumes the escapes in one pass.
-    framedTarget.name = `${iconEscapes}${labeledBody}`;
+    // hand over the tiered name and the icons that lead it.
+    framedTarget.name = displayName;
+    framedTarget.nameIconIndices = nameIconIndices;
   };
 }
 //endregion JABS_Battler

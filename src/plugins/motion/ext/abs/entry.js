@@ -1,9 +1,13 @@
 import './_metadata/initialization.js';
 import './models/CollapseMotionEffect.js';
+import './models/FoldMotionEffect.js';
 import './core/registerCollapseMotionType.js';
+import './core/registerFoldMotionTypes.js';
 import './core/DeathMotionResolver.js';
 import './managers/BattlerMotionCoordinator.js';
 import './managers/LootMotionCoordinator.js';
+import './managers/PresenceMotionCoordinator.js';
 import './objects/Game_Battler.js';
+import './objects/Game_Event.js';
 import './managers/JABS_Engine.js';
 import './sprites/Sprite_Character.js';

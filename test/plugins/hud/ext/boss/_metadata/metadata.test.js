@@ -6,6 +6,7 @@ import {
   setPluginContextToJBase,
   setPluginContextToJHud,
   setPluginContextToJHudBoss,
+  setPluginContextToJHudTarget,
 } from '../../../_component/fixtures/install-hud-host-globals.js';
 
 describe('J-HUD-BossFrame metadata (direct src import)', () =>
@@ -22,6 +23,10 @@ describe('J-HUD-BossFrame metadata (direct src import)', () =>
     setPluginContextToJHud();
     await import('../../../../../../src/plugins/hud/core/_metadata/initialization.js');
 
+    // the boss frame is built on the target frame, so it loads after it and checks its version.
+    setPluginContextToJHudTarget();
+    await import('../../../../../../src/plugins/hud/ext/target/_metadata/initialization.js');
+
     setPluginContextToJHudBoss();
     await import('../../../../../../src/plugins/hud/ext/boss/_metadata/initialization.js');
   });
@@ -36,6 +41,12 @@ describe('J-HUD-BossFrame metadata (direct src import)', () =>
   {
     // Arrange & Act & Assert
     expect(globalThis.J.HUD.EXT.BOSS.Aliased.Scene_Map).toBeInstanceOf(Map);
+  });
+
+  it('declares the aliased-method map for the JABS battler it patches', () =>
+  {
+    // Arrange & Act & Assert
+    expect(globalThis.J.HUD.EXT.BOSS.Aliased.JABS_Battler).toBeInstanceOf(Map);
   });
 
   it('completes the base plugin metadata initialization it extends', () =>
@@ -76,6 +87,22 @@ describe('J-HUD-BossFrame metadata (direct src import)', () =>
 
       // restore the real accessor rather than relying on restoreAllMocks.
       globalThis.J.HUD.Metadata.version.version = originalVersion;
+    });
+
+    it('throws when J-HUD-TargetFrame does not satisfy the minimum required version', async () =>
+    {
+      // Arrange: J-Base and J-HUD keep passing so the target frame check is the one that trips.
+      vi.resetModules();
+      const originalVersion = globalThis.J.HUD.EXT.TARGET.Metadata.version.version;
+      globalThis.J.HUD.EXT.TARGET.Metadata.version.version = () => '1.2.0';
+      setPluginContextToJHudBoss();
+
+      // Act & Assert
+      await expect(import('../../../../../../src/plugins/hud/ext/boss/_metadata/initialization.js'))
+        .rejects.toThrow(/missing J-HUD-TargetFrame/);
+
+      // restore the real accessor rather than relying on restoreAllMocks.
+      globalThis.J.HUD.EXT.TARGET.Metadata.version.version = originalVersion;
     });
   });
 });

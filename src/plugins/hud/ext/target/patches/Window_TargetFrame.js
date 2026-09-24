@@ -24,29 +24,33 @@ if (J.HUD && J.HUD.EXT.TARGET)
   };
 
   /**
-   * Builds the layout spec for target frame affliction rows.
+   * Builds the layout spec for the target frame's affliction strip.<br/>
+   * The frame keeps it compact: one row shared by debuffs and buffs, half-size icons, and a colored square
+   * behind each icon to tell the two apart.
    * @returns {StateAfflictionHudLayoutSpec}
    */
   Window_TargetFrame.prototype.targetAfflictionLayoutSpec = function()
   {
     const layout = new StateAfflictionHudLayoutSpec();
 
-    // base indent keeps afflictions off the window's left edge.
-    layout.originX = 32;
+    // the strip starts where the gauges do, so the two read as one column.
+    layout.originX = this.targetBattlerGaugesX();
 
-    // when a family/type icon is drawn to the left of the afflictions, push them
-    // right by one icon width so they don't crowd against the icon.
-    if (this.hasTargetIcon())
-    {
-      layout.originX += ImageManager.iconWidth;
-    }
+    // and it tucks in right under the last gauge the frame is showing.
+    layout.originY = this.targetBattlerGaugesY() + this.targetGaugeStackHeight();
 
-    // gauge stack: HP at+0, MP at+22; each gauge is 16px tall.
-    // MP ends at +38; add 6px gap = +44.
-    layout.originY = this.targetBattlerGaugesY() + 44;
+    // one shared row of half-size icons, each on a square colored by which side it is on.
+    layout.singleRow = true;
+    layout.iconScale = 0.5;
+    layout.polarityBacking = true;
 
-    // extra breathing room so the positive row clears the negative row timer text.
-    layout.rowGap = 24;
+    // spaced so each timer fits under its own icon without running into the next one's.
+    layout.iconPitch = 30;
+
+    // the timers shrink with their icons, and tuck in right beneath them.
+    layout.timerOffsetY = 5;
+    layout.timerFontSizeReduction = 12;
+    layout.stackFontSizeReduction = 12;
 
     return layout;
   };

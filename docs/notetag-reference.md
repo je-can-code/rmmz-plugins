@@ -2170,12 +2170,15 @@ Once defeated, this battler is gone for the rest of the playthrough.
 Enemy events, Enemies (database default), World default (plugin parameter)
 
 **When:**
-the battler respawns on the map
+the battler respawns on the map; with **J-Motion-ABS**, also whenever the event's page brings the
+battler onto the map or takes it off again (a time window opening or closing, a switch flipping)
 
 **Effect:**
 plays animation ANIMATION_ID on the event as the battler returns, so a node shimmers back into
 existence rather than blinking. Resolution order is `world default < enemy note < event comment`.
-An id of 0 (the shipped default) plays nothing.
+An id of 0 (the shipped default) plays nothing. Under J-Motion-ABS the same animation also opens
+the fold an enemy turns into view or out of it with, so one tag governs every way a battler comes
+and goes.
 
 ```
 <respawnAnimation:12>
@@ -6510,8 +6513,9 @@ The last five travel somewhere and stay there, and ease back out when they are r
 state drops, in both directions, with nothing extra written.
 
 That table is the roster core ships with, not the whole vocabulary: extensions register their own
-types and they are usable everywhere these are. J-Motion-ABS adds `collapse`, and J-ABS-Juice adds
-`squish`, `tilt`, `flip` and `charge` — each documented under the plugin that owns it.
+types and they are usable everywhere these are. J-Motion-ABS adds `collapse`, `fold` and `unfold`,
+and J-ABS-Juice adds `squish`, `tilt`, `flip` and `charge` — each documented under the plugin that
+owns it.
 J-Motion-Passive adds no types of its own; it adds a place to write these.
 
 ```

@@ -29,6 +29,20 @@ describe('FramedTarget (direct src import)', () =>
       expect(target.configuration).toEqual(null);
       expect(target.nameColorHex).toEqual(String.empty);
     });
+
+    it('starts every target with a list of name icons of its own', () =>
+    {
+      // Arrange- two targets, since a list shared between them would carry one's icons onto the other.
+      const first = new FramedTarget('Slime');
+      const second = new FramedTarget('Bat');
+
+      // Act
+      first.nameIconIndices.push(5);
+
+      // Assert
+      expect(first.nameIconIndices).toEqual([ 5 ]);
+      expect(second.nameIconIndices).toEqual([]);
+    });
   });
 
   describe('constructor with all values provided', () =>

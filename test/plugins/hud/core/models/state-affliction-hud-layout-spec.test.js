@@ -29,6 +29,22 @@ describe('StateAfflictionHudLayoutSpec (direct src import)', () =>
       expect(spec.originY).toEqual(0);
       expect(spec.rowGap).toEqual(8);
     });
+
+    it('describes two rows of bare, full-size icons until a host asks for the compact layout', () =>
+    {
+      // Arrange/Act
+      const spec = new StateAfflictionHudLayoutSpec();
+
+      // Assert
+      expect(spec.singleRow).toEqual(false);
+      expect(spec.iconScale).toEqual(1);
+      expect(spec.polarityBacking).toEqual(false);
+      expect(spec.backingPadding).toEqual(2);
+      expect(spec.backingOpacity).toEqual(192);
+      expect(spec.timerOffsetY).toEqual(20);
+      expect(spec.timerFontSizeReduction).toEqual(6);
+      expect(spec.stackFontSizeReduction).toEqual(4);
+    });
   });
 
   describe('negativeRowY', () =>
@@ -49,18 +65,34 @@ describe('StateAfflictionHudLayoutSpec (direct src import)', () =>
 
   describe('positiveRowY', () =>
   {
-    it('offsets originY by icon height plus the row gap', () =>
+    it('offsets originY by the drawn icon height plus the row gap', () =>
     {
-      // Arrange
+      // Arrange- a half-size icon, so the offset has to come from the height the icon is drawn at.
       const spec = new StateAfflictionHudLayoutSpec();
       spec.originY = 100;
       spec.rowGap = 8;
+      spec.iconScale = 0.5;
 
       // Act
       const result = spec.positiveRowY();
 
       // Assert
-      expect(result).toEqual(140);
+      expect(result).toEqual(124);
+    });
+
+    it('sits level with the negative row when both share one row', () =>
+    {
+      // Arrange
+      const spec = new StateAfflictionHudLayoutSpec();
+      spec.originY = 100;
+      spec.rowGap = 8;
+      spec.singleRow = true;
+
+      // Act
+      const result = spec.positiveRowY();
+
+      // Assert
+      expect(result).toEqual(100);
     });
   });
 
@@ -91,6 +123,102 @@ describe('StateAfflictionHudLayoutSpec (direct src import)', () =>
 
       // Assert
       expect(result).toEqual(112);
+    });
+  });
+
+  describe('positiveSlotX', () =>
+  {
+    it('starts the buffs back at the left on a row of their own', () =>
+    {
+      // Arrange
+      const spec = new StateAfflictionHudLayoutSpec();
+      spec.originX = 10;
+      spec.iconPitch = 34;
+
+      // Act
+      const result = spec.positiveSlotX(1, 2);
+
+      // Assert
+      expect(result).toEqual(44);
+    });
+
+    it('continues the buffs on past the debuffs when both share one row', () =>
+    {
+      // Arrange
+      const spec = new StateAfflictionHudLayoutSpec();
+      spec.originX = 10;
+      spec.iconPitch = 34;
+      spec.singleRow = true;
+
+      // Act
+      const result = spec.positiveSlotX(1, 2);
+
+      // Assert
+      expect(result).toEqual(112);
+    });
+  });
+
+  describe('scaledIconWidth / scaledIconHeight', () =>
+  {
+    it('scales the iconset width, not its height', () =>
+    {
+      // Arrange- width and height differ, so a mix-up between the two cannot hide.
+      globalThis.ImageManager = { iconWidth: 32, iconHeight: 40 };
+      const spec = new StateAfflictionHudLayoutSpec();
+      spec.iconScale = 0.5;
+
+      // Act
+      const result = spec.scaledIconWidth();
+
+      // Assert
+      expect(result).toEqual(16);
+    });
+
+    it('scales the iconset height, not its width', () =>
+    {
+      // Arrange
+      globalThis.ImageManager = { iconWidth: 32, iconHeight: 40 };
+      const spec = new StateAfflictionHudLayoutSpec();
+      spec.iconScale = 0.5;
+
+      // Act
+      const result = spec.scaledIconHeight();
+
+      // Assert
+      expect(result).toEqual(20);
+    });
+  });
+
+  describe('slotCenterX', () =>
+  {
+    it('lands halfway across the icon as it is drawn', () =>
+    {
+      // Arrange
+      const spec = new StateAfflictionHudLayoutSpec();
+      spec.iconScale = 0.5;
+
+      // Act
+      const result = spec.slotCenterX(10);
+
+      // Assert
+      expect(result).toEqual(18);
+    });
+  });
+
+  describe('backingSize', () =>
+  {
+    it('reaches past the drawn icon by the padding on both sides', () =>
+    {
+      // Arrange
+      const spec = new StateAfflictionHudLayoutSpec();
+      spec.iconScale = 0.5;
+      spec.backingPadding = 3;
+
+      // Act
+      const result = spec.backingSize();
+
+      // Assert
+      expect(result).toEqual(22);
     });
   });
 });

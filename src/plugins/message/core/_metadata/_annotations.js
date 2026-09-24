@@ -251,6 +251,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 2.1.1
+ *    A Show Choices, Input Number or Select Item with no Show Text above it no
+ *    longer flashes an empty message box as it closes.
  * - 2.1.0
  *    Added the \more text code, which welds a message onto the one written
  *    after it. The box grows to hold whatever they add up to.

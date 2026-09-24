@@ -22,8 +22,8 @@ Plugins ship `JABS_Engine` prototype extensions or related engine hooks, includi
 
 - ABS: `allyai`, `formula`, `input`, `tools`, `hitstop`, `shield`, `diag`
 - Non-ABS: `sdp`, `apt/ext/typed`, `regions/ext/skills`, `map`, `omni/ext/monster`
-- Popups ABS bridge: `popups/ext/abs/managers/J_POPABS_Engine.js`
-- `__ca-mods/managers/JABS_Engine.js` (Chef Adventure overrides — see `ca-mods-boundary.md`)
+- Popups ABS bridge: `popups/ext/abs/managers/JABS_Engine.js`
+- `__ca-mods/core/managers/JABS_Engine.js` (Chef Adventure overrides — see [`ca-mods-boundary.md`](../completed/ca-mods-boundary.md))
 
 Full path list: `cross-plugin-prototype-hook-surface.md`.
 

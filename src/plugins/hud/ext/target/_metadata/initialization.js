@@ -18,7 +18,7 @@ globalThis.J ||= {};
   }
 
   // Check to ensure we have the minimum required version of the J-HUD plugin.
-  const requiredHudVersion = '2.0.0';
+  const requiredHudVersion = '2.4.0';
   const hasHudRequirement = J.BASE.Helpers.satisfies(J.HUD.Metadata.version.version(), requiredHudVersion);
   if (hasHudRequirement === false)
   {

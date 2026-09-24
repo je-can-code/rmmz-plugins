@@ -38,30 +38,6 @@ describe('J-HUD-TargetFrame metadata (direct src import)', () =>
     expect(Metadata.TargetFrameHeight).toBe(252);
   });
 
-  it('parses the gauge image coordinates from plugin parameters', () =>
-  {
-    // Arrange & Act
-    const { Metadata } = globalThis.J.HUD.EXT.TARGET;
-
-    // Assert
-    expect(Metadata.BackgroundGaugeImageX).toBe(0);
-    expect(Metadata.BackgroundGaugeImageY).toBe(0);
-    expect(Metadata.MiddlegroundGaugeImageX).toBe(2);
-    expect(Metadata.MiddlegroundGaugeImageY).toBe(2);
-    expect(Metadata.ForegroundGaugeImageX).toBe(2);
-    expect(Metadata.ForegroundGaugeImageY).toBe(3);
-  });
-
-  it('parses the gauge image filenames from plugin parameters', () =>
-  {
-    // Arrange & Act
-    const { Metadata } = globalThis.J.HUD.EXT.TARGET;
-
-    // Assert
-    expect(Metadata.BackgroundFilename).toBe('img/hud/target-gauge-background');
-    expect(Metadata.ForegroundFilename).toBe('img/hud/target-gauge-foreground');
-  });
-
   it('parses the gauge enablement flags as booleans from plugin parameters', () =>
   {
     // Arrange & Act
@@ -95,20 +71,12 @@ describe('J-HUD-TargetFrame metadata (direct src import)', () =>
     expect(disabled.EnableTP).toBe(false);
   });
 
-  it('parses the gauge scale and rotation values from plugin parameters', () =>
+  it('parses the tp gauge rotation from plugin parameters', () =>
   {
     // Arrange & Act
     const { Metadata } = globalThis.J.HUD.EXT.TARGET;
 
     // Assert
-    expect(Metadata.HpGaugeScaleX).toBe(2.0);
-    expect(Metadata.HpGaugeScaleY).toBe(1.0);
-    expect(Metadata.HpGaugeRotation).toBe(0);
-    expect(Metadata.MpGaugeScaleX).toBe(1.0);
-    expect(Metadata.MpGaugeScaleY).toBe(0.5);
-    expect(Metadata.MpGaugeRotation).toBe(0);
-    expect(Metadata.TpGaugeScaleX).toBe(0.3);
-    expect(Metadata.TpGaugeScaleY).toBe(0.4);
     expect(Metadata.TpGaugeRotation).toBe(270);
   });
 

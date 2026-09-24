@@ -78,14 +78,32 @@ JABS_Battler.prototype.buildFramedTarget = function(battlerLastHit)
   // extract the target configuration.
   const targetConfiguration = battlerLastHit.buildFramedTargetConfiguration();
 
-  // create the new framed target for this battler; a passive extension may set name color on the result.
-  return new FramedTarget(
+  // create the new framed target for this battler.
+  const framedTarget = new FramedTarget(
     battlerName,
     targetFrameText,
     targetFrameIcon,
     battlerLastHit.getBattler(),
     targetConfiguration,
     String.empty);
+
+  // let any extension add to how the target is shown.
+  this.decorateFramedTarget(framedTarget, battlerLastHit);
+
+  // hand back the finished target.
+  return framedTarget;
+};
+
+/**
+ * Decorates a framed target once it is built: the hook extensions alias to add to how a target is shown.
+ * J-Passive-Affix adds a tier's name, icons, and color here. The boss frame runs its boss through this same
+ * hook, so whatever an extension adds shows up on the boss frame as well as the target frame.
+ * @param {FramedTarget} _framedTarget The framed target to decorate in place.
+ * @param {JABS_Battler} _framedBattler The battler the framed target shows.
+ */
+JABS_Battler.prototype.decorateFramedTarget = function(_framedTarget, _framedBattler)
+{
+  // nothing is added by default; extensions alias this to add their own.
 };
 
 /**

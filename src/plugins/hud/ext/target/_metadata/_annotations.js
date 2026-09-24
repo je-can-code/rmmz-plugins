@@ -28,32 +28,10 @@
  * ============================================================================
  * SETUP:
  * This plugin creates a window, which contains gauges representing the target
- * that is currently set. These gauges are not default window gauges, but
- * images loaded from disk instead. You must add two images matching these file
- * names into a new directory called "hud" inside your images directory:
- *  /img/hud/target-gauge-background.png
- *  /img/hud/target-gauge-foreground.png
- * ============================================================================
- * ABOUT THE IMAGES:
- * As mentioned above, there are two images required to construct the gauges in
- * the target frame.
- *
- * FIRST IMAGE:
- *  The first image, the background image, is typically a darker image that is
- *  drawn as a backdrop to the gauge.
- *
- * SECOND IMAGE:
- *  The second image makes up the middleground and foreground of the gauge.
- *  The format is two horizontal gauges of equal height stacked ontop of
- *  eachother. The top of these two gauges is the "foreground", representing
- *  the actual value of the gauge. The bottom of these two gauges is the
- *  "middleground", representing the "current" value of the gauge. This spends
- *  time in-transition a lot, and typically isn't ever fully displayed.
- *
- * In both images' cases, you can swap out the images to whatever other gauge
- * imagery you would like, though you'll likely need to fiddle with the x:y
- * plugin parameters of the various gauges to get it just right. You only need
- * to make sure that the file names remain the same, as those are hard-coded.
+ * that is currently set. No images are needed: the gauges are drawn the same
+ * way as the rest of the HUD's gauges, trail and all- when the target loses
+ * some of a gauge, the lost amount turns red and drains away, and when it
+ * gains some back, the gained amount shows in green and the gauge fills in.
  * ============================================================================
  * TARGET FRAME TEXT:
  * Have you ever wanted your JABS battlers to have an extra line of text that
@@ -97,9 +75,8 @@
  * ignored.
  *
  * NOTE 2:
- * If no target frame icon is available, the gauges will automatically move to
- * the left to fill the empty space that would've been left otherwise by the
- * missing icon.
+ * The icon leads the target's name. If no target frame icon is available, the
+ * name simply starts where the icon would have been.
  *
  * TAG USAGE:
  * - Enemies
@@ -111,7 +88,7 @@
  * TAG EXAMPLE:
  *  <targetFrameIcon:25>
  * When this enemy is struck on the map, the target frame will display an icon
- * that matches the icon index of 25 to the left of the gauges (if applicable).
+ * that matches the icon index of 25 ahead of the enemy's name.
  * ============================================================================
  * HIDING DATA:
  * Have you ever wanted to hide certain data points for some enemies, but not
@@ -175,83 +152,6 @@
  * @desc The height in pixels of the target frame window.
  * @default 180
  *
- * @param targetFrameGauge
- * @text Target Frame Gauge
- *
- * @param backgroundGauge
- * @parent targetFrameGauge
- * @text Background Settings
- *
- * @param backgroundImageFilename
- * @parent backgroundGauge
- * @type file
- * @text Background Image File
- * @desc The file that represents the background image; see plugin description for details.
- * @default img/hud/target-gauge-background
- *
- * @param backgroundGaugeImageX
- * @parent backgroundGauge
- * @type number
- * @min 0
- * @text Background Image X
- * @desc The x coordinate correction of the backdrop gauge image, aka the background.
- * @default 0
- *
- * @param backgroundGaugeImageY
- * @parent backgroundGauge
- * @type number
- * @min 0
- * @text Background Image Y
- * @desc The y coordinate correction of the backdrop gauge image, aka the background.
- * @default 0
- *
- * @param middlegroundGauge
- * @parent targetFrameGauge
- * @text Middleground Settings
- *
- * @param middlegroundGaugeImageX
- * @parent middlegroundGauge
- * @type number
- * @min 0
- * @text Middleground Image X
- * @desc Horizontal position is set from the measured backdrop trough at runtime so HP/MP stay aligned; Y still uses this block.
- * @default 2
- *
- * @param middlegroundGaugeImageY
- * @parent middlegroundGauge
- * @type number
- * @min 0
- * @text Middleground Image Y
- * @desc The y coordinate correction of the "current" gauge image, aka the middleground.
- * @default 2
- *
- * @param foregroundGauge
- * @parent targetFrameGauge
- * @text Foreground Settings
- *
- * @param foregroundImageFilename
- * @parent foregroundGauge
- * @type file
- * @text Background Image File
- * @desc The file that represents the foreground image; see plugin description for details.
- * @default img/hud/target-gauge-foreground
- *
- * @param foregroundGaugeImageX
- * @parent foregroundGauge
- * @type number
- * @min 0
- * @text Foreground Image X
- * @desc Horizontal position is set from the measured backdrop trough at runtime so HP/MP stay aligned; Y still uses this block.
- * @default 2
- *
- * @param foregroundGaugeImageY
- * @parent foregroundGauge
- * @type number
- * @min 0
- * @text Foreground Image Y
- * @desc The y coordinate correction of the "current" gauge image, aka the foreground.
- * @default 3
- *
  * @param settings
  * @text Target Settings
  *
@@ -268,35 +168,6 @@
  * @on Enable HP Gauge
  * @off Disable HP Gauge
  *
- * @param hpGaugeScaleX
- * @parent hpSettings
- * @type number
- * @decimals 2
- * @min -10.00
- * @max 10.00
- * @text Horizontal Scaling
- * @desc The scaling for how wide the HP gauge is.
- * @default 2.00
- *
- * @param hpGaugeScaleY
- * @parent hpSettings
- * @type number
- * @decimals 2
- * @min -10.00
- * @max 10.00
- * @text Vertical Scaling
- * @desc The scaling for how tall the HP gauge is.
- * @default 1.00
- *
- * @param hpGaugeRotation
- * @parent hpSettings
- * @type number
- * @min -360
- * @max 360
- * @text Rotation
- * @desc The degree of rotation for the HP gauge. Between -360 and 360.
- * @default 0
- *
  * @param mpSettings
  * @parent settings
  * @text For MP:
@@ -309,35 +180,6 @@
  * @default true
  * @on Enable MP Gauge
  * @off Disable MP Gauge
- *
- * @param mpGaugeScaleX
- * @parent mpSettings
- * @type number
- * @decimals 2
- * @min -10.00
- * @max 10.00
- * @text Horizontal Scaling
- * @desc The scaling for how wide the MP gauge is.
- * @default 1.00
- *
- * @param mpGaugeScaleY
- * @parent mpSettings
- * @type number
- * @decimals 2
- * @min -10.00
- * @max 10.00
- * @text Vertical Scaling
- * @desc The scaling for how tall the MP gauge is.
- * @default 0.50
- *
- * @param mpGaugeRotation
- * @parent mpSettings
- * @type number
- * @min -360
- * @max 360
- * @text Rotation
- * @desc The degree of rotation for the MP gauge. Between -360 and 360.
- * @default 0
  *
  * @param tpSettings
  * @parent settings
@@ -352,26 +194,6 @@
  * @on Enable TP Gauge
  * @off Disable TP Gauge
  *
- * @param tpGaugeScaleX
- * @parent tpSettings
- * @type number
- * @decimals 2
- * @min -10.00
- * @max 10.00
- * @text Horizontal Scaling
- * @desc The scaling for how wide the TP gauge is.
- * @default 0.30
- *
- * @param tpGaugeScaleY
- * @parent tpSettings
- * @type number
- * @decimals 2
- * @min -10.00
- * @max 10.00
- * @text Vertical Scaling
- * @desc The scaling for how tall the TP gauge is.
- * @default 0.40
- *
  * @param tpGaugeRotation
  * @parent tpSettings
  * @type number
@@ -383,6 +205,10 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 2.0.0
+ *    The target frame no longer needs gauge images. Its gauges draw like the rest of
+ *    the HUD's, trail and all, its afflictions share one compact row, and icons now
+ *    lead the target's name. The image gauge parameters are gone.
  * - 1.2.0
  *    The target frame fades while the player is standing on top of it, through the
  *    shared resolver in J-HUD. This rides on top of the inactivity fade rather than

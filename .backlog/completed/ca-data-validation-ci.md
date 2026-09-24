@@ -83,7 +83,7 @@ Ordered by how much real breakage each one catches, which is to say by how wide 
       not been tested
 - [x] a deliberately typo'd J-tag (`<sght:5>`) is reported as matching no known pattern
 - [x] `ca/chef-adventure/data/Classes.old.json` is gone, or the check fails on it
-- [ ] the check is wired as a required status check on the `ca` ruleset
+- [x] the check is wired as a required status check on the `ca` ruleset
 
 ## Notes
 

@@ -192,13 +192,34 @@ describe('JABS_Battler (J-HUD-TargetFrame) (direct src import)', () =>
       // Act
       const result = battler.buildFramedTarget(battlerLastHit);
 
-      // Assert
+      // Assert- nothing decorates it by default, so it arrives exactly as built.
       expect(result.name).toBe('Slime');
       expect(result.text).toBe('extra text');
       expect(result.icon).toBe(64);
       expect(result.battler).toBe(gameEnemy);
       expect(result.configuration).toBe(targetConfiguration);
       expect(result.nameColorHex).toBe(String.empty);
+      expect(result.nameIconIndices).toEqual([]);
+    });
+
+    it('hands the built target to the decorate hook, along with the battler it shows', () =>
+    {
+      // Arrange
+      const decorateFramedTarget = vi.fn();
+      const battler = buildBattler({ decorateFramedTarget });
+      const battlerLastHit = {
+        battlerName: () => 'Slime',
+        getTargetFrameText: () => String.empty,
+        getTargetFrameIcon: () => 0,
+        buildFramedTargetConfiguration: () => ({}),
+        getBattler: () => ({}),
+      };
+
+      // Act
+      const result = battler.buildFramedTarget(battlerLastHit);
+
+      // Assert
+      expect(decorateFramedTarget).toHaveBeenCalledWith(result, battlerLastHit);
     });
   });
 

@@ -35,6 +35,9 @@ describe('BossFrameManager (direct src import)', () =>
     // static-only class: fields persist across tests within this module instance, so reset
     // them by hand rather than re-importing the module for every test.
     BossFrameManager.boss = null;
+
+    // a hide request is the only way to stand the frame down; the acknowledgement below clears the request.
+    BossFrameManager.requestHideBossFrame();
     BossFrameManager.acknowledgeBossFrameRefresh();
     BossFrameManager.acknowledgeBossFrameHidden();
     BossFrameManager.acknowledgeBossFrameShown();
@@ -105,7 +108,7 @@ describe('BossFrameManager (direct src import)', () =>
     {
       // Arrange
       const battler = { name: () => 'Dragon', currentHpPercent100: vi.fn() };
-      const jabsBattler = { getBattler: () => battler };
+      const jabsBattler = { getBattler: () => battler, decorateFramedTarget: vi.fn() };
       globalThis.$gameMap.event.mockReturnValue({ getJabsBattler: () => jabsBattler });
 
       // Act
@@ -116,6 +119,30 @@ describe('BossFrameManager (direct src import)', () =>
       expect(boss.name).toEqual('Dragon');
       expect(boss.battler).toBe(battler);
       expect(BossFrameManager.needsBossFrameRefresh()).toEqual(true);
+    });
+
+    it('runs the boss through the same decoration a framed target gets, and keeps what it adds', () =>
+    {
+      // Arrange- a decorator standing in for J-Passive-Affix, adding a tier the way it would.
+      const battler = { name: () => 'Hard Syrup', currentHpPercent100: vi.fn() };
+      const decorateFramedTarget = vi.fn((framedTarget) =>
+      {
+        framedTarget.name = `Prime ${framedTarget.name}`;
+        framedTarget.nameIconIndices = [ 5 ];
+        framedTarget.nameColorHex = '#1e3a8a';
+      });
+      const jabsBattler = { getBattler: () => battler, decorateFramedTarget };
+      globalThis.$gameMap.event.mockReturnValue({ getJabsBattler: () => jabsBattler });
+
+      // Act
+      BossFrameManager.setBossByEventId(5);
+
+      // Assert
+      const boss = BossFrameManager.getBossFrame();
+      expect(decorateFramedTarget).toHaveBeenCalledWith(boss, jabsBattler);
+      expect(boss.name).toEqual('Prime Hard Syrup');
+      expect(boss.nameIconIndices).toEqual([ 5 ]);
+      expect(boss.nameColorHex).toEqual('#1e3a8a');
     });
   });
 
@@ -503,6 +530,137 @@ describe('BossFrameManager (direct src import)', () =>
 
       // Assert
       expect(BossFrameManager.needsBossFrameShowing()).toEqual(false);
+    });
+  });
+
+  describe('isBossFrameActive', () =>
+  {
+    it('reports the boss frame inactive until it is shown', () =>
+    {
+      // Arrange/Act
+      const result = BossFrameManager.isBossFrameActive();
+
+      // Assert
+      expect(result).toEqual(false);
+    });
+
+    it('reports the boss frame active once it is shown', () =>
+    {
+      // Arrange
+      BossFrameManager.requestShowBossFrame();
+
+      // Act
+      const result = BossFrameManager.isBossFrameActive();
+
+      // Assert
+      expect(result).toEqual(true);
+    });
+
+    it('keeps the boss frame active after the show request is acknowledged', () =>
+    {
+      // Arrange- the request clears the moment the frame acts on it; the frame being up does not.
+      BossFrameManager.requestShowBossFrame();
+      BossFrameManager.acknowledgeBossFrameShown();
+
+      // Act
+      const result = BossFrameManager.isBossFrameActive();
+
+      // Assert
+      expect(result).toEqual(true);
+    });
+
+    it('reports the boss frame inactive once it is asked to hide', () =>
+    {
+      // Arrange
+      BossFrameManager.requestShowBossFrame();
+      BossFrameManager.requestHideBossFrame();
+
+      // Act
+      const result = BossFrameManager.isBossFrameActive();
+
+      // Assert
+      expect(result).toEqual(false);
+    });
+  });
+
+  describe('isFramingBattler', () =>
+  {
+    it('frames nobody while the boss frame is not up, even the assigned boss', () =>
+    {
+      // Arrange
+      BossFrameManager.setBossFrame(makeBoss(100));
+      const bossJabsBattler = { getUuid: () => 'boss-uuid' };
+
+      // Act
+      const result = BossFrameManager.isFramingBattler(bossJabsBattler);
+
+      // Assert
+      expect(result).toEqual(false);
+    });
+
+    it('frames nobody when the boss frame is up with no boss assigned', () =>
+    {
+      // Arrange
+      BossFrameManager.requestShowBossFrame();
+      const jabsBattler = { getUuid: () => 'boss-uuid' };
+
+      // Act
+      const result = BossFrameManager.isFramingBattler(jabsBattler);
+
+      // Assert
+      expect(result).toEqual(false);
+    });
+
+    it('frames the assigned boss while the boss frame is up', () =>
+    {
+      // Arrange
+      BossFrameManager.setBossFrame(makeBoss(100));
+      BossFrameManager.requestShowBossFrame();
+      const bossJabsBattler = { getUuid: () => 'boss-uuid' };
+
+      // Act
+      const result = BossFrameManager.isFramingBattler(bossJabsBattler);
+
+      // Assert
+      expect(result).toEqual(true);
+    });
+
+    it('does not frame some other battler fighting alongside the boss', () =>
+    {
+      // Arrange
+      BossFrameManager.setBossFrame(makeBoss(100));
+      BossFrameManager.requestShowBossFrame();
+      const addJabsBattler = { getUuid: () => 'add-uuid' };
+
+      // Act
+      const result = BossFrameManager.isFramingBattler(addJabsBattler);
+
+      // Assert
+      expect(result).toEqual(false);
+    });
+  });
+
+  describe('targetFrameY', () =>
+  {
+    it('rests the target frame where it usually sits while no boss is framed', () =>
+    {
+      // Arrange/Act
+      const result = BossFrameManager.targetFrameY(20, 120);
+
+      // Assert
+      expect(result).toEqual(20);
+    });
+
+    it('drops the target frame to just below the boss frame while it is up', () =>
+    {
+      // Arrange
+      BossFrameManager.requestShowBossFrame();
+
+      // Act
+      const result = BossFrameManager.targetFrameY(20, 120);
+
+      // Assert
+      expect(result).toEqual(120);
     });
   });
 });

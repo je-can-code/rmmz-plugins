@@ -1,46 +1,61 @@
-# J-TIME: separate save data from runtime manager
+# J-TIME: stop saving what the game rebuilds
 
 ## Source
 
-- `src/plugins/time/core/_models/Game_Time.js` (prototype class — clock state + HUD/tone/block flags mixed in)
-- `src/plugins/time/core/_models/Time_Snapshot.js` (immutable moment-in-time DTO; already used by `currentTime()`)
-- `src/plugins/time/core/database/DataManager.js` (`contents.time = $gameTime` — **entire manager** serialized)
-- `src/plugins/time/core/_metadata/initialization.js` (`globalThis.$gameTime`)
+- `src/plugins/time/core/_models/Game_Time.js` (`initMembers`, `handleUpdateTime`, and the bare
+  `SerializableRegistry.register(Game_Time)` at the bottom of the file)
+- `src/plugins/time/core/windows/Window_Time.js` (the only reader of the HUD latch)
+- `docs/save-system.md` (the "Deciding what is transient" section)
 
 ## Context
 
-Today the save file stores the **whole `Game_Time` instance** — tick counters, `_active`, `_blocked`, tone/HUD transient flags, frame accumulators, and calendar fields together. That couples persistence to runtime/UI concerns and bloats saves with data that does not need round-tripping (or should re-derive on load).
+`Game_Time` registers bare, so the save codec writes every field it owns. Most of them belong in a
+save: the calendar (`_seconds` through `_years`), and `_active`, `_visible` and `_blocked`, which
+plugin commands and events set and a player expects to survive a load. Two groups do not:
 
-`Time_Snapshot` already exists as the **calendar + time-of-day + season** shape. The ideal split:
+- **`_hasBeenUpdated`** is a HUD latch. `handleUpdateTime` raises it on every tick and `Window_Time`
+  lowers it after redrawing. It means nothing across a load, because the window draws the current
+  time in its constructor anyway.
+- **The seven `*PerTick` fields** (`_tickFrames`, `_secondsPerTick`, `_minutesPerTick`,
+  `_hoursPerTick`, `_daysPerTick`, `_monthsPerTick`, `_yearsPerTick`) are copies of plugin
+  parameters. Decoded values win over seeded defaults, so a save freezes the rates it was written
+  with, and retuning `framesPerTick` or any increment never reaches a loaded game. This is the
+  save-system doc's "store an id, not a database row" problem, with plugin parameters in the role of
+  the row. Nothing changes them after construction except `setTickSpeed`, which nothing outside its
+  own tests calls.
 
-| Layer | Holds | Persisted? |
-|-------|--------|------------|
-| **Time data** (blob / snapshot + small flags) | year/month/day/hour/minute/second, season, time-of-day id, maybe `_active` | Yes — compact DTO in `contents.time` or `$gameSystem._j._time` |
-| **Time manager** (static or singleton service) | tick frames, `_blocked`, HUD dirty flags, tone cache, map window visibility | No — rebuilt or reset on load / map enter |
-
-On load: hydrate data blob → manager reads/writes through it → `updateCurrentTone()` etc. run from persisted calendar, not from resurrected manager fields.
+This item originally proposed splitting `Game_Time` into a save DTO and a runtime manager. The save
+codec's `transients` declarations now do that job in one registration, and the tone state the item
+listed moved to J-Lighting in #113, so the split is no longer needed.
 
 ## Work
 
-- Define explicit **save DTO** (extend or wrap `Time_Snapshot` + minimal persisted flags); register with `SerializableRegistry` if class-based.
-- Refactor `Game_Time` to own/reference DTO; stop assigning `$gameTime` wholesale in `extractSaveContents`.
-- Migration: old saves that stored full `Game_Time` → convert-on-load to DTO once.
-- Optional: static `Game_Time` API (`Game_Time.update()`, `Game_Time.currentSnapshot()`) with one live DTO on `$gameSystem` — aligns with “one clock per world” without serializing the manager.
-- Remove `globalThis.$gameTime` bootstrap when doing `$` cleanup.
+- Give the registration a `transients` block: `_hasBeenUpdated` re-seeds to `false`, and each
+  `*PerTick` field re-seeds from the same `J.TIME.Metadata` value `initMembers` reads.
+- Leave the calendar, `_active`, `_visible` and `_blocked` persisted.
 
 ## Definition of done
 
-- [ ] dump the time slice out of a fresh save. It holds calendar fields only — no tick accumulator,
-      no HUD or tone latches, no `_blocked`. That inspection is the item: today the entire manager is
-      what gets written
-- [ ] `$gameTime` is gone from `LEGACY_GLOBAL_THIS_PROPERTIES` in `src/build-tools/verify-ships.js`
-- [ ] in-game: save at a specific hour on a specific day, reload, and both the clock and the screen
-      tone come back right. The tone is the load-bearing half — it proves the tone re-derived from
-      the persisted calendar rather than a manager field that happened to survive
-- [ ] a save written before the change still loads and reports the correct date, once
-- [ ] `bun run hotfix` green
+- [ ] `Game_Time`'s registration declares `_hasBeenUpdated` and all seven `*PerTick` fields as
+      transients
+- [ ] a test encodes a `Game_Time` and asserts none of those eight fields is in the output, then
+      decodes it and asserts each came back at its cold value, with a calendar field and `_active`
+      surviving the round trip beside them
+- [ ] in-game: raise `framesPerTick` in the plugin parameters, load a save written before the change,
+      and time runs at the new rate
+- [ ] in-game: hide the time window with `hideMapTime`, save, reload, and it is still hidden
+- [ ] `bun run hotfix` green and coverage still 100%
 
 ## Notes
 
-- Pairs with `convert-saved-prototype-models-to-modern-classes.md` (prototype → class + registry).
-- Do not conflate with `$gameSystem.playtime` — J-TIME is fictional calendar, not real-time session clock.
+- Saves written before the change need no migration. The codec assigns transients after decoded
+  fields, so a stored `_tickFrames` is simply overwritten on load (`docs/save-system.md`, assignment
+  order).
+- If a speed command is ever wired to `setTickSpeed`, `_tickFrames` becomes player state and has to
+  leave the transients.
+- Removing the `$gameTime` global (74 references in plugin source, none in Chef Adventure's data) is
+  separate. It belongs with the other legacy-global items (`abs-action-map-bootstrap-refactor.md`,
+  `abs-input-controller-registry.md`, `game-enemies-factory-rename.md`) and the
+  `LEGACY_GLOBAL_THIS_PROPERTIES` cleanup in `src/build-tools/verify-ships.js`.
+- Do not conflate with `$gameSystem.playtime`: J-TIME is a fictional calendar, not the real-time
+  session clock.

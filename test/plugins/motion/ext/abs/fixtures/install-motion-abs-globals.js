@@ -85,6 +85,8 @@ export const installDeathMetadata = (overrides = {}) =>
       interval: 8,
       ...overrides.lootExpiryFlicker,
     },
+    arrivalDuration: overrides.arrivalDuration ?? 30,
+    departureDuration: overrides.departureDuration ?? 30,
   };
 };
 

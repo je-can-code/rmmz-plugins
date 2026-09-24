@@ -15,25 +15,9 @@ export const DEFAULT_HUD_TARGET_PLUGIN_PARAMS = {
   targetFrameY: '0',
   targetFrameWidth: '320',
   targetFrameHeight: '252',
-  backgroundImageFilename: 'img/hud/target-gauge-background',
-  backgroundGaugeImageX: '0',
-  backgroundGaugeImageY: '0',
-  middlegroundGaugeImageX: '2',
-  middlegroundGaugeImageY: '2',
-  foregroundImageFilename: 'img/hud/target-gauge-foreground',
-  foregroundGaugeImageX: '2',
-  foregroundGaugeImageY: '3',
   enableHp: 'true',
-  hpGaugeScaleX: '2.00',
-  hpGaugeScaleY: '1.00',
-  hpGaugeRotation: '0',
   enableMp: 'true',
-  mpGaugeScaleX: '1.00',
-  mpGaugeScaleY: '0.50',
-  mpGaugeRotation: '0',
   enableTp: 'true',
-  tpGaugeScaleX: '0.30',
-  tpGaugeScaleY: '0.40',
   tpGaugeRotation: '270',
 };
 
@@ -73,7 +57,7 @@ export function setPluginContextToJBase(sandbox = globalThis)
 export function setPluginContextToJHud(sandbox = globalThis)
 {
   sandbox.__PLUGIN_NAME__ = 'J-HUD';
-  sandbox.__PLUGIN_VERSION__ = '2.0.0';
+  sandbox.__PLUGIN_VERSION__ = '2.4.0';
 }
 
 /**
@@ -83,7 +67,7 @@ export function setPluginContextToJHud(sandbox = globalThis)
 export function setPluginContextToJHudTarget(sandbox = globalThis)
 {
   sandbox.__PLUGIN_NAME__ = 'J-HUD-TargetFrame';
-  sandbox.__PLUGIN_VERSION__ = '1.0.1';
+  sandbox.__PLUGIN_VERSION__ = '2.0.0';
 }
 
 /**

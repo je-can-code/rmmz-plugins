@@ -130,6 +130,9 @@ Scene_Map.prototype.updateHudFrames = function()
 
   // manage boss frame visibility.
   this.handleBossFrameVisibility();
+
+  // keep the target frame out from under the boss frame.
+  this.handleTargetFramePlacement();
 };
 
 /**
@@ -181,5 +184,27 @@ Scene_Map.prototype.handleShowBossFrame = function()
     .requestShowBossFrame();
 
   // let the manager know we've done the deed.
-  BossFrameManager.acknowledgeBossFrameHidden();
+  BossFrameManager.acknowledgeBossFrameShown();
 };
+
+/**
+ * Keeps the target frame out from under the boss frame.<br/>
+ * Both frames want the top of the screen, so while the boss frame is up, the target frame waits just below
+ * it- and goes back to its usual place once the boss frame is hidden.
+ */
+Scene_Map.prototype.handleTargetFramePlacement = function()
+{
+  // grab the frame being placed, and the frame it has to stay clear of.
+  const targetFrame = this.getTargetFrameWindow();
+  const bossFrame = this.getBossFrameWindow();
+
+  // the boss frame's bottom edge is where the target frame waits while a boss is framed.
+  const bossFrameBottom = bossFrame.y + bossFrame.height;
+
+  // and this is where the target frame sits the rest of the time.
+  const restingY = J.HUD.EXT.TARGET.Metadata.TargetFrameY;
+
+  // let the manager decide which of the two applies right now.
+  targetFrame.y = BossFrameManager.targetFrameY(restingY, bossFrameBottom);
+};
+//endregion Scene_Map

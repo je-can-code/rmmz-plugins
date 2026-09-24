@@ -267,6 +267,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.2.2
+ *    Affix tier icons now reach the target frame as icons, so they lead the enemy's
+ *    name on the rebuilt frame from J-HUD-TargetFrame 2.0.0.
  * - 1.2.1
  *    Renamed the declared dependency on J-MessageTextCodes to J-Message, which
  *    is what that plugin's file is called now.

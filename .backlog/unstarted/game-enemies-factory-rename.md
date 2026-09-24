@@ -2,7 +2,7 @@
 
 ## Source
 
-- `src/plugins/_base/objects/Game_Enemies.js` (lazy `#cache` of `Game_Enemy` by database id)
+- `src/plugins/_base/core/objects/Game_Enemies.js` (lazy `#cache` of `Game_Enemy` by database id)
 - `src/plugins/abs/core/managers/DataManager.js` (`globalThis.$gameEnemies`, `createGameObjects`)
 - Call sites: ABS `Game_Event`, `Game_Action`, danger ext, CMS skill detail, Monsterpedia, region skills dummy caster, etc.
 
@@ -30,7 +30,7 @@ Keep **one session singleton** in `createGameObjects`; behavior unchanged.
 
 - Choose final name; rename class + global (mechanical pass + type defs if any).
 - Audit call sites — ensure none treat cached enemies as **live** map battlers (spawn path should use map events / `JABS_Engine.addEnemyToMap`, not `$gameEnemies.enemy(id)` as the on-map instance).
-- Update JSDoc and guidelines with “prototype lookup only” rule.
+- Update the class JSDoc with the “prototype lookup only” rule.
 - Remove `globalThis.$gameEnemies` bootstrap when doing broader `$` cleanup; shrink verify allowlist.
 
 ## Definition of done

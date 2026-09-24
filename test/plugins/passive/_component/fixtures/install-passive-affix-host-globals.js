@@ -136,11 +136,10 @@ export function installPassiveAffixHostGlobals(sandbox = globalThis, pluginParam
     sandbox.JABS_Battler.prototype = {};
   }
 
-  if (typeof sandbox.JABS_Battler.prototype.buildFramedTarget !== 'function')
+  if (typeof sandbox.JABS_Battler.prototype.decorateFramedTarget !== 'function')
   {
-    sandbox.JABS_Battler.prototype.buildFramedTarget = function()
+    sandbox.JABS_Battler.prototype.decorateFramedTarget = function()
     {
-      return {};
     };
   }
 

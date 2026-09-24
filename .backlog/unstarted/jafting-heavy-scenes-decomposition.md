@@ -2,7 +2,7 @@
 
 ## Severity
 
-**Low** for players; **medium** for contributors. Large scene classes exceed the cyclomatic complexity target in `.junie/guidelines.md` and make bugfixes risky.
+**Low** for players; **medium** for contributors. Large scene classes exceed the cyclomatic complexity target in `CLAUDE.md` (20 per method) and make bugfixes risky.
 
 ## Gain
 
@@ -21,7 +21,7 @@ JAFTING already moved workflow state into models (`CraftingCreationSession`, `Re
 ## Work
 
 1. For each scene, list “regions” that could be private methods or helper objects (`Scene_JaftingCreateLayout`, `...Input`, `...Network` — names illustrative).
-2. Extract non-serializable helpers as `class` collaborators (guidelines: not serialized → modern class).
+2. Extract non-serializable helpers as `class` collaborators (`CLAUDE.md`: a new helper that does not derive from an engine class is a modern `class`).
 3. Align window refresh patterns between Create and Refine where they duplicate (list selection, detail pane updates).
 4. Keep `//region` per file rule: new files = new region names matching filenames.
 
@@ -42,4 +42,4 @@ JAFTING already moved workflow state into models (`CraftingCreationSession`, `Re
 ## Notes
 
 - Complements `../completed/sdp-plugin-revisit.md` (menu/scene fat).
-- Planned **salvage** and **socketing** extensions (`jafting-ext-salvage.md`, `jafting-ext-socketing.md`) are separate features; do not block those UI surfaces on this refactor.
+- Salvage shipped separately ([`jafting-ext-salvage.md`](../completed/jafting-ext-salvage.md)) with its own scene, `Scene_JaftingSalvage.js`. Feature work does not wait on this refactor.

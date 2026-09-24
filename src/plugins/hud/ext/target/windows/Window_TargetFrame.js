@@ -1,5 +1,4 @@
 //region Window_TargetFrame
-import Sprite_FlowingGauge from '../sprites/Sprite_FlowingGauge.js';
 /**
  * A window that displays a target and their relevant information.
  */
@@ -11,6 +10,18 @@ class Window_TargetFrame
    * @type {number}
    */
   static MaxDuration = 180;
+
+  /**
+   * The size of each of the frame's gauges, in pixels. Each gauge's bar fills its whole bitmap, so the height is
+   * both.
+   * @type {{hp: {width: number, height: number}, mp: {width: number, height: number},
+   * tp: {width: number, height: number}}}
+   */
+  static GaugeSizes = {
+    hp: { width: 200, height: 12 },
+    mp: { width: 200, height: 6 },
+    tp: { width: 30, height: 6 },
+  };
 
   /**
    * Constructor.
@@ -84,6 +95,12 @@ class Window_TargetFrame
     this._j._icon = 0;
 
     /**
+     * Icons an extension placed ahead of the target's name, drawn after the target's own icon.
+     * @type {number[]}
+     */
+    this._j._nameIconIndices = [];
+
+    /**
      * The battler of the target.
      * @type {Game_Actor|Game_Enemy}
      */
@@ -106,7 +123,7 @@ class Window_TargetFrame
   /**
    * Gets the j.
    * @returns {{_spriteCache: Map<string, Sprite>, _name: string, _nameColorHex: string, _text: string,
-   * _icon: number, _battler: Game_Battler|null, _requestTargetRefresh: boolean,
+   * _icon: number, _nameIconIndices: number[], _battler: Game_Battler|null, _requestTargetRefresh: boolean,
    * _inactivityTimer: number}} The j.
    */
   j()
@@ -169,82 +186,49 @@ class Window_TargetFrame
   }
 
   /**
-   * Creates an target gauge sprite for this window and caches it.
-   * @returns {Sprite_FlowingGauge} The gauge sprite of the target.
+   * Creates the target's hp gauge sprite for this window and caches it.
+   * @returns {Sprite_MapGauge} The gauge sprite of the target.
    */
   getOrCreateTargetHpGaugeSprite()
   {
-    // the key for this actor's full face sprite.
-    const key = `targetframe-enemy-hp-gauge`;
-
-    // check if the key already maps to a cached sprite.
-    if (this.j()._spriteCache.has(key))
-    {
-      // if it does, just return that.
-      return this.j()._spriteCache.get(key);
-    }
-
-    // create a new enemy gauge sprite.
-    const sprite = new Sprite_FlowingGauge();
-
-    // cache the sprite.
-    this.j()._spriteCache.set(key, sprite);
-
-    // hide the sprite for now.
-    sprite.hide();
-    sprite.scale.x = J.HUD.EXT.TARGET.Metadata.HpGaugeScaleX;
-    sprite.scale.y = J.HUD.EXT.TARGET.Metadata.HpGaugeScaleY;
-
-    // add the sprite to tracking.
-    this.addChild(sprite);
-
-    // return the created sprite.
-    return sprite;
+    return this.getOrCreateGaugeSprite('targetframe-enemy-hp-gauge', Window_TargetFrame.GaugeSizes.hp);
   }
 
   /**
-   * Creates an target gauge sprite for this window and caches it.
-   * @returns {Sprite_FlowingGauge} The gauge sprite of the target.
+   * Creates the target's mp gauge sprite for this window and caches it.
+   * @returns {Sprite_MapGauge} The gauge sprite of the target.
    */
   getOrCreateTargetMpGaugeSprite()
   {
-    // the key for this actor's full face sprite.
-    const key = `targetframe-enemy-mp-gauge`;
+    return this.getOrCreateGaugeSprite('targetframe-enemy-mp-gauge', Window_TargetFrame.GaugeSizes.mp);
+  }
 
-    // check if the key already maps to a cached sprite.
-    if (this.j()._spriteCache.has(key))
-    {
-      // if it does, just return that.
-      return this.j()._spriteCache.get(key);
-    }
+  /**
+   * Creates the target's tp gauge sprite for this window and caches it.<br/>
+   * The tp gauge stands on end beside the others, turned however far the plugin settings say.
+   * @returns {Sprite_MapGauge} The gauge sprite of the target.
+   */
+  getOrCreateTargetTpGaugeSprite()
+  {
+    // grab the gauge, making it if this is the first time.
+    const sprite = this.getOrCreateGaugeSprite('targetframe-enemy-tp-gauge', Window_TargetFrame.GaugeSizes.tp);
 
-    // create a new enemy gauge sprite.
-    const sprite = new Sprite_FlowingGauge();
+    // turn it on its end.
+    sprite.rotation = J.HUD.EXT.TARGET.Metadata.TpGaugeRotation * (Math.PI / 180);
 
-    // cache the sprite.
-    this.j()._spriteCache.set(key, sprite);
-
-    // hide the sprite for now.
-    sprite.hide();
-    sprite.scale.x = J.HUD.EXT.TARGET.Metadata.MpGaugeScaleX;
-    sprite.scale.y = J.HUD.EXT.TARGET.Metadata.MpGaugeScaleY;
-
-    // add the sprite to tracking.
-    this.addChild(sprite);
-
-    // return the created sprite.
+    // return the gauge.
     return sprite;
   }
 
   /**
-   * Creates an target gauge sprite for this window and caches it.
-   * @returns {Sprite_FlowingGauge} The gauge sprite of the target.
+   * Creates a gauge sprite of the given size for this window and caches it under the given key- or hands back
+   * the one already cached there.
+   * @param {string} key The key the gauge is cached under.
+   * @param {{width: number, height: number}} size The size of the gauge, in pixels.
+   * @returns {Sprite_MapGauge}
    */
-  getOrCreateTargetTpGaugeSprite()
+  getOrCreateGaugeSprite(key, size)
   {
-    // the key for this actor's full face sprite.
-    const key = `targetframe-enemy-tp-gauge`;
-
     // check if the key already maps to a cached sprite.
     if (this.j()._spriteCache.has(key))
     {
@@ -252,17 +236,15 @@ class Window_TargetFrame
       return this.j()._spriteCache.get(key);
     }
 
-    // create a new enemy gauge sprite.
-    const sprite = new Sprite_FlowingGauge();
+    // create a new gauge at the given size- its bitmap and its bar the same height, so the bar fills it.
+    const { width, height } = size;
+    const sprite = new Sprite_MapGauge(width, height, height);
 
     // cache the sprite.
     this.j()._spriteCache.set(key, sprite);
 
     // hide the sprite for now.
     sprite.hide();
-    sprite.rotation = J.HUD.EXT.TARGET.Metadata.TpGaugeRotation * (Math.PI / 180);
-    sprite.scale.x = J.HUD.EXT.TARGET.Metadata.TpGaugeScaleX;
-    sprite.scale.y = J.HUD.EXT.TARGET.Metadata.TpGaugeScaleY;
 
     // add the sprite to tracking.
     this.addChild(sprite);
@@ -284,6 +266,7 @@ class Window_TargetFrame
     this.j()._nameColorHex = target.nameColorHex;
     this.j()._text = target.text;
     this.j()._icon = target.icon;
+    this.j()._nameIconIndices = target.nameIconIndices;
     this.j()._battler = target.battler;
     this.j()._configuration = target.configuration;
 
@@ -341,6 +324,15 @@ class Window_TargetFrame
   targetIcon()
   {
     return this.j()._icon;
+  }
+
+  /**
+   * Gets the icons an extension placed ahead of the current target's name.
+   * @returns {number[]}
+   */
+  targetNameIconIndices()
+  {
+    return this.j()._nameIconIndices;
   }
 
   /**
@@ -428,38 +420,6 @@ class Window_TargetFrame
   }
 
   /**
-   * Pixel width reserved for the level column (Lv.xxx).
-   * @returns {number}
-   */
-  targetFrameLevelColumnWidth()
-  {
-    return 96;
-  }
-
-  /**
-   * Max draw width for the name row so the level column does not overlap long tier names.
-   * @returns {number}
-   */
-  targetFrameNameLineInnerWidth()
-  {
-    const gap = 8;
-
-    const w = this.contentsWidth() - this.targetFrameLevelColumnWidth() - gap;
-
-    return Math.max(200, w);
-  }
-
-  /**
-   * X offset for the level text (right-hand column after the name).
-   * @param {number} baseX Content-relative base x.
-   * @returns {number}
-   */
-  targetFrameLevelDrawX(baseX)
-  {
-    return baseX + this.targetFrameNameLineInnerWidth() + 4;
-  }
-
-  /**
    * Max width for subtext lines that span the window body.
    * @returns {number}
    */
@@ -468,22 +428,94 @@ class Window_TargetFrame
     return Math.max(200, this.contentsWidth() - 8);
   }
 
+  /**
+   * Lays out the target frame, top to bottom: a name row of icons, level, and name; the target's extra
+   * text beneath that, when it has any; then the gauges.
+   * @param {number} x The x coordinate.
+   * @param {number} y The y coordinate.
+   */
   drawContent(x, y)
   {
-    // draw the name of the target.
-    this.drawTargetName(x, y);
-
-    // draw the level of the target.
-    this.drawTargetLevel(this.targetFrameLevelDrawX(x), y);
+    // draw the icons, level, and name of the target along one row.
+    this.drawTargetNameRow(x, y);
 
     // draw the extra data for the target.
     this.drawTargetExtra(x, y + 24);
 
-    // draw the relation of the target.
-    this.drawTargetIcon(x, y + 48);
-
     // draw the battler data of the target- if available.
-    this.drawTargetBattlerInfo(x + 32, y);
+    this.drawTargetBattlerInfo(x, y);
+  }
+
+  /**
+   * Draws the name row: the target's icons, then its level, then its name, left to right.<br/>
+   * Each piece is drawn on its own, so each keeps its own size and color, and each is centered on the
+   * name's line- the name being the tallest thing on it.
+   * @param {number} x The x coordinate.
+   * @param {number} y The y coordinate.
+   */
+  drawTargetNameRow(x, y)
+  {
+    // the icons lead the row.
+    const iconsWidth = this.drawTargetRowIcons(x, y);
+
+    // the level follows the icons. Its small font sits on a line 10px shorter than the name's, so it drops
+    // by half that to center on the name.
+    const levelX = x + iconsWidth;
+    const levelWidth = this.drawTargetLevel(levelX, y + 5);
+
+    // the name follows the level, after a small gap- when there was a level to follow.
+    const levelSpan = levelWidth > 0
+      ? levelWidth + 6
+      : 0;
+
+    // draw the name of the target.
+    this.drawTargetName(levelX + levelSpan, y);
+  }
+
+  /**
+   * Draws the icons that lead the name row: the target's own icon, then any an extension set ahead of
+   * its name.
+   * @param {number} x The x coordinate.
+   * @param {number} y The y coordinate of the row.
+   * @returns {number} The width the icons took, including the gap after them; 0 when there were none.
+   */
+  drawTargetRowIcons(x, y)
+  {
+    // grab every icon the row leads with.
+    const iconIndices = this.targetRowIconIndices();
+
+    // no icons take no room.
+    if (iconIndices.length === 0) return 0;
+
+    // the icons are a touch shorter than the name's line, so they drop a pixel to center on it.
+    const iconY = y + 1;
+
+    // each icon sits one icon's width, and a sliver, past the last.
+    const pitch = ImageManager.iconWidth + 2;
+
+    // draw them left to right.
+    iconIndices.forEach((iconIndex, index) =>
+    {
+      this.drawIcon(iconIndex, x + (index * pitch), iconY);
+    });
+
+    // the row carries on after the last icon and a small gap.
+    return (iconIndices.length * pitch) + 4;
+  }
+
+  /**
+   * The icon indices that lead the name row, in the order they are drawn.
+   * @returns {number[]}
+   */
+  targetRowIconIndices()
+  {
+    // the target's own icon leads, when it has one.
+    const ownIcons = this.hasTargetIcon()
+      ? [ this.targetIcon() ]
+      : [];
+
+    // then come any icons an extension set ahead of the name.
+    return [ ...ownIcons, ...this.targetNameIconIndices() ];
   }
 
   /**
@@ -507,23 +539,22 @@ class Window_TargetFrame
   }
 
   /**
-   * Fades out the target frame window along with all sprites and content.
+   * Fades out the target frame's contents and sprites.<br/>
+   * The frame floats over the map with no window drawn behind it, so there is no window frame or background
+   * to fade- {@link #configure} hid those for good.
    */
   fadeOutWindow()
   {
-    this.opacity -= 10;
-    this.backOpacity -= 10;
     this.contentsOpacity -= 10;
     this.j()._spriteCache.forEach((sprite, _) => sprite.opacity -= 10);
   }
 
   /**
-   * Fades in the target frame window along with all sprites and content.
+   * Fades in the target frame's contents and sprites.<br/>
+   * Only those two- the window frame and background stay hidden, so the frame keeps floating.
    */
   fadeInWindow()
   {
-    this.opacity += 40;
-    this.backOpacity += 40;
     this.contentsOpacity += 40;
     this.j()._spriteCache.forEach((sprite, _) => sprite.opacity += 40);
   }
@@ -549,56 +580,121 @@ class Window_TargetFrame
     let name = `\\FS[24]${this.targetName()}`;
     if (J.MESSAGE)
     {
-      name = `\\*` + name;
+      name = `\\*${name}`;
     }
 
+    // the name takes whatever color the name hook settles on.
+    const color = this.targetNameColor();
+
+    // the name has the rest of the row to itself.
+    const width = this.contentsWidth() - x;
+
+    // draw the name in its color.
+    this.drawTextExInColor(name, x, y, width, color);
+  }
+
+  /**
+   * The color the target's name is drawn in.<br/>
+   * The color an extension asked for on the framed target, when it asked for one- J-Passive-Affix asks for a
+   * tier's color- and the normal text color otherwise.
+   * @returns {string}
+   */
+  targetNameColor()
+  {
+    // an extension may have asked for the name in a color of its own.
     const hex = this.j()._nameColorHex;
-    const useHex = hex !== String.empty && hex.length > 0;
+    if (hex !== String.empty) return hex;
 
-    const w = this.targetFrameNameLineInnerWidth();
+    // otherwise the name reads in the normal text color.
+    return ColorManager.normalColor();
+  }
 
-    // `Window_Base#drawTextEx` begins with `resetFontSettings()`, which calls `resetTextColor()` and would wipe a
-    // name tint applied before the call. Mirror the engine path but re-apply extension `nameColorHex` after font setup.
-    this.contents.fontFace = $gameSystem.mainFontFace();
-    this.contents.fontSize = $gameSystem.mainFontSize();
+  /**
+   * Draws text-coded text starting in the given color, and reports how wide it drew.<br/>
+   * {@link Window_Base#drawTextEx} opens by resetting the font, and that reset returns the text color to
+   * normal- so a color set before calling it never survives into the draw. This takes the same steps with
+   * the color applied after the reset instead.
+   * @param {string} text The text to draw, escape codes included.
+   * @param {number} x The x coordinate.
+   * @param {number} y The y coordinate.
+   * @param {number} width The width the text may take.
+   * @param {string} color The color the text starts in.
+   * @returns {number}
+   */
+  drawTextExInColor(text, x, y, width, color)
+  {
+    // start from the default font, as drawTextEx would.
+    this.resetFontSettings();
 
-    if (useHex)
-    {
-      this.changeTextColor(hex);
-      this.changeOutlineColor(ColorManager.outlineColor());
-    }
-    else
-    {
-      this.resetFontSettings();
-    }
+    // then apply the color that reset would otherwise have wiped.
+    this.changeTextColor(color);
 
-    const textState = this.createTextState(name, x, y, w);
+    // lay the text out and draw it.
+    const textState = this.createTextState(text, x, y, width);
     this.processAllText(textState);
+
+    // leave the color as the next draw expects to find it.
     this.resetTextColor();
+
+    // report how much room the text took.
+    return textState.outputWidth;
   }
 
   /**
    * Draws the target's level in the window.
    * @param {number} x The x coordinate.
    * @param {number} y The y coordinate.
+   * @returns {number} The width the level took; 0 when there was no level to draw.
    */
   drawTargetLevel(x, y)
   {
     // don't draw level if we can't.
-    if (!this.canDrawTargetLevel()) return;
+    if (!this.canDrawTargetLevel()) return 0;
 
     // get the level from the battler.
     const { level } = this.j()._battler;
 
-    // check to see if the enemy is leveled.
-    if (level)
-    {
-      // build the level string.
-      const levelString = `\\FS[14]Lv.${level.padZero(3)}`;
+    // an unleveled target has no level to show.
+    if (!level) return 0;
 
-      // and draw it to the window.
-      this.drawTextEx(levelString, x, y, this.targetFrameLevelColumnWidth());
-    }
+    // build the level string.
+    const levelString = `\\FS[14]Lv.${level.padZero(3)}`;
+
+    // and draw it wherever this frame places its level.
+    return this.drawTargetLevelText(levelString, x, y);
+  }
+
+  /**
+   * Draws the already-built level string at the given spot, in the level's color.<br/>
+   * Kept apart from {@link #drawTargetLevel} so a frame with a different layout can decide where the
+   * level goes without re-deciding whether there is a level to draw at all.
+   * @param {string} levelString The level text, escape codes included.
+   * @param {number} x The x coordinate.
+   * @param {number} y The y coordinate.
+   * @returns {number} The width the level took.
+   */
+  drawTargetLevelText(levelString, x, y)
+  {
+    // the level is drawn in whatever color the level hook settles on.
+    const color = this.targetLevelColor();
+
+    // it may run to the end of the row.
+    const width = this.contentsWidth() - x;
+
+    // draw it, reporting how much of the row it took.
+    return this.drawTextExInColor(levelString, x, y, width, color);
+  }
+
+  /**
+   * The color the target's level is drawn in.<br/>
+   * The normal text color by default. This is the hook for extensions that have something to say about a
+   * level- J-Level-Sync marks a synced level in its own color- so they can color the level without building
+   * or drawing it themselves.
+   * @returns {string}
+   */
+  targetLevelColor()
+  {
+    return ColorManager.normalColor();
   }
 
   /**
@@ -645,20 +741,6 @@ class Window_TargetFrame
   }
 
   /**
-   * Draws the target's icon in the window.
-   * @param {number} x The x coordinate.
-   * @param {number} y The y coordinate.
-   */
-  drawTargetIcon(x, y)
-  {
-    // check if we have an icon to draw.
-    if (!this.hasTargetIcon()) return;
-
-    // draw the target's icon.
-    this.drawIcon(this.targetIcon(), x, y + 4);
-  }
-
-  /**
    * Determines whether or not we have an icon to draw for the current target.
    * @returns {boolean}
    */
@@ -699,20 +781,14 @@ class Window_TargetFrame
   }
 
   /**
-   * Calculate the X coordinate for gauges.
+   * Calculate the X coordinate for gauges.<br/>
+   * The gauges are children of the window rather than of its contents, and the contents start the window's
+   * padding in from its edge- so shifting by the padding is what lines the gauges up with the name row.
    * @returns {number}
    */
   targetBattlerGaugesX()
   {
-    // if there is an icon in the way, then move the gauges out.
-    if (this.hasTargetIcon())
-    {
-      // move it respectively to the icon width.
-      return ImageManager.iconWidth;
-    }
-
-    // otherwise, we have no modifiers.
-    return -8;
+    return this.padding;
   }
 
   /**
@@ -733,79 +809,110 @@ class Window_TargetFrame
   }
 
   /**
+   * How far below the top of the gauges the afflictions start.<br/>
+   * The mp gauge hangs beneath the hp gauge when it is shown, so the gauges run deeper with it than without.
+   * @returns {number}
+   */
+  targetGaugeStackHeight()
+  {
+    // grab the sizes of the gauges stacked under the name.
+    const { hp, mp } = Window_TargetFrame.GaugeSizes;
+
+    // the afflictions have to clear the mp gauge too, when it is there: the hp gauge, a sliver, the mp gauge,
+    // and a small gap.
+    if (this.targetConfiguration().showMp) return hp.height + 2 + mp.height + 4;
+
+    // otherwise there is only the hp gauge to clear, and the same small gap.
+    return hp.height + 4;
+  }
+
+  /**
    * Draws the target's various gauges.
    * @param {number} x The x coordinate.
    * @param {number} y The y coordinate.
    */
   drawTargetBattlerGauges(x, y)
   {
+    // the mp gauge sits a sliver below the hp gauge.
+    const mpY = y + Window_TargetFrame.GaugeSizes.hp.height + 2;
+
     // draw all three of the primary gauges.
     this.drawTargetHpGauge(x, y);
-    this.drawTargetMpGauge(x, y + 22);
+    this.drawTargetMpGauge(x, mpY);
     this.drawTargetTpGauge(x - 10, y + 32);
   }
 
   /**
    * Draws the hp gauge of the target.
+   * @param {number} x The x coordinate.
+   * @param {number} y The y coordinate.
    */
   drawTargetHpGauge(x, y)
   {
-    // grab the gauge to draw.
+    // grab the gauge, and whether the target shows it.
     const gauge = this.getOrCreateTargetHpGaugeSprite();
+    const { showHp } = this.targetConfiguration();
 
-    // don't draw the gauge if its disabled.
-    if (!this.targetConfiguration().showHp)
-    {
-      gauge.hide();
-      return;
-    }
-
-    // setup the gauge with the battler.
-    gauge.setup(this.j()._battler, Sprite_FlowingGauge.Types.HP);
-
-    // relocate the gauge sprite.
-    gauge.move(x, y);
+    // put it in place.
+    this.placeTargetGauge(gauge, 'hp', showHp, x, y);
   }
 
   /**
    * Draws the mp gauge of the target.
+   * @param {number} x The x coordinate.
+   * @param {number} y The y coordinate.
    */
   drawTargetMpGauge(x, y)
   {
-    // grab the gauge to draw.
+    // grab the gauge, and whether the target shows it.
     const gauge = this.getOrCreateTargetMpGaugeSprite();
+    const { showMp } = this.targetConfiguration();
 
-    // don't draw the gauge if its disabled.
-    if (!this.targetConfiguration().showMp)
-    {
-      gauge.hide();
-      return;
-    }
-
-    // setup the gauge with the battler.
-    gauge.setup(this.j()._battler, Sprite_FlowingGauge.Types.MP);
-
-    // relocate the gauge sprite.
-    gauge.move(x, y);
+    // put it in place.
+    this.placeTargetGauge(gauge, 'mp', showMp, x, y);
   }
 
   /**
    * Draws the tp gauge of the target.
+   * @param {number} x The x coordinate.
+   * @param {number} y The y coordinate.
    */
   drawTargetTpGauge(x, y)
   {
-    // grab the gauge to draw.
+    // grab the gauge, and whether the target shows it.
     const gauge = this.getOrCreateTargetTpGaugeSprite();
+    const { showTp } = this.targetConfiguration();
 
-    // don't draw the gauge if its disabled.
-    if (!this.targetConfiguration().showTp)
+    // put it in place.
+    this.placeTargetGauge(gauge, 'tp', showTp, x, y);
+  }
+
+  /**
+   * Points one of the target's gauges at the framed battler and puts it on screen- or hides it, when the target
+   * does not show that gauge.<br/>
+   * A map gauge that has been hidden also stops updating, and showing it again does not start it back up, so
+   * both happen here explicitly. Without that, the gauge would draw once and then freeze.
+   * @param {Sprite_MapGauge} gauge The gauge to place.
+   * @param {string} statusType The resource the gauge shows, such as "hp".
+   * @param {boolean} isShown Whether the target shows this gauge at all.
+   * @param {number} x The x coordinate.
+   * @param {number} y The y coordinate.
+   */
+  placeTargetGauge(gauge, statusType, isShown, x, y)
+  {
+    // a gauge the target doesn't show stays hidden.
+    if (!isShown)
     {
       gauge.hide();
       return;
     }
 
-    // setup the gauge with the battler.
-    gauge.setup(this.j()._battler, Sprite_FlowingGauge.Types.TP);
+    // point the gauge at the framed battler.
+    gauge.setup(this.j()._battler, statusType);
+
+    // put it on screen, and let it update.
+    gauge.show();
+    gauge.activateGauge();
 
     // relocate the gauge sprite.
     gauge.move(x, y);
