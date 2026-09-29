@@ -547,6 +547,58 @@ class RPGManager
 
   //endregion strings
 
+  //region matches
+  /**
+   * Gathers every whole match of the regex from the given database object, one per matching note line, in the
+   * order the lines are written.
+   *
+   * Every other reader here hands back one capture, already interpreted. This one hands back the match itself,
+   * every capture group included and none of them parsed, for a caller that has to see a tag the way its own
+   * plugin reads it: a formula stays the text it was written as, and a tag with several groups keeps them all.
+   * @param {RPG_Base} databaseData The database object to inspect.
+   * @param {RegExp} structure The RegExp structure to find matches for.
+   * @returns {RegExpExecArray[]} Every match, or an empty array when there are none.
+   */
+  static getMatchesFromNoteByRegex(databaseData, structure)
+  {
+    // a row with no note has nothing to match.
+    if (this.#canParsedatabaseData(databaseData) === false) return [];
+
+    // define the unique key for this regex.
+    const key = `match[]:${structure.source}::${structure.flags}`;
+
+    // grab the result (potentially cached).
+    return this.cached(
+      databaseData,
+      key,
+      () => this.#getMatchesFromNoteByRegex(databaseData, structure)
+    );
+  }
+
+  /**
+   * Gathers every whole match of the regex from the given database object.
+   * @param {RPG_Base} databaseData The database object to inspect.
+   * @param {RegExp} structure The RegExp structure to find matches for.
+   * @returns {RegExpExecArray[]}
+   */
+  static #getMatchesFromNoteByRegex(databaseData, structure)
+  {
+    // build a non-global, non-sticky scanner to avoid lastIndex side effects across lines.
+    const safeFlags = structure.flags
+      .replace('g', '')
+      .replace('y', '');
+    const scan = new RegExp(structure.source, safeFlags);
+
+    // at most one match per line, the same as every other reader here.
+    const lines = databaseData.note.split(/[\r\n]+/);
+
+    // a line that does not match answers null, and holds nothing to describe.
+    return lines
+      .map(line => scan.exec(line))
+      .filter(match => match !== null);
+  }
+  //endregion matches
+
   //region numbers
   /**
    * Gets the last numeric value based on the provided regex structure.

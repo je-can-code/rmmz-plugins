@@ -50,7 +50,10 @@ export default defineConfig({
         // instead of one: a bare `!` negation entry is not a negation to this matcher, it inverts the
         // whole set and empties the report. Peeling the exception out segment by segment with extglob
         // is what leaves `_base/ext/save/{scenes,windows}` measured while everything else stays out.
-        '**/src/plugins/!(_base)/**/scenes/**',
+        //
+        // J-Classes was never excluded at all. It arrived with its view harness tests, so the whole family
+        // is measured from its first commit rather than lifted later.
+        '**/src/plugins/!(_base|class)/**/scenes/**',
         '**/src/plugins/_base/!(ext)/**/scenes/**',
         '**/src/plugins/_base/ext/!(save)/**/scenes/**',
         // J-Motion is the first family with its sprite layer lifted, which is why this reads as two
@@ -65,7 +68,7 @@ export default defineConfig({
         '**/src/plugins/motion/!(core)/**/sprites/**',
         '**/src/plugins/abs/!(ext)/**/sprites/**',
         '**/src/plugins/abs/ext/!(juice)/**/sprites/**',
-        '**/src/plugins/!(_base)/**/windows/**',
+        '**/src/plugins/!(_base|class)/**/windows/**',
         '**/src/plugins/_base/!(ext)/**/windows/**',
         '**/src/plugins/_base/ext/!(save)/**/windows/**',
         // pure JSDoc annotation blocks and trivial plugin-metadata re-exports- never contain

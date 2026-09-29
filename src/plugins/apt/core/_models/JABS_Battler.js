@@ -104,9 +104,13 @@ if (J.ABS)
     // if we are not logging, then don't do this.
     if (!J.LOG) return;
 
+    // the points go by the same name here as everywhere else they appear.
+    const apName = TextManager.apPoints();
+
     // build the log entry.
+    const message = `\\C[16]${battler.battlerName()}\\C[0] gained \\C[29]\\*${apPoints}\\*\\C[0] ${apName}.`;
     const apLog = new ActionLogBuilder()
-      .setMessage(`\\C[16]${battler.battlerName()}\\C[0] gained \\C[29]\\*${apPoints}\\*\\C[0] AP.`)
+      .setMessage(message)
       .build();
 
     // add the log to the action channel.

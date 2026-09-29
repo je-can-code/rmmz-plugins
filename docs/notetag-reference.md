@@ -131,7 +131,8 @@ always (contributes to the battler's standing critical damage reduction — inte
 NUM is added to how much a battler's critical damage is reduced when they're hit by one — a plain
 number, not a formula. Reduces only the critical bonus portion of the damage, not the base damage the
 crit is calculated from. Same base/non-base split rationale as `critMultiplierBase`/`critMultiplier`
-above.
+above: the base (the plugin's `critReductionBaseDefault`, 0 unless configured, plus every
+`critReductionBase` tag) counts against every crit alongside `critReduction`.
 
 ```
 <critReduction:30>
@@ -169,7 +170,7 @@ J-NaturalGrowths is also loaded; these follow that plugin's buff/growth pattern
 real formula support here (unlike the `thisCrit*` tags above) —
 `a` = the battler these bonuses are being calculated for,
 `b` = the battler's base value for this parameter in percent (`baseCriticalMultiplier()` for `cdm`
-tags, `baseCriticalReduction()` for `ctr` tags — 0.5 by default for both, so `b` is 50),
+tags, 0.5 by default so `b` is 50; `baseCriticalReduction()` for `ctr` tags, 0 by default so `b` is 0),
 `v` = `$gameVariables._data`.
 
 **Effect:**
@@ -178,7 +179,8 @@ tags, `baseCriticalReduction()` for `ctr` tags — 0.5 by default for both, so `
 each get Buff (temporary, lost when the source is removed) and Growth (permanent, accumulates per
 level) variants, each with Plus (flat) and Rate (percent-of-base) forms. Like every J-NaturalGrowths
 tag, the amount is written in percent: `Plus` adds that many percent, and `Rate` is a percent of the
-base value above.
+base value above. The base crit reduction is 0 by default, so a `ctr` Rate tag adds nothing until
+something grants a base through `<critReductionBase>`; grant crit reduction outright with a Plus tag.
 
 **Watch out:** the natural-growth prefix is `ctr`, not `cdr` — there is no `cdr*` tag family. Using
 `<cdrBuffPlus:...>` (a plausible-looking guess) silently does nothing, since it doesn't match any
@@ -1714,11 +1716,17 @@ the 8 base-param tags: only evaluated beyond level 99 (levels 1–99 stay driven
 `a.level` only — no `b`, no `v`, unlike most other formula tags in this ecosystem.
 
 **Effect:**
-when present, the formula becomes the source of truth for that class/param's value at the given
+when present, the formula becomes the source of truth for that class/param's base value at the given
 level, replacing `Game_Temp.buildBeyondMaxDataForClass`'s slope-extrapolation fallback entirely for
 that combination. Untagged class/param pairs still fall through to the extrapolation guess. Primarily
 authored via jmz-data-editor's Classes board (whose preview evaluates the identical formula/level
 pairing the runtime does), but hand-authoring directly on a class note works too.
+
+A curve is only ever the base. `mtpGrowthCurve` stands in for J-Base's configured base max TP, and
+every `<maxTp>` tag, and every natural growth or buff to max TP, still adds on top of it.
+
+J-Classes reads `mtpGrowthCurve` as the class's Max Tech curve, so the class scene measures a Max Tech
+multiplier from it at level 99, the same way it measures a base parameter's from the baked curve.
 
 ```
 <atkGrowthCurve:[20 + (a.level * 3)]>
@@ -1728,7 +1736,8 @@ Beyond level 99, this class's ATK follows `20 + (level * 3)` instead of the extr
 ```
 <mtpGrowthCurve:[a.level * 2]>
 ```
-This class's max TP is always `level * 2`, evaluated live at every level, not just beyond 99.
+This class's base max TP is `level * 2`, evaluated live at every level, not just beyond 99. Gear,
+states and natural buffs add on top.
 
 **See also:** `<maxLevelBoost>` (controls how far past 99 an actor can go; this controls what stats
 look like once they're there)
@@ -7782,3 +7791,33 @@ enumerates.
 Both names and numbers are accepted, matching `presetIds` and `intensityIds` in the weather config.
 Every condition on a page must pass, and vanilla's own page conditions are checked first — if those
 fail, weather cannot rescue the page.
+
+---
+
+## J-Classes (`src/plugins/class/core/`)
+
+Unlockable classes, and a scene where the player reviews them and, where the game allows it, changes
+between them. Classes are unlocked for one actor at a time with the "Unlock Classes" plugin command.
+
+### `<unlockableForActors:[ACTOR_IDS]>`
+
+**Applies to:**
+Classes only
+
+**When:**
+whenever the class is unlocked for an actor, and whenever an actor's class list is built
+
+**Effect:**
+sets the class aside for the actors it lists. It unlocks only for them: an "Unlock Classes" command
+naming any other actor is refused, with a warning in the console, because an event asking for it is a
+mistake in the event. Until one of those actors unlocks it, the class waits in their class list as a
+dimmed "???" row that gives nothing away — no name, no icon of its own, no details — and confirming it
+buzzes. Every other actor never sees it at all.
+
+A class without the tag is open to anyone, and stays out of every list until it is unlocked, so it is
+never teased. List several actors in one tag, or repeat the tag; all of them combine.
+
+```
+<unlockableForActors:[1]>
+```
+Only actor 1 can unlock this class, and it waits in their class list as "???" until they do.

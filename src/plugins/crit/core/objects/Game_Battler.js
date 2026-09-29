@@ -38,8 +38,12 @@ Game_Battler.prototype.criticalDamageMultiplier = function()
   // sum together all cdm values across the notes.
   const cdmBonuses = this.getCriticalDamageMultiplier();
 
+  // notes and panels are summed in percent points and only divided down at the end, so the base a
+  // percent panel is a share of has to be in percent points too, or the panel pays a hundredth of it.
+  const baseCdmPoints = this.baseCriticalMultiplier() * 100;
+
   // grab all sdp bonuses for cdm.
-  const cdmSdpBonuses = this.critSdpBonuses(0, this.baseCriticalMultiplier());
+  const cdmSdpBonuses = this.critSdpBonuses(0, baseCdmPoints);
 
   // calculate the factor for the CDM.
   const cdmFactor = (cdmBonuses + cdmSdpBonuses) / 100;
@@ -106,8 +110,11 @@ Game_Battler.prototype.criticalDamageReduction = function()
   // sum together all ctr values across the notes.
   const ctrBonuses = this.getCriticalDamageReduction();
 
+  // the base a percent panel is a share of, in the same percent points the notes and panels are summed in.
+  const baseCtrPoints = this.baseCriticalReduction() * 100;
+
   // grab all sdp bonuses for ctr.
-  const ctrSdpBonuses = this.critSdpBonuses(1, this.baseCriticalReduction());
+  const ctrSdpBonuses = this.critSdpBonuses(1, baseCtrPoints);
 
   // calculate the factor for the CTR.
   const ctrFactor = (ctrBonuses + ctrSdpBonuses) / 100;

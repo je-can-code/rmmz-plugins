@@ -54,6 +54,69 @@ describe('ApManager (direct src import)', () =>
     });
   });
 
+  describe('isSkillKnownForGood', () =>
+  {
+    it('counts a skill the actor has learned', () =>
+    {
+      // Arrange
+      const actor = {
+        hasSkill: () => true,
+        isLearnedSkill: skillId => skillId === 12,
+      };
+
+      // Act
+      const isKnown = ApManager.isSkillKnownForGood(actor, 12);
+
+      // Assert
+      expect(isKnown)
+        .toBe(true);
+    });
+
+    it('does not count a skill the actor only has on loan, from their class, gear or states', () =>
+    {
+      // Arrange- the actor can use skill 12 right now, which is not the same as having learned it.
+      const actor = {
+        hasSkill: skillId => skillId === 12,
+        isLearnedSkill: () => false,
+      };
+
+      // Act
+      const isKnown = ApManager.isSkillKnownForGood(actor, 12);
+
+      // Assert
+      expect(isKnown)
+        .toBe(false);
+    });
+  });
+
+  describe('teachingsByCost', () =>
+  {
+    it('lists a source\'s teachings cheapest first, keeping written order among equal costs', () =>
+    {
+      // Arrange- written out of order, with two pairs costing the same so their order has to survive the sort.
+      const source = {
+        aptitudeTeachings: [
+          new AptitudeTeachable(31, 500),
+          new AptitudeTeachable(32, 250),
+          new AptitudeTeachable(33, 1000),
+          new AptitudeTeachable(34, 250),
+          new AptitudeTeachable(35, 500),
+        ],
+      };
+
+      // Act
+      const ordered = ApManager.teachingsByCost(source);
+
+      // Assert- cheapest first, and each tie in the order it was written.
+      expect(ordered.map(teachable => teachable.skillId))
+        .toEqual([ 32, 34, 31, 35, 33 ]);
+
+      // and the source's own list untouched, since that is still the order AP is handed out in.
+      expect(source.aptitudeTeachings.map(teachable => teachable.skillId))
+        .toEqual([ 31, 32, 33, 34, 35 ]);
+    });
+  });
+
   describe('deriveKey', () =>
   {
     it('joins implementationType() and id with a colon', () =>

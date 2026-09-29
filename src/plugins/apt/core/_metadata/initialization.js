@@ -53,8 +53,6 @@ J.APT.Aliased.Game_Action = new Map();
 J.APT.Aliased.Game_Actor = new Map();
 J.APT.Aliased.JABS_Battler = new Map();
 J.APT.Aliased.JABS_Engine = new Map();
-J.APT.Aliased.Scene_Menu = new Map();
-J.APT.Aliased.Window_MenuCommand = new Map();
 
 /**
  * All regular expressions used by this plugin.

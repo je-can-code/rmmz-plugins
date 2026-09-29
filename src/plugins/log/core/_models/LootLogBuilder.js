@@ -92,8 +92,11 @@ class LootLogBuilder
     // wrap the amount in the appropriate color.
     const gold = `\\C[14]${goldFound}\\C[0]`;
 
+    // gold goes by the database's own currency unit.
+    const goldName = TextManager.currencyUnit;
+
     // construct the message.
-    const message = `Found \\*${gold}\\* gold.`;
+    const message = `Found \\*${gold}\\* ${goldName}.`;
 
     // assign the message to this log.
     this.setMessage(message);

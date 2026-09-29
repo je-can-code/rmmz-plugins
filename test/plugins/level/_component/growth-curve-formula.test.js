@@ -193,5 +193,50 @@ describe('GrowthCurveFormula', () =>
     });
   });
   //endregion evaluating them
+
+  //region the max tp base
+  describe('baseMaxTpForClass()', () =>
+  {
+    it('reads a class\'s max-tp curve at a level, rounded to a whole number', () =>
+    {
+      // Arrange- two and a half per level lands between whole numbers at an odd level.
+      const dataClass = { note: '<mtpGrowthCurve:[a.level * 2.5]>' };
+
+      // Act
+      const baseMaxTp = GrowthCurveFormula.baseMaxTpForClass(dataClass, 3);
+
+      // Assert- 7.5, rounded.
+      expect(baseMaxTp)
+        .toBe(8);
+    });
+
+    it('never lets a curve drive the base below zero', () =>
+    {
+      // Arrange
+      const dataClass = { note: '<mtpGrowthCurve:[a.level - 500]>' };
+
+      // Act
+      const baseMaxTp = GrowthCurveFormula.baseMaxTpForClass(dataClass, 40);
+
+      // Assert- nothing, rather than -460.
+      expect(baseMaxTp)
+        .toBe(0);
+    });
+
+    it('answers null for a class with no max-tp curve, even one with a curve for something else', () =>
+    {
+      // Arrange- null rather than zero is deliberate: a curve can evaluate to zero, and a class with no curve
+      // has to stay distinguishable from one, so its caller can keep a base of its own.
+      const dataClass = { note: '<atkGrowthCurve:[a.level * 3]>' };
+
+      // Act
+      const baseMaxTp = GrowthCurveFormula.baseMaxTpForClass(dataClass, 40);
+
+      // Assert
+      expect(baseMaxTp)
+        .toBeNull();
+    });
+  });
+  //endregion the max tp base
 });
 //endregion plugins/level/_component/growth-curve-formula.test.js

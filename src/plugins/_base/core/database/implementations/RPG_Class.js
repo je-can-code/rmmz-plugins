@@ -41,6 +41,11 @@ class RPG_Class
     // perform original logic.
     super(classData, index);
 
+    // RPG Maker's editor has no class description or icon, so only a class the JMZ data editor has saved carries
+    // them; any other keeps the empty defaults rather than reading as undefined.
+    this.description = classData.description ?? String.empty;
+    this.iconIndex = classData.iconIndex ?? 0;
+
     // map the class data to this object.
     this.expParams = classData.expParams;
     this.learnings = classData.learnings

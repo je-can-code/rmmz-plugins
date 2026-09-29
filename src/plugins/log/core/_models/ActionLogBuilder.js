@@ -357,8 +357,11 @@ class ActionLogBuilder
     // the target's name, wrapped in a defender color.
     const defender = this.#wrapName(targetName, 16);
 
+    // experience goes by the database's own term for it.
+    const expName = TextManager.exp;
+
     // construct the message.
-    const message = `${defender} gained \\*${exp}\\* experience.`;
+    const message = `${defender} gained \\*${exp}\\* ${expName}.`;
 
     // assign the message to this log.
     this.setMessage(message);
@@ -378,8 +381,11 @@ class ActionLogBuilder
     // the target's name, wrapped in a defender color.
     const defender = this.#wrapName(targetName, 16);
 
+    // the points go by the name J-SDP gives them, the only plugin that ever logs this.
+    const sdpName = TextManager.sdpPoints();
+
     // construct the message.
-    const message = `${defender} acquired \\*${amount}\\* SDP points.`;
+    const message = `${defender} acquired \\*${amount}\\* ${sdpName}.`;
 
     // assign the message to this log.
     this.setMessage(message);

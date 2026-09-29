@@ -1608,18 +1608,16 @@ class JABS_AiManager
 
   /**
    * Execute the decided queued actions for this battler.
+   *
+   * An action takes aim at its target as it begins: at once for one with no cast time, which fires instantly
+   * and is not meant to be dodged, and as the windup starts for one with a cast time. A windup commits to the
+   * direction it began with- the cast is the player's window to read the telegraph and step out of it, or to
+   * parry- so once it finishes, the action fires where it was aimed rather than turning to wherever the target
+   * went.
    * @param {JABS_Battler} battler The battler to take action.
    */
   static executeAiPhase2Action(battler)
   {
-    // face the target and re-orient the volley to the fresh facing.
-    // anti-parry protection is provided by cast time: the enemy commits a
-    // direction when the cast begins, giving the player the cast window to
-    // read the angle and dodge or parry. skills with zero cast time fire
-    // instantly and are not intended to be parried.
-    battler.turnTowardTarget();
-    this.restampActionDirections(battler);
-
     // destructure the primary action from the decided actions.
     const [ action, ] = battler.getDecidedAction();
     if (!action) return;
@@ -1627,6 +1625,12 @@ class JABS_AiManager
     // check if this action is already cast.
     if (action.isCastComplete())
     {
+      // an action with no windup takes aim as it fires; a finished windup keeps the aim it began with.
+      if (action.getCastTime() <= 0)
+      {
+        this.takeAim(battler);
+      }
+
       // execute the queued action(s) now that we are in position and not casting.
       battler.processQueuedActions();
 
@@ -1643,8 +1647,24 @@ class JABS_AiManager
     // if we are currently casting, then do not process further.
     if (battler.isCastingOrChanneling()) return;
 
+    // the windup takes aim as it begins, and keeps that aim until it fires.
+    this.takeAim(battler);
+
     // start the cast timer.
     battler.setCastCountdown(action.getCastTime());
+  }
+
+  /**
+   * Faces the battler toward its target, and re-orients its decided volley to that fresh facing.
+   * @param {JABS_Battler} battler The battler taking aim.
+   */
+  static takeAim(battler)
+  {
+    // face the target.
+    battler.turnTowardTarget();
+
+    // then point every spoke of the volley from the direction now faced.
+    this.restampActionDirections(battler);
   }
 
   /**

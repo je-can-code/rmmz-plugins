@@ -6,6 +6,19 @@ import JPassiveConditional_PluginMetadata from './_pluginMetadata.js';
  */
 globalThis.J ||= {};
 
+//region version checks
+(() =>
+{
+  // check to ensure we have the minimum required version of the J-Base plugin.
+  const requiredBaseVersion = '4.0.0';
+  const hasBaseRequirement = J.BASE.Helpers.satisfies(J.BASE.Metadata.Version, requiredBaseVersion);
+  if (hasBaseRequirement === false)
+  {
+    throw new Error(`Either missing J-Base or has a lower version than the required: ${requiredBaseVersion}`);
+  }
+})();
+//endregion version checks
+
 /**
  * The plugin umbrella that governs conditional passive states on the map.
  */
@@ -26,6 +39,7 @@ J.PASSIVE.EXT.CONDITIONAL.Aliased.JABS_Battler = new Map();
 J.PASSIVE.EXT.CONDITIONAL.Aliased.JABS_Action = new Map();
 J.PASSIVE.EXT.CONDITIONAL.Aliased.JABS_Engine = new Map();
 J.PASSIVE.EXT.CONDITIONAL.Aliased.Game_CharacterBase = new Map();
+J.PASSIVE.EXT.CONDITIONAL.Aliased.Scene_Boot = new Map();
 J.PASSIVE.EXT.CONDITIONAL.Aliased.Window_PassiveDetail = new Map();
 J.PASSIVE.EXT.CONDITIONAL.Aliased.StateAfflictionProvider = new Map();
 

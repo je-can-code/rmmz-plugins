@@ -1,0 +1,24 @@
+import './__models/AffixEffects.js';
+import './__models/DifficultyMetadata.js';
+import './__models/DifficultyBuilder.js';
+import './__models/DifficultyLayer.js';
+import './__models/DifficultyConfig.js';
+import './_metadata/initialization.js';
+import './managers/DifficultyManager.js';
+import './managers/DifficultyAffixManager.js';
+import './managers/DataManager.js';
+import './objects/Game_System.js';
+import './objects/Game_Temp.js';
+import './objects/Game_Actor.js';
+import './objects/Game_Enemy.js';
+import './objects/Game_Event.js';
+import './_metadata/JPassiveAffix_PluginMetadata.js';
+import './scenes/Scene_Boot.js';
+import './windows/Window_DifficultyList.js';
+import './windows/Window_DifficultyPoints.js';
+import './services/DifficultyEffects.js';
+import './windows/Window_DifficultyEffectList.js';
+import './scenes/Scene_Difficulty.js';
+import './_metadata/pluginCommands.js';
+
+import './registerDifficultySaveRoutes.js';

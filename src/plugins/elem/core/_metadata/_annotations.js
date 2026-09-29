@@ -283,6 +283,8 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.5.0
+ *    Its tags are described in words.
  * - 1.4.0
  *    Added <slayer:[ELEMENT_ID, PERCENT]>, a damage bonus against targets weak
  *    to an element. Keyed on what the target is rather than what the attack is

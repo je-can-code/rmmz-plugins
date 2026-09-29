@@ -141,8 +141,11 @@ if (J.ABS)
     // resolve display parts for this typed key.
     const { name, icon } = ApManager.apTypeDisplay(apTypeKey);
 
+    // the points go by the same name here as everywhere else they appear.
+    const apName = TextManager.apPoints();
+
     // eslint-disable-next-line max-len
-    const message = `\\C[16]${battler.battlerName()}\\C[0] gained \\C[29]\\*${apPoints}\\*\\C[0] AP \\i[${icon}] [${name}].`;
+    const message = `\\C[16]${battler.battlerName()}\\C[0] gained \\C[29]\\*${apPoints}\\*\\C[0] ${apName} \\i[${icon}] [${name}].`;
 
     // build the log entry (prepend icon with \i[x]).
     const apLog = new ActionLogBuilder()

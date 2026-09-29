@@ -402,6 +402,8 @@ Game_Battler.prototype.naturalDisplayBase = function(parameterKey)
 
 /**
  * Calculates the combination of base parameter value, param plus, and param rate.
+ * The rate's factor is floored at 0, so rates summing past -100% zero the value's share rather than
+ * flipping its sign.
  * This can be overridden if alternative calculations is desired.
  * @param {number} baseValue The base value of the parameter.
  * @param {number} paramPlus The flat bonus value of the parameter.
@@ -410,8 +412,8 @@ Game_Battler.prototype.naturalDisplayBase = function(parameterKey)
  */
 Game_Battler.prototype.calculatePlusRate = function(baseValue, paramPlus, paramRate)
 {
-  // determine the modified buff rate.
-  const paramFactor = ((paramRate + 100) / 100);
+  // determine the modified buff rate, never below nothing.
+  const paramFactor = Math.max(0, (paramRate + 100) / 100);
 
   // determine the modified base parameter.
   const paramBase = (baseValue + paramPlus);

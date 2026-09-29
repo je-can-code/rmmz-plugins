@@ -59,6 +59,43 @@ class ApManager
   }
 
   /**
+   * Determines whether an actor knows a skill for good: learned, rather than lent. This is what a teachable
+   * marks KNOWN, since there is nothing left for any source to teach.
+   *
+   * A skill lent by the actor's class, gear or states is theirs only for as long as they keep it on, so its
+   * teachable keeps showing how far along learning it for good is. AP flows into it all the while either way:
+   * {@link #applyApToSource} only ever skips a skill already learned through an aptitude.
+   * @param {Game_Actor} actor The actor being read.
+   * @param {number} skillId The id of the skill a teachable teaches.
+   * @returns {boolean}
+   */
+  static isSkillKnownForGood(actor, skillId)
+  {
+    return actor.isLearnedSkill(skillId);
+  }
+
+  /**
+   * The teachings a source offers, cheapest first: the order its ladder of skills is drawn in.
+   *
+   * Teachables fed the same AP gather it at the same pace, so among them cheapest first is also soonest first-
+   * the skills already learned settle at the top, and the next one to learn sits just beneath them. Teachings
+   * costing the same keep the order they were written in.
+   *
+   * A sorted copy, for display. The source's own list stays in written order, which is the order
+   * {@link #applyApToSource} hands AP out in and announces learns in.
+   * @param {RPG_Base} source The aptitude source whose teachings are listed.
+   * @returns {AptitudeTeachable[]}
+   */
+  static teachingsByCost(source)
+  {
+    // a copy, so ordering it for display disturbs nothing that hands out AP.
+    const teachables = [ ...source.aptitudeTeachings ];
+
+    // cheapest first. sorting is stable, so teachings costing the same keep the order they were written in.
+    return teachables.sort((left, right) => left.requiredAp - right.requiredAp);
+  }
+
+  /**
    * Derives a stable key for a source.
    * @param {RPG_Base} source The source to derive a key for.
    * @returns {string} The stable key.

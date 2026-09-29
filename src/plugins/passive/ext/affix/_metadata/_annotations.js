@@ -25,6 +25,8 @@
  * @orderAfter J-Message
  * @orderAfter J-HUD
  * @orderAfter J-Resources-ABS
+ * @orderAfter J-SDP
+ * @orderAfter J-Aptitude
  * @help
  * ============================================================================
  * OVERVIEW
@@ -267,6 +269,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.3.0
+ *    Its tags are described in words. J-Passive-Conditional now draws the timed
+ *    auto-apply lines in the Passives view.
  * - 1.2.2
  *    Affix tier icons now reach the target frame as icons, so they lead the enemy's
  *    name on the rebuilt frame from J-HUD-TargetFrame 2.0.0.

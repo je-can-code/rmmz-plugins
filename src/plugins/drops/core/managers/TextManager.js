@@ -9,14 +9,14 @@ TextManager.goldRate = function()
 };
 
 /**
- * Help text explaining how gold rate improves battle and chest payouts.
+ * Help text explaining how gold rate improves the gold defeated enemies pay out.
  * @returns {string[]}
  */
 TextManager.goldRateDescription = function()
 {
   return [
     'Bonus multiplier applied to gold rewards.',
-    'Higher values yield more gold from battles and chests.',
+    'Higher values yield more gold from defeated enemies.',
   ];
 };
 

@@ -28,8 +28,6 @@ import './windows/Window_AptitudeSourceList.js';
 import './windows/Window_AptitudeAggregateDetails.js';
 import './windows/Window_AptitudeSourceDetails.js';
 import './scenes/Scene_Aptitude.js';
-import './scenes/Scene_Menu.js';
-import './windows/Window_MenuCommand.js';
 import './_metadata/pluginCommands.js';
 
 import './registerAptitudeSaveRoutes.js';

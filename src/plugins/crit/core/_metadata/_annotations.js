@@ -203,9 +203,14 @@
  * thisCritMultiplier tags above)- it runs through the standard evaluator with:
  *   a = the battler these bonuses are being calculated for
  *   b = the battler's base value for this parameter, in percent
- *       (baseCriticalMultiplier() for cdm tags, baseCriticalReduction() for
- *       ctr tags- 0.5 by default for both, so b is 50)
+ *       (baseCriticalMultiplier() for cdm tags- 0.5 by default, so b is 50;
+ *       baseCriticalReduction() for ctr tags- 0 by default, so b is 0)
  *   v = $gameVariables._data
+ *
+ * NOTE ABOUT CTR RATES:
+ * Since the base crit reduction is 0 by default, a ctr "Rate" tag adds nothing
+ * until something grants a base through a <critReductionBase> tag. Use a
+ * "Plus" tag to grant crit reduction outright.
  *
  * EXAMPLE:
  *  <cdmGrowthRate:[5]>
@@ -520,6 +525,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.5.0
+ *    Its tags are described in words. The base critical reduction now applies and
+ *    defaults to 0, and SDP critical bonuses are no longer 100 times too small.
  * - 1.4.0
  *    critReduction and critReductionBase accept negative values, so a debuff can
  *    make critical hits land harder. Fixed the Rate variants of the cdm and ctr
@@ -567,6 +575,6 @@
  * @decimals 2
  * @min 0
  * @text Base Critical Damage Reduction
- * @desc The default critical damage reduction (%) for battlers with no <critReductionBase> tags. 50 = -50% of the bonus.
- * @default 50.00
+ * @desc The critical damage reduction (%) every battler starts from, against every crit. 0 = crits land in full; 25 = -25% of the bonus.
+ * @default 0.00
  */

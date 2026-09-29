@@ -1,5 +1,5 @@
 //region scene-menu-facet-base.test
-import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 import vm from 'node:vm';
@@ -38,7 +38,9 @@ describe('Scene_MenuFacetBase', () =>
         : realParameters(name);
     };
 
-    const bundle = path.join(repoRoot, 'project/js/plugins/base/J-Base.js');
+    // read from `out/`, which `hotfix` and `bun run test` both rebuild before the suite runs. The copy under
+    // `project/` is only refreshed after the suite passes, so it is one build behind any J-Base change.
+    const bundle = path.join(repoRoot, 'out/base/J-Base.js');
 
     vm.runInThisContext(fs.readFileSync(bundle, 'utf-8'), { filename: bundle });
   });
@@ -56,6 +58,23 @@ describe('Scene_MenuFacetBase', () =>
     // Assert: null means Scene_Base's initMembers ran. undefined means a subclass in the chain
     // overrode initMembers without calling super, and every modal in every facet scene will throw.
     expect(scene._j._modalDimmerWindow).toBeNull();
+  });
+
+  it('runs initMembers once per scene, from Scene_Base', () =>
+  {
+    // Arrange- J-Base's Scene_Base.initialize is the one caller; a second resets every field twice.
+    const initMembers = vi.spyOn(globalThis.Scene_MenuFacetBase.prototype, 'initMembers');
+
+    // Act
+    const scene = new globalThis.Scene_MenuFacetBase();
+
+    // Assert
+    expect(initMembers)
+      .toHaveBeenCalledTimes(1);
+    expect(initMembers.mock.contexts)
+      .toContain(scene);
+
+    initMembers.mockRestore();
   });
 
   it('builds the shared chrome when created', () =>

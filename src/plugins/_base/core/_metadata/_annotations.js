@@ -157,6 +157,10 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 4.0.0
+ *    BREAKING: requires data/config.notetag-lines.json. Added NotetagDescriber,
+ *    TextWrapper.wrapStyled, and a description and icon on every class. Sp-parameters
+ *    stop at 0, crit and evasion rates show as points, and facet scenes set up once.
  * - 3.20.0
  *    Map gauges now leave a trail. A loss leaves the lost amount behind in red to
  *    drain away, and a gain shows in green ahead of the bar as it fills in.

@@ -156,6 +156,9 @@ export const NotetagIdTargets = {
   ],
   apTyped: [ { position: 2, table: { byPosition: 1, cases: APTITUDE_DOMAINS }, acceptsName: true } ],
 
+  // J-Classes.
+  unlockableForActors: [ { position: 'each', table: 'Actors' } ],
+
   // J-CriticalFactors.
   critAlwaysIfState: [ { position: 'each', table: 'States' } ],
   critChanceIfState: [ { position: 0, table: 'States' } ],

@@ -9,6 +9,10 @@ describe('LootLogBuilder (direct src import)', () =>
   beforeAll(async () =>
   {
     String.empty = '';
+
+    // gold's name, as Chef Adventure's database gives it.
+    globalThis.TextManager = { currencyUnit: 'G' };
+
     ({ default: ActionLog } = await import('../../../../../src/plugins/log/core/_models/ActionLog.js'));
     ({ default: LootLogBuilder } = await import('../../../../../src/plugins/log/core/_models/LootLogBuilder.js'));
   });
@@ -72,7 +76,7 @@ describe('LootLogBuilder (direct src import)', () =>
 
   describe('setupGoldFound', () =>
   {
-    it('builds a gold-found message with the colored amount', () =>
+    it('builds a gold-found message with the colored amount, naming gold by the database\'s currency unit', () =>
     {
       // Arrange
       const builder = new LootLogBuilder();
@@ -81,7 +85,7 @@ describe('LootLogBuilder (direct src import)', () =>
       const log = builder.setupGoldFound(100).build();
 
       // Assert
-      expect(log.message()).toEqual('Found \\*\\C[14]100\\C[0]\\* gold.');
+      expect(log.message()).toEqual('Found \\*\\C[14]100\\C[0]\\* G.');
     });
   });
 

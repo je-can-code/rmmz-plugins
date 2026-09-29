@@ -144,7 +144,7 @@ Window_Command.prototype.drawItem = function(index)
   const extraLines = this.commandLines(index);
 
   // calculate the x of the command name.
-  let commandNameX = rectX + 40;
+  let commandNameX = rectX + this.commandNameIndent(true);
 
   // initialize the y of the command name.
   let commandNameY = rectY;
@@ -208,7 +208,7 @@ Window_Command.prototype.drawItem = function(index)
 
   // when there is no icon and no face, the visual-leader indent is wasted space.
   // collapse it to a small padding so text starts flush with the window edge.
-  if (!commandIcon && !hasFaceData) commandNameX = rectX + 4;
+  if (!commandIcon && !hasFaceData) commandNameX = rectX + this.commandNameIndent(false);
 
   // render the command name.
   this.drawTextEx(commandName, commandNameX, commandNameY, rectWidth);
@@ -289,6 +289,23 @@ Window_Command.prototype.drawItem = function(index)
       this.drawTextEx(extraLine, extraLineX, extraLineY, rectWidth);
     }, this);
   }
+};
+
+/**
+ * How far in from its row's left edge a command's name starts: past the icon when an icon or face leads it, and
+ * only a small padding when nothing does.<br/>
+ * Its own answer, so a window laying its words out ahead of drawing them, such as one wrapping a long name to fit
+ * its row, measures from the same place the name is drawn.
+ * @param {boolean} hasIcon Whether an icon or face leads the command's name.
+ * @returns {number}
+ */
+Window_Command.prototype.commandNameIndent = function(hasIcon)
+{
+  // an icon or face takes the leading room.
+  if (hasIcon === true) return 40;
+
+  // without one, only a little padding keeps the words off the edge.
+  return 4;
 };
 
 /**

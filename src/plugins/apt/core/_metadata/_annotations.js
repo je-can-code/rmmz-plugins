@@ -137,7 +137,16 @@
  *  <apr(Buff|Growth)(Plus|Rate):[FORMULA]>
  * See J-NaturalGrowth for how Buff/Growth and Plus/Rate behave.
  * ============================================================================
+ * THE APTITUDE SCENE
+ * The aptitude scene lists every source an actor carries and how far along
+ * each of its teachables is. It is a debug view: it has no menu command, and
+ * is opened from the dev console instead:
+ *  Scene_Aptitude.callScene()
+ * ============================================================================
  * CHANGELOG:
+ * - 2.0.0
+ *    BREAKING: removed the main-menu Aptitude command and its menu-switch parameter.
+ *    Teachings list cheapest first, and AP takes its name and icon from the managers.
  * - 1.5.0
  *    Added natural growth tags for aptitude rate (apr).
  * - 1.4.0
@@ -185,16 +194,6 @@
  * - 1.0.0
  *    The initial release.
  * ============================================================================
- *
- * @param parentConfig
- * @text SETUP
- *
- * @param menu-switch
- * @parent parentConfig
- * @type switch
- * @text Menu Switch ID
- * @desc When this switch is ON, then this command is visible in the menu.
- * @default 107
  *
  * @param levelConfig
  * @text LEVEL-RELATED SETUP

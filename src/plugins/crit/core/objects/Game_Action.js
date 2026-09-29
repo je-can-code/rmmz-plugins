@@ -248,7 +248,9 @@ Game_Action.prototype.applyCriticalDamageMultiplier = function(baseDamage)
 };
 
 /**
- * Calculates the amount of critical damage that will be removed from the bonus crit damage.
+ * Calculates the amount of critical damage that will be removed from the bonus crit damage.<br/>
+ * The defender's base reduction counts against every crit it takes, the same way the attacker's
+ * base multiplier counts toward every crit it lands.
  * @param {number} criticalDamage The critical damage to be added.
  * @returns {number} The amount of critical damage after mitigations.
  */
@@ -260,8 +262,14 @@ Game_Action.prototype.applyCriticalDamageReduction = function(criticalDamage)
   // if somehow we don't have a defender/target, then just return the base damage.
   if (!defender) return criticalDamage;
 
+  // get the base crit reduction.
+  let critReduction = defender.baseCriticalReduction();
+
+  // get the defender's bonus crit reduction.
+  critReduction += defender.ctr;
+
   // this gives us a multiplier representing how reduced the crit damage is.
-  const baseCriticalReductionRate = (1 - defender.ctr)
+  const baseCriticalReductionRate = (1 - critReduction);
 
   // this cannot reduce the crit bonus damage below 0.
   const criticalReductionRate = Math.max(baseCriticalReductionRate, 0);

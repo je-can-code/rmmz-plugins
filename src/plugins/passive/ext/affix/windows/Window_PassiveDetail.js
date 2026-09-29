@@ -17,9 +17,6 @@ Window_PassiveDetail.prototype.drawStateHeader = function(state)
 
   // render skillHistoryBonus tags as colored prose when the DB description is empty.
   this.drawSkillHistoryBonusProse(state);
-
-  // render time autoApplyState tags as prose with inline \\state[id] names.
-  this.drawAutoApplyStateProse(state);
 };
 
 J.PASSIVE.EXT.AFFIX.Aliased.Window_PassiveDetail.set(
@@ -52,28 +49,6 @@ Window_PassiveDetail.prototype.drawSkillHistoryBonusProse = function(state)
   if (!J.ABS) return;
 
   const lines = SkillHistoryBonusDisplay.collectGeneralProseLines(state, this);
-
-  if (lines.length === 0) return;
-
-  const width = this.innerWidth - 4;
-
-  lines.forEach(text =>
-  {
-    this.drawTextEx(text, 4, this.currentY, width);
-    this.currentY += this.textSizeEx(text).height + 4;
-  });
-};
-
-/**
- * Draws player-facing prose for each time {@link J.PASSIVE.EXT.CONDITIONAL.RegExp.AutoApplyState} tag on this state.
- * Skipped when J-Passive-Conditional is absent or the state carries no time auto-apply rules.
- * @param {RPG_State} state The state being detailed.
- */
-Window_PassiveDetail.prototype.drawAutoApplyStateProse = function(state)
-{
-  if (!J.PASSIVE.EXT.CONDITIONAL) return;
-
-  const lines = AutoApplyStateDisplay.collectTimeProseLines(state, this);
 
   if (lines.length === 0) return;
 

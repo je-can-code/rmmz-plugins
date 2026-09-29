@@ -15,3 +15,5 @@ import './windows/Window_Base.js';
 import './sprites/Sprite_WeatherLayer.js';
 import './sprites/Spriteset_Map.js';
 import './scenes/Scene_Map.js';
+import './scenes/Scene_Gameover.js';
+import './scenes/Scene_Title.js';

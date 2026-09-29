@@ -21,19 +21,6 @@ class Scene_MenuFacetBase
   extends Scene_MenuBase
 {
   /**
-   * Extends {@link #initialize}.<br/>
-   * Also initializes this scene's members.
-   */
-  initialize()
-  {
-    // perform original logic.
-    super.initialize();
-
-    // initialize our custom members.
-    this.initMembers();
-  }
-
-  /**
    * Extends {@link #initMembers}.<br/>
    * Also initializes the members shared by every facet scene.
    */

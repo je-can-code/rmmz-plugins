@@ -71,6 +71,28 @@ class GrowthCurveFormula
       return 0;
     }
   }
+
+  /**
+   * The base max TP a class's `<mtpGrowthCurve:[formula]>` tag gives at a level: the formula's value there,
+   * rounded to a whole number and never below zero.
+   *
+   * This is the one place an MTP curve becomes a number, so an actor's max TP and anything measuring a class
+   * by its curve always agree on what the curve is worth.
+   * @param {RPG_Class} dataClass The class database object to read the tag from.
+   * @param {number} level The level to evaluate the curve at.
+   * @returns {number|null} The base max TP at that level, or null if the class has no MTP growth curve tag.
+   */
+  static baseMaxTpForClass(dataClass, level)
+  {
+    const formula = this.readMtpForClass(dataClass);
+
+    // a class without a curve has no base of its own to give.
+    if (formula === null) return null;
+
+    // the curve at the level, never below nothing.
+    const curveValue = this.evaluate(formula, level);
+    return Math.max(0, Math.round(curveValue));
+  }
 }
 
 // publish for prototype aliases and tests that expect a global GrowthCurveFormula symbol after the Vite ship bundles.

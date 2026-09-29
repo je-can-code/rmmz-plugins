@@ -1,11 +1,11 @@
 //region Window_PassiveDetail
-import AutoApplyStateDisplay from '../models/AutoApplyStateDisplay.js';
-import AutoInflictStateDisplay from '../models/AutoInflictStateDisplay.js';
-import RemoveStateOnMoveDisplay from '../models/RemoveStateOnMoveDisplay.js';
+import ConditionalNotetagDescriptions from '../core/describeConditionalNotetags.js';
+
 /**
  * Extends {@link Window_PassiveDetail#drawStateHeader}.<br/>
- * Injects autoApplyState (stand condition), autoInflictState, and removeStateOnMove prose
- * under the header.
+ * Also draws, under the header, a line for every tag of this plugin's on the state: what it grants or uses on its own
+ * and on what condition, what gates or counts its passives, and what takes its stacks away. The words are the game's,
+ * from its tag lines config.
  */
 J.PASSIVE.EXT.CONDITIONAL.Aliased.Window_PassiveDetail.set(
   'drawStateHeader',
@@ -17,73 +17,50 @@ Window_PassiveDetail.prototype.drawStateHeader = function(state)
     .get('drawStateHeader')
     .call(this, state);
 
-  // render stand autoApplyState tags as prose with inline \\state[id] names.
-  this.drawAutoApplyStandProse(state);
-
-  // render autoInflictState tags as prose (fires when this battler inflicts a state on someone).
-  this.drawAutoInflictStateProse(state);
-
-  // render removeStateOnMove tags as prose (pairs with stand autoApplyState).
-  this.drawRemoveStateOnMoveProse(state);
+  // then a line for each of this plugin's tags on the state.
+  this.drawConditionalLines(state);
 };
 
 /**
- * Draws player-facing prose for each stand {@link J.PASSIVE.EXT.CONDITIONAL.RegExp.AutoApplyState} tag.
- * Skipped when the state carries no stand auto-apply rules.
+ * Draws the line describing each of this plugin's tags on the state, one beneath the next, in the order the plugin
+ * lists them.
+ *
+ * Every line arrives as finished text, so the window only draws it: what a line says, and whether a tag says anything
+ * at all, is up to the describers and the config.
  * @param {RPG_State} state The state being detailed.
  */
-Window_PassiveDetail.prototype.drawAutoApplyStandProse = function(state)
+Window_PassiveDetail.prototype.drawConditionalLines = function(state)
 {
-  const lines = AutoApplyStateDisplay.collectStandProseLines(state, this);
-
-  if (lines.length === 0) return;
+  // only this plugin's tags, since the other plugins' effects have sections of their own.
+  const structures = ConditionalNotetagDescriptions.structures();
+  const lines = NotetagDescriber.linesForTags(state, structures);
 
   const width = this.innerWidth - 4;
 
-  lines.forEach(text =>
+  // each line beneath the last, with a little room before the next.
+  lines.forEach(({ text }) =>
   {
-    this.drawTextEx(text, 4, this.currentY, width);
-    this.currentY += this.textSizeEx(text).height + 4;
+    this.drawWrappedLine(text, width);
+    this.currentY += 4;
   });
 };
 
 /**
- * Draws player-facing prose for each {@link J.PASSIVE.EXT.CONDITIONAL.RegExp.AutoInflictState} tag.
- * Skipped when the state carries no auto-inflict rules.
- * @param {RPG_State} state The state being detailed.
+ * Draws one line across the panel, carried onto the rows beneath it when it is too long for one rather than running
+ * off the panel's edge.
+ * @param {string} text The line, text codes and all.
+ * @param {number} width The width the line may take.
  */
-Window_PassiveDetail.prototype.drawAutoInflictStateProse = function(state)
+Window_PassiveDetail.prototype.drawWrappedLine = function(text, width)
 {
-  const lines = AutoInflictStateDisplay.collectProseLines(state, this);
+  // the line broken wherever it would run past the panel, keeping any color or bold across the break.
+  const pieces = TextWrapper.wrapStyled(text, width, piece => this.textSizeEx(piece).width);
 
-  if (lines.length === 0) return;
-
-  const width = this.innerWidth - 4;
-
-  lines.forEach(text =>
+  // each piece beneath the last, as tall as it draws.
+  pieces.forEach(piece =>
   {
-    this.drawTextEx(text, 4, this.currentY, width);
-    this.currentY += this.textSizeEx(text).height + 4;
-  });
-};
-
-/**
- * Draws player-facing prose for each {@link J.PASSIVE.EXT.CONDITIONAL.RegExp.RemoveStateOnMove} tag.
- * Skipped when the state carries no move-removal rules.
- * @param {RPG_State} state The state being detailed.
- */
-Window_PassiveDetail.prototype.drawRemoveStateOnMoveProse = function(state)
-{
-  const lines = RemoveStateOnMoveDisplay.collectProseLines(state, this);
-
-  if (lines.length === 0) return;
-
-  const width = this.innerWidth - 4;
-
-  lines.forEach(text =>
-  {
-    this.drawTextEx(text, 4, this.currentY, width);
-    this.currentY += this.textSizeEx(text).height + 4;
+    this.drawTextEx(piece, 4, this.currentY, width);
+    this.currentY += this.textSizeEx(piece).height;
   });
 };
 //endregion Window_PassiveDetail

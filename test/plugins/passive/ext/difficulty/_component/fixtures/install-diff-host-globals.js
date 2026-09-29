@@ -1,0 +1,122 @@
+//region plugins/passive/ext/difficulty/_component/fixtures/install-diff-host-globals.js
+import { installJBaseHostGlobals } from '../../../../../_base/core/_component/fixtures/install-j-base-host-globals.js';
+import { installPluginManagerWithParams } from '../../../../../../setup/install-plugin-manager-with-params.js';
+import PluginMetadata from '../../../../../../../src/plugins/_base/core/models/PluginMetadata.js';
+import ExternalJsonConfigLoader from '../../../../../../../src/plugins/_base/core/managers/ExternalJsonConfigLoader.js';
+import ExternalJsonConfigLoaderOptions
+  from '../../../../../../../src/plugins/_base/core/models/ExternalJsonConfigLoaderOptions.js';
+import { buildVitestDifficultyConfigJson } from './diff-config-json.js';
+
+const noop = function()
+{
+};
+
+export const DEFAULT_DIFF_PLUGIN_PARAMS = {
+  initialPoints: '10',
+  defaultDifficulty: 'vitest_diff',
+};
+
+/**
+ * `__PLUGIN_NAME__`/`__PLUGIN_VERSION__` are bare identifiers read once, at import time, by
+ * _base/_metadata/initialization.js.
+ * @param {object} [sandbox] Defaults to `globalThis`.
+ */
+export function setPluginContextToJBase(sandbox = globalThis)
+{
+  sandbox.__PLUGIN_NAME__ = 'J-Base';
+  sandbox.__PLUGIN_VERSION__ = '4.0.0';
+}
+
+/**
+ * Flips the bare `__PLUGIN_NAME__`/`__PLUGIN_VERSION__` globals to J-Passive-Difficulty's own identity.
+ * @param {object} [sandbox] Defaults to `globalThis`.
+ */
+export function setPluginContextToJDiff(sandbox = globalThis)
+{
+  sandbox.__PLUGIN_NAME__ = 'J-Passive-Difficulty';
+  sandbox.__PLUGIN_VERSION__ = '1.0.0';
+
+  // this plugin extends J-Passive, whose namespace always exists before it loads.
+  sandbox.J.PASSIVE ||= {};
+}
+
+/**
+ * Globals required for J-Passive-Difficulty's Game_System/Game_Temp.js to evaluate when direct-imported
+ * into the real Vitest realm instead of a nested vm context. Only the object files actually under test
+ * get imported, so the Scene_Difficulty/Window_Difficulty* UI chain never needs stubbing at all.
+ * @param {object} [sandbox] Defaults to `globalThis` so direct-import tests can call this with no target arg.
+ * @param {string} [diffConfigJson] Full JSON text for StorageManager.fsReadFile (data/config.difficulty.json).
+ */
+export function installDiffHostGlobals(sandbox = globalThis, diffConfigJson = buildVitestDifficultyConfigJson())
+{
+  if (sandbox.__diffHostGlobalsInstalled === true)
+  {
+    return;
+  }
+
+  sandbox.__diffHostGlobalsInstalled = true;
+
+  installJBaseHostGlobals(sandbox);
+
+  // the plugin's own _pluginMetadata.js subclasses this real J-Base class as a bare global (no import).
+  sandbox.PluginMetadata ??= PluginMetadata;
+
+  // J_DiffPluginMetadata.initializeDifficulties() reads data/config.difficulty.json via these two
+  // real J-Base globals.
+  sandbox.ExternalJsonConfigLoader ??= ExternalJsonConfigLoader;
+  sandbox.ExternalJsonConfigLoaderOptions ??= ExternalJsonConfigLoaderOptions;
+
+  installPluginManagerWithParams(sandbox, 'J-Passive-Difficulty', DEFAULT_DIFF_PLUGIN_PARAMS);
+
+  sandbox.StorageManager.fsReadFile = function()
+  {
+    return diffConfigJson;
+  };
+
+  // Game_System.js's initialize alias captures whatever's here as "original" before overwriting it.
+  sandbox.Game_System.prototype.initialize = function()
+  {
+    this.initMembers();
+  };
+
+  // J-Base adds this hook and calls it from an aliased `initialize`; plugins adding state to
+  // this host alias the hook rather than `initialize`, so their chain needs it to exist.
+  sandbox.Game_System.prototype.initMembers = noop;
+
+  // Game_Temp.js's initMembers alias captures whatever's here as "original" before overwriting it;
+  // installJBaseHostGlobals's Game_Temp placeholder has an empty prototype with no default.
+  sandbox.Game_Temp.prototype.initMembers = noop;
+
+  Object.setPrototypeOf(sandbox.Game_Actor.prototype, sandbox.Game_Battler.prototype);
+  sandbox.Game_Actor.prototype.constructor = sandbox.Game_Actor;
+  sandbox.Game_Actor.prototype.initMembers = function()
+  {
+    sandbox.Game_Battler.prototype.initMembers.call(this);
+  };
+
+  Object.setPrototypeOf(sandbox.Game_Enemy.prototype, sandbox.Game_Battler.prototype);
+  sandbox.Game_Enemy.prototype.constructor = sandbox.Game_Enemy;
+  sandbox.Game_Enemy.prototype.initMembers = function()
+  {
+    sandbox.Game_Battler.prototype.initMembers.call(this);
+  };
+
+  // J-Passive's source lists, which this plugin's aliases capture as "original".
+  sandbox.Game_Actor.prototype.getPassiveStateSources = () => [];
+  sandbox.Game_Enemy.prototype.getPassiveStateSources = () => [];
+
+  // J-Base's hydrated row, reduced to what a synthetic passive source is read for.
+  sandbox.RPG_BaseItem = class
+  {
+    constructor(rawSource, id)
+    {
+      this.id = id;
+      this.note = rawSource.note;
+    }
+  };
+
+  // the battlers a difficulty refresh walks; tests replace these with their own.
+  sandbox.$gameActors = { existingActors: () => [] };
+  sandbox.$gameTroop = { members: () => [] };
+}
+//endregion plugins/passive/ext/difficulty/_component/fixtures/install-diff-host-globals.js

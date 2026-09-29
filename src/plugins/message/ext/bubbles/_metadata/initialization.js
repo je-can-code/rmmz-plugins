@@ -49,6 +49,7 @@ J.MESSAGE.EXT.BUBBLES.Aliased = {};
 J.MESSAGE.EXT.BUBBLES.Aliased.Game_Interpreter = new Map();
 J.MESSAGE.EXT.BUBBLES.Aliased.Game_Message = new Map();
 J.MESSAGE.EXT.BUBBLES.Aliased.Scene_Map = new Map();
+J.MESSAGE.EXT.BUBBLES.Aliased.Window_ChoiceList = new Map();
 J.MESSAGE.EXT.BUBBLES.Aliased.Window_Message = new Map();
 
 /**

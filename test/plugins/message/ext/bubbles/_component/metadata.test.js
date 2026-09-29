@@ -60,7 +60,7 @@ describe('J-Message-Bubbles metadata (direct src import)', () =>
       // Assert: the alias surface is declared after the version gate, so its presence is what proves
       // initialization ran all the way through rather than throwing partway.
       expect(Object.keys(globalThis.J.MESSAGE.EXT.BUBBLES.Aliased))
-        .toEqual([ 'Game_Interpreter', 'Game_Message', 'Scene_Map', 'Window_Message' ]);
+        .toEqual([ 'Game_Interpreter', 'Game_Message', 'Scene_Map', 'Window_ChoiceList', 'Window_Message' ]);
     });
 
     it('throws when J-Base is below the required version', async () =>
@@ -138,6 +138,7 @@ describe('J-Message-Bubbles metadata (direct src import)', () =>
       expect(Aliased.Game_Interpreter).toBeInstanceOf(Map);
       expect(Aliased.Game_Message).toBeInstanceOf(Map);
       expect(Aliased.Scene_Map).toBeInstanceOf(Map);
+      expect(Aliased.Window_ChoiceList).toBeInstanceOf(Map);
       expect(Aliased.Window_Message).toBeInstanceOf(Map);
     });
 

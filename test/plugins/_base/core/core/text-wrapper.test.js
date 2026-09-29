@@ -127,8 +127,85 @@ describe('TextWrapper (direct src import)', () =>
       // Assert
       expect(result).toEqual([ 'aaa bbb ccc' ]);
     });
+
+    it('yields no lines at all for empty text, rather than one empty line', () =>
+    {
+      // Arrange & Act
+      const result = TextWrapper.wrapToLines(String.empty, 100, 2, measure);
+
+      // Assert
+      expect(result).toEqual([]);
+    });
   });
   //endregion wrapToLines
+
+  //region wrapStyled
+  describe('wrapStyled', () =>
+  {
+    it('leaves every line as wrap would when a break leaves nothing open', () =>
+    {
+      // Arrange & Act
+      const result = TextWrapper.wrapStyled('aaa bbb ccc', 70, measure);
+
+      // Assert
+      expect(result).toEqual([ 'aaa bbb', 'ccc' ]);
+    });
+
+    it('picks a color back up on the line after the break that cut through it, and not once it is closed', () =>
+    {
+      // Arrange: the color opens on the first line and closes on the second, so only the second picks it up.
+      const result = TextWrapper.wrapStyled('\\C[2]aaa bbb\\C[0] ccc', 100, measure);
+
+      // Assert
+      expect(result).toEqual([ '\\C[2]aaa', '\\C[2]bbb\\C[0]', 'ccc' ]);
+    });
+
+    it('keeps carrying a color through a line that only has it because it was carried', () =>
+    {
+      // Arrange: the middle line sets no color of its own, so the last line learns of it only from what was carried.
+      const result = TextWrapper.wrapStyled('\\C[3]aa bb cc', 20, measure);
+
+      // Assert
+      expect(result).toEqual([ '\\C[3]aa', '\\C[3]bb', '\\C[3]cc' ]);
+    });
+
+    it('picks bold back up on the line after the break that cut through it, and not once it is toggled off', () =>
+    {
+      // Arrange: bold opens on the first line and toggles off on the second, so only the second picks it up.
+      const result = TextWrapper.wrapStyled('\\*aaa bbb\\* ccc', 70, measure);
+
+      // Assert
+      expect(result).toEqual([ '\\*aaa', '\\*bbb\\*', 'ccc' ]);
+    });
+
+    it('picks a lower-case color code back up exactly as it was written', () =>
+    {
+      // Arrange & Act
+      const result = TextWrapper.wrapStyled('\\c[4]aaa bbb', 80, measure);
+
+      // Assert
+      expect(result).toEqual([ '\\c[4]aaa', '\\c[4]bbb' ]);
+    });
+
+    it('picks the color back up before bold when a line leaves both open', () =>
+    {
+      // Arrange & Act
+      const result = TextWrapper.wrapStyled('\\C[2]\\*aa bb', 70, measure);
+
+      // Assert
+      expect(result).toEqual([ '\\C[2]\\*aa', '\\C[2]\\*bb' ]);
+    });
+
+    it('yields no lines at all for empty text', () =>
+    {
+      // Arrange & Act
+      const result = TextWrapper.wrapStyled(String.empty, 70, measure);
+
+      // Assert
+      expect(result).toEqual([]);
+    });
+  });
+  //endregion wrapStyled
 
   //region construction
   describe('construction', () =>

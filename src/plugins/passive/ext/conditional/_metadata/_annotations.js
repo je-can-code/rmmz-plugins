@@ -311,6 +311,9 @@
  *    Taking even a single step immediately strips it and resets the stand timer.
  * ============================================================================
  * CHANGELOG:
+ * - 1.4.0
+ *    Its tags are described in words, conditions and all, and the Passives view draws
+ *    those lines under each state, wrapping any too long for the panel.
  * - 1.3.2
  *    Dropped a redundant round from the remaining-seconds display, which was already
  *    rounded by the time it got there.

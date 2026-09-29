@@ -228,6 +228,79 @@ describe('J-Pixelistics PIXEL_CollisionManager authoring layer (direct src impor
   });
   //endregion _applyTileCollision
 
+  //region _canEnterFrom
+  describe('_canEnterFrom', () =>
+  {
+    /**
+     * Gives the default map real neighbor stepping and an oracle that opens only the departures
+     * named, so a test can tell exactly which tile and direction the manager asked about.
+     * @param {Set<string>} openDepartures Departures that are allowed, keyed `"x,y,direction"`.
+     * @param {boolean} loops Whether the map wraps around horizontally.
+     */
+    function useDepartureMap(openDepartures, loops = false)
+    {
+      const stepX = {
+        4: -1,
+        6: 1,
+      };
+      const stepY = {
+        2: 1,
+        8: -1,
+      };
+
+      globalThis.$gameMap.roundXWithDirection = function(x, d)
+      {
+        const nextX = x + (stepX[d] ?? 0);
+        if (loops === false) return nextX;
+        return ((nextX % this.width()) + this.width()) % this.width();
+      };
+      globalThis.$gameMap.roundYWithDirection = (y, d) => y + (stepY[d] ?? 0);
+      globalThis.$gameMap.isPassable = (x, y, d) => openDepartures.has(`${x},${y},${d}`);
+    }
+
+    it('refuses a way in from beyond the edge of a map that does not loop', () =>
+    {
+      // Arrange: the departure from off the left edge is answered as open, the way the engine's
+      // unguarded tile read can land on a passable tile from another row.
+      const { Directions } = globalThis.J.PIXEL;
+      useDepartureMap(new Set([ `-1,0,${Directions.RIGHT}` ]));
+
+      // Act
+      const result = globalThis.PIXEL_CollisionManager._canEnterFrom(0, 0, Directions.LEFT);
+
+      // Assert
+      expect(result).toBe(false);
+    });
+
+    it('lets a neighbor in when it allows the step back toward the tile', () =>
+    {
+      // Arrange: only the right-hand neighbor's step left is open. The tile's own step right is
+      // not, so asking about the wrong tile or the wrong direction would come back closed.
+      const { Directions } = globalThis.J.PIXEL;
+      useDepartureMap(new Set([ `1,0,${Directions.LEFT}` ]));
+
+      // Act
+      const result = globalThis.PIXEL_CollisionManager._canEnterFrom(0, 0, Directions.RIGHT);
+
+      // Assert
+      expect(result).toBe(true);
+    });
+
+    it('finds the neighbor across the seam of a looping map', () =>
+    {
+      // Arrange: on a map two tiles wide, the far tile's step right wraps around onto the first.
+      const { Directions } = globalThis.J.PIXEL;
+      useDepartureMap(new Set([ `1,0,${Directions.RIGHT}` ]), true);
+
+      // Act
+      const result = globalThis.PIXEL_CollisionManager._canEnterFrom(0, 0, Directions.LEFT);
+
+      // Assert
+      expect(result).toBe(true);
+    });
+  });
+  //endregion _canEnterFrom
+
   //region configuration fallbacks
   describe('configuration fallbacks', () =>
   {

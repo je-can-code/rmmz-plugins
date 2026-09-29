@@ -159,16 +159,30 @@ describe('J-Pixelistics PIXEL_CollisionManager (direct src import)', () =>
      * consults the tile being left, never the one being entered, so this is exactly the shape a
      * deny-region tile takes - and the shape the "always false" oracle used elsewhere in this
      * file cannot produce, because that one also seals the tile's own exits.
+     *
+     * Departures from off the map are answered as open too. The engine does not refuse a
+     * coordinate past an edge; it reads a tile from another row instead, which is as likely as
+     * not to be passable, so only the manager's own bounds check can keep those approaches shut.
      * @param {Set<string>} sealedApproaches Departures that refuse, keyed `"x,y,direction"`.
      */
     function useApproachMap(sealedApproaches)
     {
+      const stepX = {
+        4: -1,
+        6: 1,
+      };
+      const stepY = {
+        2: 1,
+        8: -1,
+      };
+
+      // neighbors are found through the engine's own stepping, so the fixture has to step for real.
+      globalThis.$gameMap.roundXWithDirection = (x, d) => x + (stepX[d] ?? 0);
+      globalThis.$gameMap.roundYWithDirection = (y, d) => y + (stepY[d] ?? 0);
+
       globalThis.$gameMap.isPassable = function(x, y, d)
       {
-        // a tile off the edge of the map can never be departed from toward anything.
-        if (x < 0 || y < 0 || x >= this.width() || y >= this.height()) return false;
-
-        // every other departure is allowed unless it was explicitly sealed.
+        // every departure is allowed unless it was explicitly sealed, including one from off the map.
         return sealedApproaches.has(`${x},${y},${d}`) === false;
       };
     }
@@ -179,7 +193,8 @@ describe('J-Pixelistics PIXEL_CollisionManager (direct src import)', () =>
       // off-map; sealing the other two leaves it unreachable while its own four exits stay wide
       // open. Nothing about the tile itself says "wall", which is precisely why the reachability
       // question has to be asked separately - a character teleported onto it could walk off, but
-      // no character can ever walk on, so AABB overlap has to treat it as solid.
+      // no character can ever walk on, so AABB overlap has to treat it as solid. The oracle calls
+      // the two off-map approaches open, so only the manager's bounds check keeps them shut.
       const { Directions } = globalThis.J.PIXEL;
       useApproachMap(new Set([ `1,0,${Directions.DOWN}`, `0,1,${Directions.RIGHT}` ]));
       freshOpenCollision();
