@@ -10,7 +10,7 @@ import PluginMetadata from '../../../../../src/plugins/_base/core/models/PluginM
 export function setPluginContextToJBase(sandbox = globalThis)
 {
   sandbox.__PLUGIN_NAME__ = 'J-Base';
-  sandbox.__PLUGIN_VERSION__ = '3.19.0';
+  sandbox.__PLUGIN_VERSION__ = '4.0.0';
 }
 
 /**

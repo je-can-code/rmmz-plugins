@@ -525,6 +525,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.5.0
+ *    Its tags are described in words. The base critical reduction now applies and
+ *    defaults to 0, and SDP critical bonuses are no longer 100 times too small.
  * - 1.4.0
  *    critReduction and critReductionBase accept negative values, so a debuff can
  *    make critical hits land harder. Fixed the Rate variants of the cdm and ctr

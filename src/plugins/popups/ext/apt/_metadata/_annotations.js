@@ -26,6 +26,8 @@
  * This plugin has no notetags of its own.
  * ============================================================================
  * CHANGELOG:
+ * - 1.0.3
+ *    The AP popup takes its icon from IconManager.
  * - 1.0.2
  *    AP reward popups route through `JABS_PopupMergeController.routeRewardPop` when J-Popups-ABS merge is enabled.
  * - 1.0.1

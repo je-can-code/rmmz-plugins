@@ -161,6 +161,8 @@
  * See J-NaturalGrowth for how Buff/Growth and Plus/Rate behave.
  * ============================================================================
  * CHANGELOG:
+ * - 2.6.0
+ *    Its tags are described in words.
  * - 2.5.0
  *    Added natural growth tags for proficiency bonus (prof).
  * - 2.4.3

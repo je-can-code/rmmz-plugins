@@ -190,6 +190,10 @@
  *   have to diagnose from inside a playthrough.
  * ============================================================================
  * CHANGELOG:
+ * - 3.0.0
+ *    BREAKING: replaces J-Difficulty and J-Difficulty-Affix; plugin commands now come
+ *    from J-Passive-Difficulty. Each layer is a pair of hidden passive states, and the
+ *    difficulty screen says what they do in words. Locked layers show behind a padlock.
  * - 2.2.2
  *    Dropped a redundant round from the parameter and reward factors. The inputs are
  *    whole percentages, so it never had anything to round.

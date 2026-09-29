@@ -46,6 +46,8 @@
  * entirely plugin-parameter driven.
  * ============================================================================
  * CHANGELOG:
+ * - 1.3.1
+ *    Fixed tiles at the map's edge counting as enterable from off the map.
  * - 1.3.0
  *    setPosition no longer rounds a character onto the tile grid. Under pixel
  *    movement the logical and real coordinates are the same position, so

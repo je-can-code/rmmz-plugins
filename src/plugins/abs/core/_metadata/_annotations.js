@@ -48,6 +48,8 @@
  * for JABS lives at the top instead of the bottom.
  *
  * CHANGELOG:
+ * - 4.25.1
+ *    Enemies take aim when a cast skill goes off, not when the cast begins.
  * - 4.25.0
  *    An event whose page stops applying now forgets the battler that page described,
  *    rather than still reading as one. Added hooks for holding a page change back and

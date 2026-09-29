@@ -151,6 +151,8 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.2.2
+ *    Minimap walls follow the engine's passability instead of the tileset's flags.
  * - 1.2.1
  *    Corrected PLUGIN_NAME from J-MAP to J-Map, matching the name the ship has
  *    always been built and shipped under.

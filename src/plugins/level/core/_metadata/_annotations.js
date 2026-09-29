@@ -377,6 +377,8 @@
  * This same logic is again applied to gold from each defeated enemy.
  * ============================================================================
  * CHANGELOG:
+ * - 1.6.4
+ *    Max TP from a growth curve is now the base that other bonuses build on.
  * - 1.6.3
  *    Routed the growth-curve formula error through J-Base's new Diagnostics, so
  *    it names J-LevelMaster in the console.

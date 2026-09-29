@@ -171,6 +171,8 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 2.4.0
+ *    Its tags are described in words.
  * - 2.3.0
  *    Passive sources are no longer written to savefiles; they are entirely
  *    derived from equipment, states, and skills, and are now rebuilt on load

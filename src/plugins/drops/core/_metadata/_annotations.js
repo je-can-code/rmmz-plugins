@@ -219,6 +219,8 @@
  * The party will now gain +175% gold from defeated enemies.
  * ============================================================================
  * CHANGELOG:
+ * - 2.7.0
+ *    Its tags are described in words.
  * - 2.6.0
  *    Added natural growth tags for gold rate (gdr). Fixed drop rate growth, which
  *    never applied when J-NaturalGrowth loaded after this plugin, and drop rate

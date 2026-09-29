@@ -144,6 +144,9 @@
  *  Scene_Aptitude.callScene()
  * ============================================================================
  * CHANGELOG:
+ * - 2.0.0
+ *    BREAKING: removed the main-menu Aptitude command and its menu-switch parameter.
+ *    Teachings list cheapest first, and AP takes its name and icon from the managers.
  * - 1.5.0
  *    Added natural growth tags for aptitude rate (apr).
  * - 1.4.0

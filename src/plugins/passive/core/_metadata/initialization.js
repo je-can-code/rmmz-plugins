@@ -6,6 +6,19 @@ import JPassive_PluginMetadata from './_pluginMetadata.js';
  */
 globalThis.J ||= {};
 
+//region version checks
+(() =>
+{
+  // check to ensure we have the minimum required version of the J-Base plugin.
+  const requiredBaseVersion = '4.0.0';
+  const hasBaseRequirement = J.BASE.Helpers.satisfies(J.BASE.Metadata.Version, requiredBaseVersion);
+  if (hasBaseRequirement === false)
+  {
+    throw new Error(`Either missing J-Base or has a lower version than the required: ${requiredBaseVersion}`);
+  }
+})();
+//endregion version checks
+
 /**
  * The plugin umbrella that governs all things related to this plugin.
  */

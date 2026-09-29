@@ -205,6 +205,8 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 2.1.0
+ *    A target name too long for the frame shrinks to fit.
  * - 2.0.0
  *    The target frame no longer needs gauge images. Its gauges draw like the rest of
  *    the HUD's, trail and all, its afflictions share one compact row, and icons now

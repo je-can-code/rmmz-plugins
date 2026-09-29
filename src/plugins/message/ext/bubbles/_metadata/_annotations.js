@@ -90,6 +90,8 @@
  * the characters those bubbles were pointing at have stopped existing.
  * ============================================================================
  * CHANGELOG:
+ * - 1.3.0
+ *    Choices shown with a bubble line up with it and stay on screen.
  * - 1.2.1
  *    A plugin that walks the scene calling refresh() on everything it finds no
  *    longer crashes on a message bubble.

@@ -113,6 +113,8 @@
  * JABS integration (when installed) and by plugin commands.
  * ============================================================================
  * CHANGELOG:
+ * - 3.0.3
+ *    EXP, SDP, AP and gold take their names from TextManager.
  * - 3.0.2
  *    Renamed the declared dependency on J-MessageTextCodes to J-Message, which
  *    is what that plugin's file is called now. Left as it was, the base

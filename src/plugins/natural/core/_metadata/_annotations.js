@@ -280,6 +280,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 3.1.0
+ *    Its buff and growth tags are described in words, and a negative rate stops a
+ *    parameter at 0.
  * - 3.0.0
  *    Any plugin can now bind natural growth to its own parameters, and plugin
  *    order no longer matters. Every tag is written in the numbers the status

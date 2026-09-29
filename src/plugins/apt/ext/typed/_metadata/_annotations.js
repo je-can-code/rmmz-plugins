@@ -171,6 +171,8 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.2.1
+ *    AP gain messages take AP's name from TextManager.
  * - 1.2.0
  *    Enemy typing reads prefixed elements (vs , x , tool-) from the weakness
  *    side and standard elements from the resistance side, since a prefix marks
