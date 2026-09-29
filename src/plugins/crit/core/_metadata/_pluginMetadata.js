@@ -13,10 +13,12 @@ class J_CriticalFactorsPluginMetadata extends PluginMetadata
 
   /**
    * The factor used for critical damage reduction when the plugin parameter is absent or
-   * unreadable. Static for the same reason as {@link #DEFAULT_CDM_FACTOR}.
+   * unreadable. None: the base reduction counts against every critical hit a battler takes, so
+   * anything above zero would blunt every crit in the game before a single tag asked it to.
+   * Static for the same reason as {@link #DEFAULT_CDM_FACTOR}.
    * @type {number}
    */
-  static #DEFAULT_CTR_FACTOR = 0.5;
+  static #DEFAULT_CTR_FACTOR = 0;
 
   // `baseCdmFactor` and `baseCtrFactor` are deliberately not declared as fields here, and this is
   // the one place in the codebase where that is correct. Field initializers - including valueless

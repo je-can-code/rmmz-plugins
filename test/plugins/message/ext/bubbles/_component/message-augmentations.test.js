@@ -9,12 +9,14 @@ import {
 import { installPluginManagerWithParams } from '../../../../../setup/install-plugin-manager-with-params.js';
 
 /**
- * These three files augment engine classes rather than defining anything, so the classes have to
- * exist as globals before the modules are imported - importing one is what performs the patch.
+ * These files augment engine classes rather than defining anything, so the classes have to exist as
+ * globals before the modules are imported - importing one is what performs the patch.
  *
  * The stubs are deliberately the real shapes: `Game_Message.initialize` reaching `clear` is what
  * makes the bubble fields exist on a fresh message at all, and `command101` gathering its lines
- * through `add` is what makes the pop code get read out of them.
+ * through `add` is what makes the pop code get read out of them. The choice list's own `windowX`
+ * answers where the engine alone would put the choices, which is what a message in its usual box
+ * has to be handed back untouched.
  */
 describe('J-Message-Bubbles engine augmentations (direct src import)', () =>
 {
@@ -68,11 +70,24 @@ describe('J-Message-Bubbles engine augmentations (direct src import)', () =>
     Game_Message.prototype.clear = function()
     {
       this._texts = [];
+
+      // the engine's own default: choices on the right.
+      this._choicePositionType = 2;
     };
 
     Game_Message.prototype.add = function(text)
     {
       this._texts.push(text);
+    };
+
+    Game_Message.prototype.choicePositionType = function()
+    {
+      return this._choicePositionType;
+    };
+
+    Game_Message.prototype.setChoicePositionType = function(positionType)
+    {
+      this._choicePositionType = positionType;
     };
 
     commandLog = [];
@@ -102,14 +117,42 @@ describe('J-Message-Bubbles engine augmentations (direct src import)', () =>
       return 300;
     };
 
+    function Window_ChoiceList()
+    {
+    }
+
+    // where the engine alone puts choices 120 wide on the right of a screen 816 wide: against its far edge.
+    Window_ChoiceList.prototype.windowX = function()
+    {
+      return 696;
+    };
+
+    Window_ChoiceList.prototype.windowWidth = function()
+    {
+      return 120;
+    };
+
+    Window_ChoiceList.prototype.setMessageWindow = function(messageWindow)
+    {
+      this._messageWindow = messageWindow;
+    };
+
+    // J-Base's accessor, which lives in a ship this realm never loads.
+    Window_ChoiceList.prototype.messageWindow = function()
+    {
+      return this._messageWindow;
+    };
+
     globalThis.Game_Message = Game_Message;
     globalThis.Game_Interpreter = Game_Interpreter;
     globalThis.Game_CharacterBase = Game_CharacterBase;
+    globalThis.Window_ChoiceList = Window_ChoiceList;
     globalThis.$gameMap = { tileHeight: () => 48 };
 
     await import('../../../../../../src/plugins/message/ext/bubbles/objects/Game_Message.js');
     await import('../../../../../../src/plugins/message/ext/bubbles/objects/Game_Interpreter.js');
     await import('../../../../../../src/plugins/message/ext/bubbles/objects/Game_CharacterBase.js');
+    await import('../../../../../../src/plugins/message/ext/bubbles/windows/Window_ChoiceList.js');
 
     globalThis.$gameMessage = new globalThis.Game_Message();
   });
@@ -280,6 +323,76 @@ describe('J-Message-Bubbles engine augmentations (direct src import)', () =>
       // Assert- the ground they are standing on. Aiming at the head from underneath would put the
       // bubble on top of them instead of under them.
       expect(anchorY).toBe(300);
+    });
+  });
+
+  describe('Window_ChoiceList', () =>
+  {
+    /** @type {Function} the placement service, as the module the window was patched against hands it out. */
+    let BubblePlacement;
+
+    beforeEach(async () =>
+    {
+      // the very module the patch imported: the module reset above hands every test a copy of its own,
+      // and a spy on any other copy would watch a service the window never calls.
+      const placementModule = await import(
+        '../../../../../../src/plugins/message/ext/bubbles/services/BubblePlacement.js');
+      BubblePlacement = placementModule.default;
+    });
+
+    /**
+     * A choice list anchored to a message window 300 wide, starting 400 across.
+     * @param {boolean} floating Whether the message is floating in a bubble.
+     * @returns {Window_ChoiceList}
+     */
+    function choiceListBeside(floating)
+    {
+      const choiceList = new globalThis.Window_ChoiceList();
+      choiceList.setMessageWindow({
+        x: 400,
+        width: 300,
+        isFloatingMessage: () => floating,
+      });
+
+      return choiceList;
+    }
+
+    it('leaves the choices of a message in its usual box where the engine puts them', () =>
+    {
+      // Arrange
+      const choicesX = vi.spyOn(BubblePlacement, 'choicesX');
+      const choiceList = choiceListBeside(false);
+
+      // Act
+      const x = choiceList.windowX();
+
+      // Assert- the engine's own answer, with the bubble placement never consulted.
+      expect(x).toBe(696);
+      expect(choicesX).not.toHaveBeenCalled();
+
+      choicesX.mockRestore();
+    });
+
+    it('lines the choices of a floating message up with its bubble', () =>
+    {
+      // Arrange
+      const choicesX = vi.spyOn(BubblePlacement, 'choicesX')
+        .mockReturnValue(490);
+      const choiceList = choiceListBeside(true);
+
+      // the middle rather than the engine's default of the right, so the position has to be read off
+      // the message rather than assumed.
+      globalThis.$gameMessage.setChoicePositionType(1);
+
+      // Act
+      const x = choiceList.windowX();
+
+      // Assert- the position, the bubble, the choices and the screen each reach the placement in their
+      // own place, and its answer is the window's.
+      expect(choicesX).toHaveBeenCalledWith(1, 400, 300, 120, 816);
+      expect(x).toBe(490);
+
+      choicesX.mockRestore();
     });
   });
 });

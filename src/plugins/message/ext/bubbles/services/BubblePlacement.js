@@ -35,6 +35,7 @@ class BubblePlacement
    * @param {number} anchorY The vertical position of whoever is speaking, in screen pixels.
    * @param {number} screenWidth How wide the visible area is.
    * @param {number} screenHeight How tall the visible area is.
+   * @param {boolean} preferBelow Whether the author asked for this one to sit under its speaker.
    * @returns {{x: number, y: number}}
    */
   static place(width, height, anchorX, anchorY, screenWidth, screenHeight, preferBelow)
@@ -79,6 +80,45 @@ class BubblePlacement
     }
 
     return BubblePlacement.holdOnScreen(other, height, screenHeight);
+  }
+
+  /**
+   * Where the choices shown with a floating message go across: lined up with its bubble, rather than with the screen.
+   *
+   * The Show Choices position still decides where they line up- the bubble's left edge, its middle, or its right
+   * edge- and the screen still wins wherever the two disagree, the same as it does for the bubble itself.
+   * @param {number} positionType The Show Choices position: 0 for left, 1 for middle, 2 for right.
+   * @param {number} bubbleX Where the bubble's left edge is.
+   * @param {number} bubbleWidth How wide the bubble is.
+   * @param {number} choicesWidth How wide the choices are.
+   * @param {number} screenWidth How wide the visible area is.
+   * @returns {number}
+   */
+  static choicesX(positionType, bubbleX, bubbleWidth, choicesWidth, screenWidth)
+  {
+    const aligned = BubblePlacement.alignedChoicesX(positionType, bubbleX, bubbleWidth, choicesWidth);
+
+    return BubblePlacement.holdOnScreen(aligned, choicesWidth, screenWidth);
+  }
+
+  /**
+   * Where the choices would line up with a bubble, before the screen has its say.
+   * @param {number} positionType The Show Choices position: 0 for left, 1 for middle, 2 for right.
+   * @param {number} bubbleX Where the bubble's left edge is.
+   * @param {number} bubbleWidth How wide the bubble is.
+   * @param {number} choicesWidth How wide the choices are.
+   * @returns {number}
+   */
+  static alignedChoicesX(positionType, bubbleX, bubbleWidth, choicesWidth)
+  {
+    // in the middle, centred on the bubble.
+    if (positionType === 1) return bubbleX + ((bubbleWidth - choicesWidth) / 2);
+
+    // on the right, flush with the bubble's right edge.
+    if (positionType === 2) return bubbleX + bubbleWidth - choicesWidth;
+
+    // on the left, flush with its left edge.
+    return bubbleX;
   }
 
   /**

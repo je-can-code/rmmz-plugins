@@ -256,15 +256,22 @@ describe('JABS_Engine ext/apt-core augments (direct src import)', () =>
       expect(globalThis.$mapLogs.action.addLog).not.toHaveBeenCalled();
     });
 
-    it('builds and adds a log entry when J.LOG is enabled', () =>
+    it('builds and adds a log entry when J.LOG is enabled, naming the points the way the plugin names them', () =>
     {
-      // Arrange
+      // Arrange- a name the log could only have read from the manager.
       const engine = new JABS_Engine();
       globalThis.J.LOG = true;
       globalThis.$mapLogs = { action: { addLog: vi.fn() } };
+      globalThis.TextManager = { apPoints: () => 'Aptitude Points' };
+      let loggedMessage = '';
       globalThis.ActionLogBuilder = function()
       {
-        this.setMessage = vi.fn().mockReturnThis();
+        this.setMessage = vi.fn(message =>
+        {
+          loggedMessage = message;
+
+          return this;
+        });
         this.build = vi.fn().mockReturnValue('built-log');
       };
 
@@ -273,6 +280,7 @@ describe('JABS_Engine ext/apt-core augments (direct src import)', () =>
 
       // Assert
       expect(globalThis.$mapLogs.action.addLog).toHaveBeenCalledWith('built-log');
+      expect(loggedMessage).toBe('\\C[16]Hero\\C[0] gained \\C[29]\\*5\\*\\C[0] Aptitude Points.');
     });
   });
 });

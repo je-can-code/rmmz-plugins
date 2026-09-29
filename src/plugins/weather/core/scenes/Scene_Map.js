@@ -1,4 +1,5 @@
 //region Scene_Map
+import WeatherAudioChannel from './../managers/WeatherAudioChannel.js';
 import WeatherDirector from './../managers/WeatherDirector.js';
 
 /**
@@ -38,5 +39,24 @@ Scene_Map.prototype.update = function()
 
   // then note where that left the player.
   WeatherDirector.trackPlayer();
+};
+
+/**
+ * Extends {@link #stopAudioOnBattleStart}.<br/>
+ * Also silences the weather as a battle begins, at the moment the engine silences the map's own background
+ * sound.
+ *
+ * Nothing needs doing to bring it back: returning to the map is an arrival like any other, and the weather is
+ * worked out again, and fades back in, on every arrival.
+ */
+J.WEATHER.Aliased.Scene_Map.set('stopAudioOnBattleStart', Scene_Map.prototype.stopAudioOnBattleStart);
+Scene_Map.prototype.stopAudioOnBattleStart = function()
+{
+  // perform original logic.
+  J.WEATHER.Aliased.Scene_Map.get('stopAudioOnBattleStart')
+    .call(this);
+
+  // the weather falls silent with the map's own background sound.
+  WeatherAudioChannel.stop();
 };
 //endregion Scene_Map

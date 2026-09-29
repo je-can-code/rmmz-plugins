@@ -143,27 +143,31 @@ Game_Actor.prototype.paramBase = function(paramId)
 };
 
 /**
- * Extends {@link #maxTp}.<br/>
- * When the actor's current class carries an `<mtpGrowthCurve:[formula]>` tag, that formula is the
- * sole source of this actor's MTP at every level- it replaces J-Base's flat `base + tag-sum`
- * calculation entirely (no additive stacking with `<maxTp:N>`/`<mtpBuffPlus:[...]>`), since MTP has no
- * `params[]` array to defer to for any level range the way the 8 base params do. Falls through to the
- * original calculation unchanged when the current class has no such tag.
+ * Extends {@link #getBaseMaxTp}.<br/>
+ * When the actor's current class carries an `<mtpGrowthCurve:[formula]>` tag, that formula at the actor's
+ * level is their base max TP, in place of the flat base J-Base is configured with.
+ *
+ * It is only the base, the same as a base parameter's curve is: every `<maxTp>` tag, and every natural
+ * growth and buff, still adds on top of it. MTP has no `params[]` array to bake a curve into, so the formula
+ * is evaluated live at every level rather than only past 99. A class with no such tag keeps the configured
+ * base.
  * @returns {number}
  */
-J.LEVEL.Aliased.Game_Actor.set('maxTp', Game_Actor.prototype.maxTp);
-Game_Actor.prototype.maxTp = function()
+J.LEVEL.Aliased.Game_Actor.set('getBaseMaxTp', Game_Actor.prototype.getBaseMaxTp);
+Game_Actor.prototype.getBaseMaxTp = function()
 {
-  const growthCurveFormula = GrowthCurveFormula.readMtpForClass(this.currentClass());
+  const curveBaseMaxTp = GrowthCurveFormula.baseMaxTpForClass(this.currentClass(), this.getLevel());
 
-  if (growthCurveFormula)
+  // a class without a curve keeps the configured base.
+  if (curveBaseMaxTp === null)
   {
-    return Math.max(0, Math.round(GrowthCurveFormula.evaluate(growthCurveFormula, this.getLevel())));
+    // perform original logic.
+    return J.LEVEL.Aliased.Game_Actor.get('getBaseMaxTp')
+      .call(this);
   }
 
-  // perform original logic.
-  return J.LEVEL.Aliased.Game_Actor.get('maxTp')
-    .call(this);
+  // otherwise the curve at the actor's level is their base.
+  return curveBaseMaxTp;
 };
 
 /**

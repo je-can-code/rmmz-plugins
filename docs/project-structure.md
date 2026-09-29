@@ -77,11 +77,13 @@ Custom action battle system for RMMZ. The largest family in the repo.
 |---|---|
 | `apt/core` | Grants the ability to learn by gaining points (aptitude) |
 | `apt/ext/typed` | Typed (element / weapon type / skill type) AP gains |
-| `cms/core` | A redesign of the main menu. Also owns the shared parameter-catalog rendering machinery the other CMS scenes build on |
+| `class/core` | Per-actor class unlocks, and a scene to review classes and change between them where the game allows |
+| `class/ext/apt` | J-Aptitude integration for J-Classes — each class's learnings and mastery, and what it keeps known |
+| `class/ext/natural` | J-NaturalGrowth integration for J-Classes — each class's growth per level and while worn |
+| `cms/core` | A redesign of the main menu. Also owns the shared parameter-catalog rendering machinery the other CMS scenes and J-Classes build on |
 | `cms/ext/equip` | A redesign of the equip menu |
 | `cms/ext/skill` | A redesign of the skill menu |
 | `crit/core` | Manages critical damage multiplier/reduction of battlers |
-| `diff/core` | A layered difficulty system — several layers can apply at once |
 | `drops/core` | Enables greater control over loot drops |
 | `elem/core` | Enables greater control over elements |
 | `escribe/core` | "Describing" an event with text and/or an icon over its head on the map |
@@ -111,6 +113,7 @@ Custom action battle system for RMMZ. The largest family in the repo.
 | `passive/core` | Grants passive states from various database objects |
 | `passive/ext/affix` | Random passive affixes + tier presentation for JABS enemies |
 | `passive/ext/conditional` | Gates passives and auto-applies combat states on the JABS map |
+| `passive/ext/difficulty` | Difficulty layers as passive states for everyone — several can apply at once |
 | `passive/ext/otib` | One-Time Item Boosts as permanent passive states |
 | `passive/ext/sks` | Gates passive state application by SKS equip state |
 | `pixel/core` | J-Pixelistics — sub-tile (pixel-accurate) movement on the map |

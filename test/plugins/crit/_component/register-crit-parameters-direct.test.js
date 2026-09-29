@@ -102,12 +102,17 @@ describe('CritParameterRegistration.registerAll (crit core, direct src import)',
       expect(definition.resolveValue(battler)).toBe(0.4);
     });
 
-    it('binds its SDP base to actor.baseCriticalMultiplier()', () =>
+    it('binds its SDP base to actor.baseCriticalMultiplier(), in the percent points panels are summed in', () =>
     {
+      // Arrange- the actor answers differently for the two crit bases, so the right one is visible.
       const definition = ParameterRegistry.get('cdm');
-      const actor = { baseCriticalMultiplier: () => 0.5 };
+      const actor = { baseCriticalMultiplier: () => 0.5, baseCriticalReduction: () => 0.2 };
 
-      expect(definition.sdpBinding.getBaseForSdp(actor)).toBe(0.5);
+      // Act
+      const base = definition.sdpBinding.getBaseForSdp(actor);
+
+      // Assert
+      expect(base).toBe(50);
     });
 
     it('binds natural growth to the four crit damage tags', () =>
@@ -167,12 +172,17 @@ describe('CritParameterRegistration.registerAll (crit core, direct src import)',
       expect(definition.resolveValue(battler)).toBe(0.25);
     });
 
-    it('binds its SDP base to actor.baseCriticalReduction()', () =>
+    it('binds its SDP base to actor.baseCriticalReduction(), in the percent points panels are summed in', () =>
     {
+      // Arrange- the actor answers differently for the two crit bases, so the right one is visible.
       const definition = ParameterRegistry.get('ctr');
-      const actor = { baseCriticalReduction: () => 0.5 };
+      const actor = { baseCriticalMultiplier: () => 0.5, baseCriticalReduction: () => 0.2 };
 
-      expect(definition.sdpBinding.getBaseForSdp(actor)).toBe(0.5);
+      // Act
+      const base = definition.sdpBinding.getBaseForSdp(actor);
+
+      // Assert
+      expect(base).toBe(20);
     });
 
     it('binds natural growth to the four crit taken tags', () =>

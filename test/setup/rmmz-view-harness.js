@@ -314,7 +314,7 @@ export function installBitmapMock()
         save() {}, restore() {}, clearRect() {}, fillRect() {}, drawImage() {}, clip() {},
         putImageData() {}, setTransform() {}, translate() {}, scale() {}, rotate() {},
         fillText() {}, strokeText() {}, beginPath() {}, closePath() {},
-        moveTo() {}, lineTo() {}, stroke() {}, fill() {},
+        moveTo() {}, lineTo() {}, rect() {}, stroke() {}, fill() {},
         measureText: text => ({ width: String(text).length * 10 }),
         getImageData: () => ({ data: new Uint8ClampedArray(4) }),
         createLinearGradient: () => ({ addColorStop() {} }),

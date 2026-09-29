@@ -335,6 +335,32 @@ describe('J-Base Game_BattlerBase (direct src import)', () =>
       // Assert- (1.0 + 1.0 - 0.5) + 0.45.
       expect(result).toBeCloseTo(1.95);
     });
+
+    it('floors a stacked total that would fall below nothing at zero', () =>
+    {
+      // Arrange- two damage-rate reductions of 70% and 80% sum to -50% of nothing.
+      const battler = buildInitializedBattler();
+      battler.traitsWithId = (code, id) => (code === 23 && id === 6 ? [ { value: 0.3 }, { value: 0.2 } ] : []);
+
+      // Act
+      const result = battler.sparam(6);
+
+      // Assert
+      expect(result).toBe(0);
+    });
+
+    it('leaves a stacked total that stays above zero where it landed', () =>
+    {
+      // Arrange- the near-miss: 40% and 30% reductions leave 30% standing.
+      const battler = buildInitializedBattler();
+      battler.traitsWithId = (code, id) => (code === 23 && id === 6 ? [ { value: 0.6 }, { value: 0.7 } ] : []);
+
+      // Act
+      const result = battler.sparam(6);
+
+      // Assert
+      expect(result).toBeCloseTo(0.3);
+    });
   });
 
   //region localised equipment parameters

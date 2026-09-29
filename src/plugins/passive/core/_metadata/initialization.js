@@ -43,6 +43,7 @@ J.PASSIVE.Aliased.Game_BattlerBase = new Map();
 J.PASSIVE.Aliased.Game_Enemy = new Map();
 J.PASSIVE.Aliased.Game_Party = new Map();
 J.PASSIVE.Aliased.JABS_AiManager = new Map();
+J.PASSIVE.Aliased.Scene_Boot = new Map();
 J.PASSIVE.Aliased.Scene_Menu = new Map();
 J.PASSIVE.Aliased.Window_MenuCommand = new Map();
 J.PASSIVE.Aliased.Window_MoreEquipData = new Map();

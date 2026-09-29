@@ -22,7 +22,7 @@ describe('TextManager drops augments (direct src import)', () =>
   {
     expect(TextManager.goldRateDescription()).toEqual([
       'Bonus multiplier applied to gold rewards.',
-      'Higher values yield more gold from battles and chests.',
+      'Higher values yield more gold from defeated enemies.',
     ]);
   });
 

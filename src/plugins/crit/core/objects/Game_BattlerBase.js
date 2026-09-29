@@ -55,7 +55,7 @@ Game_BattlerBase.prototype.criticalDamageMultiplier = function()
  * The base critical taken rate.
  * A battler's critical taken rate acts as the base crit reduction for all incoming
  * critical hits. The individual battler's `ctr` is added to this amount to calculate
- * the damage a critical hit can potentially deal.
+ * how much of a critical hit's bonus damage the battler shrugs off.
  * Sourced from the plugin parameter so designers can retune the default without
  * touching code- see {@link J_CriticalFactorsPluginMetadata#baseCtrFactor}.
  * @returns {number} The base reduction for this battler.

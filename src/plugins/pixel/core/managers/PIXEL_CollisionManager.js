@@ -95,15 +95,10 @@ class PIXEL_CollisionManager
       // Loop over all integer tiles horizontally.
       for (let x = 0; x < $dataMap.width; x++)
       {
-        // Check whether each adjacent tile can move INTO this tile.
+        // Check whether any adjacent tile can move INTO this tile.
         // A tile that cannot be entered from any direction (e.g. a deny-region tile)
         // must be treated as fully solid so that AABB overlap checks catch it.
-        const canEnterFromBelow = $gameMap.isPassable(x, y + 1, J.PIXEL.Directions.UP);
-        const canEnterFromAbove = $gameMap.isPassable(x, y - 1, J.PIXEL.Directions.DOWN);
-        const canEnterFromLeft  = $gameMap.isPassable(x - 1, y, J.PIXEL.Directions.RIGHT);
-        const canEnterFromRight = $gameMap.isPassable(x + 1, y, J.PIXEL.Directions.LEFT);
-
-        const canBeEntered = canEnterFromBelow || canEnterFromAbove || canEnterFromLeft || canEnterFromRight;
+        const canBeEntered = this._canBeEntered(x, y);
 
         // If this tile is unreachable from every direction, mark it completely solid.
         if (canBeEntered === false)
@@ -128,6 +123,45 @@ class PIXEL_CollisionManager
         this._applyTileCollision(x, y, passDown, passLeft, passRight, passUp);
       }
     }
+  }
+
+  /**
+   * Whether a character on any neighboring tile could step into this one.
+   * @param {number} x The integer tile x.
+   * @param {number} y The integer tile y.
+   * @returns {boolean}
+   */
+  static _canBeEntered(x, y)
+  {
+    // Grab the four sides a step could come in from.
+    const { DOWN, LEFT, RIGHT, UP } = J.PIXEL.Directions;
+
+    // One way in is enough.
+    return [ DOWN, LEFT, RIGHT, UP ].some(side => this._canEnterFrom(x, y, side));
+  }
+
+  /**
+   * Whether a character on the neighboring tile to one side could step into this one.
+   * @param {number} x The integer tile x.
+   * @param {number} y The integer tile y.
+   * @param {2|4|6|8} side The side of this tile the step would come in from.
+   * @returns {boolean}
+   */
+  static _canEnterFrom(x, y, side)
+  {
+    // Find the neighbor on that side, letting the engine wrap a looping map around its seam.
+    const neighborX = $gameMap.roundXWithDirection(x, side);
+    const neighborY = $gameMap.roundYWithDirection(y, side);
+
+    // Past the edge of a map that does not loop there is no neighbor, and the engine will not say so
+    // itself: it reads a coordinate beyond an edge as whatever tile sits at that offset in another row.
+    if ($gameMap.isValid(neighborX, neighborY) === false) return false;
+
+    // Opposite directions in numpad notation always sum to ten.
+    const towardThisTile = 10 - side;
+
+    // The neighbor has to allow a step back toward this tile.
+    return $gameMap.isPassable(neighborX, neighborY, towardThisTile);
   }
 
   /**

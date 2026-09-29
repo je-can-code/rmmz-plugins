@@ -21,11 +21,14 @@ describe('TextPopBuilder.isAptitude (direct src import)', () =>
 
     // apply the apt augment's isAptitude() convenience method onto the real TextPopBuilder prototype.
     await import('../../../../../src/plugins/popups/ext/apt/_models/TextPopBuilder.js');
+
+    // J-Aptitude names the icon its points wear; this one could only have come from asking it.
+    globalThis.IconManager = { apPoints: () => 1234 };
   });
 
   describe('isAptitude', () =>
   {
-    it('configures the builder with the Ap popup type, color, icon, and reward-up ring', () =>
+    it('configures the builder with the Ap popup type, color, the points\' own icon, and reward-up ring', () =>
     {
       // Arrange
       const builder = new TextPopBuilder(42);
@@ -37,7 +40,7 @@ describe('TextPopBuilder.isAptitude (direct src import)', () =>
       // Assert
       expect(popup.popupType).toEqual('ap');
       expect(popup.textColorIndex).toEqual(17);
-      expect(popup.iconIndex).toEqual(86);
+      expect(popup.iconIndex).toEqual(1234);
       expect(popup.layoutRing).toEqual(globalThis.Map_TextPop.LayoutRings.RewardUp);
     });
 

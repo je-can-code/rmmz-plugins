@@ -223,16 +223,16 @@ class VanillaParameterRegistration
     VanillaParameterRegistration.registerXparam('hit', 0, ParameterGroups.PRECISION, 0, ParameterFormat.SCALED_POINTS);
     VanillaParameterRegistration.registerBparam('agi', 6, ParameterGroups.PRECISION, 1);
     VanillaParameterRegistration.registerSparam('grd', 1, ParameterGroups.PRECISION, 2, ParameterFormat.SCALED_OFFSET);
-    VanillaParameterRegistration.registerXparam('cri', 2, ParameterGroups.PRECISION, 4);
-    VanillaParameterRegistration.registerXparam('cev', 3, ParameterGroups.PRECISION, 5);
+    VanillaParameterRegistration.registerXparam('cri', 2, ParameterGroups.PRECISION, 4, ParameterFormat.SCALED_POINTS);
+    VanillaParameterRegistration.registerXparam('cev', 3, ParameterGroups.PRECISION, 5, ParameterFormat.SCALED_POINTS);
 
     // defensive
     VanillaParameterRegistration.registerBparam('def', 3, ParameterGroups.DEFENSIVE, 0);
     VanillaParameterRegistration.registerBparam('mdf', 5, ParameterGroups.DEFENSIVE, 1);
     VanillaParameterRegistration.registerSparam('pdr', 6, ParameterGroups.DEFENSIVE, 2, ParameterFormat.PERCENT_CENTERED, ParameterDisplayPolicy.DAMAGE_RATE);
     VanillaParameterRegistration.registerSparam('mdr', 7, ParameterGroups.DEFENSIVE, 3, ParameterFormat.PERCENT_CENTERED, ParameterDisplayPolicy.DAMAGE_RATE);
-    VanillaParameterRegistration.registerXparam('eva', 1, ParameterGroups.DEFENSIVE, 4);
-    VanillaParameterRegistration.registerXparam('mev', 4, ParameterGroups.DEFENSIVE, 5);
+    VanillaParameterRegistration.registerXparam('eva', 1, ParameterGroups.DEFENSIVE, 4, ParameterFormat.SCALED_POINTS);
+    VanillaParameterRegistration.registerXparam('mev', 4, ParameterGroups.DEFENSIVE, 5, ParameterFormat.SCALED_POINTS);
     VanillaParameterRegistration.registerSparam('fdr', 8, ParameterGroups.DEFENSIVE, 6, ParameterFormat.PERCENT_CENTERED, ParameterDisplayPolicy.DAMAGE_RATE);
     VanillaParameterRegistration.registerSparam('tgr', 0, ParameterGroups.FATE, 0, ParameterFormat.PERCENT_CENTERED, ParameterDisplayPolicy.SIGNED);
 

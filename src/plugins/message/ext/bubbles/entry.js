@@ -19,5 +19,6 @@ import './sprites/Sprite_SpentBubble.js';
 import './sprites/Sprite_SpentBubbleLayer.js';
 import './scenes/Scene_Map.js';
 import './windows/Window_Message.js';
+import './windows/Window_ChoiceList.js';
 
 import './_metadata/pluginCommands.js';

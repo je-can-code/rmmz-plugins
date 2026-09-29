@@ -4445,21 +4445,48 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
 
     describe('executeAiPhase2Action()', () =>
     {
-      it('faces the target and re-stamps action directions before anything else', () =>
+      it('takes aim at the target as an action with no windup fires', () =>
       {
-        const battler = buildActionBattler({ getDecidedAction: () => [ buildJabsAction() ] });
+        // Arrange- no cast time, so the action is complete from the moment it is decided.
+        const action = buildJabsAction({ isCastComplete: () => true, getCastTime: () => 0 });
+        const battler = buildActionBattler({ getDecidedAction: () => [ action ] });
 
+        // Act
         JABS_AiManager.executeAiPhase2Action(battler);
 
+        // Assert- faced, the volley re-aimed, and fired.
         expect(battler.turnTowardTarget).toHaveBeenCalled();
+        expect(action.setFacing).toHaveBeenCalledWith(2);
+        expect(battler.processQueuedActions).toHaveBeenCalled();
+      });
+
+      it('fires a finished windup where it was aimed, without turning to the target again', () =>
+      {
+        // Arrange- a windup that has run its course: the player had the whole cast to step out of the telegraph.
+        const action = buildJabsAction({ isCastComplete: () => true, getCastTime: () => 45 });
+        const battler = buildActionBattler({ getDecidedAction: () => [ action ] });
+
+        // Act
+        JABS_AiManager.executeAiPhase2Action(battler);
+
+        // Assert- fired, facing and volley both left as they were committed.
+        expect(battler.processQueuedActions).toHaveBeenCalled();
+        expect(battler.turnTowardTarget).not.toHaveBeenCalled();
+        expect(action.setFacing).not.toHaveBeenCalled();
       });
 
       it('does nothing further when there is no primary action', () =>
       {
+        // Arrange
         const battler = buildActionBattler({ getDecidedAction: () => [] });
 
-        expect(() => JABS_AiManager.executeAiPhase2Action(battler)).not.toThrow();
+        // Act
+        const execute = () => JABS_AiManager.executeAiPhase2Action(battler);
+
+        // Assert- not even a turn toward the target, since there is nothing to aim.
+        expect(execute).not.toThrow();
         expect(battler.processQueuedActions).not.toHaveBeenCalled();
+        expect(battler.turnTowardTarget).not.toHaveBeenCalled();
       });
 
       it('executes queued actions, waits, and advances to phase 3 once cast-complete', () =>
@@ -4476,23 +4503,50 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
 
       it('does nothing further while actively casting or channeling', () =>
       {
-        const action = buildJabsAction({ isCastComplete: () => false });
+        // Arrange- mid-windup.
+        const action = buildJabsAction({ isCastComplete: () => false, getCastTime: () => 45 });
         const battler = buildActionBattler({ getDecidedAction: () => [ action ], isCastingOrChanneling: () => true });
 
+        // Act
         JABS_AiManager.executeAiPhase2Action(battler);
 
+        // Assert- no second cast, no firing, and no turning to follow the target mid-windup.
         expect(battler.setCastCountdown).not.toHaveBeenCalled();
         expect(battler.processQueuedActions).not.toHaveBeenCalled();
+        expect(battler.turnTowardTarget).not.toHaveBeenCalled();
       });
 
-      it('starts the cast timer when not yet cast-complete and not already casting', () =>
+      it('takes aim and starts the cast timer as a windup begins', () =>
       {
+        // Arrange
         const action = buildJabsAction({ isCastComplete: () => false, getCastTime: () => 45 });
         const battler = buildActionBattler({ getDecidedAction: () => [ action ], isCastingOrChanneling: () => false });
 
+        // Act
         JABS_AiManager.executeAiPhase2Action(battler);
 
+        // Assert- the direction committed now is the one the windup fires in.
+        expect(battler.turnTowardTarget).toHaveBeenCalled();
+        expect(action.setFacing).toHaveBeenCalledWith(2);
         expect(battler.setCastCountdown).toHaveBeenCalledWith(45);
+        expect(battler.processQueuedActions).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('takeAim()', () =>
+    {
+      it('faces the target and re-orients the volley to the fresh facing', () =>
+      {
+        // Arrange
+        const action = buildJabsAction();
+        const battler = buildActionBattler({ getDecidedAction: () => [ action ] });
+
+        // Act
+        JABS_AiManager.takeAim(battler);
+
+        // Assert
+        expect(battler.turnTowardTarget).toHaveBeenCalled();
+        expect(action.setFacing).toHaveBeenCalledWith(2);
       });
     });
   });

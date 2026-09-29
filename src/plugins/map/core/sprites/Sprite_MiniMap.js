@@ -1,5 +1,6 @@
 //region Sprite_MiniMap
 import MinimapEventType from './../__models/MinimapEventType.js';
+import MinimapPassability from './../services/MinimapPassability.js';
 // noinspection JSBitwiseOperatorUsage
 /**
  * A lightweight, cached mini-map sprite:
@@ -859,7 +860,7 @@ class Sprite_MiniMap
    * Rebuilds the full cached bitmap of the map (with padding), drawing:
    * - Background
    * - Base floor tiles
-   * - Edge strokes according to passability flags
+   * - Wall strokes along every edge the engine will not let a step cross
    * Subclasses may override drawCell(...) to fully customize tile rendering.
    */
   buildCache()
@@ -881,38 +882,37 @@ class Sprite_MiniMap
     // Background behind the map
     this.cacheBitmap().fillRect(0, 0, pixelWidth, pixelHeight, this.toCss(this.BG_COLOR));
 
-    // Pre-fetch tileset flags once
-    /** @type {number[]} */
-    const flags = $gameMap.tilesetFlags();
+    // ask the engine about every tile once, and let every copy of the map below draw from those answers.
+    const passability = new MinimapPassability();
 
     // Loop flags from engine
     const loopH = $gameMap.isLoopHorizontal();
     const loopV = $gameMap.isLoopVertical();
 
     // Base map at (pad, pad)
-    this.drawMapCopyAt(pad, pad, flags);
+    this.drawMapCopyAt(pad, pad, passability);
 
     // Horizontal wrapping (fill left/right padding)
     if (loopH)
     {
-      this.drawMapCopyAt(pad - mapWidth, pad, flags); // left band
-      this.drawMapCopyAt(pad + mapWidth, pad, flags); // right band
+      this.drawMapCopyAt(pad - mapWidth, pad, passability); // left band
+      this.drawMapCopyAt(pad + mapWidth, pad, passability); // right band
     }
 
     // Vertical wrapping (fill top/bottom padding)
     if (loopV)
     {
-      this.drawMapCopyAt(pad, pad - mapHeight, flags); // top band
-      this.drawMapCopyAt(pad, pad + mapHeight, flags); // bottom band
+      this.drawMapCopyAt(pad, pad - mapHeight, passability); // top band
+      this.drawMapCopyAt(pad, pad + mapHeight, passability); // bottom band
     }
 
     // Corner quadrants when both loop
     if (loopH && loopV)
     {
-      this.drawMapCopyAt(pad - mapWidth, pad - mapHeight, flags); // top-left
-      this.drawMapCopyAt(pad + mapWidth, pad - mapHeight, flags); // top-right
-      this.drawMapCopyAt(pad - mapWidth, pad + mapHeight, flags); // bottom-left
-      this.drawMapCopyAt(pad + mapWidth, pad + mapHeight, flags); // bottom-right
+      this.drawMapCopyAt(pad - mapWidth, pad - mapHeight, passability); // top-left
+      this.drawMapCopyAt(pad + mapWidth, pad - mapHeight, passability); // top-right
+      this.drawMapCopyAt(pad - mapWidth, pad + mapHeight, passability); // bottom-left
+      this.drawMapCopyAt(pad + mapWidth, pad + mapHeight, passability); // bottom-right
     }
   }
 
@@ -1046,10 +1046,11 @@ class Sprite_MiniMap
    * originTileX/Y are in cache tile space, relative to the cache’s (0,0).
    * @param {number} originTileX The origin tile x driving this step.
    * @param {number} originTileY The origin tile y driving this step.
-   * @param {number[]} flags - tileset flags (pre-fetched)
+   * @param {MinimapPassability} passability The engine's answers about which tile edges can be crossed.
    */
-  drawMapCopyAt(originTileX, originTileY, flags)
+  drawMapCopyAt(originTileX, originTileY, passability)
   {
+    // the copy covers the whole map, tile for tile.
     const mapWidth = $gameMap.width();
     const mapHeight = $gameMap.height();
 
@@ -1057,19 +1058,24 @@ class Sprite_MiniMap
     {
       for (let x = 0; x < mapWidth; x++)
       {
+        // where this tile lands in the cache, in pixels.
         const sx = (originTileX + x) * this.SCALE;
         const sy = (originTileY + y) * this.SCALE;
 
-        const mask = this.blockedMaskAt(x, y, flags);
+        // the edges of this tile a step cannot be taken across.
+        const mask = passability.blockedMask(x, y);
 
-        if (this.drawCell(x, y, sx, sy, mask)) continue;
+        // a subclass may take over drawing this cell entirely.
+        if (this.drawCell(x, y, sx, sy, mask) === true) continue;
 
-        if (mask === 0x0f)
+        // a tile nothing can step onto or off of is drawn solid.
+        if (passability.isImpassable(x, y) === true)
         {
           this.cacheBitmap().fillRect(sx, sy, this.SCALE, this.SCALE, this.toCss(this.IMPASSABLE_COLOR));
         }
         else
         {
+          // anything else is floor, walled along whichever edges cannot be crossed.
           this.cacheBitmap().fillRect(sx, sy, this.SCALE, this.SCALE, this.toCss(this.FLOOR_COLOR));
           this.drawEdges(this.cacheBitmap(), sx, sy, mask);
         }
@@ -1569,41 +1575,6 @@ class Sprite_MiniMap
 
   //endregion overlay & markers
 
-  //region passability
-  /**
-   * Computes the blocked-direction mask for a tile using the same precedence
-   * as Game_Map.prototype.checkPassage.
-   * Bits:
-   * - 0x01 = down blocked
-   * - 0x02 = left blocked
-   * - 0x04 = right blocked
-   * - 0x08 = up blocked
-   * 0x0f indicates wholly impassable.
-   * @param {number} x - Tile X.
-   * @param {number} y - Tile Y.
-   * @param {number[]} [flagsRef] - Optional pre-fetched tilesetFlags array.
-   * @returns {number} The blocked-direction mask.
-   */
-  blockedMaskAt(x, y, flagsRef)
-  {
-    if (!$gameMap.isValid(x, y)) return 0x0f; // treat OOB as blocked
-
-    const flags = flagsRef || $gameMap.tilesetFlags();
-    const tiles = $gameMap.allTiles(x, y); // tile-graphic events first, then layers 3..0
-
-    for (const tileId of tiles)
-    {
-      const flag = flags[tileId] || 0;
-      if (flag & 0x10) continue; // star: no effect on passage
-      return flag & 0x0f;        // lower nibble: directional blocks
-    }
-
-    // No decisive tile found → engine defaults to blocked for our purposes
-    return 0x0f;
-  }
-
-  //endregion passability
-
   //region utilities
   /**
    * Converts #rrggbb or #rrggbbaa into a CSS color string.
@@ -1761,7 +1732,7 @@ class Sprite_MiniMap
    * @param {number} y - Map tile Y.
    * @param {number} sx - Pixel x origin within the cache bitmap (top-left of the tile).
    * @param {number} sy - Pixel y origin within the cache bitmap (top-left of the tile).
-   * @param {number} blockedMask - Directional block mask for this tile.
+   * @param {number} blockedMask - Edges of this tile a step cannot cross; 0x0f when none can be crossed.
    * @returns {boolean} True if the tile was fully handled; false to fall back to default rendering.
    */
   // eslint-disable-next-line no-unused-vars

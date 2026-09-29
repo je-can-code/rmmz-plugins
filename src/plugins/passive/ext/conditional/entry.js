@@ -23,9 +23,9 @@ import './managers/JABS_Battler.js';
 import './managers/JABS_Engine.js';
 import './models/JABS_Action.js';
 import './models/StateAfflictionProvider.js';
-import './models/AutoApplyStateDisplay.js';
-import './models/AutoInflictStateDisplay.js';
-import './models/RemoveStateOnMoveDisplay.js';
+import './core/ConditionPhrases.js';
+import './core/describeConditionalNotetags.js';
 import './windows/Window_PassiveDetail.js';
+import './scenes/Scene_Boot.js';
 
 import './registerPassiveConditionalSaveCodecs.js';

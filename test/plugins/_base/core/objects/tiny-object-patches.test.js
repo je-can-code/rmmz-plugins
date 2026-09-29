@@ -240,6 +240,20 @@ describe('J-Base tiny Game_* object patches (direct src import)', () =>
       // Assert
       expect(item.dataClass()).toBe('item');
     });
+
+    it('carries nothing beyond the database until a plugin gives it something to carry', () =>
+    {
+      // Arrange- an item wrapping a real row, which J-Base alone has no reason to carry.
+      const item = new globalThis.Game_Item();
+      item._dataClass = 'weapon';
+      item._itemId = 3;
+
+      // Act
+      const underlying = item.underlyingObject();
+
+      // Assert
+      expect(underlying).toBeNull();
+    });
   });
 
   describe('BattleManager reward accessors', () =>

@@ -304,11 +304,12 @@ class Window_AptitudeAggregateDetails
     // determine learned state for this specific source.
     const learned = sourceProgress.learned() === true;
 
-    // determine if the actor already knows the skill via some other source.
+    // determine if the actor already knows the skill for good by some other means. one their class, gear or
+    // states only lend them still shows its progress.
+    const skillId = sourceProgress.skillId();
     const knownElsewhere = learned === false &&
       sourceProgress.currentAp() < sourceProgress.requiredAp() &&
-      this.actor()
-        .hasSkill(sourceProgress.skillId());
+      ApManager.isSkillKnownForGood(this.actor(), skillId);
 
     // decide the right-side text content.
     let rightText;

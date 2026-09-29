@@ -72,13 +72,20 @@ describe('J-CriticalFactors Game_Battler crit math (direct src import)', () =>
   {
     it('adds all critReductionBase tags on top of the plugin-configured floor', () =>
     {
-      // Arrange
+      // Arrange- the unconfigured floor is 0, which would hide a dropped floor, so configure one.
       const actor = buildActor();
       actor.__testNoteSources = [ { note: '<critReductionBase: 30>' } ];
+      const savedFactor = globalThis.J.CRIT.Metadata.baseCtrFactor;
+      globalThis.J.CRIT.Metadata.baseCtrFactor = 0.25;
 
-      // Act & Assert
-      // floor (unconfigured plugin param default) = 0.5; tag = 30/100 = 0.3; total = 0.8.
-      expect(actor.baseCriticalReduction()).toBeCloseTo(0.8, 5);
+      // Act
+      const result = actor.baseCriticalReduction();
+
+      // Assert
+      // floor = 0.25; tag = 30/100 = 0.3; total = 0.55.
+      expect(result).toBeCloseTo(0.55, 5);
+
+      globalThis.J.CRIT.Metadata.baseCtrFactor = savedFactor;
     });
   });
 
@@ -144,6 +151,21 @@ describe('J-CriticalFactors Game_Battler crit math (direct src import)', () =>
       // Assert
       expect(result).toBeCloseTo(0.25, 10);
     });
+
+    it('hands its sdp panels the base multiplier in percent points, which a percent panel is a share of', () =>
+    {
+      // Arrange- a percent panel paying 7.5% of whatever base it is handed. Handed the bare 0.5 factor, it
+      // would pay 0.0375 points, a hundredth of what it should; ctr's panels must not leak in.
+      const actor = buildActor();
+      actor.__testNoteSources = [];
+      actor.getSdpBonusForParameterKey = (key, base) => (key === 'cdm' ? base * 0.075 : 9);
+
+      // Act
+      const result = actor.criticalDamageMultiplier();
+
+      // Assert- 7.5% of the default 50 points is 3.75 points.
+      expect(result).toBeCloseTo(0.0375, 10);
+    });
   });
 
   describe('criticalDamageReduction', () =>
@@ -170,6 +192,21 @@ describe('J-CriticalFactors Game_Battler crit math (direct src import)', () =>
 
       // Assert
       expect(result).toBeCloseTo(0.5, 10);
+    });
+
+    it('hands its sdp panels the base reduction in percent points, which a percent panel is a share of', () =>
+    {
+      // Arrange- the base reduction is 0 unless granted, so grant 20. A percent panel paying 10% of whatever
+      // base it is handed would pay 0.02 points against the bare factor; cdm's panels must not leak in.
+      const actor = buildActor();
+      actor.__testNoteSources = [ { note: '<critReductionBase: 20>' } ];
+      actor.getSdpBonusForParameterKey = (key, base) => (key === 'ctr' ? base * 0.1 : 9);
+
+      // Act
+      const result = actor.criticalDamageReduction();
+
+      // Assert- 10% of 20 points is 2 points.
+      expect(result).toBeCloseTo(0.02, 10);
     });
   });
 

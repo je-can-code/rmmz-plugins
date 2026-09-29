@@ -322,11 +322,13 @@ describe('J-CriticalFactors metadata (direct src import)', () =>
     {
       // Arrange & Act
       const metadata = await buildWithParams(
-        { critMultiplierBaseDefault: 'not-a-number' },
+        { critMultiplierBaseDefault: 'not-a-number', critReductionBaseDefault: 'not-a-number' },
         'J-CriticalFactors-Unparseable');
 
-      // Assert- a NaN factor would silently zero out every crit in the game.
+      // Assert- a NaN factor would silently zero out every crit in the game. The base reduction
+      // defaults to none, since it counts against every crit a battler takes.
       expect(metadata.baseCdmFactor).toBe(0.5);
+      expect(metadata.baseCtrFactor).toBe(0);
     });
 
     it('keeps the built-in default when the parameter is blank', async () =>

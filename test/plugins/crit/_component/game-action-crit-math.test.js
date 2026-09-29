@@ -522,22 +522,22 @@ describe('J-CriticalFactors Game_Action crit math (direct src import)', () =>
       expect(action.applyCriticalDamageReduction(50)).toBe(50);
     });
 
-    it('reduces critical damage by (1 - target.ctr)', () =>
+    it('reduces critical damage by the target\'s base reduction plus its ctr', () =>
     {
-      // Arrange
+      // Arrange- the two differ, so leaving either out of the sum lands on 35 or 40 instead.
       const action = buildAction();
-      action.setTargetBattler({ ctr: 0.3 });
+      action.setTargetBattler({ baseCriticalReduction: () => 0.2, ctr: 0.3 });
 
       // Act & Assert
-      // 50 * (1 - 0.3) = 35.
-      expect(action.applyCriticalDamageReduction(50)).toBeCloseTo(35, 5);
+      // 50 * (1 - (0.2 + 0.3)) = 25.
+      expect(action.applyCriticalDamageReduction(50)).toBeCloseTo(25, 5);
     });
 
     it('never reduces the reduction rate below 0 (ctr > 1 cannot flip the sign)', () =>
     {
       // Arrange
       const action = buildAction();
-      action.setTargetBattler({ ctr: 2 });
+      action.setTargetBattler({ baseCriticalReduction: () => 0, ctr: 2 });
 
       // Act & Assert
       expect(action.applyCriticalDamageReduction(50)).toBe(0);

@@ -39,7 +39,9 @@ J.WEATHER.Metadata = new J_WEATHER_PluginMetadata(__PLUGIN_NAME__, __PLUGIN_VERS
  */
 J.WEATHER.Aliased = {};
 J.WEATHER.Aliased.Game_Map = new Map();
+J.WEATHER.Aliased.Scene_Gameover = new Map();
 J.WEATHER.Aliased.Scene_Map = new Map();
+J.WEATHER.Aliased.Scene_Title = new Map();
 J.WEATHER.Aliased.Spriteset_Map = new Map();
 J.WEATHER.Aliased.Window_Base = new Map();
 

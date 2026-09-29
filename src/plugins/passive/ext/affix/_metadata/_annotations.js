@@ -25,6 +25,8 @@
  * @orderAfter J-Message
  * @orderAfter J-HUD
  * @orderAfter J-Resources-ABS
+ * @orderAfter J-SDP
+ * @orderAfter J-Aptitude
  * @help
  * ============================================================================
  * OVERVIEW

@@ -291,6 +291,52 @@ describe('RPGManager', () =>
     });
   });
 
+  describe('getMatchesFromNoteByRegex', () =>
+  {
+    it('collects every matching line\'s whole match in note order, every capture left unparsed', () =>
+    {
+      // Arrange- the first capture is a formula a parser would read as the number 10, and a line between the two
+      // matches carries a different tag that must be left behind.
+      const data = { note: '<pair:a,10 + a.agi>\n<other:1>\n<pair:b,2>' };
+      const re = /<pair:(\w+),(.+)>/;
+
+      // Act
+      const result = RPGManager.getMatchesFromNoteByRegex(data, re);
+
+      // Assert
+      expect(result.map(match => [ ...match ]))
+        .toEqual([ [ '<pair:a,10 + a.agi>', 'a', '10 + a.agi' ], [ '<pair:b,2>', 'b', '2' ] ]);
+    });
+
+    it('reads every line with a global regex too, as the natural growth tags are written', () =>
+    {
+      // Arrange- a global regex remembers where it stopped, which would skip the second line if used as given.
+      const data = { note: '<pair:a,1>\n<pair:b,2>' };
+      const re = /<pair:(\w+),(.+)>/gi;
+
+      // Act
+      const result = RPGManager.getMatchesFromNoteByRegex(data, re);
+
+      // Assert
+      expect(result.map(([ , key ]) => key))
+        .toEqual([ 'a', 'b' ]);
+    });
+
+    it('answers an empty list for a row with no note', () =>
+    {
+      // Arrange
+      const data = {};
+      const re = /<pair:(\w+),(.+)>/;
+
+      // Act
+      const result = RPGManager.getMatchesFromNoteByRegex(data, re);
+
+      // Assert
+      expect(result)
+        .toEqual([]);
+    });
+  });
+
   describe('getNumberFromNoteByRegex', () =>
   {
     it('uses the last match and parses decimals', () =>

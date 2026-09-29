@@ -36,6 +36,7 @@ J.ELEM.Aliased = {
   Game_Action: new Map(),
   Game_Actor: new Map(),
   Game_Enemy: new Map(),
+  Scene_Boot: new Map(),
 };
 
 J.ELEM.RegExp = {};

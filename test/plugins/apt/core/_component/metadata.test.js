@@ -11,15 +11,8 @@ describe('J-Aptitude metadata (direct src import)', () =>
     vi.resetModules();
 
     await installAptHostGlobals(globalThis, {
-      'menu-switch': '0',
       'max-level-threshold': '-1',
     });
-  });
-
-  it('parses the menu switch id out of the plugin parameters', () =>
-  {
-    // Arrange & Act & Assert
-    expect(globalThis.J.APT.Metadata.menuSwitchId).toBe(0);
   });
 
   it('parses the max level threshold out of the plugin parameters', () =>
@@ -48,7 +41,6 @@ describe('J-Aptitude metadata (direct src import)', () =>
         await import('../../../../../src/plugins/apt/core/_metadata/_pluginMetadata.js');
 
       installPluginManagerWithParams(globalThis, 'J-Aptitude-configured-threshold', {
-        'menu-switch': '0',
         'max-level-threshold': '5',
       });
 

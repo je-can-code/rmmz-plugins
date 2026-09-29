@@ -1,7 +1,9 @@
 //region Scene_Boot
+import AffixNotetagDescriptions from './../core/describeAffixNotetags.js';
+
 /**
  * Extends {@link #onDatabaseLoaded}.<br/>
- * Initializes the passive state affix weights for JABS map enemies.
+ * Initializes the passive state affix weights for JABS map enemies, and describes this plugin's tags.
  * The passive detail window's JABS sections are provided directly by
  * Window_PassiveDetail in this extension — no contributor registration needed.
  */
@@ -13,5 +15,8 @@ Scene_Boot.prototype.onDatabaseLoaded = function()
 
   // initialize the state affix weights used by the JABS enemy affix system.
   J.PASSIVE.EXT.AFFIX.Metadata.initializeStateAffixWeights();
+
+  // describe the tags this plugin reads, for every screen that lists what a state does.
+  AffixNotetagDescriptions.registerAll();
 };
 //endregion Scene_Boot

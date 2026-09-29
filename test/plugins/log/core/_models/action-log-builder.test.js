@@ -10,6 +10,12 @@ describe('ActionLogBuilder', () =>
     // String.empty is a J-Base runtime augmentation, always present by the time this file's
     // production code runs in-game; stub it here since this test doesn't boot J-Base itself.
     String.empty = '';
+
+    // the reward names, as Chef Adventure's database and J-SDP give them.
+    globalThis.TextManager = {
+      exp: 'EXP',
+      sdpPoints: () => 'SDP',
+    };
   });
 
   describe('build/setMessage/#clear', () =>
@@ -320,7 +326,7 @@ describe('ActionLogBuilder', () =>
 
   describe('setupExperienceGained', () =>
   {
-    it('renders an experience gained message', () =>
+    it('renders an experience gained message, naming experience by the database\'s own term', () =>
     {
       // Arrange
       const builder = new ActionLogBuilder();
@@ -330,13 +336,13 @@ describe('ActionLogBuilder', () =>
         .build();
 
       // Assert
-      expect(log.message()).toEqual('\\C[16]Target\\C[0] gained \\*\\C[6]250\\C[0]\\* experience.');
+      expect(log.message()).toEqual('\\C[16]Target\\C[0] gained \\*\\C[6]250\\C[0]\\* EXP.');
     });
   });
 
   describe('setupSdpAcquired', () =>
   {
-    it('renders an SDP points acquired message', () =>
+    it('renders an SDP points acquired message, naming the points the way J-SDP names them', () =>
     {
       // Arrange
       const builder = new ActionLogBuilder();
@@ -346,7 +352,7 @@ describe('ActionLogBuilder', () =>
         .build();
 
       // Assert
-      expect(log.message()).toEqual('\\C[16]Target\\C[0] acquired \\*30\\* SDP points.');
+      expect(log.message()).toEqual('\\C[16]Target\\C[0] acquired \\*30\\* SDP.');
     });
   });
 

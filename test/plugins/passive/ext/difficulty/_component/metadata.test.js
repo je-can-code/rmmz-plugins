@@ -1,0 +1,229 @@
+//region plugins/passive/ext/difficulty/_component/metadata.test.js
+import { beforeAll, describe, expect, it, vi } from 'vitest';
+
+import {
+  DEFAULT_DIFF_PLUGIN_PARAMS,
+  installDiffHostGlobals,
+  setPluginContextToJBase,
+  setPluginContextToJDiff,
+} from './fixtures/install-diff-host-globals.js';
+
+describe('J-Passive-Difficulty metadata (direct src import)', () =>
+{
+  beforeAll(async () =>
+  {
+    vi.resetModules();
+
+    installDiffHostGlobals();
+
+    setPluginContextToJBase();
+    await import('../../../../../../src/plugins/_base/core/_metadata/initialization.js');
+
+    setPluginContextToJDiff();
+    await import('../../../../../../src/plugins/passive/ext/difficulty/_metadata/initialization.js');
+  });
+
+  it('parses the starting difficulty point budget out of the plugin parameters', () =>
+  {
+    // Arrange & Act & Assert
+    expect(globalThis.J.PASSIVE.EXT.DIFFICULTY.Metadata.initialPoints)
+      .toBe(Number(DEFAULT_DIFF_PLUGIN_PARAMS.initialPoints));
+  });
+
+  it('parses the default difficulty key out of the plugin parameters', () =>
+  {
+    // Arrange & Act & Assert
+    expect(globalThis.J.PASSIVE.EXT.DIFFICULTY.Metadata.defaultKey).toBe(DEFAULT_DIFF_PLUGIN_PARAMS.defaultDifficulty);
+  });
+
+  it('loads every difficulty in the external config into the metadata map', () =>
+  {
+    // Arrange & Act & Assert
+    expect(globalThis.J.PASSIVE.EXT.DIFFICULTY.Metadata.allMetadatas.size).toBe(3);
+  });
+
+  it('keys each loaded difficulty by its own key and keeps its actor state', () =>
+  {
+    // Arrange & Act
+    const meta = globalThis.J.PASSIVE.EXT.DIFFICULTY.Metadata.allMetadatas.get('vitest_hard');
+
+    // Assert
+    expect(meta.key).toBe('vitest_hard');
+    expect(meta.actorStateId).toBe(501);
+  });
+
+  it('keeps the enemy state of a loaded difficulty distinct from its actor state', () =>
+  {
+    // Arrange & Act
+    const hard = globalThis.J.PASSIVE.EXT.DIFFICULTY.Metadata.allMetadatas.get('vitest_hard');
+
+    // Assert
+    expect(hard.enemyStateId).toBe(502);
+  });
+
+  it('parses a declared affix block into affix effects', () =>
+  {
+    // Arrange & Act
+    const hard = globalThis.J.PASSIVE.EXT.DIFFICULTY.Metadata.allMetadatas.get('vitest_hard');
+
+    // Assert
+    expect(hard.affixEffects.prefixChance).toBe(150);
+  });
+
+  it('answers null affix effects for a layer that declared no block', () =>
+  {
+    // Arrange & Act- the near-miss beside the hard layer's block.
+    const plain = globalThis.J.PASSIVE.EXT.DIFFICULTY.Metadata.allMetadatas.get('vitest_diff');
+
+    // Assert
+    expect(plain.affixEffects).toBe(null);
+  });
+
+  it('throws when J-Base does not satisfy the minimum required version', async () =>
+  {
+    // Arrange: drop the already-installed J-Base metadata below this plugin's floor.
+    vi.resetModules();
+    const originalVersion = globalThis.J.BASE.Metadata.Version;
+    globalThis.J.BASE.Metadata.Version = '0.0.1';
+    setPluginContextToJDiff();
+
+    // Act & Assert
+    await expect(import('../../../../../../src/plugins/passive/ext/difficulty/_metadata/initialization.js'))
+      .rejects.toThrow(/missing J-Base/);
+
+    // restore the satisfying version so later tests in this file are unaffected.
+    globalThis.J.BASE.Metadata.Version = originalVersion;
+  });
+
+  describe('layer classification', () =>
+  {
+    // every config below has to contain the configured default layer, because the metadata
+    // resolves that key while it initializes and has nothing to fall back on.
+    const defaultKey = DEFAULT_DIFF_PLUGIN_PARAMS.defaultDifficulty;
+
+    /**
+     * Builds a second metadata instance against a doctored difficulty config. PluginMetadata keeps
+     * a static name registry that rejects duplicates, so each variation introduces itself under a
+     * name of its own.
+     * @param {object[]} layers The difficulty layers the config should carry.
+     * @param {string} name The plugin name this instance registers under.
+     */
+    const buildWithLayers = async (layers, name) =>
+    {
+      const { default: DiffPluginMetadata } =
+        await import('../../../../../../src/plugins/passive/ext/difficulty/_metadata/_pluginMetadata.js');
+      globalThis.StorageManager.fsReadFile = () => JSON.stringify(layers);
+
+      // the instance resolves its default layer through its own plugin parameters, so the harness
+      // parameters have to answer to this name as well as to the real one.
+      const previous = globalThis.PluginManager;
+      globalThis.PluginManager = {
+        parameters: requested => (requested === name
+          ? DEFAULT_DIFF_PLUGIN_PARAMS
+          : previous.parameters(requested)),
+        registerCommand() {},
+      };
+
+      const metadata = new DiffPluginMetadata(name, '1.0.0');
+      globalThis.PluginManager = previous;
+
+      return metadata;
+    };
+
+    /**
+     * A single difficulty layer, naming a state for each side so the classification of both is
+     * actually exercised.
+     * @param {string} key The key this layer answers to.
+     */
+    const buildLayer = key => ({
+      key,
+      name: 'Vitest Layer',
+      description: 'harness layer',
+      iconIndex: 0,
+      cost: 0,
+      enabled: true,
+      unlocked: true,
+      hidden: false,
+      actorStateId: 11,
+      enemyStateId: 12,
+    });
+
+    it('carries both state ids across', async () =>
+    {
+      // Arrange & Act
+      const metadata = await buildWithLayers([ buildLayer(defaultKey) ], 'J-Passive-Difficulty-StateIds');
+      const layer = metadata.allMetadatas.get(defaultKey);
+
+      // Assert
+      expect(layer.actorStateId).toBe(11);
+      expect(layer.enemyStateId).toBe(12);
+    });
+
+    it('warns when two layers claim the same key, and keeps the last one', async () =>
+    {
+      // Arrange- a duplicated key is an authoring mistake in the editor rather than a crash, so it
+      // reports itself and lets the later definition win.
+      const warnSpy = vi.spyOn(console, 'warn')
+        .mockImplementation(() => {});
+
+      // a layer with a key of its own, so the warning has something it must stay silent about.
+      // Against a config where every key collides, "warns on a duplicate" and "warns on every
+      // layer it ever reads" produce the same output.
+      const unique = buildLayer('vitest_unique');
+      const first = buildLayer(defaultKey);
+      const second = { ...buildLayer(defaultKey), name: 'Second Definition' };
+
+      // Act
+      const metadata = await buildWithLayers([ unique, first, second ], 'J-Passive-Difficulty-Duplicate');
+
+      // Assert
+      expect(warnSpy).toHaveBeenCalledTimes(1);
+      expect(warnSpy)
+        .toHaveBeenCalledWith(`[J-Passive-Difficulty] duplicate difficulty key definition detected for [${defaultKey}].`);
+      expect(metadata.allMetadatas.get(defaultKey).name).toBe('Second Definition');
+
+      warnSpy.mockRestore();
+    });
+
+    it('reports how many layers it loaded when external file load info is enabled', async () =>
+    {
+      // Arrange
+      const logSpy = vi.spyOn(console, 'info')
+        .mockImplementation(() => {});
+      globalThis.J.BASE.Metadata.ShowExternalFileLoadInfo = true;
+
+      // Act
+      await buildWithLayers([ buildLayer(defaultKey) ], 'J-Passive-Difficulty-Logged');
+
+      // Assert
+      const [ [ logged ] ] = logSpy.mock.calls;
+      expect(logged).toContain('1 difficulty layers');
+
+      globalThis.J.BASE.Metadata.ShowExternalFileLoadInfo = false;
+      logSpy.mockRestore();
+    });
+
+    it('names an unmistakable placeholder default when no default difficulty was configured', async () =>
+    {
+      // Arrange- the key is looked up against the layer table, so a project that never chose one
+      // gets a miss that reads as a configuration mistake rather than silently resolving to
+      // whichever layer happened to be first.
+      const { default: DiffPluginMetadata } =
+        await import('../../../../../../src/plugins/passive/ext/difficulty/_metadata/_pluginMetadata.js');
+      globalThis.StorageManager.fsReadFile = () => JSON.stringify([ buildLayer('default_undefined') ]);
+      const previous = globalThis.PluginManager;
+      globalThis.PluginManager = {
+        parameters: () => ({ initialPoints: '10' }),
+        registerCommand() {},
+      };
+
+      // Act
+      const metadata = new DiffPluginMetadata('J-Passive-Difficulty-NoDefault', '1.0.0');
+      globalThis.PluginManager = previous;
+
+      // Assert
+      expect(metadata.defaultKey).toBe('default_undefined');
+    });
+  });
+});
+//endregion plugins/passive/ext/difficulty/_component/metadata.test.js

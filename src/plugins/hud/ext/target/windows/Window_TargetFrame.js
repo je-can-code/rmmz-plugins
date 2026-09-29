@@ -1,4 +1,6 @@
 //region Window_TargetFrame
+import TargetNameLayout from '../helpers/TargetNameLayout.js';
+
 /**
  * A window that displays a target and their relevant information.
  */
@@ -571,26 +573,42 @@ class Window_TargetFrame
   }
 
   /**
-   * Draws the target's name in the window.
+   * Draws the target's name in the window, at the largest size that fits the rest of its row- see
+   * {@link TargetNameLayout}.
    * @param {number} x The x coordinate.
    * @param {number} y The y coordinate.
    */
   drawTargetName(x, y)
   {
-    let name = `\\FS[24]${this.targetName()}`;
-    if (J.MESSAGE)
-    {
-      name = `\\*${name}`;
-    }
+    // the name has the rest of the row to itself.
+    const width = this.contentsWidth() - x;
+
+    // the largest size the name fits that width at, measured as it will actually draw.
+    const widthAt = fontSize => this.textSizeEx(this.targetNameText(fontSize)).width;
+    const fontSize = TargetNameLayout.fittingFontSize(widthAt, width);
 
     // the name takes whatever color the name hook settles on.
     const color = this.targetNameColor();
 
-    // the name has the rest of the row to itself.
-    const width = this.contentsWidth() - x;
+    // draw the name in its color, kept centered on the row however small it went.
+    const name = this.targetNameText(fontSize);
+    const nameY = y + TargetNameLayout.offsetY(fontSize);
+    this.drawTextExInColor(name, x, nameY, width, color);
+  }
 
-    // draw the name in its color.
-    this.drawTextExInColor(name, x, y, width, color);
+  /**
+   * The target's name as it is drawn, escape codes included, at the given size.
+   * @param {number} fontSize The size to draw the name at.
+   * @returns {string}
+   */
+  targetNameText(fontSize)
+  {
+    const name = `\\FS[${fontSize}]${this.targetName()}`;
+
+    // alongside J-Message, the name draws bold.
+    if (J.MESSAGE) return `\\*${name}`;
+
+    return name;
   }
 
   /**

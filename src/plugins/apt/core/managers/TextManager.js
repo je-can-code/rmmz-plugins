@@ -1,5 +1,15 @@
 //region TextManager
 /**
+ * Gets the proper name for the points this plugin grants: what the combat log, rewards and every other screen call
+ * them.
+ * @returns {string}
+ */
+TextManager.apPoints = function()
+{
+  return 'AP';
+};
+
+/**
  * Display label for aptitude rate — bonus multiplier on aptitude point gains.
  * @returns {string}
  */

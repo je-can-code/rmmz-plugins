@@ -70,12 +70,12 @@ describe('J-LevelMaster Game_Actor max level (direct src import)', () =>
     expect(result).toBe(actor.baseMaxLevel());
   });
 
-  describe('maxTp', () =>
+  describe('max tp', () =>
   {
-    it('uses the class\'s authored max-tp curve when one is tagged', () =>
+    it('takes the class\'s authored max-tp curve as the base when one is tagged', () =>
     {
-      // Arrange- unlike the eight base params, max tp has no baked `params[]` array to defer to, so
-      // an authored curve is the only way it can grow at all.
+      // Arrange- unlike the eight base params, max tp has no baked `params[]` array to defer to, so an
+      // authored curve is its base at every level.
       const actor = new globalThis.Game_Actor();
       actor.__actorDb = { id: 1, name: '', note: '', classId: 1, maxLevel: 99, traits: [] };
       actor.initMembers();
@@ -90,12 +90,31 @@ describe('J-LevelMaster Game_Actor max level (direct src import)', () =>
       expect(result).toBe(80);
     });
 
-    it('never lets an authored curve drive max tp below zero', () =>
+    it('stacks every other max tp source on top of the curve, rather than the curve replacing them', () =>
     {
-      // Arrange- a curve authored with a negative constant would otherwise produce a battler who can
-      // never hold any tp, which reads in-game as a broken resource bar rather than as a bad tag.
+      // Arrange- the curve is only the base; a `<maxTp:N>` tag, as gear or a state would carry, adds to it.
       const actor = new globalThis.Game_Actor();
       actor.__actorDb = { id: 1, name: '', note: '', classId: 1, maxLevel: 99, traits: [] };
+      actor.__testNoteSources = [ { note: '<maxTp:40>' } ];
+      actor.initMembers();
+      actor.onBattlerDataChange();
+      actor.currentClass = () => ({ note: '<mtpGrowthCurve:[a.level * 2]>' });
+      actor.getLevel = () => 40;
+
+      // Act
+      const result = actor.maxTp();
+
+      // Assert- the curve's 80, and the tag's 40 on top.
+      expect(result).toBe(120);
+    });
+
+    it('never lets an authored curve drive the base below zero, so every bonus still counts', () =>
+    {
+      // Arrange- a curve authored with a negative constant would otherwise eat every bonus on top of it,
+      // which reads in-game as a broken resource bar rather than as a bad tag.
+      const actor = new globalThis.Game_Actor();
+      actor.__actorDb = { id: 1, name: '', note: '', classId: 1, maxLevel: 99, traits: [] };
+      actor.__testNoteSources = [ { note: '<maxTp:40>' } ];
       actor.initMembers();
       actor.onBattlerDataChange();
       actor.currentClass = () => ({ note: '<mtpGrowthCurve:[a.level - 500]>' });
@@ -104,15 +123,16 @@ describe('J-LevelMaster Game_Actor max level (direct src import)', () =>
       // Act
       const result = actor.maxTp();
 
-      // Assert
-      expect(result).toBe(0);
+      // Assert- a base of nothing, rather than -460, under the tag's 40.
+      expect(result).toBe(40);
     });
 
-    it('falls through to the engine\'s own answer for a class with no curve tagged', () =>
+    it('keeps the configured base for a class with no curve tagged', () =>
     {
-      // Arrange- the engine's untagged answer is zero, which is indistinguishable from a curve
-      // evaluated against nothing. A `<maxTp:N>` tag gives the fall-through a value of its own that
-      // only the original calculation can produce.
+      // Arrange- the configured base is zero by default, and a base of zero reads exactly like no base at all,
+      // so this configures one of its own. A `<maxTp:N>` tag on top proves the bonuses still stack on it.
+      const configuredBase = globalThis.J.BASE.Metadata.BaseTpMaxActors;
+      globalThis.J.BASE.Metadata.BaseTpMaxActors = 100;
       const actor = new globalThis.Game_Actor();
       actor.__actorDb = { id: 1, name: '', note: '', classId: 1, maxLevel: 99, traits: [] };
       actor.__testNoteSources = [ { note: '<maxTp:40>' } ];
@@ -122,10 +142,11 @@ describe('J-LevelMaster Game_Actor max level (direct src import)', () =>
 
       // Act
       const result = actor.maxTp();
+      globalThis.J.BASE.Metadata.BaseTpMaxActors = configuredBase;
 
-      // Assert- the point is that this file did not substitute a curve of its own for a class that
-      // never asked for one.
-      expect(result).toBe(40);
+      // Assert- the configured 100, and the tag's 40 on top. The point is that this file did not substitute a
+      // curve of its own for a class that never asked for one.
+      expect(result).toBe(140);
     });
   });
 });

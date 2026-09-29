@@ -145,6 +145,64 @@ describe('J-Message-Bubbles BubblePlacement (direct src import)', () =>
     expect(placed.y).toBe(6);
   });
 
+  describe('choicesX()', () =>
+  {
+    // a bubble 300 wide starting at 400, with choices 120 wide beside it.
+    const BUBBLE_X = 400;
+    const BUBBLE_WIDTH = 300;
+    const CHOICES_WIDTH = 120;
+
+    it('lines the choices up with the bubble\'s left edge for a left position', () =>
+    {
+      // Arrange
+      // Act
+      const x = BubblePlacement.choicesX(0, BUBBLE_X, BUBBLE_WIDTH, CHOICES_WIDTH, SCREEN_WIDTH);
+
+      // Assert
+      expect(x).toBe(400);
+    });
+
+    it('centres the choices on the bubble for a middle position', () =>
+    {
+      // Arrange
+      // Act
+      const x = BubblePlacement.choicesX(1, BUBBLE_X, BUBBLE_WIDTH, CHOICES_WIDTH, SCREEN_WIDTH);
+
+      // Assert- 90 in from each of the bubble's edges.
+      expect(x).toBe(490);
+    });
+
+    it('lines the choices up with the bubble\'s right edge for a right position', () =>
+    {
+      // Arrange
+      // Act
+      const x = BubblePlacement.choicesX(2, BUBBLE_X, BUBBLE_WIDTH, CHOICES_WIDTH, SCREEN_WIDTH);
+
+      // Assert- rather than at the screen's right edge, which is where the engine alone would put them.
+      expect(x).toBe(580);
+    });
+
+    it('holds choices off the left edge beside a bubble that reaches it', () =>
+    {
+      // Arrange- a bubble held against the left edge, choices wider than it and centred on it.
+      // Act
+      const x = BubblePlacement.choicesX(1, 6, 100, 300, SCREEN_WIDTH);
+
+      // Assert- centring would have put them at -94.
+      expect(x).toBe(6);
+    });
+
+    it('holds choices off the right edge beside a bubble that reaches it', () =>
+    {
+      // Arrange- the near-miss for the clamp above: a bubble against the right edge, choices flush with its left.
+      // Act
+      const x = BubblePlacement.choicesX(0, 710, 100, 300, SCREEN_WIDTH);
+
+      // Assert- flush would have run them off the edge at 1010.
+      expect(x).toBe(510);
+    });
+  });
+
   it('leaves each axis to its own measurements', () =>
   {
     // Arrange & Act

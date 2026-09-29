@@ -18,9 +18,10 @@ class CritParameterRegistration
       .iconIndex(() => IconManager.critParam(0))
       .format(ParameterFormat.PERCENT_SUFFIX)
       .getValue(battler => battler.cdm)
+      // panels are summed in percent points, so a percent panel is a share of the base in percent points too.
       .sdpBinding(SdpParameterBinding.byKey(
         'cdm',
-        actor => actor.baseCriticalMultiplier()
+        actor => actor.baseCriticalMultiplier() * 100
       ))
       .build();
 
@@ -45,9 +46,10 @@ class CritParameterRegistration
       .iconIndex(() => IconManager.critParam(1))
       .format(ParameterFormat.PERCENT_SUFFIX)
       .getValue(battler => battler.ctr)
+      // the same percent points as crit damage's panels above.
       .sdpBinding(SdpParameterBinding.byKey(
         'ctr',
-        actor => actor.baseCriticalReduction()
+        actor => actor.baseCriticalReduction() * 100
       ))
       .build();
 

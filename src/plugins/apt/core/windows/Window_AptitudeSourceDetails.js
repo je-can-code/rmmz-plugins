@@ -226,21 +226,21 @@ class Window_AptitudeSourceDetails
     const baseY = this.nextY();
 
     // header label for the section.
-    this.drawTextEx(`\\I[79]\\C[16]Skills\\C[0]`, 0, baseY, this.contentsWidth());
+    this.drawTextEx(`\\I[79]\\C[16]Skills\\C[0]`, this.contentLeft(), baseY, this.contentsWidth());
 
     // compute the starting y for rows.
     const updatedY = baseY + this.lineHeight();
     this.setNextY(updatedY);
 
-    // extract all the teachables for this source.
-    const teachables = source.aptitudeTeachings;
+    // every teachable this source offers, cheapest first, so the next one to learn sits just under what is done.
+    const teachables = ApManager.teachingsByCost(source);
 
     // check if we are lacking in teachables.
     if (teachables.length === 0)
     {
       // render a friendly hint.
       this.resetTextColor();
-      this.drawText('No teachable skills available.', 0, this.nextY(), this.contentsWidth());
+      this.drawText('No teachable skills available.', this.contentLeft(), this.nextY(), this.contentsWidth());
 
       // stop processing.
       return;
@@ -262,8 +262,8 @@ class Window_AptitudeSourceDetails
     // derive the key from the source.
     const sourceKey = ApManager.deriveKey(this.source());
 
-    // default with 0 for the x coordinate.
-    const x = 0;
+    // every row starts at the details' left edge.
+    const x = this.contentLeft();
 
     // start with the nextY.
     const nextY = this.nextY();
@@ -300,10 +300,9 @@ class Window_AptitudeSourceDetails
     // determine learned state for this specific source.
     const learned = hasLearning && learning.isLearned() === true;
 
-    // determine if the actor already knows the skill via some other source.
-    const knownElsewhere = (learned === false) &&
-      this.actor()
-        .hasSkill(skillId);
+    // determine if the actor already knows the skill for good by some other means. one their class, gear or
+    // states only lend them still shows its progress.
+    const knownElsewhere = (learned === false) && ApManager.isSkillKnownForGood(actor, skillId);
 
     // decide the right-side text content.
     let rightText;
@@ -338,8 +337,8 @@ class Window_AptitudeSourceDetails
 
     // apply the right-side color and draw the right-aligned status text.
     this.changeTextColor(ColorManager.textColor(rightColor));
-    const rightW = this.contentsWidth() - leftW;
-    this.drawText(rightText, 0, nextY, rightW, Window_Base.TextAlignments.Right);
+    const statusRight = this.teachableStatusRight();
+    this.drawText(rightText, 0, nextY, statusRight, Window_Base.TextAlignments.Right);
 
     // Only draw a gauge if the skill is neither DONE nor KNOWN.
     const shouldDrawGauge = learned === false && knownElsewhere === false;
@@ -364,7 +363,7 @@ class Window_AptitudeSourceDetails
     const nextY = this.nextY();
 
     // compute the gauge rectangle centered vertically within the row.
-    const gaugeX = Math.floor(this.contentsWidth() * 0.40);
+    const gaugeX = this.teachableGaugeX();
     const gaugeY = nextY + Math.round(this.lineHeight() / 2) - Math.round(this.gaugeHeight() / 2);
     const rect = new Rectangle(gaugeX, gaugeY, this.gaugeWidth(), this.gaugeHeight());
 
@@ -400,6 +399,40 @@ class Window_AptitudeSourceDetails
   //endregion draw
 
   //region helpers
+  /**
+   * The x the details' section headers and rows start at.
+   *
+   * The window's own left edge. A window drawing the ladder somewhere its rows should sit further in
+   * overrides this, alongside {@link #teachableStatusRight} and {@link #teachableGaugeX}.
+   * @returns {number}
+   */
+  contentLeft()
+  {
+    return 0;
+  }
+
+  /**
+   * The x a teachable's status ends at, right-aligned against it: its AP progress, or DONE or KNOWN.
+   *
+   * Two fifths of the way across, with the gauge starting from there- spaced for the full width the aptitude
+   * scene gives this window. A window drawing the ladder somewhere narrower overrides this and
+   * {@link #teachableGaugeX} together, so the two never cross.
+   * @returns {number}
+   */
+  teachableStatusRight()
+  {
+    return this.contentsWidth() - Math.floor(this.contentsWidth() * 0.60);
+  }
+
+  /**
+   * The x a teachable's progress gauge starts at, just past the status in front of it.
+   * @returns {number}
+   */
+  teachableGaugeX()
+  {
+    return Math.floor(this.contentsWidth() * 0.40);
+  }
+
   /**
    * The width of the gauges in this window.
    * @returns {number}

@@ -1,9 +1,10 @@
 //region Scene_Boot
+import CritNotetagDescriptions from './../core/describeCritNotetags.js';
 import CritParameterRegistration from './../core/registerCritParameters.js';
 
 /**
  * Extends {@link #onDatabaseLoaded}.<br/>
- * Registers J-Crit stats with the parameter catalog after vanilla seeding.
+ * Registers J-Crit stats with the parameter catalog after vanilla seeding, and describes this plugin's tags.
  */
 J.CRIT.Aliased.Scene_Boot.set('onDatabaseLoaded', Scene_Boot.prototype.onDatabaseLoaded);
 Scene_Boot.prototype.onDatabaseLoaded = function()
@@ -13,6 +14,9 @@ Scene_Boot.prototype.onDatabaseLoaded = function()
 
   // register owner stats with the parameter catalog.
   CritParameterRegistration.registerAll();
+
+  // describe the tags this plugin reads, for every screen that lists what a state does.
+  CritNotetagDescriptions.registerAll();
 
   // register all conditional crit tags as non-combining so multiple lines on the same
   // note are appended rather than overwritten when J-Extend merges extension skills.

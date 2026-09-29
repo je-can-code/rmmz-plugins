@@ -260,6 +260,10 @@
  * growth curve tag, when present, is evaluated LIVE for every level, not
  * just beyond 99.
  *
+ * Either way, a curve is only the base. An MTP curve stands in for J-Base's
+ * configured base max TP, and every <maxTp> tag and natural growth or buff
+ * still adds on top of it.
+ *
  * Formula context:
  *   a.level = the level being evaluated (this is the ONLY binding available-
  *             no b, no v, unlike most other formula tags in this ecosystem)
@@ -284,8 +288,8 @@
  * slope-extrapolation fallback.
  *
  *  <mtpGrowthCurve:[a.level * 2]>
- * This class's max TP is always (level * 2), evaluated live at every level-
- * not just beyond 99.
+ * This class's base max TP is (level * 2), evaluated live at every level-
+ * not just beyond 99. Gear, states and natural buffs add on top.
  *
  * ============================================================================
  * SAMPLE CALCULATIONS:

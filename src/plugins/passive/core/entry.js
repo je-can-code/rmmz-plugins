@@ -15,6 +15,7 @@ import './windows/Window_PassiveList.js';
 import './windows/Window_PassiveDetail.js';
 import './scenes/Scene_Passive.js';
 import './scenes/Scene_Menu.js';
+import './scenes/Scene_Boot.js';
 import './windows/Window_MenuCommand.js';
 import './windows/Window_MoreEquipData.js';
 

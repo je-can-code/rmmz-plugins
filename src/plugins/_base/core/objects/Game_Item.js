@@ -46,4 +46,18 @@ Game_Item.prototype.setDataClass = function(newDataClass)
   // assign the database this item belongs to.
   this._dataClass = newDataClass;
 };
+
+/**
+ * Gets the object this item carries beyond the database, which is nothing until a plugin gives game items
+ * something to carry.
+ *
+ * {@link Game_Actor.haveEquipsChanged} compares these to notice one carried object being swapped for another
+ * under the same id. J-Base carries nothing, so every item answers alike and only ids and data classes
+ * decide; J-Extend overrides this to hand back the overlay-merged row it carries.
+ * @returns {RPG_EquipItem|RPG_UsableItem|null} The carried object, or null when nothing is carried.
+ */
+Game_Item.prototype.underlyingObject = function()
+{
+  return null;
+};
 //endregion Game_Item

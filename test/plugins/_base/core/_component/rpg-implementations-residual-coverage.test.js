@@ -25,6 +25,10 @@ describe('RPG_* implementations residual coverage (direct src import)', () =>
   {
     installJBaseHostGlobals();
 
+    // String.empty is a J-Base runtime augmentation, always present by the time these models are built in-game;
+    // stub it here since this file doesn't boot J-Base itself.
+    String.empty = '';
+
     ({ default: RPG_Actor } = await import('../../../../../src/plugins/_base/core/database/implementations/RPG_Actor.js'));
     ({ default: RPG_Armor } = await import('../../../../../src/plugins/_base/core/database/implementations/RPG_Armor.js'));
     ({ default: RPG_Class } = await import('../../../../../src/plugins/_base/core/database/implementations/RPG_Class.js'));
@@ -63,6 +67,56 @@ describe('RPG_* implementations residual coverage (direct src import)', () =>
     {
       const raw = { ...rawBase, traits: [], expParams: [ 0, 0, 0, 0 ], learnings: [], params: [ [ 1 ], [ 0 ], [ 0 ], [ 0 ], [ 0 ], [ 0 ], [ 0 ], [ 0 ] ] };
       expect(new RPG_Class(raw, 1).implementationType()).toBe('@base:traited:class');
+    });
+
+    it('keeps the description the data editor saved on the class', () =>
+    {
+      // Arrange
+      const raw = { ...rawBase, description: 'Hits first.\nAsks later.', traits: [], expParams: [ 0, 0, 0, 0 ], learnings: [], params: [ [ 1 ], [ 0 ], [ 0 ], [ 0 ], [ 0 ], [ 0 ], [ 0 ], [ 0 ] ] };
+
+      // Act
+      const klass = new RPG_Class(raw, 1);
+
+      // Assert
+      expect(klass.description).toBe('Hits first.\nAsks later.');
+    });
+
+    it('reads a class RPG Maker saved, which has no description at all, as empty', () =>
+    {
+      // Arrange- RPG Maker's editor writes no description key for a class.
+      const raw = { ...rawBase, traits: [], expParams: [ 0, 0, 0, 0 ], learnings: [], params: [ [ 1 ], [ 0 ], [ 0 ], [ 0 ], [ 0 ], [ 0 ], [ 0 ], [ 0 ] ] };
+      delete raw.description;
+
+      // Act
+      const klass = new RPG_Class(raw, 1);
+
+      // Assert
+      expect(klass.description).toBe('');
+    });
+
+    it('keeps the icon the data editor saved on the class', () =>
+    {
+      // Arrange
+      const raw = { ...rawBase, iconIndex: 96, traits: [], expParams: [ 0, 0, 0, 0 ], learnings: [], params: [ [ 1 ], [ 0 ], [ 0 ], [ 0 ], [ 0 ], [ 0 ], [ 0 ], [ 0 ] ] };
+
+      // Act
+      const klass = new RPG_Class(raw, 1);
+
+      // Assert
+      expect(klass.iconIndex).toBe(96);
+    });
+
+    it('reads a class RPG Maker saved, which has no icon at all, as no icon', () =>
+    {
+      // Arrange- RPG Maker's editor writes no iconIndex key for a class.
+      const raw = { ...rawBase, traits: [], expParams: [ 0, 0, 0, 0 ], learnings: [], params: [ [ 1 ], [ 0 ], [ 0 ], [ 0 ], [ 0 ], [ 0 ], [ 0 ], [ 0 ] ] };
+      delete raw.iconIndex;
+
+      // Act
+      const klass = new RPG_Class(raw, 1);
+
+      // Assert
+      expect(klass.iconIndex).toBe(0);
     });
   });
 

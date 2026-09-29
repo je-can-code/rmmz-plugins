@@ -317,8 +317,11 @@ Game_BattlerBase.prototype.traitsDeltaSum = function(code, id)
  * sums the deltas, then restores the 1.0 baseline — giving linear, predictable stacking
  * while keeping the 1.0 return value that engine healing/cost/damage formulas expect.
  *
+ * The result is floored at 0: stacked reductions can take a rate to nothing, never past it. A
+ * negative damage rate would heal on every hit, and a negative cost rate would refund on every cast.
+ *
  * @param {number} sparamId The sparam index (0–9).
- * @returns {number} The additively aggregated sparam value.
+ * @returns {number} The additively aggregated sparam value, minimum 0.
  */
 J.BASE.Aliased.Game_BattlerBase.set('sparam', Game_BattlerBase.prototype.sparam);
 Game_BattlerBase.prototype.sparam = function(sparamId)
@@ -330,7 +333,8 @@ Game_BattlerBase.prototype.sparam = function(sparamId)
   // equipment's share is removed here and re-applied against each item's own base below.
   const global = 1.0 + this.traitsDeltaSum(Game_BattlerBase.TRAIT_SPARAM, sparamId) - delta;
 
-  return global + local;
+  // floor at 0 so stacked reductions reach nothing rather than inverting the rate.
+  return Math.max(0, global + local);
 };
 
 /**

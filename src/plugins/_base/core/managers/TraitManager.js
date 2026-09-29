@@ -2,12 +2,11 @@
 import IconManager from './IconManager.js';
 
 /**
- * A static class that centralizes display data (name and icon) for traits and
- * notetag-driven effects across the ecosystem.
+ * Display names and icons for the slip effects JABS reads off a state's notes, shared by every window that
+ * shows one.
  *
- * The goal is a single authoritative place where Jeremy can adjust how any
- * given tag or trait type presents itself, so every window that renders trait
- * data stays consistent without needing updates in multiple files.
+ * How a trait reads is {@link RPG_Trait}'s to say, and how a notetag reads is {@link NotetagDescriber}'s, where
+ * each plugin registers the lines for its own tags.
  */
 class TraitManager
 {

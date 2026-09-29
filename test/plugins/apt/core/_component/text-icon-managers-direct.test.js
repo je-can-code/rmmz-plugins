@@ -20,6 +20,11 @@ describe('TextManager / IconManager aptitude additions (direct src import)', () 
     delete globalThis.IconManager;
   });
 
+  it('TextManager.apPoints returns the name of the points', () =>
+  {
+    expect(globalThis.TextManager.apPoints()).toBe('AP');
+  });
+
   it('TextManager.aptRate returns the display label', () =>
   {
     expect(globalThis.TextManager.aptRate()).toBe('Aptitude UP');
@@ -33,6 +38,11 @@ describe('TextManager / IconManager aptitude additions (direct src import)', () 
       'Bonus multiplier applied to aptitude point gains.',
       'Higher values accelerate skill mastery through aptitude tracks.',
     ]);
+  });
+
+  it('IconManager.apPoints returns the icon the points wear', () =>
+  {
+    expect(globalThis.IconManager.apPoints()).toBe(86);
   });
 
   it('IconManager.aptRate returns the fixed icon index', () =>

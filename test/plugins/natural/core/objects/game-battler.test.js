@@ -515,6 +515,24 @@ describe('J-NaturalGrowth Game_Battler (direct src import)', () =>
       // Assert: (100 + 10) * 1.2 - 100.
       expect(result).toBe(32);
     });
+
+    it('floors a rate below -100% at nothing rather than flipping the value', () =>
+    {
+      // Arrange & Act
+      const result = battler.calculatePlusRate(100, 0, -150);
+
+      // Assert: the whole base share is removed, and no more.
+      expect(result).toBe(-100);
+    });
+
+    it('applies a reduction that stays above -100% as written', () =>
+    {
+      // Arrange & Act- the near-miss: half the base share goes.
+      const result = battler.calculatePlusRate(100, 0, -50);
+
+      // Assert
+      expect(result).toBe(-50);
+    });
   });
   //endregion resolving bonuses
 
