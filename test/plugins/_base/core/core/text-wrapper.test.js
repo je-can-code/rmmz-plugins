@@ -127,6 +127,15 @@ describe('TextWrapper (direct src import)', () =>
       // Assert
       expect(result).toEqual([ 'aaa bbb ccc' ]);
     });
+
+    it('yields no lines at all for empty text, rather than one empty line', () =>
+    {
+      // Arrange & Act
+      const result = TextWrapper.wrapToLines(String.empty, 100, 2, measure);
+
+      // Assert
+      expect(result).toEqual([]);
+    });
   });
   //endregion wrapToLines
 

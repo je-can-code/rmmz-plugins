@@ -494,6 +494,32 @@ describe('DifficultyEffects (direct src import)', () =>
         .toBe('harder');
     });
 
+    it('reads a base parameter by its own direction, not by the sp-parameter at the same index', () =>
+    {
+      // Arrange- MAT up. The sp-parameter at index 4 is MCR, a cost, which reads the other way round.
+      const magicAttackUp = trait(21, 4, 1.5);
+
+      // Act
+      const tone = DifficultyEffects.toneFor(magicAttackUp, DifficultyEffects.Sides.ACTOR);
+
+      // Assert
+      expect(tone)
+        .toBe('easier');
+    });
+
+    it('reads an ex-parameter by its own direction, not by the sp-parameter at the same index', () =>
+    {
+      // Arrange- MEV +10%. The sp-parameter at index 4 is MCR, a cost, which reads the other way round.
+      const magicEvasionUp = trait(22, 4, 0.1);
+
+      // Act
+      const tone = DifficultyEffects.toneFor(magicEvasionUp, DifficultyEffects.Sides.ACTOR);
+
+      // Assert
+      expect(tone)
+        .toBe('easier');
+    });
+
     it('reads less element damage taken as easier on the party\'s side', () =>
     {
       // Arrange- element 2 damage taken x0.5.

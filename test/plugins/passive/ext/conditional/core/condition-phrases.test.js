@@ -45,6 +45,7 @@ describe('ConditionPhrases (direct src import)', () =>
     [ 'gate.enemiesTargetingMe.one', 'while an enemy has you targeted' ],
     [ 'gate.sinceLastHit', 'after {seconds} without being hit' ],
     [ 'gate.allOffCooldown', 'while every skill is ready' ],
+    [ 'gate.slotOffCooldown', 'while that slot has been ready for {seconds}' ],
     [ 'count.enemiesNearby', 'per {per} enemies within {tiles}' ],
     [ 'count.enemiesNearby.one', 'per enemy within {tiles}' ],
     [ 'count.lessIsMoreHp', 'per {per} of {resource} missing' ],
@@ -381,6 +382,19 @@ describe('ConditionPhrases (direct src import)', () =>
       // Assert
       expect(textOf(phrase))
         .toBe('while every skill is ready');
+    });
+
+    it('hands a gate that measures no time no seconds, so words asking for them say nothing', () =>
+    {
+      // Arrange- a slot's readiness is no span of time, whatever its words were written to ask for.
+      const rule = [ 'slotOffCooldown', 'mainhand' ];
+
+      // Act
+      const phrase = ConditionPhrases.gate(rule);
+
+      // Assert
+      expect(textOf(phrase))
+        .toBe('');
     });
   });
 
