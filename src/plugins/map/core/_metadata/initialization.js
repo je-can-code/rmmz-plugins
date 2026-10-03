@@ -37,5 +37,4 @@ J.MAP.Aliased.Window_JabsRemapActions = new Map();
 J.MAP.RegExp = {};
 J.MAP.RegExp.MinimapEvent = /<(?:mm|minimap):(npc|loot|object|teleport|questOffer|questProgress|questTurnIn)>/gi;
 J.MAP.RegExp.BlockMinimap = /<blockMinimap>/gi;
-J.MAP.RegExp.AreaEvent = /<areaEvent: ?(\d+)x(\d+)>/i;
 //endregion initialization

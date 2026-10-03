@@ -30,10 +30,55 @@ J.PIXEL.Aliased = {
   Game_CharacterBase: new Map(),
   Game_Event: new Map(),
   Game_Follower: new Map(),
+  Game_Interpreter: new Map(),
   Game_Map: new Map(),
   Game_Player: new Map(),
   Spriteset_Map: new Map(),
 };
+
+/**
+ * All regular expressions used by this plugin.
+ */
+J.PIXEL.RegExp = {};
+
+/**
+ * The area an event's page covers: a rectangle of whole tiles whose top-left corner is the tile the
+ * event itself stands on. Both sizes must be at least one, since an event always covers its own tile;
+ * anything else does not match, and the page covers that one tile.
+ *
+ * <pre>
+ * Structure:
+ *  <areaEvent:[WIDTH, HEIGHT]>
+ *
+ * Example:
+ *  <areaEvent:[5, 1]>
+ *
+ * Translation:
+ *  This page covers the event's own tile and the four to the right of it.
+ * </pre>
+ * @type {RegExp}
+ */
+J.PIXEL.RegExp.AreaEvent = /<areaEvent:[ ]?(\[[ ]?[1-9]\d*[ ]?,[ ]?[1-9]\d*[ ]?])>/i;
+
+/**
+ * A transfer from this page lands as far along its destination as the player stood along the page's
+ * area, measured from the event's own tile.
+ *
+ * <pre>
+ * Structure:
+ *  <relativeTransfer>
+ *
+ * Example:
+ *  <areaEvent:[20, 1]>
+ *  <relativeTransfer>
+ *
+ * Translation:
+ *  Crossing this 20-tile edge eight tiles from the event lands the player eight tiles to the right of
+ *  where its Transfer Player points.
+ * </pre>
+ * @type {RegExp}
+ */
+J.PIXEL.RegExp.RelativeTransfer = /<relativeTransfer>/i;
 
 /**
  * Directional constants matching RMMZ engine conventions.

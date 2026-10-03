@@ -6291,40 +6291,17 @@ always
 
 **Effect:**
 marks this event with a minimap marker of MARKER_TYPE: `npc` (purple circle), `loot` (green
-diamond), `object` (yellow diamond), `teleport` (hollow light-blue square, stretchable via
-`<areaEvent>`), `questOffer` (yellow square), `questProgress` (blue diamond), or `questTurnIn`
-(green circle). `mm` is a shorthand alias for `minimap`. If multiple marker tags are present on
-one event, the last one found wins.
+diamond), `object` (yellow diamond), `teleport` (hollow light-blue square, stretched across the
+whole area when J-Pixelistics' `<areaEvent>` gives the event one), `questOffer` (yellow square),
+`questProgress` (blue diamond), or `questTurnIn` (green circle). `mm` is a shorthand alias for
+`minimap`. If multiple marker tags are present on one event, the last one found wins.
 
 ```
 <minimap:loot>
 ```
 This event shows up as a green diamond loot marker on the minimap.
 
-**See also:** `<areaEvent>`
-
----
-
-### `<areaEvent:WIDTHxHEIGHT>`
-
-**Applies to:**
-Events on the map (comment), typically alongside `<minimap:teleport>`
-
-**When:**
-always
-
-**Effect:**
-stretches this event's minimap marker to a WIDTHxHEIGHT tile rectangle instead of the default
-single-tile marker — used to represent multi-tile teleport zones accurately on the minimap.
-Defaults to 1x1 if absent or malformed.
-
-```
-<minimap:teleport>
-<areaEvent:3x2>
-```
-This teleport event's minimap marker is stretched to a 3-wide by 2-tall hollow square.
-
-**See also:** `<minimap>`
+**See also:** `<areaEvent>` (J-Pixelistics)
 
 ---
 
@@ -6895,6 +6872,61 @@ objective is in STATE — one of `inactive`/`active`/`completed`/`failed`/`misse
 <pageQuestCondition:[herbalist_delivery, 2, completed]>
 ```
 This event page is only active once objective 2 of the "herbalist_delivery" quest is completed.
+
+---
+
+## J-Pixelistics (`src/plugins/pixel/core/`)
+
+Sub-tile, pixel-accurate movement. Its tags decide which tiles an event counts as standing on, which
+is what every trigger and "is anything here?" check reads.
+
+### `<areaEvent:[WIDTH, HEIGHT]>`
+
+**Applies to:**
+Events on the map (page comment)
+
+**When:**
+while this page is the event's active page
+
+**Effect:**
+the event stands on every tile of a WIDTH by HEIGHT rectangle whose top-left corner is the tile it
+occupies, so stepping onto any of them counts as reaching it: triggers, Get Location Info and
+pathfinding all see the whole area. Both sizes are whole tiles of at least 1; anything else is not
+an area tag, and the page covers its one tile. It changes where the event counts as standing,
+never the size of its body. A page without the tag covers one tile again. J-Minimap stretches a
+teleport marker across the whole area.
+
+```
+<areaEvent:[5, 1]>
+```
+This page covers the event's own tile and the four to the right of it.
+
+**See also:** `<relativeTransfer>`, `<minimap>`
+
+---
+
+### `<relativeTransfer>`
+
+**Applies to:**
+Events on the map (page comment), alongside `<areaEvent>`
+
+**When:**
+a Transfer Player runs from this page
+
+**Effect:**
+the transfer lands as far along its destination as the player stood along the page's area,
+measured from the event's own tile, so walking off a wide edge arrives at the matching spot on the
+next map. Point the Transfer Player at where the event's own tile should land. A landing that would
+fall off the destination map lands on its edge instead, with a warning in the console.
+
+```
+<areaEvent:[20, 1]>
+<relativeTransfer>
+```
+Crossing eight tiles from the event lands the player eight tiles to the right of where the Transfer
+Player points.
+
+**See also:** `<areaEvent>`
 
 ---
 

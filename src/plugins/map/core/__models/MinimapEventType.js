@@ -84,7 +84,8 @@ class MinimapEventType
   static Object = new MinimapEventType('object', '#dddd00cc', MinimapEventType.Shapes.Diamond);
 
   /**
-   * The minimap event type of teleport, rendered as a hollow square. May stretch if <areaEvent:WxH> is present.
+   * The minimap event type of teleport, rendered as a hollow square. Stretches across every tile the event's
+   * area covers, when J-Pixelistics gives it one through `<areaEvent>`.
    * @type {MinimapEventType}
    */
   static Teleport = new MinimapEventType('teleport', '#66ccffcc', MinimapEventType.Shapes.HollowSquare);

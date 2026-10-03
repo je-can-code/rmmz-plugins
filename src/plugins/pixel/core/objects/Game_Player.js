@@ -1,5 +1,39 @@
 //region Game_Player
 /**
+ * Extends {@link Game_Player.initMembers}.<br/>
+ * Also seeds the offset a relative transfer carries across maps, which is none until one is handed over.
+ */
+J.PIXEL.Aliased.Game_Player.set('initMembers', Game_Player.prototype.initMembers);
+Game_Player.prototype.initMembers = function()
+{
+  // perform original logic.
+  J.PIXEL.Aliased.Game_Player.get('initMembers')
+    .call(this);
+
+  // initialize the relative transfer members.
+  this.initRelativeTransferMembers();
+};
+
+/**
+ * Initializes the offset a relative transfer hands the player, which only ever holds anything between a
+ * Transfer Player reserving the transfer and the player landing at the other end.
+ */
+Game_Player.prototype.initRelativeTransferMembers = function()
+{
+  /**
+   * How many tiles rightward to move the reserved landing once the destination has loaded.
+   * @type {number}
+   */
+  this._j._pixel._transferOffsetX = 0;
+
+  /**
+   * How many tiles downward to move the reserved landing once the destination has loaded.
+   * @type {number}
+   */
+  this._j._pixel._transferOffsetY = 0;
+};
+
+/**
  * Overwrites {@link Game_Player.checkEventTriggerHere}.<br/>
  * Checks the tile this character's body actually occupies (the collision pivot's tile) rather
  * than the fractional `_x`/`_y` vanilla assumes are already integers.
@@ -630,7 +664,112 @@ Game_Player.prototype.getCollisionPivotY = function()
   return 0.70;
 };
 
+//region relative transfer
+/**
+ * Extends {@link Game_Player.performTransfer}.<br/>
+ * A transfer from an area that remembers where the player crossed moves its landing just as far along
+ * before the player is placed. This is the first moment the destination map has loaded, so it is the
+ * first moment its edges are known.
+ */
+J.PIXEL.Aliased.Game_Player.set('performTransfer', Game_Player.prototype.performTransfer);
+Game_Player.prototype.performTransfer = function()
+{
+  // a relative transfer moves its landing before anything is placed.
+  if (this.hasTransferOffset())
+  {
+    this.applyTransferOffset();
+  }
+
+  // perform original logic.
+  J.PIXEL.Aliased.Game_Player.get('performTransfer')
+    .call(this);
+};
+
+/**
+ * Determines whether a relative transfer has handed the player an offset that is still to be applied.
+ * Crossing at the event's own tile hands over nothing, since that landing is already the authored one.
+ * @returns {boolean} True if the reserved landing still needs moving.
+ */
+Game_Player.prototype.hasTransferOffset = function()
+{
+  return this.transferOffsetX() !== 0 || this.transferOffsetY() !== 0;
+};
+
+/**
+ * Moves the reserved landing by the offset a relative transfer handed over, keeps it on the destination
+ * map, and spends the offset.<br/>
+ * A landing that has to be pulled back onto the map means the opening on one side runs longer than the
+ * opening on the other. The player lands on the destination's edge rather than off the world, and the
+ * mismatch is reported, since it is an authoring fix rather than something to quietly absorb.
+ */
+Game_Player.prototype.applyTransferOffset = function()
+{
+  // the landing the transfer was authored with, moved as far along as the player stood.
+  const shiftedX = this.newX() + this.transferOffsetX();
+  const shiftedY = this.newY() + this.transferOffsetY();
+
+  // the destination has loaded by now, so its edges are known.
+  const landingX = shiftedX.clamp(0, $dataMap.width - 1);
+  const landingY = shiftedY.clamp(0, $dataMap.height - 1);
+
+  // a landing pulled back onto the map means the openings on either side do not line up.
+  if (landingX !== shiftedX || landingY !== shiftedY)
+  {
+    const message = 'a relative transfer would have landed off its map, so it lands on the edge instead.';
+    const details = { mapId: this.newMapId(), x: shiftedX, y: shiftedY };
+    Diagnostics.warn(__PLUGIN_NAME__, message, details);
+  }
+
+  // reserve the moved landing in place of the authored one.
+  this.reserveTransfer(this.newMapId(), landingX, landingY, this.newDirection(), this.fadeType());
+
+  // the offset has been spent.
+  this.setTransferOffsetX(0);
+  this.setTransferOffsetY(0);
+};
+//endregion relative transfer
+
 //region properties
+/**
+ * Gets how many tiles rightward the reserved landing moves once the destination has loaded.
+ * @returns {number} The offset, in tiles.
+ */
+Game_Player.prototype.transferOffsetX = function()
+{
+  // hand back the transfer offset x.
+  return this._j._pixel._transferOffsetX;
+};
+
+/**
+ * Sets how many tiles rightward the reserved landing moves once the destination has loaded.
+ * @param {number} transferOffsetX The offset, in tiles.
+ */
+Game_Player.prototype.setTransferOffsetX = function(transferOffsetX)
+{
+  // assign the transfer offset x.
+  this._j._pixel._transferOffsetX = transferOffsetX;
+};
+
+/**
+ * Gets how many tiles downward the reserved landing moves once the destination has loaded.
+ * @returns {number} The offset, in tiles.
+ */
+Game_Player.prototype.transferOffsetY = function()
+{
+  // hand back the transfer offset y.
+  return this._j._pixel._transferOffsetY;
+};
+
+/**
+ * Sets how many tiles downward the reserved landing moves once the destination has loaded.
+ * @param {number} transferOffsetY The offset, in tiles.
+ */
+Game_Player.prototype.setTransferOffsetY = function(transferOffsetY)
+{
+  // assign the transfer offset y.
+  this._j._pixel._transferOffsetY = transferOffsetY;
+};
+
 /**
  * Gets the last occupied tile x.
  * @returns {number} The lastOccupiedTileX.

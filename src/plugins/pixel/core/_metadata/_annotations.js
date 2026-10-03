@@ -8,6 +8,7 @@
  * @base J-Base
  * @orderAfter J-Base
  * @orderAfter J-Base-Save
+ * @orderAfter J-ABS
  * @help
  * ============================================================================
  * OVERVIEW
@@ -41,9 +42,51 @@
  *   src/plugins/pixel/ext/abs  — JABS bridge (loads after J-ABS + this)
  *
  * ============================================================================
- * NOTE ABOUT NOTETAGS:
- * This plugin has no notetags of its own- movement/collision tuning is
- * entirely plugin-parameter driven.
+ * AREA EVENTS
+ * An event normally stands on exactly one tile. A comment on one of its
+ * pages can stretch that into a rectangle, so stepping onto any tile of it
+ * counts as reaching the event: one wide exit along a map's edge, rather
+ * than a row of identical events.
+ *
+ * TAG USAGE:
+ * - Events on the map (page comment)
+ *
+ * TAG FORMAT:
+ *  <areaEvent:[WIDTH, HEIGHT]>
+ * Where WIDTH and HEIGHT are whole tiles, counted rightward and downward
+ * from the tile the event itself stands on. Both must be at least 1.
+ *
+ * TAG EXAMPLES:
+ *  <areaEvent:[5, 1]>
+ * This page covers the event's own tile and the four to the right of it.
+ *
+ * An area belongs to the page that declares it, so a page without the tag
+ * covers one tile again. It changes where the event counts as standing,
+ * never the size of its body.
+ *
+ * ----------------------------------------------------------------------------
+ * RELATIVE TRANSFERS
+ * A transfer from an area can remember where along it the player crossed,
+ * and land them just as far along on the other side.
+ *
+ * TAG USAGE:
+ * - Events on the map (page comment), alongside <areaEvent>
+ *
+ * TAG FORMAT:
+ *  <relativeTransfer>
+ * Point the page's Transfer Player at where the event's own tile should
+ * land. Every other tile of the area lands the same distance along, so
+ * walking off a wide edge arrives at the matching spot on the next map.
+ *
+ * TAG EXAMPLES:
+ *  <areaEvent:[20, 1]>
+ *  <relativeTransfer>
+ * Crossing eight tiles from the event lands the player eight tiles to the
+ * right of where the Transfer Player points.
+ *
+ * The two maps' openings should line up tile for tile. A landing that would
+ * fall off the destination map lands on its edge instead, and a warning in
+ * the console names the transfer.
  * ============================================================================
  * CHANGELOG:
  * - 1.3.1
