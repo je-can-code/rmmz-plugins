@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.3.1 PIXEL] Enables sub-tile (pixel-accurate) movement on the map.
+ * [v1.4.0 PIXEL] Enables sub-tile (pixel-accurate) movement on the map.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -89,6 +89,10 @@
  * the console names the transfer.
  * ============================================================================
  * CHANGELOG:
+ * - 1.4.0
+ *    Added <areaEvent:[WIDTH, HEIGHT]>, letting an event's page cover a rectangle
+ *    of tiles. Added <relativeTransfer>, landing a transfer from an area as far
+ *    along as the player crossed it.
  * - 1.3.1
  *    Fixed tiles at the map's edge counting as enterable from off the map.
  * - 1.3.0
@@ -271,7 +275,7 @@ J.PIXEL.EXT ||= {};
 /**
 * The metadata associated with this plugin.
 */
-J.PIXEL.Metadata = new JPixelistics_PluginMetadata("J-Pixelistics", "1.3.1");
+J.PIXEL.Metadata = new JPixelistics_PluginMetadata("J-Pixelistics", "1.4.0");
 /**
 * A collection of all aliased methods for this plugin.
 */

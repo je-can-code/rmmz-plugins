@@ -145,6 +145,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 2.0.0
+ *    BREAKING: <areaEvent:WxH> is no longer read here. Teleport markers stretch
+ *    across J-Pixelistics' <areaEvent:[W, H]> instead.
  * - 1.2.2
  *    Minimap walls follow the engine's passability instead of the tileset's flags.
  * - 1.2.1

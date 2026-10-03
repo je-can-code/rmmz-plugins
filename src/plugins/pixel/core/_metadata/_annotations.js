@@ -89,6 +89,10 @@
  * the console names the transfer.
  * ============================================================================
  * CHANGELOG:
+ * - 1.4.0
+ *    Added <areaEvent:[WIDTH, HEIGHT]>, letting an event's page cover a rectangle
+ *    of tiles. Added <relativeTransfer>, landing a transfer from an area as far
+ *    along as the player crossed it.
  * - 1.3.1
  *    Fixed tiles at the map's edge counting as enterable from off the map.
  * - 1.3.0

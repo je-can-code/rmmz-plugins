@@ -157,6 +157,8 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 4.1.0
+ *    Added accessors for where a reserved transfer will land the player.
  * - 4.0.0
  *    BREAKING: requires data/config.notetag-lines.json. Added NotetagDescriber,
  *    TextWrapper.wrapStyled, and a description and icon on every class. Sp-parameters

@@ -1,7 +1,7 @@
 //region annoations
 /*:
  * @target MZ
- * @plugindesc [v1.2.2 MAP] Renders a passability-driven minimap on the screen.
+ * @plugindesc [v2.0.0 MAP] Renders a passability-driven minimap on the screen.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -145,6 +145,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 2.0.0
+ *    BREAKING: <areaEvent:WxH> is no longer read here. Teleport markers stretch
+ *    across J-Pixelistics' <areaEvent:[W, H]> instead.
  * - 1.2.2
  *    Minimap walls follow the engine's passability instead of the tileset's flags.
  * - 1.2.1
@@ -290,7 +293,7 @@ J.MAP.EXT ||= {};
 /**
 * The metadata associated with this plugin.
 */
-J.MAP.Metadata = new J_MAP__PluginMetadata("J-Map", "1.2.2");
+J.MAP.Metadata = new J_MAP__PluginMetadata("J-Map", "2.0.0");
 /**
 * A collection of all aliased methods for this plugin.
 */
