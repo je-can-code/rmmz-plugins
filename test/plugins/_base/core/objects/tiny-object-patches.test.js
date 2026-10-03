@@ -144,6 +144,64 @@ describe('J-Base tiny Game_* object patches (direct src import)', () =>
     });
   });
 
+  describe('Game_Player reserved transfer accessors', () =>
+  {
+    /**
+     * Builds a player holding a reserved transfer, written field for field the way vanilla's
+     * `reserveTransfer` writes one. Every value differs from every other, so an accessor reading the
+     * wrong field cannot pass by coincidence.
+     * @returns {Game_Player} The player, between reserving a transfer and arriving.
+     */
+    const reservedPlayer = () =>
+    {
+      const player = new globalThis.Game_Player();
+      player._transferring = true;
+      player._newMapId = 23;
+      player._newX = 12;
+      player._newY = 7;
+      player._newDirection = 8;
+      player._fadeType = 0;
+
+      return player;
+    };
+
+    it('reads back the x coordinate the transfer will land on', () =>
+    {
+      // Arrange
+      const player = reservedPlayer();
+
+      // Act
+      const newX = player.newX();
+
+      // Assert
+      expect(newX).toBe(12);
+    });
+
+    it('reads back the y coordinate the transfer will land on', () =>
+    {
+      // Arrange
+      const player = reservedPlayer();
+
+      // Act
+      const newY = player.newY();
+
+      // Assert
+      expect(newY).toBe(7);
+    });
+
+    it('reads back the direction the transfer will leave the player facing', () =>
+    {
+      // Arrange
+      const player = reservedPlayer();
+
+      // Act
+      const newDirection = player.newDirection();
+
+      // Assert
+      expect(newDirection).toBe(8);
+    });
+  });
+
   describe('Game_Vehicle#isVehicle', () =>
   {
     it('returns true', () =>

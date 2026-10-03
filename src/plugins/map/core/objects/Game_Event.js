@@ -319,37 +319,27 @@ Game_Event.prototype.hasQuestPluginCommand = function(commandNames)
 };
 
 /**
- * Parses and returns the area rectangle for this event from <areaEvent:WxH>.
- * Defaults to 1x1 when not present or invalid.
- * @returns {{w:number,h:number}}
+ * Gets the rectangle of tiles this event covers, for drawing its marker across the whole of it.<br/>
+ * J-Pixelistics owns areas: it reads `<areaEvent>` off the active page and makes the event stand on every
+ * tile of it. Without J-Pixelistics nothing gives an event more than its own tile, so the marker is that
+ * one tile too.
+ * @returns {{w:number,h:number}} The width and height, in tiles.
  */
 Game_Event.prototype.getAreaEventRect = function()
 {
-  // default area is a single tile.
-  let w = 1;
-  let h = 1;
-
-  // iterate comments for the area tag.
-  const commands = this.getValidCommentCommands();
-  for (let i = 0; i < commands.length; i++)
+  // without J-Pixelistics, an event covers its own tile and no more.
+  if (!J.PIXEL)
   {
-    const [ comment, ] = commands[i].parameters;
-    if (!comment) continue;
-
-    J.MAP.RegExp.AreaEvent.lastIndex = 0;
-    const match = J.MAP.RegExp.AreaEvent.exec(comment);
-    if (match)
-    {
-      const [ , unparsedW, unparsedH ] = match;
-      w = Math.max(1, parseInt(unparsedW));
-      h = Math.max(1, parseInt(unparsedH));
-      break;
-    }
+    return {
+      w: 1,
+      h: 1,
+    };
   }
 
+  // otherwise the area is whatever the event's active page covers.
   return {
-    w,
-    h
+    w: this.areaEventWidth(),
+    h: this.areaEventHeight(),
   };
 };
 //endregion Game_Event

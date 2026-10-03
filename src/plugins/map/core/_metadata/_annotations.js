@@ -13,6 +13,7 @@
  * @orderAfter J-Base-Save
  * @orderAfter J-Omnipedia
  * @orderAfter J-OMNI-Quests
+ * @orderAfter J-Pixelistics
  * @help
  * ============================================================================
  * OVERVIEW
@@ -79,8 +80,8 @@
  * - Interactable Object
  *    An object event marker is rendered as a yellow diamond shape.
  * - Teleport
- *    A hollow light-blue square. Can be stretched to represent a
- *    multi-tile teleport zone with <areaEvent:WxH> (see below).
+ *    A hollow light-blue square. Stretches across a multi-tile teleport
+ *    zone from J-Pixelistics' <areaEvent> (see below).
  * - Quest Offer
  *    A yellow square marking a quest available to accept.
  * - Quest Progress
@@ -114,23 +115,16 @@
  *
  * ----------------------------------------------------------------------------
  * TELEPORT ZONE SIZE
- * By default, a <minimap:teleport> marker is drawn as a single-tile hollow
- * square. If the teleport actually spans multiple tiles, stretch its marker
- * to match using this tag on the same event.
- *
- * TAG USAGE:
- * - Events on the map (typically alongside <minimap:teleport>)
- *
- * TAG FORMAT:
- *  <areaEvent:WIDTHxHEIGHT>
- * Where WIDTH and HEIGHT are the tile dimensions of the zone. Defaults to
- * 1x1 (a single tile) if this tag is absent or malformed.
+ * A teleport marker covers exactly the tiles its event does. Most events
+ * cover a single tile, but with J-Pixelistics a page can cover a whole
+ * rectangle through <areaEvent:[WIDTH, HEIGHT]>, and the marker stretches
+ * across all of it with no tag of this plugin's own.
  *
  * TAG EXAMPLES:
- *  <minimap:teleport>
- *  <areaEvent:3x2>
+ *  <areaEvent:[3, 2]>
  * This teleport event's minimap marker is stretched to a 3-wide by 2-tall
- * hollow square instead of a single tile.
+ * hollow square instead of a single tile. See J-Pixelistics' help for the
+ * tag itself.
  *
  * ============================================================================
  * BLOCKING THE MINIMAP:
@@ -151,6 +145,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 2.0.0
+ *    BREAKING: <areaEvent:WxH> is no longer read here. Teleport markers stretch
+ *    across J-Pixelistics' <areaEvent:[W, H]> instead.
  * - 1.2.2
  *    Minimap walls follow the engine's passability instead of the tileset's flags.
  * - 1.2.1

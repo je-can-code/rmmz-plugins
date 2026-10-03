@@ -117,6 +117,47 @@ function buildWalledPixelGameMap(width, height, wallTiles = new Set())
 }
 
 /**
+ * Gives the fixture's placeholder player the engine's transfer plumbing. Reserving writes the landing field
+ * for field the way vanilla's `reserveTransfer` does; performing records the landing it would place the
+ * player on, which is the one thing pixel core's alias in front of it is able to change.
+ * @param {Function} Game_Player The player class to install onto.
+ */
+function installEngineTransfer(Game_Player)
+{
+  Game_Player.prototype.reserveTransfer = function(mapId, x, y, d, fadeType)
+  {
+    this._transferring = true;
+    this._newMapId = mapId;
+    this._newX = x;
+    this._newY = y;
+    this._newDirection = d;
+    this._fadeType = fadeType;
+  };
+
+  Game_Player.prototype.newMapId = function()
+  {
+    return this._newMapId;
+  };
+
+  Game_Player.prototype.fadeType = function()
+  {
+    return this._fadeType;
+  };
+
+  Game_Player.prototype.performTransfer = function()
+  {
+    this._landing = {
+      mapId: this._newMapId,
+      x: this._newX,
+      y: this._newY,
+      direction: this._newDirection,
+      fadeType: this._fadeType,
+    };
+    this._transferring = false;
+  };
+}
+
+/**
  * Pixel core's `Game_Player` input, dashing, vector-angle and follower-train behavior, driven
  * against real collision geometry rather than pre-decided booleans.
  */
@@ -131,6 +172,10 @@ describe('J-Pixelistics Game_Player (direct src import)', () =>
     setPluginContextToJBase();
     await import('../../../../../src/plugins/_base/core/_metadata/initialization.js');
     await import('../../../../../src/plugins/_base/core/objects/Game_CharacterBase.js');
+
+    // the reserved-landing accessors a relative transfer reads, and the engine plumbing around them.
+    await import('../../../../../src/plugins/_base/core/objects/Game_Player.js');
+    installEngineTransfer(globalThis.Game_Player);
 
     setPluginContextToJPixel();
     await import('../../../../../src/plugins/pixel/core/_metadata/initialization.js');
@@ -1281,5 +1326,120 @@ describe('J-Pixelistics Game_Player (direct src import)', () =>
     });
   });
   //endregion collision pivot
+
+  //region relative transfer
+  describe('initMembers', () =>
+  {
+    it('starts the player carrying no transfer offset', () =>
+    {
+      // Arrange
+      const player = new globalThis.Game_Player();
+
+      // Act
+      player.initMembers();
+
+      // Assert
+      expect([ player.transferOffsetX(), player.transferOffsetY() ])
+        .toStrictEqual([ 0, 0 ]);
+    });
+  });
+
+  describe('performTransfer', () =>
+  {
+    /**
+     * Builds a player holding a transfer reserved to map 23, facing up with a black fade, onto a
+     * destination of the given size.
+     * @param {number} x The reserved landing's x.
+     * @param {number} y The reserved landing's y.
+     * @param {number} mapWidth The destination's width, in tiles.
+     * @param {number} mapHeight The destination's height, in tiles.
+     * @returns {Game_Player} The player, between reserving and arriving.
+     */
+    const reservedPlayer = (x, y, mapWidth, mapHeight) =>
+    {
+      globalThis.$dataMap = { width: mapWidth, height: mapHeight };
+      const player = new globalThis.Game_Player();
+      player.initMembers();
+      player.reserveTransfer(23, x, y, 8, 0);
+
+      return player;
+    };
+
+    it('moves the landing along by the offset a relative transfer handed over, then spends it', () =>
+    {
+      // Arrange
+      const player = reservedPlayer(4, 0, 40, 30);
+      player.setTransferOffsetX(12);
+      const warnSpy = vi.spyOn(globalThis.Diagnostics, 'warn')
+        .mockImplementation(noop);
+
+      // Act
+      player.performTransfer();
+
+      // Assert
+      const offset = [ player.transferOffsetX(), player.transferOffsetY() ];
+      const outcome = [ player._landing, offset, warnSpy.mock.calls.length ];
+      expect(outcome)
+        .toStrictEqual([ { mapId: 23, x: 16, y: 0, direction: 8, fadeType: 0 }, [ 0, 0 ], 0 ]);
+      warnSpy.mockRestore();
+    });
+
+    it('leaves a transfer that was handed no offset exactly as it was authored', () =>
+    {
+      // Arrange: authored past the destination's right edge, which applying an offset would have pulled
+      // back onto the map. A transfer that is not relative is never this plugin's to move.
+      const player = reservedPlayer(45, 0, 40, 30);
+
+      // Act
+      player.performTransfer();
+
+      // Assert
+      expect(player._landing)
+        .toStrictEqual({ mapId: 23, x: 45, y: 0, direction: 8, fadeType: 0 });
+    });
+
+    it('lands on the right edge, and says so, when the offset would carry the player off the map', () =>
+    {
+      // Arrange: a 20-tile-wide destination, and a landing at 10 moved 15 along.
+      const player = reservedPlayer(10, 0, 20, 30);
+      player.setTransferOffsetX(15);
+      const warnSpy = vi.spyOn(globalThis.Diagnostics, 'warn')
+        .mockImplementation(noop);
+
+      // Act
+      player.performTransfer();
+
+      // Assert
+      const outcome = [ player._landing, warnSpy.mock.calls ];
+      expect(outcome)
+        .toStrictEqual([
+          { mapId: 23, x: 19, y: 0, direction: 8, fadeType: 0 },
+          [ [ 'J-Pixelistics', expect.stringContaining('off its map'), { mapId: 23, x: 25, y: 0 } ] ],
+        ]);
+      warnSpy.mockRestore();
+    });
+
+    it('lands on the bottom edge, and says so, when the offset would carry the player off the map', () =>
+    {
+      // Arrange: a 10-tile-high destination, and a landing at 5 moved 8 down.
+      const player = reservedPlayer(3, 5, 40, 10);
+      player.setTransferOffsetY(8);
+      const warnSpy = vi.spyOn(globalThis.Diagnostics, 'warn')
+        .mockImplementation(noop);
+
+      // Act
+      player.performTransfer();
+
+      // Assert
+      const outcome = [ player._landing, warnSpy.mock.calls ];
+      expect(outcome)
+        .toStrictEqual([
+          { mapId: 23, x: 3, y: 9, direction: 8, fadeType: 0 },
+          [ [ 'J-Pixelistics', expect.stringContaining('off its map'), { mapId: 23, x: 3, y: 13 } ] ],
+        ]);
+      warnSpy.mockRestore();
+    });
+  });
+  //endregion relative transfer
 });
 //endregion plugins/pixel/core/objects/game-player.test.js

@@ -379,6 +379,18 @@ function installMinimalGameCharacterBasePrototypes(sandbox)
     return this._validCommentCommands;
   };
 
+  // mirrors J-Base's Game_Event#commentNote: the page's comment lines joined into one note-shaped
+  // string, which is what lets RPGManager's note getters read an event at all. Stubbed rather than
+  // imported so the comment source stays the one seam these tests control- the real method's own
+  // filtering is covered in the J-Base component test.
+  sandbox.Game_Event.prototype.commentNote = function()
+  {
+    const lines = this.getValidCommentCommands()
+      .map(command => command.parameters.at(0));
+
+    return { note: lines.join('\n') };
+  };
+
   sandbox.Game_Event.prototype.extractValueByRegex = function(structure, defaultValue = null, andParse = true)
   {
     let value = defaultValue;
@@ -565,6 +577,12 @@ export function installPixelCoreHostGlobals(sandbox = globalThis, coreParams = D
 
   sandbox.Math.sqrt = Math.sqrt;
   sandbox.Math.hypot = Math.hypot;
+
+  // rmmz_core.js defines this on every number before any plugin loads, and pixel core leans on it.
+  sandbox.Number.prototype.clamp ??= function(min, max)
+  {
+    return Math.min(Math.max(this, min), max);
+  };
 
   if (typeof sandbox.Array.prototype.contains !== 'function')
   {

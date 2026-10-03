@@ -738,62 +738,23 @@ describe('J-MAP Game_Event', () =>
   //region how much ground the event covers
   describe('getAreaEventRect()', () =>
   {
-    it('defaults to a single tile when nothing says otherwise', () =>
+    /**
+     * The overrides for an event J-Pixelistics would say covers a 6 by 2 area. Different sizes on each
+     * axis, so a rectangle drawn with the two swapped cannot pass.
+     * @type {object}
+     */
+    const coversSixByTwo = { areaEventWidth: () => 6, areaEventHeight: () => 2 };
+
+    beforeEach(() =>
     {
-      // Arrange
-      const event = buildEvent({ getValidCommentCommands: () => [] });
-
-      // Act
-      const area = event.getAreaEventRect();
-
-      // Assert
-      expect(area)
-        .toEqual({
-          w: 1,
-          h: 1,
-        });
+      delete globalThis.J.PIXEL;
     });
 
-    it('reads the dimensions off the area tag', () =>
+    it('covers whatever area J-Pixelistics says the event stands on', () =>
     {
       // Arrange
-      const event = buildEvent({ getValidCommentCommands: () => [ commentCommand('<areaEvent:3x5>') ] });
-
-      // Act
-      const area = event.getAreaEventRect();
-
-      // Assert
-      expect(area)
-        .toEqual({
-          w: 3,
-          h: 5,
-        });
-    });
-
-    it('steps over an empty comment rather than trying to match one', () =>
-    {
-      // Arrange
-      const event = buildEvent({
-        getValidCommentCommands: () => [ commentCommand(''), commentCommand('<areaEvent: 2x4>') ],
-      });
-
-      // Act
-      const area = event.getAreaEventRect();
-
-      // Assert
-      expect(area)
-        .toEqual({
-          w: 2,
-          h: 4,
-        });
-    });
-
-    it('steps over a comment that is not the area tag', () =>
-    {
-      // Arrange
-      const event = buildEvent({
-        getValidCommentCommands: () => [ commentCommand('<minimap:npc>'), commentCommand('<areaEvent:6x2>') ],
-      });
+      globalThis.J.PIXEL = {};
+      const event = buildEvent(coversSixByTwo);
 
       // Act
       const area = event.getAreaEventRect();
@@ -806,28 +767,10 @@ describe('J-MAP Game_Event', () =>
         });
     });
 
-    it('stops at the first area tag, so a second one cannot quietly win', () =>
+    it('covers a single tile without J-Pixelistics, whatever the event itself might answer', () =>
     {
       // Arrange
-      const event = buildEvent({
-        getValidCommentCommands: () => [ commentCommand('<areaEvent:2x2>'), commentCommand('<areaEvent:9x9>') ],
-      });
-
-      // Act
-      const area = event.getAreaEventRect();
-
-      // Assert
-      expect(area)
-        .toEqual({
-          w: 2,
-          h: 2,
-        });
-    });
-
-    it('never lets a zero-sized area through, since an event always occupies its own tile', () =>
-    {
-      // Arrange
-      const event = buildEvent({ getValidCommentCommands: () => [ commentCommand('<areaEvent:0x0>') ] });
+      const event = buildEvent(coversSixByTwo);
 
       // Act
       const area = event.getAreaEventRect();
