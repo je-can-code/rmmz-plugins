@@ -526,7 +526,7 @@ Game_Character.prototype.findDiagonalDirectionTo = function(goalX, goalY)
   }
 
   // the search itself is J-Base's, stepping all eight ways.
-  const node = TilePathSearch.firstStep({
+  const request = {
     startX: startXi,
     startY: startYi,
     goalX: goalXi,
@@ -537,7 +537,15 @@ Game_Character.prototype.findDiagonalDirectionTo = function(goalX, goalY)
     stepFrom: (x, y, direction) => this.stepFromInDirection(x, y, direction),
     canStep: (x, y, direction) => this.canStepInDirection(x, y, direction),
     distance: (x1, y1, x2, y2) => $gameMap.distance(x1, y1, x2, y2),
-  });
+  };
+
+  // and a search that just failed from this tile toward this goal is not asked again for a moment.
+  const node = PathSearchMemory.firstStep(
+    this,
+    'diagonal',
+    Graphics.frameCount,
+    request,
+    search => TilePathSearch.firstStep(search));
 
   const deltaX1 = $gameMap.deltaX(node.x, startXi);
   const deltaY1 = $gameMap.deltaY(node.y, startYi);

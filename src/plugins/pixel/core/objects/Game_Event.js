@@ -167,16 +167,31 @@ Game_Event.prototype.refreshAreaEvent = function()
  */
 Game_Event.prototype.pos = function(x, y)
 {
-  // the tile this event's body occupies is the top-left corner of its area.
-  const left = this.occupiedTileX();
-  const top = this.occupiedTileY();
+  const { left, top, width, height } = this.areaBounds();
 
-  // the area runs rightward and downward from that corner.
-  const isWithinColumns = x >= left && x < left + this.areaEventWidth();
-  const isWithinRows = y >= top && y < top + this.areaEventHeight();
+  // the area runs rightward and downward from its corner.
+  const isWithinColumns = x >= left && x < left + width;
+  const isWithinRows = y >= top && y < top + height;
 
   // the event stands on the tile when the tile lies inside both.
   return isWithinColumns && isWithinRows;
+};
+
+/**
+ * Gets the rectangle of tiles this event stands on: its active page's area, with the tile its body
+ * occupies as the top-left corner.<br/>
+ * The one statement of that rule. {@link Game_Event#pos} answers from it a tile at a time, and the
+ * lookup a path search builds answers from it for every tile at once, so the two cannot drift apart.
+ * @returns {{left: number, top: number, width: number, height: number}} The area, in tiles.
+ */
+Game_Event.prototype.areaBounds = function()
+{
+  return {
+    left: this.occupiedTileX(),
+    top: this.occupiedTileY(),
+    width: this.areaEventWidth(),
+    height: this.areaEventHeight(),
+  };
 };
 
 /**

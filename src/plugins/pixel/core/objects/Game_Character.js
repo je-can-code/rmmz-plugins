@@ -46,6 +46,11 @@ Game_Character.prototype.searchLimit = function()
  * Everything else is the engine's own: standing exactly on the goal answers nothing, the four
  * directions are tried in its order, and when no step gets any closer - which includes both ends
  * sharing a tile - it heads straight for the goal along whichever axis is farther off.
+ *
+ * Two things keep it cheap. A search that has just failed from the same tile toward the same goal is
+ * answered from {@link PathSearchMemory} rather than asked again, and a search that does run looks
+ * events up by tile through {@link Game_Map#searchWithEventIndex} instead of walking all of them at
+ * every step it considers.
  * @param {number} goalX The x coordinate to reach.
  * @param {number} goalY The y coordinate to reach.
  * @returns {number} The direction to step in, or 0 when there is nowhere to go.
@@ -59,7 +64,7 @@ Game_Character.prototype.findDirectionTo = function(goalX, goalY)
   // search the grid between the tiles both ends stand on.
   const startX = Math.round(this.x);
   const startY = Math.round(this.y);
-  const { x: stepX, y: stepY } = TilePathSearch.firstStep({
+  const request = {
     startX,
     startY,
     goalX: Math.round(goalX),
@@ -73,7 +78,16 @@ Game_Character.prototype.findDirectionTo = function(goalX, goalY)
     }),
     canStep: (x, y, direction) => this.canPass(x, y, direction),
     distance: (x1, y1, x2, y2) => $gameMap.distance(x1, y1, x2, y2),
-  });
+  };
+
+  // a search that just failed from this tile toward this goal is not asked again for a moment, and one
+  // that runs looks events up by tile instead of walking all of them at every step.
+  const { x: stepX, y: stepY } = PathSearchMemory.firstStep(
+    this,
+    'straight',
+    Graphics.frameCount,
+    request,
+    search => $gameMap.searchWithEventIndex(() => TilePathSearch.firstStep(search)));
 
   // the direction of the first step, in the engine's order of preference.
   const deltaX = $gameMap.deltaX(stepX, startX);

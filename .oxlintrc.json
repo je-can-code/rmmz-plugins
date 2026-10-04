@@ -581,6 +581,8 @@
     "PassiveRuleJabsAccess": "writable",
     "PassiveRuleThreshold": "writable",
     "PassiveStackCountEvaluator": "writable",
+    "PathSearchEventIndex": "writable",
+    "PathSearchMemory": "writable",
     "PixelDebugSampler": "writable",
     "PlayerLightCoordinator": "writable",
     "PlayerTravel": "writable",

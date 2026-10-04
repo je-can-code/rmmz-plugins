@@ -42,7 +42,8 @@ class TilePathSearch
    * @param {function(number, number, number): {x: number, y: number}} request.stepFrom The tile a step lands on.
    * @param {function(number, number, number): boolean} request.canStep Whether a step may be taken from a tile.
    * @param {function(number, number, number, number): number} request.distance The estimated steps between tiles.
-   * @returns {{x: number, y: number}} The tile to step onto first, or the start's own tile when none gets closer.
+   * @returns {{x: number, y: number, reachedGoal: boolean}} The tile to step onto first, or the start's own
+   *   tile when none gets closer, and whether the search arrived at the goal or settled for the closest tile.
    */
   static firstStep(request)
   {
@@ -72,13 +73,19 @@ class TilePathSearch
     search.open.set(startY * mapWidth + startX, start);
 
     // expand the cheapest open node until the goal is expanded or nothing is left to try.
-    while (search.heap.length > 0)
+    let reachedGoal = false;
+    while (search.heap.length > 0 && reachedGoal === false)
     {
-      const reachedGoal = TilePathSearch.#expandNext(search);
-      if (reachedGoal === true) break;
+      reachedGoal = TilePathSearch.#expandNext(search);
     }
 
-    return TilePathSearch.#firstStepToward(search.best, start);
+    const { x, y } = TilePathSearch.#firstStepToward(search.best, start);
+
+    return {
+      x,
+      y,
+      reachedGoal,
+    };
   }
 
   /**

@@ -32,8 +32,13 @@ describe('J-Pixelistics Game_Character move routes (direct src import)', () =>
     await import('../../../../../src/plugins/pixel/core/objects/Game_CharacterBase.js');
     await import('../../../../../src/plugins/pixel/core/objects/Game_Character.js');
 
-    // J-Base's search, a global once J-Base has loaded- the real one, since the tests pin its paths.
+    // J-Base's search and its memory, globals once J-Base has loaded- the real ones, since the tests pin
+    // the paths found and when a search is skipped.
     ({ default: globalThis.TilePathSearch } = await import('../../../../../src/plugins/_base/core/core/TilePathSearch.js'));
+    ({ default: globalThis.PathSearchMemory } = await import('../../../../../src/plugins/_base/core/core/PathSearchMemory.js'));
+
+    // the engine's frame counter, which is all the memory reads off it.
+    globalThis.Graphics = { frameCount: 0 };
   });
 
   beforeEach(() =>
@@ -107,6 +112,8 @@ describe('J-Pixelistics Game_Character move routes (direct src import)', () =>
         roundYWithDirection: (y, direction) => y + (direction === 2 ? 1 : 0) - (direction === 8 ? 1 : 0),
         deltaX: (x1, x2) => x1 - x2,
         deltaY: (y1, y2) => y1 - y2,
+        // the lookup's own behavior is tested beside it; here the search simply runs inside it.
+        searchWithEventIndex: vi.fn(search => search()),
       };
 
       return (x, y, direction) =>
@@ -202,6 +209,41 @@ describe('J-Pixelistics Game_Character move routes (direct src import)', () =>
       // Assert
       expect(direction)
         .toBe(expected);
+    });
+
+    it('runs its search with the map\'s event lookup built', () =>
+    {
+      // Arrange
+      const canPass = aMap([ '...' ]);
+      const character = aCharacterAt(0, 0, canPass);
+
+      // Act
+      character.findDirectionTo(2, 0);
+
+      // Assert
+      expect($gameMap.searchWithEventIndex).toHaveBeenCalledTimes(1);
+    });
+
+    it('answers a search that just failed from memory instead of searching again', () =>
+    {
+      // Arrange - walled off from its goal, so the first search fails, then asked again a frame later.
+      const canPass = vi.fn(aMap([ '.#.' ]));
+      const character = aCharacterAt(0, 0, canPass);
+      Graphics.frameCount = 500;
+      const first = character.findDirectionTo(2, 0);
+      const asked = canPass.mock.calls.length;
+      Graphics.frameCount = 501;
+
+      // Act
+      const second = character.findDirectionTo(2, 0);
+
+      // Assert - the same answer, and not one more question about the map.
+      expect(second)
+        .toBe(first);
+      expect(asked)
+        .toBeGreaterThan(0);
+      expect(canPass.mock.calls)
+        .toHaveLength(asked);
     });
 
     it('has nowhere to go on a looping map where the goal measures no distance away', () =>

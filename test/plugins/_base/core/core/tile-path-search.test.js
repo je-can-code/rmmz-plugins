@@ -98,7 +98,7 @@ describe('TilePathSearch', () =>
       const step = TilePathSearch.firstStep(request);
 
       // Assert
-      expect(step).toEqual({ x: 1, y: 0 });
+      expect(step).toEqual({ x: 1, y: 0, reachedGoal: true });
     });
 
     it('detours around a wall standing between the start and the goal', () =>
@@ -119,7 +119,7 @@ describe('TilePathSearch', () =>
       const step = TilePathSearch.firstStep(request);
 
       // Assert - down toward the gap, not left.
-      expect(step).toEqual({ x: 1, y: 1 });
+      expect(step).toEqual({ x: 1, y: 1, reachedGoal: true });
     });
 
     it('breaks a tie between equally short routes in favor of the tile opened first', () =>
@@ -139,7 +139,7 @@ describe('TilePathSearch', () =>
       const step = TilePathSearch.firstStep(request);
 
       // Assert
-      expect(step).toEqual({ x: 0, y: 1 });
+      expect(step).toEqual({ x: 0, y: 1, reachedGoal: true });
     });
 
     it('answers with the start itself when no step can be taken at all', () =>
@@ -158,8 +158,8 @@ describe('TilePathSearch', () =>
       // Act
       const step = TilePathSearch.firstStep(request);
 
-      // Assert
-      expect(step).toEqual({ x: 1, y: 1 });
+      // Assert - and it says it never got there.
+      expect(step).toEqual({ x: 1, y: 1, reachedGoal: false });
     });
 
     it('heads for the explored tile closest to a goal it cannot reach', () =>
@@ -177,8 +177,8 @@ describe('TilePathSearch', () =>
       // Act
       const step = TilePathSearch.firstStep(request);
 
-      // Assert - toward x 6, the nearest anybody can get.
-      expect(step).toEqual({ x: 4, y: 0 });
+      // Assert - toward x 6, the nearest anybody can get, without having arrived.
+      expect(step).toEqual({ x: 4, y: 0, reachedGoal: false });
     });
 
     it('expands nothing past the search limit', () =>
@@ -200,7 +200,7 @@ describe('TilePathSearch', () =>
 
       // Assert - nobody was asked about a step, so the answer is the start.
       expect(canStep).not.toHaveBeenCalled();
-      expect(step).toEqual({ x: 0, y: 0 });
+      expect(step).toEqual({ x: 0, y: 0, reachedGoal: false });
     });
 
     it('never asks again about a step into a tile it has already expanded', () =>
@@ -245,7 +245,7 @@ describe('TilePathSearch', () =>
       const step = TilePathSearch.firstStep(request);
 
       // Assert
-      expect(step).toEqual({ x: 1, y: 0 });
+      expect(step).toEqual({ x: 1, y: 0, reachedGoal: true });
     });
 
     it('works its way down a long open search without losing the cheapest tile', () =>
@@ -264,7 +264,7 @@ describe('TilePathSearch', () =>
       const step = TilePathSearch.firstStep(request);
 
       // Assert - straight down the diagonal.
-      expect(step).toEqual({ x: 1, y: 1 });
+      expect(step).toEqual({ x: 1, y: 1, reachedGoal: true });
     });
   });
 
