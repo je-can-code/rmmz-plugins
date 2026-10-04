@@ -792,6 +792,63 @@ Game_Character.prototype.searchLimit = function() {
 	return 40;
 };
 /**
+* Overwrites {@link Game_Character#findDirectionTo}.<br/>
+* Searches between the tiles both ends actually stand on, through J-Base's {@link TilePathSearch}.
+*
+* The engine's search starts from the character's own coordinates and treats them as a tile, which
+* only holds while coordinates are whole numbers. Under pixel movement they rarely are, and a search
+* starting from 30.6 explores 30.6, 31.6, 32.6 and onward, so it can never arrive at a whole-numbered
+* goal. Every search then runs to its limit - with forty steps, the whole neighborhood - and settles
+* for whichever point it explored came closest. Rounding both ends onto the grid lets it arrive.
+*
+* Everything else is the engine's own: standing exactly on the goal answers nothing, the four
+* directions are tried in its order, and when no step gets any closer - which includes both ends
+* sharing a tile - it heads straight for the goal along whichever axis is farther off.
+* @param {number} goalX The x coordinate to reach.
+* @param {number} goalY The y coordinate to reach.
+* @returns {number} The direction to step in, or 0 when there is nowhere to go.
+*/
+Game_Character.prototype.findDirectionTo = function(goalX, goalY) {
+	if (this.x === goalX && this.y === goalY) return 0;
+	const startX = Math.round(this.x);
+	const startY = Math.round(this.y);
+	const { x: stepX, y: stepY } = TilePathSearch.firstStep({
+		startX,
+		startY,
+		goalX: Math.round(goalX),
+		goalY: Math.round(goalY),
+		searchLimit: this.searchLimit(),
+		mapWidth: $gameMap.width(),
+		directions: [
+			2,
+			4,
+			6,
+			8
+		],
+		stepFrom: (x, y, direction) => ({
+			x: $gameMap.roundXWithDirection(x, direction),
+			y: $gameMap.roundYWithDirection(y, direction)
+		}),
+		canStep: (x, y, direction) => this.canPass(x, y, direction),
+		distance: (x1, y1, x2, y2) => $gameMap.distance(x1, y1, x2, y2)
+	});
+	const deltaX = $gameMap.deltaX(stepX, startX);
+	const deltaY = $gameMap.deltaY(stepY, startY);
+	if (deltaY > 0) return 2;
+	if (deltaX < 0) return 4;
+	if (deltaX > 0) return 6;
+	if (deltaY < 0) return 8;
+	const deltaToGoalX = this.deltaXFrom(goalX);
+	const deltaToGoalY = this.deltaYFrom(goalY);
+	if (Math.abs(deltaToGoalX) > Math.abs(deltaToGoalY)) {
+		return deltaToGoalX > 0 ? 4 : 6;
+	}
+	if (deltaToGoalY !== 0) {
+		return deltaToGoalY > 0 ? 8 : 2;
+	}
+	return 0;
+};
+/**
 * Extends {@link #updateRoutineMove}.<br/>
 * Repeats move-route movement commands by the collision step count so that
 * scripted movement (event pages, move routes) covers the intended full-tile distance.

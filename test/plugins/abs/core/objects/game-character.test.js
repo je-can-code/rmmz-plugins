@@ -65,6 +65,10 @@ describe('J-ABS Game_Character (unit, all downstream dependencies mocked)', () =
     vi.doMock('../../../../../src/plugins/abs/core/models/JABS_Action.js', () => ({ default: class {} }));
     vi.doMock('../../../../../src/plugins/abs/core/models/JABS_Aabb.js', () => ({ default: class {} }));
 
+    // J-Base's search, which J-ABS reaches as a global once J-Base has loaded- the real one, since the
+    // tests below pin the paths it finds.
+    ({ default: globalThis.TilePathSearch } = await import('../../../../../src/plugins/_base/core/core/TilePathSearch.js'));
+
     await import('../../../../../src/plugins/abs/core/objects/Game_Character.js');
   });
 

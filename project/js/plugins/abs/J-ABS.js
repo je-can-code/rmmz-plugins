@@ -30998,7 +30998,9 @@ Game_Character.prototype.findDiagonalDirectionToHeuristic = function(goalX, goal
 	}
 };
 /**
-* Intelligently determines the next step to take on a path to the destination `x,y`.
+* Intelligently determines the next step to take on a path to the destination `x,y`.<br/>
+* The search itself is J-Base's {@link TilePathSearch}, stepping all eight ways. This decides only
+* which tiles it runs between - both ends rounded onto the grid - and how its answer becomes a direction.
 * @param {number} goalX The `x` coordinate trying to be reached.
 * @param {number} goalY The `y` coordinate trying to be reached.
 * @returns {1|2|3|4|6|7|8|9} The direction decided.
@@ -31007,13 +31009,6 @@ Game_Character.prototype.findDiagonalDirectionTo = function(goalX, goalY) {
 	if (this.isThrough() || this.isDebugThrough()) {
 		return this.findDiagonalDirectionToHeuristic(goalX, goalY);
 	}
-	const searchLimit = this.searchLimit();
-	const mapWidth = $gameMap.width();
-	const nodeList = [];
-	const openList = [];
-	const closedList = [];
-	const start = {};
-	let best = start;
 	const startXi = Math.round(this.x);
 	const startYi = Math.round(this.y);
 	const goalXi = Math.round(goalX);
@@ -31021,89 +31016,29 @@ Game_Character.prototype.findDiagonalDirectionTo = function(goalX, goalY) {
 	if (startXi === goalXi && startYi === goalYi) {
 		return 0;
 	}
-	start.parent = null;
-	start.x = startXi;
-	start.y = startYi;
-	start.g = 0;
-	start.f = $gameMap.distance(start.x, start.y, goalXi, goalYi);
-	nodeList.push(start);
-	openList.push(start.y * mapWidth + start.x);
-	while (nodeList.length > 0) {
-		let bestIndex = 0;
-		for (let i = 0; i < nodeList.length; i++) {
-			if (nodeList[i].f < nodeList[bestIndex].f) {
-				bestIndex = i;
-			}
-		}
-		const current = nodeList[bestIndex];
-		const x1 = current.x;
-		const y1 = current.y;
-		const pos1 = y1 * mapWidth + x1;
-		const g1 = current.g;
-		nodeList.splice(bestIndex, 1);
-		openList.splice(openList.indexOf(pos1), 1);
-		closedList.push(pos1);
-		if (current.x === goalXi && current.y === goalYi) {
-			best = current;
-			break;
-		}
-		if (g1 >= searchLimit) {
-			continue;
-		}
-		for (let j = 1; j <= 9; j++) {
-			if (j === 5) {
-				continue;
-			}
-			let directions;
-			if (this.isDiagonalDirection(j)) {
-				directions = this.getDiagonalDirections(j);
-			} else {
-				directions = [j, j];
-			}
-			const [horz, vert] = directions;
-			const x2 = $gameMap.roundXWithDirection(x1, horz);
-			const y2 = $gameMap.roundYWithDirection(y1, vert);
-			const pos2 = y2 * mapWidth + x2;
-			if (closedList.contains(pos2)) {
-				continue;
-			}
-			if (this.isStraightDirection(j)) {
-				if (!this.canPass(x1, y1, j)) {
-					continue;
-				}
-			} else {
-				if (!this.canPassDiagonally(x1, y1, horz, vert)) {
-					continue;
-				}
-			}
-			let g2 = g1 + 1;
-			let index2 = openList.indexOf(pos2);
-			if (index2 < 0 || g2 < nodeList[index2].g) {
-				let neighbor;
-				if (index2 >= 0) {
-					neighbor = nodeList[index2];
-				} else {
-					neighbor = {};
-					nodeList.push(neighbor);
-					openList.push(pos2);
-				}
-				neighbor.parent = current;
-				neighbor.x = x2;
-				neighbor.y = y2;
-				neighbor.g = g2;
-				neighbor.f = g2 + $gameMap.distance(x2, y2, goalXi, goalYi);
-				if (!best || neighbor.f - neighbor.g < best.f - best.g) {
-					best = neighbor;
-				}
-			}
-		}
-	}
-	let node = best;
-	while (node.parent && node.parent !== start) {
-		node = node.parent;
-	}
-	const deltaX1 = $gameMap.deltaX(node.x, start.x);
-	const deltaY1 = $gameMap.deltaY(node.y, start.y);
+	const node = TilePathSearch.firstStep({
+		startX: startXi,
+		startY: startYi,
+		goalX: goalXi,
+		goalY: goalYi,
+		searchLimit: this.searchLimit(),
+		mapWidth: $gameMap.width(),
+		directions: [
+			1,
+			2,
+			3,
+			4,
+			6,
+			7,
+			8,
+			9
+		],
+		stepFrom: (x, y, direction) => this.stepFromInDirection(x, y, direction),
+		canStep: (x, y, direction) => this.canStepInDirection(x, y, direction),
+		distance: (x1, y1, x2, y2) => $gameMap.distance(x1, y1, x2, y2)
+	});
+	const deltaX1 = $gameMap.deltaX(node.x, startXi);
+	const deltaY1 = $gameMap.deltaY(node.y, startYi);
 	if (deltaY1 > 0) {
 		return deltaX1 === 0 ? 2 : deltaX1 > 0 ? 3 : 1;
 	} else if (deltaY1 < 0) {
@@ -31114,6 +31049,36 @@ Game_Character.prototype.findDiagonalDirectionTo = function(goalX, goalY) {
 		}
 	}
 	return this.findDiagonalDirectionToHeuristic(goalX, goalY);
+};
+/**
+* Gets the tile one step in any of the eight directions lands on.<br/>
+* A diagonal is its horizontal and vertical halves taken together, and a straight step is its own
+* half on both axes, since the map's rounding leaves alone the axis a direction does not move along.
+* @param {number} x The x tile the step starts from.
+* @param {number} y The y tile the step starts from.
+* @param {number} direction The direction of the step, as a numpad direction.
+* @returns {{x: number, y: number}} The tile the step lands on.
+*/
+Game_Character.prototype.stepFromInDirection = function(x, y, direction) {
+	const [horz, vert] = this.isDiagonalDirection(direction) ? this.getDiagonalDirections(direction) : [direction, direction];
+	return {
+		x: $gameMap.roundXWithDirection(x, horz),
+		y: $gameMap.roundYWithDirection(y, vert)
+	};
+};
+/**
+* Determines whether this character may take one step in any of the eight directions from a tile.<br/>
+* A straight step only has to clear the edge it crosses, while a diagonal answers to the map's
+* diagonal rule, which also looks at the corner it cuts.
+* @param {number} x The x tile the step starts from.
+* @param {number} y The y tile the step starts from.
+* @param {number} direction The direction of the step, as a numpad direction.
+* @returns {boolean} True if the step can be taken, false otherwise.
+*/
+Game_Character.prototype.canStepInDirection = function(x, y, direction) {
+	if (this.isStraightDirection(direction)) return this.canPass(x, y, direction);
+	const [horz, vert] = this.getDiagonalDirections(direction);
+	return this.canPassDiagonally(x, y, horz, vert);
 };
 
 //#endregion
