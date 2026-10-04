@@ -177,6 +177,8 @@
  * appears or vanishes on the frame its page changes, as it used to.
  * ============================================================================
  * CHANGELOG:
+ * - 1.2.1
+ *    Kept the loot expiry warning working with J-ABS 4.26.0.
  * - 1.2.0
  *    Enemies now fold into view when their page brings them onto the map, and fold
  *    away when it takes them off, instead of popping in and out. A folding enemy

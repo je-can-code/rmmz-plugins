@@ -157,6 +157,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 4.2.0
+ *    Characters far off-screen stop updating and drawing until they come back near.
+ *    Added TilePathSearch and PathSearchMemory.
  * - 4.1.0
  *    Added accessors for where a reserved transfer will land the player.
  * - 4.0.0

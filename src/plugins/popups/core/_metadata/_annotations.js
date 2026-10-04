@@ -45,6 +45,9 @@
  * Resources) build popups on top of.
  * ============================================================================
  * CHANGELOG:
+ * - 2.2.1
+ *    Popups queued while a character was off-screen are dropped instead of bursting
+ *    in when it returns. Requires J-Base 4.2.0.
  * - 2.2.0
  *    Damage popups now draw above everything that takes light away, so a hit
  *    always reports itself even when whatever was hit cannot be seen.

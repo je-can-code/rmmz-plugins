@@ -65,6 +65,14 @@ describe('J-ABS Game_Character (unit, all downstream dependencies mocked)', () =
     vi.doMock('../../../../../src/plugins/abs/core/models/JABS_Action.js', () => ({ default: class {} }));
     vi.doMock('../../../../../src/plugins/abs/core/models/JABS_Aabb.js', () => ({ default: class {} }));
 
+    // J-Base's search and its memory, which J-ABS reaches as globals once J-Base has loaded- the real
+    // ones, since the tests below pin the paths found.
+    ({ default: globalThis.TilePathSearch } = await import('../../../../../src/plugins/_base/core/core/TilePathSearch.js'));
+    ({ default: globalThis.PathSearchMemory } = await import('../../../../../src/plugins/_base/core/core/PathSearchMemory.js'));
+
+    // the engine's frame counter, which is all the memory reads off it.
+    globalThis.Graphics = { frameCount: 0 };
+
     await import('../../../../../src/plugins/abs/core/objects/Game_Character.js');
   });
 

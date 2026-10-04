@@ -118,18 +118,26 @@ Spriteset_Map.prototype.setCaptionPlane = function(newCaptionPlane)
 
 /**
  * Extends {@link Spriteset_Map.update}.<br/>
- * Also brings the caption plane's roster in line with who is actually on the map.
+ * Also puts far-off characters to sleep, and brings the caption plane's roster in line with who is
+ * actually on the map.
  *
- * The reconcile happens *before* the original runs, and that ordering is load-bearing. The original
- * is what walks the spriteset's children, which is what updates every caption on the plane - and a
- * caption whose character sprite was destroyed since the last frame throws the moment it reads a
- * position off it. J-ABS destroys expired action and loot sprites routinely, so this is the normal
- * case rather than an unlucky one. Correcting the roster first means every caption that gets walked
- * still has a character to ask.
+ * Both happen *before* the original runs, and that ordering is load-bearing. The original is what
+ * walks the spriteset's children, which is what updates every character on the tilemap and every
+ * caption on the plane.
+ *
+ * Sleep is settled first so the walk sees this frame's answer: a character stepping back into view
+ * is awake in time to be updated before it is drawn, rather than drawn once from wherever it fell
+ * asleep. And a caption whose character sprite was destroyed since the last frame throws the moment
+ * it reads a position off it. J-ABS destroys expired action and loot sprites routinely, so this is
+ * the normal case rather than an unlucky one. Correcting the roster first means every caption that
+ * gets walked still has a character to ask.
  */
 J.BASE.Aliased.Spriteset_Map.set('update', Spriteset_Map.prototype.update);
 Spriteset_Map.prototype.update = function()
 {
+  // wake or sleep every character before anything walks the tilemap.
+  this.updateCharacterSleep();
+
   // admit arrivals and evict departures before anything walks the plane.
   this.captionPlane()
     .reconcileCaptions(this.characterSprites());
@@ -137,5 +145,20 @@ Spriteset_Map.prototype.update = function()
   // perform original logic.
   J.BASE.Aliased.Spriteset_Map.get('update')
     .call(this);
+};
+
+/**
+ * Wakes or sleeps every character sprite according to how near its character is to the screen.
+ *
+ * Nobody can see a character three screens away, yet without this its sprite would run its entire
+ * update chain every frame regardless, and on a big map those sprites outnumber the visible ones
+ * many times over. Asleep, a sprite costs one distance check a frame. Its character is untouched:
+ * whatever an event does out of sight it still does, and the sprite simply reads where everything got
+ * to the moment it wakes.
+ */
+Spriteset_Map.prototype.updateCharacterSleep = function()
+{
+  this.characterSprites()
+    .forEach(characterSprite => characterSprite.updateSleep());
 };
 //endregion Spriteset_Map

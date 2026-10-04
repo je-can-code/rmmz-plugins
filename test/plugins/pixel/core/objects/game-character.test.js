@@ -31,6 +31,14 @@ describe('J-Pixelistics Game_Character move routes (direct src import)', () =>
     await import('../../../../../src/plugins/pixel/core/_metadata/initialization.js');
     await import('../../../../../src/plugins/pixel/core/objects/Game_CharacterBase.js');
     await import('../../../../../src/plugins/pixel/core/objects/Game_Character.js');
+
+    // J-Base's search and its memory, globals once J-Base has loaded- the real ones, since the tests pin
+    // the paths found and when a search is skipped.
+    ({ default: globalThis.TilePathSearch } = await import('../../../../../src/plugins/_base/core/core/TilePathSearch.js'));
+    ({ default: globalThis.PathSearchMemory } = await import('../../../../../src/plugins/_base/core/core/PathSearchMemory.js'));
+
+    // the engine's frame counter, which is all the memory reads off it.
+    globalThis.Graphics = { frameCount: 0 };
   });
 
   beforeEach(() =>
@@ -86,6 +94,174 @@ describe('J-Pixelistics Game_Character move routes (direct src import)', () =>
     });
   });
   //endregion searchLimit
+
+  //region findDirectionTo
+  describe('findDirectionTo', () =>
+  {
+    /**
+     * Installs a map drawn as rows of text, where `#` is a wall, with the engine's own geometry.
+     * @param {string[]} rows The grid, with x along a row and y down the list.
+     * @returns {function(number, number, number): boolean} Whether a step from a tile may be taken.
+     */
+    const aMap = rows =>
+    {
+      globalThis.$gameMap = {
+        width: () => rows[0].length,
+        distance: (x1, y1, x2, y2) => Math.abs(x2 - x1) + Math.abs(y2 - y1),
+        roundXWithDirection: (x, direction) => x + (direction === 6 ? 1 : 0) - (direction === 4 ? 1 : 0),
+        roundYWithDirection: (y, direction) => y + (direction === 2 ? 1 : 0) - (direction === 8 ? 1 : 0),
+        deltaX: (x1, x2) => x1 - x2,
+        deltaY: (y1, y2) => y1 - y2,
+        // the lookup's own behavior is tested beside it; here the search simply runs inside it.
+        searchWithEventIndex: vi.fn(search => search()),
+      };
+
+      return (x, y, direction) =>
+      {
+        const x2 = $gameMap.roundXWithDirection(x, direction);
+        const y2 = $gameMap.roundYWithDirection(y, direction);
+        return y2 >= 0 && y2 < rows.length && x2 >= 0 && x2 < rows[0].length && rows[y2][x2] !== '#';
+      };
+    };
+
+    /**
+     * Builds a character standing at a point on the current map, passing wherever the map allows.
+     * @param {number} x The character's x coordinate.
+     * @param {number} y The character's y coordinate.
+     * @param {function(number, number, number): boolean} canPass Whether a step from a tile may be taken.
+     * @returns {Game_Character}
+     */
+    const aCharacterAt = (x, y, canPass) =>
+    {
+      const character = Object.create(globalThis.Game_Character.prototype);
+      character.x = x;
+      character.y = y;
+      character.canPass = canPass;
+      character.deltaXFrom = goalX => $gameMap.deltaX(character.x, goalX);
+      character.deltaYFrom = goalY => $gameMap.deltaY(character.y, goalY);
+
+      return character;
+    };
+
+    it('has nowhere to go when standing exactly on the goal', () =>
+    {
+      // Arrange
+      const canPass = aMap([ '...' ]);
+      const character = aCharacterAt(1, 0, canPass);
+
+      // Act
+      const direction = character.findDirectionTo(1, 0);
+
+      // Assert
+      expect(direction)
+        .toBe(0);
+    });
+
+    it.each([
+      // each way round is the only one, and heading straight for the goal would say otherwise.
+      [ 'down', [ '.#.', '...' ], [ 0, 0 ], [ 2, 0 ], 2 ],
+      [ 'left', [ '...', '.##', '...' ], [ 1, 0 ], [ 1, 2 ], 4 ],
+      [ 'right', [ '...', '##.', '...' ], [ 1, 0 ], [ 1, 2 ], 6 ],
+      [ 'up', [ '...', '.#.', '##.' ], [ 0, 1 ], [ 2, 1 ], 8 ],
+    ])('steps %s when that is where the way round begins', (_, rows, [ startX, startY ], [ goalX, goalY ], expected) =>
+    {
+      // Arrange - a wall between the two, so the first step is one only the search knows to take.
+      const canPass = aMap(rows);
+      const character = aCharacterAt(startX, startY, canPass);
+
+      // Act
+      const direction = character.findDirectionTo(goalX, goalY);
+
+      // Assert
+      expect(direction)
+        .toBe(expected);
+    });
+
+    it('searches from the tile a character stands on, not from its fractional coordinates', () =>
+    {
+      // Arrange - a fifth of a tile off the grid, with the wall forcing a detour along the bottom. A
+      // search that started from 0.2 could never arrive, and heading straight for the goal says right.
+      const canPass = aMap([ '.#..', '....' ]);
+      const character = aCharacterAt(0.2, 0, canPass);
+
+      // Act
+      const direction = character.findDirectionTo(2, 0);
+
+      // Assert - down, the way round the wall.
+      expect(direction)
+        .toBe(2);
+    });
+
+    it.each([
+      [ 'left, when the goal lies farther off to the left', [ 0.3, 0 ], [ 0.1, 0 ], 4 ],
+      [ 'right, when the goal lies farther off to the right', [ 0.1, 0 ], [ 0.3, 0 ], 6 ],
+      [ 'up, when the goal lies farther off above', [ 0, 0.3 ], [ 0, 0.1 ], 8 ],
+      [ 'down, when the goal lies farther off below', [ 0, 0.1 ], [ 0, 0.3 ], 2 ],
+    ])('heads straight %s when no step gets any closer', (_, [ startX, startY ], [ goalX, goalY ], expected) =>
+    {
+      // Arrange - both ends round onto the same tile, so the grid has nothing to offer.
+      const canPass = aMap([ '..', '..' ]);
+      const character = aCharacterAt(startX, startY, canPass);
+
+      // Act
+      const direction = character.findDirectionTo(goalX, goalY);
+
+      // Assert
+      expect(direction)
+        .toBe(expected);
+    });
+
+    it('runs its search with the map\'s event lookup built', () =>
+    {
+      // Arrange
+      const canPass = aMap([ '...' ]);
+      const character = aCharacterAt(0, 0, canPass);
+
+      // Act
+      character.findDirectionTo(2, 0);
+
+      // Assert
+      expect($gameMap.searchWithEventIndex).toHaveBeenCalledTimes(1);
+    });
+
+    it('answers a search that just failed from memory instead of searching again', () =>
+    {
+      // Arrange - walled off from its goal, so the first search fails, then asked again a frame later.
+      const canPass = vi.fn(aMap([ '.#.' ]));
+      const character = aCharacterAt(0, 0, canPass);
+      Graphics.frameCount = 500;
+      const first = character.findDirectionTo(2, 0);
+      const asked = canPass.mock.calls.length;
+      Graphics.frameCount = 501;
+
+      // Act
+      const second = character.findDirectionTo(2, 0);
+
+      // Assert - the same answer, and not one more question about the map.
+      expect(second)
+        .toBe(first);
+      expect(asked)
+        .toBeGreaterThan(0);
+      expect(canPass.mock.calls)
+        .toHaveLength(asked);
+    });
+
+    it('has nowhere to go on a looping map where the goal measures no distance away', () =>
+    {
+      // Arrange - a goal one full loop around the map: a different coordinate, but the same place.
+      const canPass = aMap([ '..', '..' ]);
+      $gameMap.deltaX = () => 0;
+      const character = aCharacterAt(0, 0, canPass);
+
+      // Act
+      const direction = character.findDirectionTo(2, 0);
+
+      // Assert
+      expect(direction)
+        .toBe(0);
+    });
+  });
+  //endregion findDirectionTo
 
   //region processMoveCommand
   describe('processMoveCommand', () =>

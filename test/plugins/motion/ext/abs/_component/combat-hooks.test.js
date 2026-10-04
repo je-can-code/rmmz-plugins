@@ -56,9 +56,9 @@ describe('J-Motion-ABS combat hooks (direct src import)', () =>
     globalThis.Sprite_Character = function()
     {
     };
-    globalThis.Sprite_Character.prototype.handleLootDuration = function()
+    globalThis.Sprite_Character.prototype.updateLootFloat = function()
     {
-      engineCalls.push('original-handle-loot-duration');
+      engineCalls.push('original-update-loot-float');
     };
 
     // literal import paths, so Stryker can map mutants in these files back to this test file.
@@ -355,7 +355,7 @@ describe('J-Motion-ABS combat hooks (direct src import)', () =>
     });
   });
 
-  describe('handleLootDuration', () =>
+  describe('updateLootFloat', () =>
   {
     /**
      * Builds a loot sprite stand-in wired to the shared character.
@@ -376,17 +376,17 @@ describe('J-Motion-ABS combat hooks (direct src import)', () =>
       return sprite;
     };
 
-    it('still performs J-ABS\'s own duration handling', () =>
+    it('still performs J-ABS\'s own per-frame loot drawing', () =>
     {
-      // Arrange- the countdown and the removal it triggers are J-ABS's business and stay that way;
-      // this extension only adds something to look at on the way there.
+      // Arrange- the float is J-ABS's business and stays that way; this extension only adds
+      // something to look at on the way out.
       const sprite = aLootSprite(900);
 
       // Act
-      sprite.handleLootDuration();
+      sprite.updateLootFloat();
 
       // Assert
-      expect(engineCalls).toEqual([ 'original-handle-loot-duration' ]);
+      expect(engineCalls).toEqual([ 'original-update-loot-float' ]);
     });
 
     it('starts a drop fading once it is close to timing out', () =>
@@ -395,7 +395,7 @@ describe('J-Motion-ABS combat hooks (direct src import)', () =>
       const sprite = aLootSprite(40);
 
       // Act
-      sprite.handleLootDuration();
+      sprite.updateLootFloat();
 
       // Assert
       expect(CharacterMotionComposer.hasMotion(character)).toBe(true);
@@ -407,7 +407,7 @@ describe('J-Motion-ABS combat hooks (direct src import)', () =>
       const sprite = aLootSprite(900);
 
       // Act
-      sprite.handleLootDuration();
+      sprite.updateLootFloat();
 
       // Assert
       expect(CharacterMotionComposer.hasMotion(character)).toBe(false);

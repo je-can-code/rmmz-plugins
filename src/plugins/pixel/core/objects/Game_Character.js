@@ -34,6 +34,87 @@ Game_Character.prototype.searchLimit = function()
 };
 
 /**
+ * Overwrites {@link Game_Character#findDirectionTo}.<br/>
+ * Searches between the tiles both ends actually stand on, through J-Base's {@link TilePathSearch}.
+ *
+ * The engine's search starts from the character's own coordinates and treats them as a tile, which
+ * only holds while coordinates are whole numbers. Under pixel movement they rarely are, and a search
+ * starting from 30.6 explores 30.6, 31.6, 32.6 and onward, so it can never arrive at a whole-numbered
+ * goal. Every search then runs to its limit - with forty steps, the whole neighborhood - and settles
+ * for whichever point it explored came closest. Rounding both ends onto the grid lets it arrive.
+ *
+ * Everything else is the engine's own: standing exactly on the goal answers nothing, the four
+ * directions are tried in its order, and when no step gets any closer - which includes both ends
+ * sharing a tile - it heads straight for the goal along whichever axis is farther off.
+ *
+ * Two things keep it cheap. A search that has just failed from the same tile toward the same goal is
+ * answered from {@link PathSearchMemory} rather than asked again, and a search that does run looks
+ * events up by tile through {@link Game_Map#searchWithEventIndex} instead of walking all of them at
+ * every step it considers.
+ * @param {number} goalX The x coordinate to reach.
+ * @param {number} goalY The y coordinate to reach.
+ * @returns {number} The direction to step in, or 0 when there is nowhere to go.
+ */
+Game_Character.prototype.findDirectionTo = function(goalX, goalY)
+{
+  // standing exactly on the goal, there is nowhere to go. The fallback below would say so too, after
+  // a search; this only spares the search.
+  if (this.x === goalX && this.y === goalY) return 0;
+
+  // search the grid between the tiles both ends stand on.
+  const startX = Math.round(this.x);
+  const startY = Math.round(this.y);
+  const request = {
+    startX,
+    startY,
+    goalX: Math.round(goalX),
+    goalY: Math.round(goalY),
+    searchLimit: this.searchLimit(),
+    mapWidth: $gameMap.width(),
+    directions: [ 2, 4, 6, 8 ],
+    stepFrom: (x, y, direction) => ({
+      x: $gameMap.roundXWithDirection(x, direction),
+      y: $gameMap.roundYWithDirection(y, direction),
+    }),
+    canStep: (x, y, direction) => this.canPass(x, y, direction),
+    distance: (x1, y1, x2, y2) => $gameMap.distance(x1, y1, x2, y2),
+  };
+
+  // a search that just failed from this tile toward this goal is not asked again for a moment, and one
+  // that runs looks events up by tile instead of walking all of them at every step.
+  const { x: stepX, y: stepY } = PathSearchMemory.firstStep(
+    this,
+    'straight',
+    Graphics.frameCount,
+    request,
+    search => $gameMap.searchWithEventIndex(() => TilePathSearch.firstStep(search)));
+
+  // the direction of the first step, in the engine's order of preference.
+  const deltaX = $gameMap.deltaX(stepX, startX);
+  const deltaY = $gameMap.deltaY(stepY, startY);
+  if (deltaY > 0) return 2;
+  if (deltaX < 0) return 4;
+  if (deltaX > 0) return 6;
+  if (deltaY < 0) return 8;
+
+  // no step gets any closer, so head straight for the goal along whichever axis is farther off.
+  const deltaToGoalX = this.deltaXFrom(goalX);
+  const deltaToGoalY = this.deltaYFrom(goalY);
+  if (Math.abs(deltaToGoalX) > Math.abs(deltaToGoalY))
+  {
+    return deltaToGoalX > 0 ? 4 : 6;
+  }
+
+  // the vertical half, which on a looping map can measure nothing even off the goal.
+  if (deltaToGoalY !== 0)
+  {
+    return deltaToGoalY > 0 ? 8 : 2;
+  }
+
+  return 0;
+};
+
+/**
  * Extends {@link #updateRoutineMove}.<br/>
  * Repeats move-route movement commands by the collision step count so that
  * scripted movement (event pages, move routes) covers the intended full-tile distance.

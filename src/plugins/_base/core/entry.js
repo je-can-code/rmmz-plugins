@@ -16,6 +16,8 @@ import './core/JsonEx.js';
 import './core/Bitmap.js';
 import './core/TextRasterMetrics.js';
 import './core/CaptionPlaneRoster.js';
+import './core/TilePathSearch.js';
+import './core/PathSearchMemory.js';
 
 import './models/PluginVersion.js';
 import './models/PluginMetadata.js';

@@ -361,6 +361,23 @@ describe('Game_Event ext/pixel augments (direct src import)', () =>
     });
   });
 
+  describe('areaBounds', () =>
+  {
+    it('reports its area with the tile its body occupies as the corner', () =>
+    {
+      // Arrange - mid-step at (3.4, 5.2), so the corner is the occupied tile rather than the raw position.
+      const event = buildEvent(3.4, 5.2);
+      event.setAreaEventWidth(4);
+      event.setAreaEventHeight(2);
+
+      // Act
+      const bounds = event.areaBounds();
+
+      // Assert
+      expect(bounds).toEqual({ left: 3, top: 5, width: 4, height: 2 });
+    });
+  });
+
   describe('areaColumnOf', () =>
   {
     /**
