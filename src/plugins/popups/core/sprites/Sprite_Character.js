@@ -88,6 +88,38 @@ Sprite_Character.prototype.update = function()
   this.updateTextPops();
 };
 
+/**
+ * Extends {@link Sprite_Character#wakeUp}.<br/>
+ * Also throws away every popup queued while this character was out of sight.
+ *
+ * A sleeping sprite processes nothing, so whatever happened to its character in the meantime - a
+ * poison tick, a regen, a stray hit from across the map - is still waiting in the queue when it
+ * wakes. Drawn now, that would be a burst of numbers all at once for things that happened a while
+ * ago where nobody could see them, so they are dropped rather than shown late.
+ */
+J.POPUPS.Aliased.Sprite_Character.set('wakeUp', Sprite_Character.prototype.wakeUp);
+Sprite_Character.prototype.wakeUp = function()
+{
+  // drop whatever piled up while nobody was looking.
+  this.discardQueuedTextPops();
+
+  // perform original logic.
+  J.POPUPS.Aliased.Sprite_Character.get('wakeUp')
+    .call(this);
+};
+
+/**
+ * Throws away every popup waiting on this sprite's character, without drawing any of them.
+ */
+Sprite_Character.prototype.discardQueuedTextPops = function()
+{
+  const character = this.character();
+
+  // empty the queue, then lower the flag announcing that it had anything in it.
+  character.emptyDamagePops();
+  character.acknowledgeTextPops();
+};
+
 //region incoming subscription
 /**
  * Listens for a notification to process any new popups.

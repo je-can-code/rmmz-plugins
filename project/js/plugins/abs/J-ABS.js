@@ -19407,6 +19407,7 @@ var JABS_Engine = class JABS_Engine {
 		this.updateAiBattlers();
 		JABS_AiManager.rebuildSpatialIndex();
 		this.updateActions();
+		this.updateLootDrops();
 		this.updateJabsStates();
 		this.updateSkillExecutionLog();
 		this.updateRespawns();
@@ -20017,6 +20018,33 @@ var JABS_Engine = class JABS_Engine {
 		const actionEvents = this.getAllActionEvents();
 		if (actionEvents.length === 0) return;
 		actionEvents.forEach((action) => action.update());
+	}
+	/**
+	* Ages every loot drop lying on the map by one frame, and flags the ones whose time ran out.
+	*
+	* A drop's lifetime is game state, so it is counted here with everything else the battle map
+	* advances each frame, rather than by the sprite that draws it. That matters because sprites far
+	* from the screen are put to sleep and stop updating, and a drop left behind three screens away
+	* still has to run out on time instead of waiting for somebody to come back and look at it.
+	*/
+	updateLootDrops() {
+		$gameMap.lootEvents().forEach(this.updateLootDrop, this);
+	}
+	/**
+	* Ages one loot drop by a frame, and flags it for removal once its time has run out.
+	*
+	* The drop decides for itself whether it is aging at all: one that never expires, or one already
+	* claimed by somebody, simply ignores the countdown. Flagging is what hands it to the spriteset,
+	* which sweeps up every flagged drop on the next frame.
+	* @param {Game_Event} lootEvent The event carrying the loot drop.
+	*/
+	updateLootDrop(lootEvent) {
+		const lootDrop = lootEvent.getJabsLoot();
+		lootDrop.countdownDuration();
+		if (lootDrop.isExpired() === false) return;
+		if (lootEvent.getLootNeedsRemoving() === true) return;
+		lootEvent.setLootNeedsRemoving(true);
+		this.requestClearLoot = true;
 	}
 	/**
 	* Generates a new JABS action based on a skillId, and executes the skill.
@@ -35082,12 +35110,6 @@ Sprite_Character.prototype.getLootExpired = function() {
 	return this.getLootData().isExpired() ?? true;
 };
 /**
-* Executes the loot's countdown to expiry.
-*/
-Sprite_Character.prototype.performLootDurationCountdown = function() {
-	this.getLootData().countdownDuration();
-};
-/**
 * Removes this character's loot icon from the screen.
 *
 * Only the icon goes. The character's other children- the overlay layer chief among them- belong to
@@ -35131,28 +35153,13 @@ Sprite_Character.prototype.lootSwingDown = function(amount = 0) {
 	this.setOy(this.oy() + amount);
 };
 /**
-* Updates the loot to give the effect that it is floating in place.
+* Updates the loot to give the effect that it is floating in place.<br/>
+* The drop's lifetime is deliberately not counted here. It is game state, and
+* {@link JABS_Engine#updateLootDrops} ages every drop on the map whether or not its sprite is awake to
+* draw it, so a drop left behind out of sight still runs out on time.
 */
 Sprite_Character.prototype.updateLootFloat = function() {
-	this.handleLootDuration();
 	this.handleLootFloat();
-};
-/**
-* Handles loot duration and expiration for this sprite.
-*/
-Sprite_Character.prototype.handleLootDuration = function() {
-	this.performLootDurationCountdown();
-	if (this.getLootExpired()) {
-		this.expireLoot();
-	}
-};
-/**
-* Perform all steps to have this loot expired and removed.
-*/
-Sprite_Character.prototype.expireLoot = function() {
-	if (this.character().getLootNeedsRemoving()) return;
-	this.character().setLootNeedsRemoving(true);
-	$jabsEngine.requestClearLoot = true;
 };
 /**
 * Handles the float effect of the loot while on the map.

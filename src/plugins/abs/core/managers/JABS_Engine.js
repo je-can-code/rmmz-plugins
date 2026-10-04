@@ -889,6 +889,9 @@ class JABS_Engine
     // update all active actions on the map.
     this.updateActions();
 
+    // age the loot lying on the map, wherever it lies.
+    this.updateLootDrops();
+
     // update all JABS states being tracked.
     this.updateJabsStates();
 
@@ -2009,6 +2012,49 @@ class JABS_Engine
   }
 
   //endregion update actions
+
+  //region update loot
+  /**
+   * Ages every loot drop lying on the map by one frame, and flags the ones whose time ran out.
+   *
+   * A drop's lifetime is game state, so it is counted here with everything else the battle map
+   * advances each frame, rather than by the sprite that draws it. That matters because sprites far
+   * from the screen are put to sleep and stop updating, and a drop left behind three screens away
+   * still has to run out on time instead of waiting for somebody to come back and look at it.
+   */
+  updateLootDrops()
+  {
+    $gameMap.lootEvents()
+      .forEach(this.updateLootDrop, this);
+  }
+
+  /**
+   * Ages one loot drop by a frame, and flags it for removal once its time has run out.
+   *
+   * The drop decides for itself whether it is aging at all: one that never expires, or one already
+   * claimed by somebody, simply ignores the countdown. Flagging is what hands it to the spriteset,
+   * which sweeps up every flagged drop on the next frame.
+   * @param {Game_Event} lootEvent The event carrying the loot drop.
+   */
+  updateLootDrop(lootEvent)
+  {
+    const lootDrop = lootEvent.getJabsLoot();
+
+    // a frame of the drop's life passes.
+    lootDrop.countdownDuration();
+
+    // a drop with time left needs nothing more.
+    if (lootDrop.isExpired() === false) return;
+
+    // a drop already flagged for removal is not flagged twice.
+    if (lootEvent.getLootNeedsRemoving() === true) return;
+
+    // flag it, and ask for the sweep that clears it away.
+    lootEvent.setLootNeedsRemoving(true);
+    this.requestClearLoot = true;
+  }
+
+  //endregion update loot
   //endregion update
 
   //region actions

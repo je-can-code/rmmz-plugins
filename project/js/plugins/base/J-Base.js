@@ -15853,9 +15853,18 @@ var Sprite_CharacterOverlay = class extends Sprite {
 	}
 	/**
 	* Extends {@link Sprite.update}.<br/>
-	* Also follows the character this layer captions.
+	* Also follows the character this layer captions, and sleeps whenever that character's sprite does.
+	*
+	* A caption describes something on screen, so a character too far away to be drawn has nothing
+	* worth captioning. Without this, every nameplate and gauge on the map would keep updating and
+	* keep being drawn somewhere off in the dark, which on a big map costs nearly as much as the
+	* character sprites themselves. Waking needs nothing special: the first awake frame copies the
+	* character's current state like any other.
 	*/
 	update() {
+		const isAsleep = this.characterSprite().isAsleep();
+		this.renderable = isAsleep === false;
+		if (isAsleep === true) return;
 		super.update();
 		this.updateFromCharacterSprite();
 	}
@@ -15988,6 +15997,63 @@ Sprite_Character.prototype.initMembers = function() {
 */
 Sprite_Character.prototype.characterOverlay = function() {
 	return this._j._characterOverlay;
+};
+/**
+* Determines whether this sprite's character is close enough to the screen to be worth drawing.<br/>
+* The engine's own {@link Game_CharacterBase#isNearTheScreen} is the measure: half a screen of margin
+* beyond every edge, the same reach it uses to decide which events may wander on their own. That
+* margin is what makes waking up invisible, since a sprite comes back long before it can be seen.
+*
+* The measure ignores the screen's zoom, and that is only safe while nothing zooms the camera out. A
+* zoom in shows less of the map, so the margin still covers it; a zoom out shows more than the margin
+* reaches, and the sprites in that band would be asleep in plain view. A camera that ever zooms out
+* needs this widened by the inverse of its zoom scale.
+* @returns {boolean} True if this sprite should be updated and drawn, false if it can sleep.
+*/
+Sprite_Character.prototype.shouldBeAwake = function() {
+	return this.character().isNearTheScreen();
+};
+/**
+* Determines whether this sprite is asleep: neither updated nor drawn, because its character is too
+* far from the screen for anybody to see it.<br/>
+* Sleep is held in PIXI's own `renderable` flag rather than a field of ours, because that flag is
+* already what decides drawing, and {@link Tilemap#updateChild} reads the same flag to decide updating.
+* @returns {boolean} True if this sprite is asleep, false if it is awake.
+*/
+Sprite_Character.prototype.isAsleep = function() {
+	return this.renderable === false;
+};
+/**
+* Brings this sprite's sleep in line with where its character currently stands.<br/>
+* Called by the spriteset once a frame, before the tilemap walks its children, so a sprite that wakes
+* this frame is also updated this frame and is never drawn from wherever it fell asleep.
+*/
+Sprite_Character.prototype.updateSleep = function() {
+	const shouldBeAwake = this.shouldBeAwake();
+	const isAsleep = this.isAsleep();
+	if (shouldBeAwake === true && isAsleep === true) {
+		this.wakeUp();
+		return;
+	}
+	if (shouldBeAwake === false && isAsleep === false) {
+		this.fallAsleep();
+	}
+};
+/**
+* Puts this sprite to sleep, so it is neither updated nor drawn until its character comes back.<br/>
+* Only the picture stops. Position, movement and everything else that makes a character what it is
+* live on the character rather than here, so the world carries on exactly as it would have.
+*/
+Sprite_Character.prototype.fallAsleep = function() {
+	this.renderable = false;
+};
+/**
+* Wakes this sprite up, so it is updated and drawn again from this frame on.<br/>
+* Also the seam for anything a sprite would otherwise let pile up while nobody was looking: J-Popups
+* extends it to throw away the popups queued for a character that was out of sight.
+*/
+Sprite_Character.prototype.wakeUp = function() {
+	this.renderable = true;
 };
 
 //#endregion
@@ -17076,19 +17142,37 @@ Spriteset_Map.prototype.setCaptionPlane = function(newCaptionPlane) {
 };
 /**
 * Extends {@link Spriteset_Map.update}.<br/>
-* Also brings the caption plane's roster in line with who is actually on the map.
+* Also puts far-off characters to sleep, and brings the caption plane's roster in line with who is
+* actually on the map.
 *
-* The reconcile happens *before* the original runs, and that ordering is load-bearing. The original
-* is what walks the spriteset's children, which is what updates every caption on the plane - and a
-* caption whose character sprite was destroyed since the last frame throws the moment it reads a
-* position off it. J-ABS destroys expired action and loot sprites routinely, so this is the normal
-* case rather than an unlucky one. Correcting the roster first means every caption that gets walked
-* still has a character to ask.
+* Both happen *before* the original runs, and that ordering is load-bearing. The original is what
+* walks the spriteset's children, which is what updates every character on the tilemap and every
+* caption on the plane.
+*
+* Sleep is settled first so the walk sees this frame's answer: a character stepping back into view
+* is awake in time to be updated before it is drawn, rather than drawn once from wherever it fell
+* asleep. And a caption whose character sprite was destroyed since the last frame throws the moment
+* it reads a position off it. J-ABS destroys expired action and loot sprites routinely, so this is
+* the normal case rather than an unlucky one. Correcting the roster first means every caption that
+* gets walked still has a character to ask.
 */
 J.BASE.Aliased.Spriteset_Map.set("update", Spriteset_Map.prototype.update);
 Spriteset_Map.prototype.update = function() {
+	this.updateCharacterSleep();
 	this.captionPlane().reconcileCaptions(this.characterSprites());
 	J.BASE.Aliased.Spriteset_Map.get("update").call(this);
+};
+/**
+* Wakes or sleeps every character sprite according to how near its character is to the screen.
+*
+* Nobody can see a character three screens away, yet without this its sprite would run its entire
+* update chain every frame regardless, and on a big map those sprites outnumber the visible ones
+* many times over. Asleep, a sprite costs one distance check a frame. Its character is untouched:
+* whatever an event does out of sight it still does, and the sprite simply reads where everything got
+* to the moment it wakes.
+*/
+Spriteset_Map.prototype.updateCharacterSleep = function() {
+	this.characterSprites().forEach((characterSprite) => characterSprite.updateSleep());
 };
 
 //#endregion
@@ -17098,6 +17182,35 @@ Spriteset_Map.prototype.update = function() {
 * Fuck those autoshadows.
 */
 Tilemap.prototype._addShadow = function(layer, shadowBits, dx, dy) {};
+/**
+* Overwrites {@link Tilemap#update}.<br/>
+* Advances the autotile animation, then updates only the children that are going to be drawn.
+*
+* The engine walks every child on every frame, and every character sprite on the map lives here, so
+* left alone each one runs its whole update chain - the engine's, and that of every plugin extending
+* {@link Sprite_Character} - whether its character stands beside the player or three screens away
+* where nobody can see it. On a big map that is most of the frame. {@link Spriteset_Map#updateCharacterSleep}
+* puts the far-off sprites to sleep by clearing `renderable`, and this is the half that honours it.
+*
+* `renderable` is what gets asked, rather than anything about sleep, because the children here are
+* not all character sprites: the tile layers themselves live here too, alongside animations and
+* balloons. `renderable` is a question every display object can answer, and PIXI already reads it to
+* decide what to draw, so "not drawn" and "not updated" become one rule nothing else has to know.
+*/
+Tilemap.prototype.update = function() {
+	this.animationCount++;
+	this.animationFrame = Math.floor(this.animationCount / 30);
+	this.children.forEach(this.updateChild, this);
+};
+/**
+* Updates one child of this tilemap, unless it is not going to be drawn this frame.
+* @param {PIXI.DisplayObject} child The child to bring up to date.
+*/
+Tilemap.prototype.updateChild = function(child) {
+	if (child.renderable === false) return;
+	if (!child.update) return;
+	child.update();
+};
 
 //#endregion
 //#region src/plugins/_base/core/windows/Window_Base.js

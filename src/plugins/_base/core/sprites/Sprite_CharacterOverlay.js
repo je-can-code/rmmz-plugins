@@ -98,10 +98,24 @@ class Sprite_CharacterOverlay
 
   /**
    * Extends {@link Sprite.update}.<br/>
-   * Also follows the character this layer captions.
+   * Also follows the character this layer captions, and sleeps whenever that character's sprite does.
+   *
+   * A caption describes something on screen, so a character too far away to be drawn has nothing
+   * worth captioning. Without this, every nameplate and gauge on the map would keep updating and
+   * keep being drawn somewhere off in the dark, which on a big map costs nearly as much as the
+   * character sprites themselves. Waking needs nothing special: the first awake frame copies the
+   * character's current state like any other.
    */
   update()
   {
+    // a caption is asleep whenever the character it describes is.
+    const isAsleep = this.characterSprite()
+      .isAsleep();
+    this.renderable = isAsleep === false;
+
+    // nothing to follow while nobody can see it.
+    if (isAsleep === true) return;
+
     // perform original logic.
     super.update();
 

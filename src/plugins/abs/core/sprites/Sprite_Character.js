@@ -1561,16 +1561,6 @@ Sprite_Character.prototype.getLootExpired = function()
 };
 
 /**
- * Executes the loot's countdown to expiry.
- */
-Sprite_Character.prototype.performLootDurationCountdown = function()
-{
-  // execute a countdown on behalf of the loot.
-  this.getLootData()
-    .countdownDuration();
-};
-
-/**
  * Removes this character's loot icon from the screen.
  *
  * Only the icon goes. The character's other children- the overlay layer chief among them- belong to
@@ -1631,44 +1621,15 @@ Sprite_Character.prototype.lootSwingDown = function(amount = 0)
 };
 
 /**
- * Updates the loot to give the effect that it is floating in place.
+ * Updates the loot to give the effect that it is floating in place.<br/>
+ * The drop's lifetime is deliberately not counted here. It is game state, and
+ * {@link JABS_Engine#updateLootDrops} ages every drop on the map whether or not its sprite is awake to
+ * draw it, so a drop left behind out of sight still runs out on time.
  */
 Sprite_Character.prototype.updateLootFloat = function()
 {
-  // perform the countdown and manage this loot expiration.
-  this.handleLootDuration();
-
   // manage the floaty-ness if we float.
   this.handleLootFloat();
-};
-
-/**
- * Handles loot duration and expiration for this sprite.
- */
-Sprite_Character.prototype.handleLootDuration = function()
-{
-  // tick tock the duration countdown of the loot if it has an expiration.
-  this.performLootDurationCountdown();
-
-  // check if the loot is now expired.
-  if (this.getLootExpired())
-  {
-    // expire it if it is.
-    this.expireLoot();
-  }
-};
-
-/**
- * Perform all steps to have this loot expired and removed.
- */
-Sprite_Character.prototype.expireLoot = function()
-{
-  // don't reset the removal if its already set.
-  if (this.character().getLootNeedsRemoving()) return;
-
-  // set the loot to be removed.
-  this.character().setLootNeedsRemoving(true);
-  $jabsEngine.requestClearLoot = true;
 };
 
 /**

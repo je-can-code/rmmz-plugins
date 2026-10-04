@@ -950,6 +950,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       engine.updateAiBattlers = vi.fn(() => callOrder.push('updateAiBattlers'));
       JABS_AiManager.rebuildSpatialIndex.mockImplementation(() => callOrder.push('rebuildSpatialIndex'));
       engine.updateActions = vi.fn(() => callOrder.push('updateActions'));
+      engine.updateLootDrops = vi.fn(() => callOrder.push('updateLootDrops'));
       engine.updateJabsStates = vi.fn(() => callOrder.push('updateJabsStates'));
       engine.updateSkillExecutionLog = vi.fn(() => callOrder.push('updateSkillExecutionLog'));
       engine.updateInput = vi.fn(() => callOrder.push('updateInput'));
@@ -958,8 +959,121 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
 
       expect(callOrder).toEqual([
         'updatePlayers', 'updateAiBattlers', 'rebuildSpatialIndex',
-        'updateActions', 'updateJabsStates', 'updateSkillExecutionLog', 'updateInput',
+        'updateActions', 'updateLootDrops', 'updateJabsStates', 'updateSkillExecutionLog', 'updateInput',
       ]);
+    });
+  });
+
+  describe('updateLootDrops', () =>
+  {
+    /**
+     * Builds a loot event carrying a drop, along with the drop itself so its countdown can be watched.
+     * @param {Object} options How the drop should behave this frame.
+     * @param {boolean} options.runsOut Whether the drop's time is up once this frame's countdown is done.
+     * @param {boolean} options.alreadyFlagged Whether the drop is already flagged for removal.
+     * @returns {{lootEvent: Object, lootDrop: Object}}
+     */
+    const aLootEvent = ({ runsOut, alreadyFlagged }) =>
+    {
+      const lootDrop = {
+        countdownDuration: vi.fn(),
+        isExpired: () => runsOut,
+      };
+
+      const lootEvent = {
+        getJabsLoot: () => lootDrop,
+        getLootNeedsRemoving: () => alreadyFlagged,
+        setLootNeedsRemoving: vi.fn(),
+      };
+
+      return {
+        lootEvent,
+        lootDrop,
+      };
+    };
+
+    it('ages every loot drop on the map by one frame', () =>
+    {
+      // Arrange - two drops, so aging is proven to reach each one rather than only the first.
+      const first = aLootEvent({ runsOut: false, alreadyFlagged: false });
+      const second = aLootEvent({ runsOut: false, alreadyFlagged: false });
+      globalThis.$gameMap = Object.assign(globalThis.$gameMap, {
+        lootEvents: () => [ first.lootEvent, second.lootEvent ],
+      });
+      const engine = new JABS_Engine();
+
+      // Act
+      engine.updateLootDrops();
+
+      // Assert
+      expect(first.lootDrop.countdownDuration).toHaveBeenCalledTimes(1);
+      expect(second.lootDrop.countdownDuration).toHaveBeenCalledTimes(1);
+    });
+
+    it('asks for no sweep when no loot lies on the map', () =>
+    {
+      // Arrange
+      const lootEvents = vi.fn(() => []);
+      globalThis.$gameMap = Object.assign(globalThis.$gameMap, { lootEvents });
+      const engine = new JABS_Engine();
+
+      // Act
+      engine.updateLootDrops();
+
+      // Assert - the map was asked, which is what proves there was nothing to age.
+      expect(lootEvents).toHaveBeenCalledTimes(1);
+      expect(engine.requestClearLoot).toBe(false);
+    });
+
+    it('flags a drop whose time ran out and asks for the sweep that clears it', () =>
+    {
+      // Arrange - beside a drop with time to spare, which has to come through untouched.
+      const expiring = aLootEvent({ runsOut: true, alreadyFlagged: false });
+      const lasting = aLootEvent({ runsOut: false, alreadyFlagged: false });
+      globalThis.$gameMap = Object.assign(globalThis.$gameMap, {
+        lootEvents: () => [ expiring.lootEvent, lasting.lootEvent ],
+      });
+      const engine = new JABS_Engine();
+
+      // Act
+      engine.updateLootDrops();
+
+      // Assert
+      expect(expiring.lootEvent.setLootNeedsRemoving).toHaveBeenCalledWith(true);
+      expect(lasting.lootEvent.setLootNeedsRemoving).not.toHaveBeenCalled();
+      expect(engine.requestClearLoot).toBe(true);
+    });
+
+    it('leaves a drop with time left alone', () =>
+    {
+      // Arrange - not flagged yet, so only its remaining time can be what spares it.
+      const lasting = aLootEvent({ runsOut: false, alreadyFlagged: false });
+      globalThis.$gameMap = Object.assign(globalThis.$gameMap, { lootEvents: () => [ lasting.lootEvent ] });
+      const engine = new JABS_Engine();
+
+      // Act
+      engine.updateLootDrops();
+
+      // Assert - it aged, and that is all that happened to it.
+      expect(lasting.lootDrop.countdownDuration).toHaveBeenCalledTimes(1);
+      expect(lasting.lootEvent.setLootNeedsRemoving).not.toHaveBeenCalled();
+      expect(engine.requestClearLoot).toBe(false);
+    });
+
+    it('does not flag a drop that is already on its way out', () =>
+    {
+      // Arrange - out of time, so only the existing flag can be what spares it.
+      const departing = aLootEvent({ runsOut: true, alreadyFlagged: true });
+      globalThis.$gameMap = Object.assign(globalThis.$gameMap, { lootEvents: () => [ departing.lootEvent ] });
+      const engine = new JABS_Engine();
+
+      // Act
+      engine.updateLootDrops();
+
+      // Assert - it aged, and was not flagged a second time.
+      expect(departing.lootDrop.countdownDuration).toHaveBeenCalledTimes(1);
+      expect(departing.lootEvent.setLootNeedsRemoving).not.toHaveBeenCalled();
+      expect(engine.requestClearLoot).toBe(false);
     });
   });
 

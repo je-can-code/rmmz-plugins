@@ -76,3 +76,77 @@ Sprite_Character.prototype.characterOverlay = function()
 {
   return this._j._characterOverlay;
 };
+
+/**
+ * Determines whether this sprite's character is close enough to the screen to be worth drawing.<br/>
+ * The engine's own {@link Game_CharacterBase#isNearTheScreen} is the measure: half a screen of margin
+ * beyond every edge, the same reach it uses to decide which events may wander on their own. That
+ * margin is what makes waking up invisible, since a sprite comes back long before it can be seen.
+ *
+ * The measure ignores the screen's zoom, and that is only safe while nothing zooms the camera out. A
+ * zoom in shows less of the map, so the margin still covers it; a zoom out shows more than the margin
+ * reaches, and the sprites in that band would be asleep in plain view. A camera that ever zooms out
+ * needs this widened by the inverse of its zoom scale.
+ * @returns {boolean} True if this sprite should be updated and drawn, false if it can sleep.
+ */
+Sprite_Character.prototype.shouldBeAwake = function()
+{
+  return this.character()
+    .isNearTheScreen();
+};
+
+/**
+ * Determines whether this sprite is asleep: neither updated nor drawn, because its character is too
+ * far from the screen for anybody to see it.<br/>
+ * Sleep is held in PIXI's own `renderable` flag rather than a field of ours, because that flag is
+ * already what decides drawing, and {@link Tilemap#updateChild} reads the same flag to decide updating.
+ * @returns {boolean} True if this sprite is asleep, false if it is awake.
+ */
+Sprite_Character.prototype.isAsleep = function()
+{
+  return this.renderable === false;
+};
+
+/**
+ * Brings this sprite's sleep in line with where its character currently stands.<br/>
+ * Called by the spriteset once a frame, before the tilemap walks its children, so a sprite that wakes
+ * this frame is also updated this frame and is never drawn from wherever it fell asleep.
+ */
+Sprite_Character.prototype.updateSleep = function()
+{
+  const shouldBeAwake = this.shouldBeAwake();
+  const isAsleep = this.isAsleep();
+
+  // a sleeping sprite whose character has come near the screen wakes up.
+  if (shouldBeAwake === true && isAsleep === true)
+  {
+    this.wakeUp();
+    return;
+  }
+
+  // an awake sprite whose character has wandered out of reach goes to sleep.
+  if (shouldBeAwake === false && isAsleep === false)
+  {
+    this.fallAsleep();
+  }
+};
+
+/**
+ * Puts this sprite to sleep, so it is neither updated nor drawn until its character comes back.<br/>
+ * Only the picture stops. Position, movement and everything else that makes a character what it is
+ * live on the character rather than here, so the world carries on exactly as it would have.
+ */
+Sprite_Character.prototype.fallAsleep = function()
+{
+  this.renderable = false;
+};
+
+/**
+ * Wakes this sprite up, so it is updated and drawn again from this frame on.<br/>
+ * Also the seam for anything a sprite would otherwise let pile up while nobody was looking: J-Popups
+ * extends it to throw away the popups queued for a character that was out of sight.
+ */
+Sprite_Character.prototype.wakeUp = function()
+{
+  this.renderable = true;
+};
