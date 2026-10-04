@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v2.2.0 POPUPS] Map text popups for JABS and beyond.
+ * [v2.2.1 POPUPS] Map text popups for JABS and beyond.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -45,6 +45,9 @@
  * Resources) build popups on top of.
  * ============================================================================
  * CHANGELOG:
+ * - 2.2.1
+ *    Popups queued while a character was off-screen are dropped instead of bursting
+ *    in when it returns. Requires J-Base 4.2.0.
  * - 2.2.0
  *    Damage popups now draw above everything that takes light away, so a hit
  *    always reports itself even when whatever was hit cannot be seen.
@@ -114,7 +117,7 @@ J.POPUPS = {};
 /**
 * The metadata associated with this plugin.
 */
-J.POPUPS.Metadata = new J_PopupsPluginMetadata("J-Popups", "2.2.0");
+J.POPUPS.Metadata = new J_PopupsPluginMetadata("J-Popups", "2.2.1");
 /**
 * Namespace for optional first-party extensions (J-Popups-ABS, J-Popups-APT, …).
 */

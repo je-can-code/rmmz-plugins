@@ -89,6 +89,9 @@
  * the console names the transfer.
  * ============================================================================
  * CHANGELOG:
+ * - 1.5.0
+ *    Fixed path searches never reaching their goal from a fractional position. Path
+ *    searches are much faster and remember a failed search briefly. Requires J-Base 4.2.0.
  * - 1.4.0
  *    Added <areaEvent:[WIDTH, HEIGHT]>, letting an event's page cover a rectangle
  *    of tiles. Added <relativeTransfer>, landing a transfer from an area as far

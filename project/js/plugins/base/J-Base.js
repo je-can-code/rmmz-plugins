@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v4.1.0 BASE] The base class for all J plugins.
+ * [v4.2.0 BASE] The base class for all J plugins.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @help
@@ -157,6 +157,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 4.2.0
+ *    Characters far off-screen stop updating and drawing until they come back near.
+ *    Added TilePathSearch and PathSearchMemory.
  * - 4.1.0
  *    Added accessors for where a reserved transfer will land the player.
  * - 4.0.0
@@ -2096,7 +2099,7 @@ J.BASE.EXT = {};
 */
 J.BASE.Metadata = {};
 J.BASE.Metadata.Name = "J-Base";
-J.BASE.Metadata.Version = "4.1.0";
+J.BASE.Metadata.Version = "4.2.0";
 /**
 * The actual `plugin parameters` extracted from RMMZ.
 */

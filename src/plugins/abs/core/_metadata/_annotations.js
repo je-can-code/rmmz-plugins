@@ -48,6 +48,9 @@
  * for JABS lives at the top instead of the bottom.
  *
  * CHANGELOG:
+ * - 4.26.0
+ *    Loot expires on time even out of sight. Diagonal path searches are faster and
+ *    remember a failed search briefly. Requires J-Base 4.2.0.
  * - 4.25.1
  *    Enemies take aim when a cast skill goes off, not when the cast begins.
  * - 4.25.0

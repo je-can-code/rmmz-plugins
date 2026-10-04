@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.2.0 MOTION-ABS] Combat-driven motion: state effects, deaths, arrivals and departures.
+ * [v1.2.1 MOTION-ABS] Combat-driven motion: state effects, deaths, arrivals and departures.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -177,6 +177,8 @@
  * appears or vanishes on the frame its page changes, as it used to.
  * ============================================================================
  * CHANGELOG:
+ * - 1.2.1
+ *    Kept the loot expiry warning working with J-ABS 4.26.0.
  * - 1.2.0
  *    Enemies now fold into view when their page brings them onto the map, and fold
  *    away when it takes them off, instead of popping in and out. A folding enemy
@@ -395,7 +397,7 @@ J.MOTION.EXT.ABS = {};
 /**
 * The metadata associated with this plugin.
 */
-J.MOTION.EXT.ABS.Metadata = new J_MOTION_ABS_PluginMetadata("J-Motion-ABS", "1.2.0");
+J.MOTION.EXT.ABS.Metadata = new J_MOTION_ABS_PluginMetadata("J-Motion-ABS", "1.2.1");
 /**
 * A collection of all aliased methods for this plugin.
 */

@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v4.25.1 ABS] Enables combat to be carried out on the map.
+ * [v4.26.0 ABS] Enables combat to be carried out on the map.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -48,6 +48,9 @@
  * for JABS lives at the top instead of the bottom.
  *
  * CHANGELOG:
+ * - 4.26.0
+ *    Loot expires on time even out of sight. Diagonal path searches are faster and
+ *    remember a failed search briefly. Requires J-Base 4.2.0.
  * - 4.25.1
  *    Enemies take aim when a cast skill goes off, not when the cast begins.
  * - 4.25.0
@@ -4483,7 +4486,7 @@ var J_AbsPluginMetadata = class J_AbsPluginMetadata extends PluginMetadata {
 */
 globalThis.J ||= {};
 (() => {
-	const requiredBaseVersion = "3.2.0";
+	const requiredBaseVersion = "4.2.0";
 	const hasBaseRequirement = J.BASE.Helpers.satisfies(J.BASE.Metadata.Version, requiredBaseVersion);
 	if (!hasBaseRequirement) {
 		throw new Error(`Either missing J-Base or has a lower version than the required: ${requiredBaseVersion}`);
@@ -4584,7 +4587,7 @@ J.ABS.Helpers.loadExternalConfig = (configPath = "data/config.jabs.json") => {
 /**
 * The metadata associated with this plugin.
 */
-J.ABS.Metadata = new J_AbsPluginMetadata("J-ABS", "4.25.1");
+J.ABS.Metadata = new J_AbsPluginMetadata("J-ABS", "4.26.0");
 J.ABS.Helpers.loadExternalConfig();
 /**
 * The various default values across the engine. Often configurable.
@@ -24918,7 +24921,7 @@ var StateAfflictionProvider = class StateAfflictionProvider {
 //#endregion
 //#region src/plugins/abs/core/_metadata/meta.js
 var PLUGIN_NAME = "J-ABS";
-var PLUGIN_VERSION = "4.25.1";
+var PLUGIN_VERSION = "4.26.0";
 var PLUGIN_DESC_TAG = "ABS";
 
 //#endregion
