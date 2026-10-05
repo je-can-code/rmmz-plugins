@@ -93,6 +93,19 @@ Game_Battler.prototype.initJabsMembers = function()
   this._j._abs._lastDamageSource = null;
 
   /**
+   * Whether this battler is partway through {@link #clearStates} handing its tracked states to
+   * {@link #removeState} one at a time.
+   *
+   * Every one of those removals ends in a vanilla `refresh()`, and a dying battler spends that walk in
+   * a window where its hp is already zero but the death state is not yet recorded- vanilla
+   * `addNewState` calls `die()` before it pushes the state `die()` is running for. A refresh inside
+   * that window would add the death state a second time and re-enter `die()`, firing every on-death
+   * hook once more for each tracked state, so the death state is held back while this is raised.
+   * @type {boolean}
+   */
+  this._j._abs._clearingStates = false;
+
+  /**
    * The cached result of {@link #getVisionModifier}.
    * Null when the cache is cold; invalidated by {@link #onBattlerDataChange}.
    * @type {number|null}
@@ -1274,6 +1287,10 @@ Game_Battler.prototype.stateTypeResistRate = function(stateId)
 J.ABS.Aliased.Game_Battler.set('isStateAddable', Game_Battler.prototype.isStateAddable);
 Game_Battler.prototype.isStateAddable = function(stateId)
 {
+  // while clearStates() walks this battler's tracked states, the death state can only arrive from a
+  // refresh() inside die() itself- adding it would re-enter die() and fire every on-death hook again.
+  if (stateId === this.deathStateId() && this.isClearingStates()) return false;
+
   // total immunity blocks everything, including the death state.
   if (this.isImmuneToAllStates()) return false;
 
@@ -1378,6 +1395,25 @@ Game_Battler.prototype.removeState = function(stateId)
 };
 
 /**
+ * Whether this battler is partway through {@link #clearStates} walking its tracked states.<br/>
+ * While it is, {@link #isStateAddable} refuses the death state- see `_clearingStates` for why.
+ * @returns {boolean}
+ */
+Game_Battler.prototype.isClearingStates = function()
+{
+  return this._j._abs._clearingStates;
+};
+
+/**
+ * Sets whether this battler is partway through {@link #clearStates} walking its tracked states.
+ * @param {boolean} clearing True while the walk is underway, false once it has finished.
+ */
+Game_Battler.prototype.flagClearingStates = function(clearing)
+{
+  this._j._abs._clearingStates = clearing;
+};
+
+/**
  * Extends `clearStates()` to also purge this battler's JABS-tracked map states.
  * Vanilla `clearStates()` (called by `die()`, `recoverAll()`, and `escape()`) wipes `_states`
  * directly without going through `removeState()`, which is the only place the JABS state
@@ -1404,6 +1440,10 @@ Game_Battler.prototype.clearStates = function()
 
     const trackedStates = Array.from(trackedStateValues);
 
+    // every removal below ends in a refresh, and a dying battler has no hp but no death state yet,
+    // so hold the death state back until the walk is done or each refresh would re-enter die().
+    this.flagClearingStates(true);
+
     trackedStates.forEach(trackedState =>
     {
       // already fully removed- nothing left to do for this one.
@@ -1419,6 +1459,9 @@ Game_Battler.prototype.clearStates = function()
       // passive-granted states) stays in sync with the state list about to be wiped wholesale.
       this.removeState(trackedState.stateId);
     }, this);
+
+    // the walk is over, so the death state is addable again by whoever adds it next.
+    this.flagClearingStates(false);
   }
 
   // perform original logic.
