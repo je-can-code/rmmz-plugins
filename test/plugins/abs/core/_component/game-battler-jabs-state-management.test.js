@@ -455,6 +455,29 @@ describe('J-ABS Game_Battler JABS state management (direct src import)', () =>
       expect(removeSpy).not.toHaveBeenCalled();
       removeSpy.mockRestore();
     });
+
+    it('holds the death state back for exactly the length of the walk', () =>
+    {
+      // Arrange- two tracked states, each removal recording whether the guard was up when it ran.
+      const battler = buildBattler();
+      battler.deathStateId = () => 1;
+      globalThis.J.ABS.Aliased.Game_Battler.set('clearStates', vi.fn());
+      globalThis.$jabsEngine.getJabsStatesByUuid = () => new Map([
+        [ 5, { stateId: 5, expired: false } ],
+        [ 6, { stateId: 6, expired: false } ],
+      ]);
+      const guardDuringRemoval = [];
+      const removeSpy = vi.spyOn(battler, 'removeState')
+        .mockImplementation(() => guardDuringRemoval.push(battler.isClearingStates()));
+
+      // Act
+      battler.clearStates();
+
+      // Assert- up for every removal, down again once the walk is done.
+      expect(guardDuringRemoval).toEqual([ true, true ]);
+      expect(battler.isClearingStates()).toBe(false);
+      removeSpy.mockRestore();
+    });
   });
 
   describe('decrementStateStacks', () =>

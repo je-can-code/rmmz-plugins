@@ -274,6 +274,51 @@ describe('J-ABS Game_Battler state-application immunity (direct src import)', ()
     });
   });
 
+  describe('isStateAddable while clearStates walks the tracked states', () =>
+  {
+    it('refuses the death state while the battler is clearing its tracked states', () =>
+    {
+      // Arrange- no immunity notes and an original that always agrees, so the clearing guard is the
+      // only thing left that could refuse it.
+      const battler = buildBattler([]);
+      battler.flagClearingStates(true);
+
+      // Act
+      const result = battler.isStateAddable(DEATH_STATE_ID);
+
+      // Assert
+      expect(result).toBe(false);
+    });
+
+    it('still allows any other state while the battler is clearing its tracked states', () =>
+    {
+      // Arrange- the guard is for the death state alone; a removal that applies something else in
+      // passing must not have it silently swallowed.
+      const battler = buildBattler([]);
+      battler.flagClearingStates(true);
+
+      // Act
+      const result = battler.isStateAddable(POSITIVE_STATE_ID);
+
+      // Assert
+      expect(result).toBe(true);
+    });
+
+    it('allows the death state again once the walk has finished', () =>
+    {
+      // Arrange- raised and then lowered, so this reads the lowering rather than a fresh default.
+      const battler = buildBattler([]);
+      battler.flagClearingStates(true);
+      battler.flagClearingStates(false);
+
+      // Act
+      const result = battler.isStateAddable(DEATH_STATE_ID);
+
+      // Assert
+      expect(result).toBe(true);
+    });
+  });
+
   describe('stateTypeResistRate', () =>
   {
     it('returns 1.0 (no resistance) when the state has no type classifiers', () =>

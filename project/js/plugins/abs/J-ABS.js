@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v4.26.0 ABS] Enables combat to be carried out on the map.
+ * [v4.26.1 ABS] Enables combat to be carried out on the map.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -48,6 +48,9 @@
  * for JABS lives at the top instead of the bottom.
  *
  * CHANGELOG:
+ * - 4.26.1
+ *    A battler that dies carrying states now dies once, so a kill counts once toward
+ *    slay quests and defeat tallies.
  * - 4.26.0
  *    Loot expires on time even out of sight. Diagonal path searches are faster and
  *    remember a failed search briefly. Requires J-Base 4.2.0.
@@ -4587,7 +4590,7 @@ J.ABS.Helpers.loadExternalConfig = (configPath = "data/config.jabs.json") => {
 /**
 * The metadata associated with this plugin.
 */
-J.ABS.Metadata = new J_AbsPluginMetadata("J-ABS", "4.26.0");
+J.ABS.Metadata = new J_AbsPluginMetadata("J-ABS", "4.26.1");
 J.ABS.Helpers.loadExternalConfig();
 /**
 * The various default values across the engine. Often configurable.
@@ -24921,7 +24924,7 @@ var StateAfflictionProvider = class StateAfflictionProvider {
 //#endregion
 //#region src/plugins/abs/core/_metadata/meta.js
 var PLUGIN_NAME = "J-ABS";
-var PLUGIN_VERSION = "4.26.0";
+var PLUGIN_VERSION = "4.26.1";
 var PLUGIN_DESC_TAG = "ABS";
 
 //#endregion
@@ -29195,6 +29198,18 @@ Game_Battler.prototype.initJabsMembers = function() {
 	*/
 	this._j._abs._lastDamageSource = null;
 	/**
+	* Whether this battler is partway through {@link #clearStates} handing its tracked states to
+	* {@link #removeState} one at a time.
+	*
+	* Every one of those removals ends in a vanilla `refresh()`, and a dying battler spends that walk in
+	* a window where its hp is already zero but the death state is not yet recorded- vanilla
+	* `addNewState` calls `die()` before it pushes the state `die()` is running for. A refresh inside
+	* that window would add the death state a second time and re-enter `die()`, firing every on-death
+	* hook once more for each tracked state, so the death state is held back while this is raised.
+	* @type {boolean}
+	*/
+	this._j._abs._clearingStates = false;
+	/**
 	* The cached result of {@link #getVisionModifier}.
 	* Null when the cache is cold; invalidated by {@link #onBattlerDataChange}.
 	* @type {number|null}
@@ -29960,6 +29975,7 @@ Game_Battler.prototype.stateTypeResistRate = function(stateId) {
 */
 J.ABS.Aliased.Game_Battler.set("isStateAddable", Game_Battler.prototype.isStateAddable);
 Game_Battler.prototype.isStateAddable = function(stateId) {
+	if (stateId === this.deathStateId() && this.isClearingStates()) return false;
 	if (this.isImmuneToAllStates()) return false;
 	if (stateId !== this.deathStateId() && this.isImmuneToNonDeathStates()) return false;
 	const state = $dataStates[stateId];
@@ -30013,6 +30029,21 @@ Game_Battler.prototype.removeState = function(stateId) {
 	this.flagSkillSlotsForRefresh();
 };
 /**
+* Whether this battler is partway through {@link #clearStates} walking its tracked states.<br/>
+* While it is, {@link #isStateAddable} refuses the death state- see `_clearingStates` for why.
+* @returns {boolean}
+*/
+Game_Battler.prototype.isClearingStates = function() {
+	return this._j._abs._clearingStates;
+};
+/**
+* Sets whether this battler is partway through {@link #clearStates} walking its tracked states.
+* @param {boolean} clearing True while the walk is underway, false once it has finished.
+*/
+Game_Battler.prototype.flagClearingStates = function(clearing) {
+	this._j._abs._clearingStates = clearing;
+};
+/**
 * Extends `clearStates()` to also purge this battler's JABS-tracked map states.
 * Vanilla `clearStates()` (called by `die()`, `recoverAll()`, and `escape()`) wipes `_states`
 * directly without going through `removeState()`, which is the only place the JABS state
@@ -30027,11 +30058,13 @@ Game_Battler.prototype.clearStates = function() {
 	if ($jabsEngine && this.getUuid() !== String.empty) {
 		const trackedStateValues = $jabsEngine.getJabsStatesByUuid(this.getUuid()).values();
 		const trackedStates = Array.from(trackedStateValues);
+		this.flagClearingStates(true);
 		trackedStates.forEach((trackedState) => {
 			if (trackedState.expired) return;
 			if (trackedState.stateId === this.deathStateId()) return;
 			this.removeState(trackedState.stateId);
 		}, this);
+		this.flagClearingStates(false);
 	}
 	J.ABS.Aliased.Game_Battler.get("clearStates").call(this);
 };
@@ -36673,6 +36706,24 @@ Spriteset_Map.prototype.setHitboxPulseLayer = function(newHitboxPulseLayer) {
 */
 if (J.BASE.EXT.SAVE) {
 	SaveSectionRouter.registerNamespace("_abs", "abs");
+}
+
+//#endregion
+//#region src/plugins/abs/core/registerJabsSaveCodecs.js
+/**
+* Keeps the flag {@link Game_Battler#isClearingStates} reads out of every savefile.<br/>
+* It is raised and lowered within a single synchronous {@link Game_Battler#clearStates} call, so it
+* is always false at rest and carries nothing worth surviving a load. Its cold value is false- exactly
+* what a battler that is not partway through that walk reads.
+*
+* `Game_Actor` is the only host that reaches a savefile: the field is assigned on `Game_Battler`, but
+* enemies are rebuilt from the map rather than persisted, and declarations do not inherit.
+*
+* J-Base-Save is the plugin that registers `Game_Actor`, and it is genuinely optional, so the
+* declaration waits on the same namespace check the save routes do.
+*/
+if (J.BASE.EXT.SAVE) {
+	SerializableRegistry.extend(Game_Actor, { transients: { "_j._abs._clearingStates": () => false } });
 }
 
 //#endregion

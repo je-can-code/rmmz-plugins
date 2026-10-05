@@ -48,6 +48,9 @@
  * for JABS lives at the top instead of the bottom.
  *
  * CHANGELOG:
+ * - 4.26.1
+ *    A battler that dies carrying states now dies once, so a kill counts once toward
+ *    slay quests and defeat tallies.
  * - 4.26.0
  *    Loot expires on time even out of sight. Diagonal path searches are faster and
  *    remember a failed search briefly. Requires J-Base 4.2.0.

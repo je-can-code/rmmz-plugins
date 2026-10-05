@@ -92,3 +92,4 @@ import './sprites/Sprite_MapAfflictionStrip.js';
 import './sprites/Spriteset_Map.js';
 
 import './registerJabsSaveRoutes.js';
+import './registerJabsSaveCodecs.js';
