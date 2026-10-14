@@ -35,7 +35,7 @@
  * refreshes during initialize, so class fields are perfectly safe there.
  *
  * Usage:
- *   node src/build-tools/verify-no-late-window-command-state.js
+ *   bun src/build-tools/verify-no-late-window-command-state.js
  */
 import * as fs from 'fs/promises';
 import { glob } from 'glob';

@@ -28,7 +28,7 @@
  * Runs after `build:all` and never before, since `clean:out` empties the directory it writes into.
  *
  * Usage:
- *   node src/build-tools/generate-manifest.js
+ *   bun src/build-tools/generate-manifest.js
  */
 import * as fs from 'fs/promises';
 import path from 'node:path';

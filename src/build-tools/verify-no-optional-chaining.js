@@ -18,7 +18,7 @@
  * way to fall back from a `nullIfEmpty` note-parse to a plugin-parameter default.
  *
  * Usage:
- *   node src/build-tools/verify-no-optional-chaining.js
+ *   bun src/build-tools/verify-no-optional-chaining.js
  */
 import * as fs from 'fs/promises';
 import { glob } from 'glob';

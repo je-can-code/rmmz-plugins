@@ -7,9 +7,9 @@
  * Modeled after {@link verify-ships.js}: grouped failures, non-zero exit, wired into {@code hotfix}.
  *
  * Usage:
- *   node src/build-tools/verify-docs.js
- *   node src/build-tools/verify-docs.js --glob "src/build-tools/logger.js"
- *   node src/build-tools/verify-docs.js --stats
+ *   bun src/build-tools/verify-docs.js
+ *   bun src/build-tools/verify-docs.js --glob "src/build-tools/logger.js"
+ *   bun src/build-tools/verify-docs.js --stats
  */
 import * as acorn from 'acorn';
 import { ancestor as walkAncestor } from 'acorn-walk';

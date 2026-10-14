@@ -35,8 +35,8 @@
  * real calls that must resolve. Run it whenever the result surprises you.
  *
  * Usage:
- *   node src/build-tools/verify-no-phantom-calls.js
- *   node src/build-tools/verify-no-phantom-calls.js --selftest
+ *   bun src/build-tools/verify-no-phantom-calls.js
+ *   bun src/build-tools/verify-no-phantom-calls.js --selftest
  */
 import * as fs from 'fs/promises';
 import { glob } from 'glob';

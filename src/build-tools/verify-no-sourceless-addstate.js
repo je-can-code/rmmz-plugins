@@ -28,7 +28,7 @@
  * there costs nothing and behaves identically. Every remaining sourceless call is a bug.
  *
  * Usage:
- *   node src/build-tools/verify-no-sourceless-addstate.js
+ *   bun src/build-tools/verify-no-sourceless-addstate.js
  */
 import * as fs from 'fs/promises';
 import { glob } from 'glob';

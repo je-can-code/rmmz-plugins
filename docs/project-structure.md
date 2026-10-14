@@ -16,6 +16,7 @@ truth in a second.
 | `/out` | Vite build scratch, **nested by ship** (`out/sdp/J-SDP.js`). Gitignored — this is the intermediate, not the deliverable |
 | `/project` | Not a loadable MZ project — no `data/`, no plugin manifest, no bootstrap. Three things live here and all three are load-bearing: `project/js/plugins/` is the **committed** mirror of `out/` that `hotfix` produces; `project/js/rmmz_*.js` are the vendored engine scripts the test harnesses execute and the engine-def and phantom-call tooling parse; `project/js/libs/` holds the real PIXI the view harness runs against |
 | `/docs` | Markdown documentation, including this file. Mostly incomplete |
+| `/docs/plugins` | Plugin books in Open Knowledge Format, one folder per ship, mirroring `src/plugins/`. A ship with a book gets its MZ header generated from it by `src/build-tools/okf-header.js` and has no `_annotations.js` |
 | `/.backlog` | Work items: `unstarted/` and `completed/`. Historical record, not active instruction |
 
 ## `/src`
@@ -35,8 +36,8 @@ the ship bundle contract in `CLAUDE.md`.
 A family is either a single `core/` or a `core/` plus an `ext/` tree of optional extensions. Each leaf
 directory is one ship — one bundled `.js` that RMMZ loads.
 
-Descriptions below are the `@plugindesc` values from each ship's `_metadata/_annotations.js`, which is
-the authoritative source.
+Descriptions below are the `@plugindesc` values from each ship's `_metadata/_annotations.js` (or, for a
+ship with a book, its `meta.js` `PLUGIN_DESCRIPTION`), which is the authoritative source.
 
 ### `_base` and `__ca-mods`
 
@@ -142,9 +143,11 @@ Custom action battle system for RMMZ. The largest family in the repo.
   entry.js              # the Vite entry; every new file must be reachable from here
   vite.config.js        # merges vite.config.shared.js
   _metadata/
-    _annotations.js     # the oversized JSDoc the MZ editor parses; holds the CHANGELOG
+    _annotations.js     # the oversized JSDoc the MZ editor parses; holds the CHANGELOG. Absent when the
+                        #   ship has a book under docs/plugins/, which the header is generated from instead
     initialization.js   # namespace shell, Metadata, Aliased maps, RegExp, Helpers — bootstrap only
-    meta.js             # ship name/version constants for the header plugin
+    meta.js             # ship name/version constants for the header plugin, plus PLUGIN_DESCRIPTION when
+                        #   the ship has a book
     _pluginMetadata.js  # the PluginMetadata subclass
     pluginCommands.js   # PluginManager.registerCommand wiring
   database/             # RPG_* classes

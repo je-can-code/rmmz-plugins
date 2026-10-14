@@ -61,8 +61,9 @@ const executions = [];
 // iterate over every ship discovered on disk.
 for (const configPath of configPaths)
 {
-  // bun runs vite directly; there is no package.json script in between anymore.
-  const command = `bunx vite build --config ${configPath}`;
+  // bun runs vite directly; there is no package.json script in between anymore. `--bun` overrides the node
+  // shebang vite ships with, so the whole build, header plugin included, runs on bun as well.
+  const command = `bunx --bun vite build --config ${configPath}`;
 
   // capture the execution as a promise for parallelization.
   const execution = new Promise((resolve, reject) =>

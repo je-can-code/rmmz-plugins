@@ -33,7 +33,7 @@
  * behavior rather than assignment, and extensions rewrite what they pass to those all the time.
  *
  * Usage:
- *   node src/build-tools/verify-no-transforming-setter-aliases.js
+ *   bun src/build-tools/verify-no-transforming-setter-aliases.js
  */
 import * as fs from 'fs/promises';
 import { glob } from 'glob';

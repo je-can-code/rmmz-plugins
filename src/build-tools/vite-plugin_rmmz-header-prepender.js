@@ -1,6 +1,7 @@
 import path from 'node:path';
 import fs from 'node:fs';
 import { pathToFileURL } from 'node:url';
+import { generateShipHeader, hasBook } from './okf-header.js';
 
 /**
  * Build-time identifiers substituted by {@link prependMzHeaderPlugin} via Vite `define`.
@@ -49,7 +50,9 @@ async function resolveShipMeta(config)
  *
  * Contract:
  * - `_metadata/meta.js` exports PLUGIN_NAME (runtime Metadata), PLUGIN_VERSION (shared), PLUGIN_DESC_TAG (header only).
- * - `_metadata/_annotations.js` may use @@PLUGIN_VERSION@@ and @@PLUGIN_DESC_TAG@@ in the header block.
+ * - A ship with a book under `docs/plugins/` has its header generated from that book (see `okf-header.js`), and
+ *   its `meta.js` must also export PLUGIN_DESCRIPTION. Such a ship has no `_annotations.js`.
+ * - Every other ship's `_metadata/_annotations.js` may use @@PLUGIN_VERSION@@ and @@PLUGIN_DESC_TAG@@ in the header block.
  * - `_metadata/initialization.js` must use __PLUGIN_NAME__ and __PLUGIN_VERSION__ for Metadata construction (not import meta.js).
  */
 export function prependMzHeaderPlugin()
@@ -76,7 +79,8 @@ export function prependMzHeaderPlugin()
       };
     },
     /**
-     * Reads annotations and meta.js, substitutes version/tag placeholders, and guards against meta.js in the ship graph.
+     * Builds the header from the ship's book, or reads its annotations and substitutes the version/tag
+     * placeholders, and guards against meta.js in the ship graph.
      * @param {import('vite').ResolvedConfig} config The config driving this step.
      */
     async configResolved(config)
@@ -90,6 +94,13 @@ export function prependMzHeaderPlugin()
         throw new Error(
           `prepend-mz-header: ${initializationPath} must not import meta.js; use ${RMMZ_SHIP_DEFINE_PLUGIN_NAME} and ${RMMZ_SHIP_DEFINE_PLUGIN_VERSION} instead.`
         );
+      }
+
+      // a ship with a book is documented there, so its whole header is generated from it.
+      if (hasBook(shipRoot) === true)
+      {
+        header = await generateShipHeader(shipRoot);
+        return;
       }
 
       const annotationsPath = path.join(shipRoot, '_metadata', '_annotations.js');
