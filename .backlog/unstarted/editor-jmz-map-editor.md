@@ -10,6 +10,38 @@ maps an enemy appears on) merged after review. P2 is built and in review. Runnin
 (the list and catalog; the eight hand-built editors and the plugin-header parser), plus a fix to P0's
 out-of-order undo.
 
+**2026-10-10 13:30: merged, and a bug found while mapping.** The overnight work went in as PR #26 that morning.
+Then, mapping, Jeremy found that a character graphic whose name starts with `$` draws only part of its image. Seen
+with `$o_tree-heartwood`, one frame of which is 279 by 261. Not looked into yet; he put it off until later.
+
+**2026-10-10 06:05: the overnight run is done**, everything merged and pushed on `feat/transfer-location-picker` at
+`3a43f2a` (still no PR; that and the merge are Jeremy's asks). Since weather: stamps and blueprints with linked copies,
+a placement record, editing a blueprint that reaches every copy, per-tag fields and J-ABS fields, the copy panel; a
+saved state that means saved; the landing check and door pairs; exit-strip footprints; the J-ABS battler panel and
+brush; and the fixes the hands-on passes found. Each built, reviewed or tested hands-on, and merged; the details are
+under P8, P9 and P10.
+
+**2026-10-08: weather done**, four features (under P9), all merged and pushed at `f3ea798` by 11:00: map weather, a
+season on the clock, weather in Map Properties, and the sky's weather. Every one agrees with the headless game by its
+numbers. On 10-07 the Switches & Variables window landed, and quest states joined it as a third column (`bd992e3`).
+
+**2026-10-06: P9 started, one feature at a time, lights and the clock first** (the order is under P9). By 16:46 all
+seven lighting and time features were merged onto `feat/transfer-location-picker` and pushed. They were checked against
+the headless game: the dark, the night sky and every event's fresh-save page matched pixel for pixel or page for page.
+Then, by 18:15, quest-gated pages (J-OMNI-Quests' `<pageQuestCondition>`, judged as on a fresh save: 207 of 207 pages
+agree with the game) and a review pass over the clock and pages (animated light pieces redraw only on screen) were
+merged too, at `45e7aad`. Next proposed: the switch preview, turning switches on and setting quest states to see later
+in the story.
+
+**2026-10-05: Jeremy's first wishlist round, on `feat/transfer-location-picker` (pushed, no PR yet).** A map
+picker wherever a map and a tile are chosen (Transfer Player, Set Vehicle Location, the transfer quick panel; see
+P10). And the move route editor, which he called "this sad sad popup" for being blind and "an unorganized pile of
+chips": it now shows the route on the real map, walked through the map's own passability, starting where the earlier
+Set Movement Routes and Set Event Locations on the same page leave the walker (the player starts on the event running
+it; a click moves the start, preview only); steps are listed as runs ("Move Left ×3") with an editable count; the
+palette is a numpad-layout move compass, a turn compass and ON/OFF setting rows, and the number pad types moves
+(Shift turns). The same editor serves an event page's own Custom movement.
+
 **2026-10-02: shipped.** jmz-data-editor PR #24 and ca PR #98 (the editor's own data) are squash-merged. After
 checkpoint 3 the editor also gained markers on image-less events with an Events panel, collapsible panels and
 sides (Ctrl+B, Ctrl+Shift+B), a Panels menu, Layers in torn-out windows, and `bun run map-editor-ca`. 5,268 tests.
@@ -759,6 +791,159 @@ re-deriving offsets for copies edited elsewhere.
 
 Done when changing a blueprint updates every copy on every map, and one undo rolls them all back.
 
+**2026-10-08: four features, in this order.** Jeremy, after weather: "yeah go for it". What is already there from P0: the
+`blueprints` editor-data document (`jmz-editor/blueprints.json`, schema 1, `{ blueprints: [] }`), document keys for
+editor-only documents, and the history core's transactions across documents. Event copy and paste exists
+(`core/events/eventClipboard.ts`); no stamp or blueprint code does.
+
+1. **Stamps.** Everything copied off a map, tiles across layers, events, or both, lands in a **Stamps** pane, newest
+   first. Clicking one makes it the brush; placing it paints the tiles with their autotile edges refreshed and drops
+   the events with fresh ids, as one undo step. Plain copies, never linked. **Merged 10-08 at `3dd7840`:** Ctrl+C or
+   Ctrl+X with the Select tool takes the area's tiles (every layer, or the chosen one) and its events, or only the
+   selected events; the panel sits beside Tiles and keeps 24 per session; Ctrl+V places the newest at the pointer, on
+   any map. The old event copy and paste is gone, folded into stamps; Ctrl+D still duplicates. On another tileset the
+   events go down and the tiles are skipped with a note; past the map's edge tiles are cut off like a brush and events
+   skipped with a note; an event landing on another event refuses the whole placement. A 20 by 15 stamp with ten
+   events places in about 25 ms. The same build fixed ghosts and overlays shifting under a screen tone. Layouts saved
+   before it need Reset Layout, or Panels, to show the Stamps panel.
+2. **Blueprints.** Saving a stamp names it and keeps it in `jmz-editor/blueprints.json`. Placing a blueprint drops
+   linked copies: the link sits in each event's note, appended to any text there on one line, with no `<` or `>` in
+   its values, and never on Map002's action templates (S4). The pane lists the blueprints and how many copies each
+   has. Reviewed before merging. **Merged 10-08 at `53b257a`** after review and a fix round. The link is
+   `<blueprint:[ID, EVENT]>` on its own line after whatever the note holds: ID is eight random lowercase letters and
+   digits, kept through renames; EVENT is the event's id inside the blueprint; features 3 and 4 add values after them,
+   and today's reader already keeps those. Chef Adventure's validator needs `blueprint` on its allowlist. Counts are
+   read from the notes and stored nowhere: live on open maps, unsaved copies in other windows through the sync between
+   windows, and the rest through a new `GET /api/event-notes` (a full count of 385 map files takes about a third of a
+   second cold). `blueprints.json` is `{ blueprints: {} }` keyed by id, written at once and never over a copy that
+   changed elsewhere. A blueprint with copies anywhere cannot be deleted, and **an undo or redo that would take it
+   away is refused too, in the same words** (the orchestrator's call, on D8's precedent of refusing a cross-map undo
+   with its reason; Jeremy may overrule it). A pasted copy whose blueprint is gone comes back plain, with the dead link
+   taken out. Map002 is recognised from J-ABS's action-map setting, and every way of putting a copy there refuses.
+3. **Linked changes.** A blueprint opens as its own document with its own history, and a change to it reaches every
+   copy on every map as one step that one undo rolls back (D8). Copies keep offsets for numbers, overrides for
+   choices, and pins (D6), clamped to each field's range. The field model is the heart of it: a copy differs from its
+   blueprint field by field. Page settings are fields (move speed and frequency are numbers; conditions, image,
+   trigger, priority and options are choices), and module tags in comments are fields through a module seam that
+   says whether each is a number with a range or a choice: lighting now, J-ABS when battlers land. A tag nothing
+   declares is a choice, never a number, since an enemy id looks like one. Position is never linked; the name is a
+   choice. Reviewed before merging.
+4. **Copies that drift.** A copy changed outside the editor (in MZ, say) has its offsets re-derived from its new
+   values rather than overwritten; a number can be pinned or unpinned from the copy's panel; a copy can be detached.
+   Reviewed before merging. **State at 10-09 13:55, with 1 to 3 merged and pushed at `78b9ba7`:** the re-deriving is
+   already done, inside 3b's planner: when a change reaches a copy whose number is no longer what its link predicts,
+   the link is read afresh (a pin moves to the copy's value; otherwise the offset becomes the copy's value less the
+   blueprint's), so a hand edit, in MZ or in the editor, is kept as that copy's intent. What remains is the author's
+   side: pinning and unpinning a number from a copy's panel (nothing writes a pin yet), and detaching a copy (its link
+   taken out; its placement forgotten). Held for Jeremy's hands-on try first.
+
+**Jeremy's hands-on try, 2026-10-09 14:18: undo refused.** He stamped a 5 by 5 bundle of battlers, saved it as a
+blueprint, placed it a few times, changed one battler's graphic in the blueprint, then raised that same copy's speed by
+hand, and Ctrl+Z said "'Change graphic (page 1)' cannot be undone: 'Edit Comment' later changed what 'Change graphic
+(page 1)' changed." His question: "so... I can't undo at all if I manually changed something that was a stamp?" It was
+a bug: the blueprint step's patch on each copy was wider than the field it changed, so a later edit to another field
+of that copy read as a collision. **Decided (the orchestrator's call, his to veto): a blueprint step's undo compares
+field by field and cell by cell, and where a copy was changed since in the same field, undo leaves that copy as it is
+and says so, never refusing.** It is the undo side of hand-painted cells staying. The refusal stays for every other
+cross-document step. The speed edit itself sat in the event window's own history, per D8, which is why Ctrl+Z in the
+map reached past it to the graphic change. Fixed and merged at `540042e`: a blueprint change now touches each copy
+only in the fields it changes.
+
+**A hands-on test the same afternoon** (an agent driving the real editor on the GPU while Jeremy was away) found the
+worst problem yet: hand-tweaking one tag on a battler copy froze all of that copy's tags, because a page's whole
+command list was one choice and J-ABS declared no fields. Jeremy suggested splitting battler comments into one comment
+per tag in Chef Adventure's data; not needed, since a tag in a separate comment froze too. **Fixed in the field model
+and merged at `31eae8d`:** every comment tag line is its own field (an undeclared one is a choice keyed by its tag,
+`p1.<motion>`, then `#2` for a repeat, never a number), and J-ABS declares its battler tags: `sight`, `pursuit`,
+`alertedSightBoost`, `guardRange` and `alertDuration` as whole numbers and `moveSpeed` and `alertedPursuitBoost` with
+fractions, all 0 and up with no top (J-ABS's patterns allow no minus and set no limit); `level` (J-LevelMaster's tag,
+declared only while it is on) allowing negatives; `enemyId`, `teamId`, `respawnAnimation`, `aiTrait`, `aiRole`,
+`jabsConfig`, `respawn` and `noRespawn` as choices. Checked on all 4,734 shipped battlers and their 20,584 tag fields.
+Found on the way, for rmmz-plugins: J-ABS's `TeamId` pattern carries the `/g` flag, so reading a team id can fail on
+alternate tries (one shipped battler uses it); and `guardRange` is read as a whole number on events though
+`docs/notetag-reference.md` says fractions are allowed.
+
+**Settled 2026-10-09, Jeremy: a copy's tiles follow too.** Asked whether repainting a blueprint's tiles should
+repaint every placed copy, he chose yes: "A I think is the correct answer, but I don't think the editor needs to
+REMEMBER, I just think it needs to know how to look up the usages", kept "in CA itself alongside blueprints" as a
+record of which blueprints sit on which map (his sketch: `used.json`, map id to blueprint id to a count). The record
+holds each placement's spot (map, blueprint, x and y), since a count cannot say where to repaint; counts fall out of
+it. Events stay out of it: their note link (S4) already says which blueprint they copy, and travels with them if MZ
+moves them. A tile is a choice under D6: when a blueprint's cell changes, a copy's cell still reading the old tile
+follows, and a cell painted over by hand stays (autotiles compare by kind, and edges are refreshed around whatever
+changed). Before repainting, the editor checks that a placement still matches the blueprint well enough to be where
+the record says, so a map resized or shifted in MZ is flagged rather than painted over.
+
+Item 3 is therefore built in three parts:
+- **3a. The placement record and where-used.** `jmz-editor/blueprint-uses.json` (his `used.json`, named like the
+  folder's other files), through the editor-data route with its overwrite protection, kept in step with placing, undo
+  and redo, the editor's own Resize (its anchor shifts origins), and deleting or duplicating a map; the match check as
+  a pure function; and a where-used list in the panel (map and spot; a click goes there). Reviewed before merging.
+  **Merged 10-09 at `afb7082`** after review. The record is map, then blueprint, then a list of top-left corners
+  (`{"maps":{"1":{"k3x9q2mf":[{"x":22,"y":17}]}}}`); blueprints holding no tiles are not recorded. It is kept in step,
+  in the same undo step as the tiles, by placing, Resize, the Select tool's move and copy, stamps' cut, copy and paste,
+  and the tree's delete, duplicate, copy, paste, new map and Forget; discarding a map's edits restores its part. Resize
+  drops a placement left wholly off the map, warning first. The match check passes a placement whose tiles all match
+  (autotiles by kind), reports a slide of up to two tiles, and otherwise needs half its tiles matching: on 6,351 pieces
+  from 328 maps, 96.5% still pass with a quarter of their tiles painted over. A follow-up, running: each map's part
+  reaches the disk only with that map's own save, merged into the file there, so unsaved placements never do; the
+  whole-file conflict choice goes, since it could throw away a map's undo steps; and a placement cut off at an edge is
+  judged only by the part placed, so growing the map never flags it. That follow-up merged at `8244b76` (a map's part
+  is merged on the server, under the editor-data lock; the record is never unsaved, saved whole or conflicted;
+  placements record the part that went down, as record version 2) and was reviewed on its own, which fixed four ways
+  two windows could leave it wrong. **Known limits, left as they are:** a window closed without saving can leave its
+  unsaved placements in another window's view of the record, for a later save there to write; and undoing a map's
+  delete restores its part as it was read at the delete. Either should only make a placement read "No longer where it
+  was", since the match check comes first, though a phantom placement over ground that happens to look like its
+  blueprint could pass that check and be repainted.
+- **3b. The field model, with no UI.** What item 3 describes above, plus the tile cell rule and the shape of the
+  link's extra values. D6 says a copy's intent survives a rebalance and results clamp, so an offset survives being
+  clamped: offsets are stored in the link, and re-derived only when a copy no longer holds what its link predicts (an
+  edit made elsewhere, item 4). Nothing writes, so no review. **Merged 10-09 at `5139933`.** Fields: the name and the
+  note's own text are choices; per page, speed (1 to 6) and frequency (1 to 5) are numbers, and conditions, image,
+  move type, move route, walking, stepping, direction fix, through, priority and trigger are choices, as is the
+  command list less module tags. Lighting declares its tags through a new `commentTag` seam (radius from 0.01 with no
+  top and intensity 0 to 100 are numbers; colour and effect are choices; lights on a page are keyed by order). A tag no
+  module declares stays inside the command list, so an enemy id never moves by an offset. The link grows to
+  `<blueprint:[ID, EVENT, KEY+N | KEY-N | KEY=V, ...]>`, for example `<blueprint:[k3x9q2mf, 2, p1.speed+2,
+  p1.light1.radius=3.5]>`: offsets and pins only, an offset of 0 never written, and values it does not recognise kept as
+  written. Pages pair by position; a copy whose page count differs from the blueprint's, whose note cannot take its
+  link cleanly, or whose tag line cannot hold a value it must follow has drifted, and a change that adds or removes
+  pages says which old page each new one continues. Checked against all 7,971 shipped events: nothing outside the
+  changed fields moves.
+- **3c. Editing and propagation.** A blueprint opens as its own document, and a change reaches every copy through 3a
+  and 3b as one step, undone from either side under D8's rule, with a policy, picked and reported, for maps nobody has
+  open. **Editing never ships without propagation:** editing alone would move the reference, and every copy still
+  matching the old blueprint would later read as hand-edited. Reviewed before merging.
+  Built 10-09 as two halves on one branch, merged together after one review: 3c-1, a blueprint opened and edited in
+  its own tab, each step carrying what the field model needs (before and after, and which old page each new page
+  continues); then 3c-2, each step reaching every copy. Rules for both: **the blueprint, its copies' new values and
+  the record's parts reach the disk in the same act**, or a discard or crash leaves the blueprint ahead of its copies
+  and every copy reads as hand-edited on reload (propagation writes at once, as the tree does, and undo writes again;
+  writing a map at once never saves the author's other unsaved edits on it). One blueprint step is one undo step,
+  however many maps it reaches. **For this cut a blueprint's size and set of events are fixed:** removing an event
+  would delete events on every map, and growing would paint over cells its copies never owned.
+  **Built 10-09 and reviewed.** A blueprint opens from its card in a tab of its own with its own history and needs no
+  saving: about a quarter of a second after an edit, one write carries `blueprints.json` and every map with copies, and
+  the server writes all of them or none (renames back to back, then one flush per folder). Open maps change on top of
+  their unsaved edits, which never reach disk; maps nobody has open are written without opening, and the step joins
+  their history when they open later. Undo works from the blueprint tab or any touched map, refusing with the reason
+  when a later edit changed the same thing. A stroke over 50 copies on 20 maps commits in about 4 ms. On real maps the
+  untouched copies followed, a hand-painted cell and a hand-edited light colour stayed, undo restored every file byte
+  for byte, and a column-shifted map was flagged rather than repainted. **Known limits, left as they are:** if a second
+  window opens a map in the quarter second while the first is writing a change to it, and saves it at once, that map's
+  file can keep a change the rest took back; after the "could not be taken back" alarm, Save all reaches the blueprint
+  and open maps but not maps nobody has open; and maps pulled into a blueprint's window stay there after its tab
+  closes, so it is that window, not the map's, that asks about their unsaved edits.
+
+3a and 3b run side by side; 3c needs both.
+
+**Another tileset, settled 2026-10-09:** a stamp or blueprint placed on a map with another tileset puts down only its
+events (a blueprint's still linked), leaves the tiles out with a note, and refuses a tiles-only one; a map whose
+tileset changes later has its placements flagged, never repainted. Letting tiles through sheet by sheet where two
+tilesets share a picture sheet (Elemental Earth and Air share all but the ground) was offered and declined: Jeremy,
+"events-only is fine ... If I need more, I'll ask for more later."
+
 ### P9. Plugin modules
 
 Needs P5. Each module is its own package:
@@ -777,6 +962,221 @@ Needs P5. Each module is its own package:
 Done when each module switches off cleanly with its plugin disabled, and round-trips its tags with nothing
 lost.
 
+**2026-10-06: built one feature at a time, lights and the clock first.** Jeremy: "dissect each distinct feature into
+its own thing so we can add them one by one like modular features". Each feature lands as its own commit and switches
+off with its plugin. He chose J-Lighting, J-Lighting-Time and J-TIME ahead of J-ABS, and approved this order the same
+morning ("and including TIME. Perfect."):
+
+1. Light rings: each light's reach drawn in its colour, from the first page that carries a light tag.
+2. The light panel: radius, colour, intensity and effect, writing the same tag back.
+3. The dark: a map's `<ambient>` darkness drawn, with light pools cut through it by J-Lighting's own falloff.
+4. Effects: flicker, pulse and glitch animate.
+5. The clock: an hour control. The sky's tone and darkness follow `config.lighting-time.json` and compound with the
+   map's own darkness; maps tagged `<noToneChange>` stay put.
+6. Time-gated pages: events show the page the clock allows (`<hourRangePage>` and the rest of J-TIME's page tags).
+   Decided by Jeremy the same day: an event shows the page a fresh save would show at the clock's time (the game's own
+   page rule, with every switch and self switch off), and an event with no page active then shows faded rather than
+   vanishing. Turning switches on to preview later in the story is a feature of its own, for later.
+7. Map darkness: controls in Map Properties that write `<ambient>`, plus `<noToneChange>` for a map without a sky.
+
+One chip, **Lighting**, sits beside Shadows in the map view's bar and shows or hides everything J-Lighting draws, the
+darkness and the lights together. Jeremy: "it'll toggle light visibility- both ambient and the light radius". It
+appears only while J-Lighting is enabled. Chef Adventure's usage when this started: 810 light events on 70 maps,
+`<ambient>` on 29 maps, `<noToneChange>` on 180, and 551 time-gated pages.
+
+After lighting, the same treatment goes to J-ABS (sight and pursuit rings, the battler panel, a battler brush, a link
+to the enemy, J-Motion's motions), J-Pixelistics (area footprints, and landing strips for relative transfers flagged
+when they run off the other map) and J-RegionEffects, then P8 and P10.
+
+**2026-10-07: the switch preview became a Switches & Variables window.** Jeremy, building on the Common Events
+button: switch toggling and variable management "as another popout button". In his words, he wants "setting the names
+for variables and switches", and, "for the sake of managing events", to "see with variable74 set to 99 ... (like being
+able to see a named enemy spawn on the map or something)" and "see with switch74 set to ON to see a set of events
+appear/disappear." So:
+- names are real edits to `System.json`;
+- on/off toggles and values are a preview that the page rule judges against, never written to the game;
+- a chip beside the clock says when a preview is on, and "Back to a fresh save" clears it;
+- the preview and the clock's hour are remembered between sessions.
+
+Later, as features of their own: quest states in the same window, self switches, and where each switch and variable
+is used. After this window, the proposed order is weather, blueprints, exits and door pairs, then battlers.
+
+Quest states landed the same day as the window's third column: a quest set to a state, or an objective set, is judged
+by `<pageQuestCondition>` as the plugin would, and a quest left alone follows its objectives. All 207 quest-gated pages
+still agree with the game on a fresh save.
+
+**2026-10-08: weather, four features.** Jeremy gave the go that morning ("you should be clear to do weather"). The
+season was first planned inside the sky's weather; it became a feature of its own the same morning, because it moves
+pages with no weather plugin on at all. Feature 1 first, then 2 and 3 side by side, then 4, which needs 2:
+
+1. **Map weather.** A map tagged `<weather:PRESET>` shows that preset moving, drawn with J-Weather's own effects at the
+   depth the game draws them, above or below the tone and the dark exactly as the game stacks them. `<noWeather>` shows
+   none. A **Weather** chip beside Lighting shows or hides it and appears only while J-Weather is enabled; with Animate
+   off, the weather holds still. Presets come from `config.weather.json` through the existing `GET /api/config/weather`.
+   **Merged 10-08 at `3e08e68`:** seven presets on eight maps agree with the game by their numbers (count, picture,
+   tint, blend and depth exactly; motion, size and opacity within tolerance, being random). The game draws weather as
+   the last child of the base sprite, so the tone tints it and J-Lighting's dark covers it; the editor stacks it the
+   same way. A map with no weather pays nothing for it when it opens.
+2. **A season on the clock.** In the game the date decides the season, and the editor's clock held only an hour, with
+   the date fixed at the fresh save's (Dec 16 2026, always winter). Choosing a season moves the clock's date to the
+   start's day in the first month of that season after the fresh save (Mar 16, Jun 16 or Sep 16 2027; winter is the
+   fresh save itself), and every date and season page tag is judged against the moved date. Remembered between
+   sessions like the hour, and shown wherever the clock is. **Merged 10-08 at `053454e`:** the chip reads "21:00 Night ·
+   Summer", and the dates come from J-TIME's parameters. All 551 time-gated pages agree with the game at six moments
+   across the seasons. Chef Adventure ships no date- or season-gated pages yet, so the parity run adds a fixture map to
+   the game's copy (53 events, one per tag, near misses on each side), and its 56 pages agree at every moment. J-TIME's
+   months are all 30 days long, but its date ranges go through the real calendar, so Feb 30 reads as Mar 2 there.
+3. **Map Properties.** A weather dropdown that writes `<weather:PRESET>`, listing the presets from the config, and a No
+   weather toggle for `<noWeather>`. Written in place under the light panel's rule: a write that would change how any
+   other tag reads is refused. Reviewed before merging, like every feature that writes data. It also settles a loose
+   end from lighting: the `<noToneChange>` toggle shows while any plugin that reads it is on, not only J-Lighting.
+   **Merged 10-08 at `b2b8f2f`** after review. The control is called **Look**, as the data editor's Weather board and
+   J-Weather's help call a preset. With both tags present, No weather shows ticked and the Look says it never shows,
+   since the opt-out outranks it in the game. Every shipped note round-trips: all 384 maps, 850 edits each read back
+   exactly with every other tag unchanged; the reviewer added about 1.7 million random writes against a model of the
+   game's reader and CRLF notes, and found no way to lose data. The sky toggle appears once, in Lighting while
+   J-Lighting-Time is on and otherwise in Weather. Only J-Lighting-Time and J-Weather read `<noToneChange>`; J-TIME
+   stopped at 2.0.0, though its help text and `docs/notetag-reference.md` still say it reads it.
+4. **The sky's weather.** J-Weather-Time's weather on maps without a tag, outdoors as the plugins themselves decide it.
+   A picker beside the clock sets the condition and strength. A fresh save's forecast is random, so the picker starts
+   clear. Tagged outdoor maps take the sky's strength, as they do in the game (feature 1 draws them moderate). The sky's
+   faces follow the plugin and the clock's season and hour (stars on clear nights, fireflies on clear summer nights).
+   Remembered between sessions like the hour, and shown only while J-Weather-Time is enabled.
+   **Merged 10-08 at `f3ea798`:** 416 sky checks agree with the game across 16 cases (seven conditions on an untagged
+   map, five faces of a clear sky by season and hour, tagged maps taking the sky's strength, and roofed and opted-out
+   maps staying clear under heavy rain), and item 1's 224 still agree. The plugins' rule for outdoors: `<noWeather>`
+   means none; any `<noToneChange>` means roofed, whatever its value; an untagged outdoor map shows the sky at the sky's
+   strength; a tagged map always shows its own look, at the sky's strength outdoors and its own under a roof; and
+   `<climate:NAME>` adjusts the strength. J-Weather-Time's own "clear" always shows something (sunlight, scorcher,
+   frigid, stars or fireflies), so the picker starts at **No sky weather** and "clear" is a choice like any other.
+   Conditions a month can never roll are greyed, settling days pull the sky toward clear as the plugin does, and the
+   sky is offered only with J-TIME on too, since J-Weather-Time throws at boot without it. Not built: pages switched by
+   the sky's weather (`<weatherTypePage:X>` and two similar tags), which Chef Adventure does not use. What "agrees" means
+   changed slightly here: a layer of 8 to 12 particles failed the spread check by chance alone, so the mean speed and
+   size of a layer may now differ between the game and the editor by the larger of 20% of their range or three standard
+   errors; item 1's checks follow the same rule, and only small layers get the wider allowance.
+
+**State at 10-08 11:00:** weather is done, all four features merged and pushed on `feat/transfer-location-picker` at
+`f3ea798`. Next proposed, unchanged: blueprints (P8), then exits and door pairs (P10), then battlers.
+
+Done when: a tagged map's weather matches the game's per preset (the same effect, count, colour, size, speed, direction
+and depth; random particles are compared by those numbers and by eye, never pixel for pixel), the speed budgets hold on
+Map361 and Map102 with weather showing, each feature switches off with its plugin, and the tags round-trip with nothing
+lost. Chef Adventure on 10-07: `<weather:...>` on 82 maps, `<noWeather>` on 35.
+
+**2026-10-09 overnight: wrap it up.** Jeremy, going to bed at 21:15: "do everything we discussed and totally wrap up
+all our fantasies about the editor. I wanna start editing tomorrow. I think that includes battler details and all that
+for JABS and feel free to include any other of my dozens of plugins for map data if it makes sense". Stability for
+tomorrow's editing outranks breadth, so every feature that writes data is still reviewed before it merges. The queue,
+in order:
+1. Running at 21:15: the copy panel (P8 item 4) and door pairs (P10 item 2); each reviewed, then merged. **Both merged
+   by 01:05 on 10-10** (door pairs at `5465197`, the copy panel at `82cccd4`).
+   - **Door pairs:** right-click a tile, "New transfer…": an edge tile starts an edge pair, any other a door; the
+     current map on the left, "Leads to" on the right; landings cyan where the player can stand and red where not, with
+     the reason; Place stays off until both pass; one click, one step from either map, both files written together
+     through a new `PUT /api/map-changes`. The default door sprite is `!EX_Dungeon_Doors` character 5, the picture most
+     shipped doors use, counted live. Made beside the inn's bathroom and the salt mine's strips, the events match the
+     shipped ones byte for byte; the inn's front door differs only in its name and in landing one tile north of the way
+     out (the inn lands two, his words said one). The review fixed a window freeze and placed and took back a pair on
+     all 384 maps byte for byte. Known limit: a pair placed into an unopened map, then a blueprint change reaching that
+     map, then the map opened: that blueprint change can no longer be undone from anywhere (the history's forget gets
+     past it).
+   - **The copy panel:** a "Blueprint" section in a copy's event window, `Copy of "useless" (event 21)`, Open
+     blueprint, a summary ("1 field set by hand, 1 pinned, 1 at an offset."), Follow the blueprint again, Unlink, and a
+     row per field ("Follows the blueprint", "+1", "Pinned at 3", "Set by hand") with Pin, Unpin or Follow; the quick
+     panel carries the summary; the Note box shows the note's own text and keeps a refused edit as typed; where-used
+     marks copies with fields set by hand. Unlink keeps the placement in the record, so the tiles and the other copies
+     placed with it still follow. Commands that name other events of a tile-less blueprint read "These commands name
+     other events in the blueprint, so this copy keeps its own". Values left behind by an undo still read "Set by hand".
+2. **J-ABS battlers** (merged 02:59 at `c0c10d7` after review: the panel shows each value the game uses with its
+   source, "This battler", "Enemy" or "Default", the other source's value beneath and an × to hand the row back to the
+   enemy; a page picker for events with several battler pages; the brush copies each enemy's own most common battler
+   (128 of 143 keep one picture) at the enemy's own level, and says so; the enemy opens in the data editor, whose boards
+   no longer land on row 1 for links from elsewhere. J-LevelMaster reads `lv`, `lvl` or `level`; the panel writes
+   `<level:N>`, the only spelling Chef Adventure uses. Not shown: passives granted by an enemy's skills (Tsukumogami's
+   state 99 from Ghastly Plating). **A J-ABS bug, not fixed:** `Game_Event.js:356` reads `jabsBattlerRole` from a
+   `Game_Enemy`, but only database rows define it, so AI roles in enemy notes never reach battlers on the map; about 20
+   Chef Adventure enemies carry one, and a page's own `<aiRole>` still works.) **The brush's level, Jeremy, 10-10
+   06:11:** "I assumed both? You drop a battler, it is the first battler, and so it comes at its default level (which
+   means no level tag). Using the quick battler data panel, update the level to something different and the tag gets
+   added ... and now the map remembers 'the level' of this map. Or alternatively, the map gets a 'default level'
+   setting that is purely for the editor". Built as: the map's editor-only "new battlers start at level" setting if
+   set, else the level that enemy already carries on the map, else the map's most common battler level, else no tag;
+   the map learns by reading its own battlers, so undo un-teaches it. Merged 06:55 at `dfb5e98`: ties go to the
+   higher level; the pointer says why ("Level 12 · this enemy's level here"); Map Properties' "Battlers" section
+   ("New battlers start at level", shown with J-ABS and J-LevelMaster on) is kept in `jmz-editor/new-battler-levels.json`
+   and never in the map file; a deleted map's setting stays in that file for a new map reusing its id. The battler kind
+   and its quick panel (the enemy, by name from
+   `Enemies.json`; level; sight; pursuit; the alerted boosts; motion; AI; team; respawn), marking which values the event
+   sets and which the enemy's database note supplies, the event winning as `ca/CLAUDE.md` records; a link that opens
+   the enemy in the data editor; and a battler brush (pick an enemy, click to place a battler carrying its tags).
+   Reviewed. **No rings:** asked whether sight and pursuit rings should draw for every battler or only the selected one,
+   Jeremy dropped them (21:22): "visibility of enemy sight/pursuit and alert extras can be skipped. I don't really build
+   maps based on them and rarely change the defaults. Most enemies are probably 4/6 sight/pursuit ... sight and pursuit
+   isn't collision based, it's just 'are you within X or Y range?'" The values still show in the panel.
+3. **J-Pixelistics**: `<areaEvent:[W,H]>` footprints drawn on the map, since most map-edge exits are one wide area
+   event; relative transfers' landing strips if any exist. **Merged 10-09 at `31eaf59`:** a W by H rectangle right and
+   down from the event's tile, from the active page's last whole-line tag, as `Game_Event.js` reads it; drawn as a
+   faint band in the marker's colour, exits with chevrons pointing the way the player arrives, clipped bands with a red
+   edge and a "!" and a plain warning in the quick panel; a click inside picks the event; with the Events chip, while
+   J-Pixelistics is on. All 471 shipped areas draw where the plugin puts them (436 exits), and six run past the edge:
+   Map229/3, Map233/4, Map251/2, Map268/1, Map240/15 and Map072/38. Map361's cold open is unchanged (alternating runs:
+   base 492.8 to 519.3 ms, branch 491.8 to 505.0); its 500 ms budget was already missed about half the time.
+4. **Other plugins' map data**, as a survey of every enabled plugin's map and event tags ranks them by what an author
+   gains.
+5. **Cleanup**: a map whose file is deleted outside the editor reads unsaved (closing it warns); a failed re-read no
+   longer leaves a false "unsaved". **Merged 01:46 at `e513918`,** with two more: the blueprint writer's wait looped
+   forever in the same case the door review fixed for pairs (a frozen window), now fixed; and every undo or redo
+   refusal names maps as the tree shows them. A deleted map's file is written back by saving; a file coming back
+   unchanged reads saved, changed is an "Externally modified" step; a failed read retries from 1 to 30 seconds. Deleting
+   a map in the tree while another window holds it now makes that window ask before closing. 1,500 more seeded runs of
+   undo, redo, save and discard passed; no separate review, for the clock, with the hands-on pass covering it.
+6. **A final hands-on pass** over everything on the real GPU, with screenshots for Jeremy's phone, then his morning
+   summary. **Done 02:59;** it found that a door pair's undo was refused after any later edit to the map or after the
+   editor's own save, that Show Text took one undo step per letter, that quick settings kept another map's event, that
+   Ctrl+V did nothing right after switching map tabs, and smaller wording slips. **Fixed and merged by 05:50 on 10-10**
+   (`076e1f3`, then `661791d`): a pair's undo is judged by its own events and fields and never by the editor's own
+   saves, and when it truly cannot go through it says what to undo first and where; typing lands as one step per burst
+   (a pause of a second, or leaving the box) in every command editor; quick settings follows the map in view; clicking
+   a map's tab gives it the keyboard; a copy's title reads "Event 57 · Copy of event 14 of "Needler nest""; and the
+   battler panel explains that a battler always keeps at least one AI trait. Still running at 05:50: the deleted-file
+   bar's words and Save, an occupied tile shown in the door dialog's readout, and map names instead of numbers in
+   messages.
+
+**The plugin survey, 21:30** (383 maps, 7,933 events; every working event tag sits in page comments, one per line, read
+from the active page only; no plugin reads an event's own note):
+- J-ABS: `<enemyId>` on 4,732 events across 223 maps (143 enemies); `<moveSpeed>` 2,918; `<sight>` and `<pursuit>`
+  about 1,000; the three alert tags 960; `<jabsConfig:inanimate>` 865 (tool gates and props) and `noIdle` 146;
+  J-LevelMaster's level 458 (444 of 454 differ from the database: real overrides); J-Passive's `<passive:[ids]>` 620,
+  mostly one affix (Brine, Clay); `<aiTrait>` about 90. The enemy's `Enemies.json` note supplies the same tags; the page
+  wins value by value, except that AI traits and roles on a page replace the database's set, `inanimate` forces the
+  neutral team and hides the HP bar, name and idle, `<passive>` adds to the database's passives (an affix listed there
+  is fixed rather than rolled), and `<gapCloseTarget>` is the database's (unused on pages). 37 events have several
+  battler pages, 21 of them changing enemy. Many pages repeat the database (inanimate 860 of 866, sight 216 of 366).
+  The rules are `parseEnemyComments` in J-ABS's `Game_Event.js`.
+- J-Motion: `<motion:[type, ...]>` on 4,140 events, 4,122 of them battlers (stretch 1,644, breathe 1,397, float 1,148,
+  swing 432, ghost 98), defaults in `config.motion.json`. **In tonight's battler panel** as a motion picker (P9 already
+  said J-Motion's motions belong there).
+- J-Pixelistics: `<areaEvent:[W,H]>` on 471 events across 187 maps, 445 of them exits. **Tonight's one extra plugin**:
+  footprints drawn, draw-only. `<relativeTransfer>` is unused.
+- **Found, not built, for Jeremy to choose:** J-Escriptions' floating labels (`<text>` 323 events, `<icon>` 211,
+  `<proximityText>` 187, `<proximityIcon>` 173; "Jump" and "Save Point" lead), drawn with a ring for proximity; animated
+  J-Motion previews on the map; area footprints resizable from the quick panel; per-page battler state, and a flag on
+  page tags that only repeat the database; J-Message's choice conditions in the Show Choices editor (5 uses);
+  J-Regions-Skills and -States as map properties (2 maps, 1 a test map); J-TIME's and J-OMNI's choice tags and
+  `<timeBlock>` (test maps only).
+- **Tags that do nothing, for Jeremy:** `<proximity:1>` on Map320 event 5 is a skill tag; `<noDangerIndicator>` on two
+  events and `<battleMap:109>` on Map083 belong to plugins that are switched off.
+
+Rules for the night: every merge leaves the branch launchable and usable; never a third data-writing build while two
+are unreviewed; **no new build launched after about 04:00**, so the last review and the hands-on pass finish before he
+is up; from the plugin survey, at most one more plugin is built (the most used with the smallest surface), and the rest
+are recorded here as found, not built, for him to choose.
+
+**Priority, Jeremy, 2026-10-06 13:13:** lighting and time matter most, because "it'll help me immersive build the world
+with less guesswork." The battler features are "cool but less important": enemies wander, and their ranges are
+generally the same. So J-ABS goes to the back of the line.
+
 ### P10. Transfers
 
 Needs P5 and the J-RegionEffects rules. Placing a pair (both ends, one transaction), the landing-spot
@@ -785,6 +1185,86 @@ placement.
 
 Done when a pair places, undoes and redoes as one step, and a landing on a blocked tile is refused with the
 reason shown.
+
+**Already built (2026-10-05, Jeremy's first wishlist item after shipping):** the landing-spot picker. Transfer
+Player's "Pick on the map" opens a picker in the event window: the map field, then the real renderer to click a tile,
+starting centred on where the transfer lands now. It reads maps without holding them (`lookAtDocument`), so an event
+window never counts as keeping a copy it cannot save. P10's "click the landing spot on the other map" reuses it
+(`LocationPicks` and `LocationPickerDialog` in `jmz-data-editor`, branch `feat/transfer-location-picker`). Jeremy's
+rule the same day: anywhere a map and a tile on it are chosen, the picker is offered. Set Vehicle Location and the
+transfer quick panel have it too, and the built-in catalog's tests fail any map field left without one.
+
+**2026-10-09: exits and door pairs, from a survey of the shipped maps.** Jeremy chose this as next after blueprints
+("build what comes next and I'll test the whole roster"). A read-only survey of all 384 maps found his habits, which
+the tool follows rather than inventing its own:
+- 939 transfers in 883 events on 303 maps, all to a fixed spot; of 744 exits, 723 have a return on the target map.
+  The return event sits behind the player's arrival facing: 1 tile in 75% of exits, 2 in 14%, 94% behind in all.
+- Kinds: invisible map-edge exits (539: player touch, below characters, one page, arriving facing the way of travel);
+  invisible interior exits and stairs drawn in tiles (242: player touch, below, one page); door sprites (31: player
+  touch, same as characters, one page or a locked page and an unlock page, arriving facing up, returning one tile below
+  the door facing down); teleports (15, Through on); tile graphics (16); bomb walls (9, event touch, page 2).
+- 98% play Move1 (volume 90, pitch 100) straight before the transfer, and 91% end with it; fade black 95%. The common
+  pages are `<areaEvent>` comment, Move1, Transfer (434) and Move1, Transfer (304); door sprites run Open1, a door route
+  (turn left, wait 3, turn right, wait 3, turn up, Through on), a player route (Move Forward), Move1, Transfer (24).
+- Map edges: 358 of 435 are one wide `<areaEvent:[W,1]>` or `[1,H]` event one tile deep, mostly 3 to 9 wide; the return
+  is always on the opposite edge, landing 1 tile in from it (85%) at the centre of the return strip (76%).
+  `<relativeTransfer>` is never used.
+- Names: maps from 300 up use "Transfer (target map name)", the newer habit; older maps use "teleport ...".
+- Odd, for Jeremy to look at: 1/1 lands on Map002 at (16,12), outside its 10 by 15; 188/18 lands on a blocked tile,
+  (23,7) on Map181; 7 edge exits arrive facing the wrong way (240/14, 266/5 and 268/1 among them); the areas of 229/3,
+  233/4, 251/2 and 268/1 run past the map's edge; 207/1 lands where 206/1 does, 337/9 where 337/8 does and 251/2 where
+  244/2 does, probably copied by mistake; 232/3 goes to Map327, which has no events.
+
+The work, in order:
+1. **The landing check.** A tile is a landing when the player can stand on it: RMMZ's passability from the tileset's
+   flags (top layer first, ★ tiles skipped), events in the way, and J-RegionEffects' region and terrain-tag deny rules
+   while it is enabled. The landing picker marks blocked tiles and refuses them with the reason; existing transfers whose
+   landing fails it (or lies off the map) are marked on the map and in the transfer's quick panel. **Merged 10-09 at
+   `4166ee2`.** A tile is a landing when it is on the map, no event a fresh save shows there blocks the player (same as
+   characters, not Through), and at least one step leads off it as the engine steps (`canPass`, module rules included):
+   stricter than the validator's whole-tile test, which fails 8 stairs and ladder landings the player really stands on,
+   and it refuses about 403 open tiles walled in on every side. J-RegionEffects' rule is mirrored from its source
+   (regions kept clear, from its parameters and the map's note; open regions exempting the terrain rule; denied terrain
+   tags), so region 10 and terrain tag 1, live in Chef Adventure, now show amber under the Passability chip. Over all
+   939 shipped transfers it flags exactly Map188's event 18 (into a wall at 23,7 on Map181); Map001's event 1 lands off
+   Map002 but is a debug guide whose transfer sits in a choice, so no transfer kind claims it.
+2. **Placing a pair.** Both ends, one step that undoes from either map, written to disk together the way blueprint
+   changes are. Kinds from his habits: an edge pair (one wide area event per edge, the return on the opposite edge, each
+   landing 1 tile in at the centre of the other strip, arriving facing the way of travel); a building pair (below); and
+   a one-way transfer. Each page is Move1 then Transfer (with the `<areaEvent>` comment first for wide ones), fade
+   black, named "Transfer (target map name)".
+
+   **How a building is entered, Jeremy, 2026-10-09**, asked whether the return door goes one tile behind the arrival:
+   "I don't really use 'auto door creation' (which is a native function in RMMZ, but less good). 'doors' are just...
+   usually a door from the outside ... and then you enter a building, and there is no 'door to go outside', its just...
+   a obvious dip in the tiles." His example is the Comfy Bear Inn, "the only real inn in the game": a door drawn in the
+   wall outside, and inside a one-tile slot in the bottom wall with the exit at its foot and the landing just above it.
+   He added, the same evening: "outside, the door is a 'same as player' level event so you walk up to it, and the door
+   does an opening animation and you step in. Then when you arrive inside, you just are 'pop' one step away from the
+   exit, wherever the exit is. Typically its north to enter and north above the exit slot. I don't think there are any
+   other door types." So a building pair is:
+   - **outside**, a door event, same as characters, player touch, whose page is his opening animation: Open1, the door's
+     route (This Event, wait on: turn left, wait 3, turn right, wait 3, turn up, Through on), the player's route (Move
+     Forward), Move1, then the transfer, arriving facing up (28 shipped pages carry these routes);
+   - **inside**, the exit the author places in the slot: an invisible walk-on event (below characters, player touch),
+     Move1 then the transfer back to one tile below the outside door, facing down;
+   - the landing inside is one tile north of the exit, so the author picks the exit, not the landing.
+   The inn's own events are the model for anything this leaves open; a locked door's second page stays a hand edit.
+
+   **His shape for the tool, the same evening:** "I think a 'left and right' notion for doors makes sense in two
+   different windows or panes. Also, if there was a dropdown for the door sprite and movement sound (defaulting to NONE
+   for sound and ... probably one of my most common door sprites for doors), that would be ideal." So placing a pair
+   shows the two maps side by side, the door's map on the left and the exit's map on the right, each a real map view to
+   click in; a dropdown picks the door's sprite, defaulting to the one his shipped doors use most; and a dropdown picks
+   the movement sound played before the transfer (the Move1 of his older pages), defaulting to none. The door's own
+   opening sound stays part of its animation unless he says otherwise. Both dropdowns remember the last choice for the
+   session: Jeremy, "Default being 'this is what happens when you don't choose one' but also 'you just chose this move
+   sound so now this is the default till you close the map editor' makes sense". A fresh start goes back to the built-in
+   defaults. And two sounds, not one: "if you wanted to make a 'I moved through this passageway' sound different from
+   'the passageway moved for me' (aka I walked through the door, and the door creaked open as I passed) I wouldn't
+   object". So a **door sound** dropdown (the creak as the door opens, defaulting to Open1, which his doors play today)
+   sits beside the **movement sound** dropdown (the sound of passing through, defaulting to none), both remembered for
+   the session.
 
 ### P11. Data editor gaps
 
