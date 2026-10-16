@@ -14,7 +14,7 @@ That is three phases, and it is more than a build:
 
 | Phase | What runs |
 |---|---|
-| `verify-pre-compile` | `lint`, then fifteen source gates (`verify:docs`, `no-typeof`, `no-instanceof`, …) |
+| `verify-pre-compile` | `lint`, then sixteen source gates (`verify:docs`, `no-typeof`, `no-instanceof`, …) |
 | `compile` | `clean:out`, then `build:all` |
 | `verify-post-compile` | `verify:ships`, the full test suite, then `copy:to-all` (into `project/js/plugins/` and `../ca/chef-adventure/js/plugins/j`) |
 
@@ -44,7 +44,8 @@ bun run plugin:init <path-under-plugins>   # e.g. abs/ext/myext
 ```
 
 Copies `src/plugin-template/` into `src/plugins/<path>/` (includes `entry.js`, `vite.config.js`, and the
-`_metadata/` set). Follow **`SCAFFOLD.md`** in the new folder. Nothing in this repo needs registering
+`_metadata/` set), and `src/book-template/` into `docs/plugins/<path>/` as the plugin's book. Follow
+**`SCAFFOLD.md`** in the new folder. Nothing in this repo needs registering
 afterwards — the vite config is the registration — but the built plugin does have to be added to Chef
 Adventure's own `js/plugins.js`, since `project/` here holds the vendored engine and a mirror of `out/`
 rather than a loadable project.

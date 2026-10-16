@@ -16,7 +16,7 @@ truth in a second.
 | `/out` | Vite build scratch, **nested by ship** (`out/sdp/J-SDP.js`). Gitignored — this is the intermediate, not the deliverable |
 | `/project` | Not a loadable MZ project — no `data/`, no plugin manifest, no bootstrap. Three things live here and all three are load-bearing: `project/js/plugins/` is the **committed** mirror of `out/` that `hotfix` produces; `project/js/rmmz_*.js` are the vendored engine scripts the test harnesses execute and the engine-def and phantom-call tooling parse; `project/js/libs/` holds the real PIXI the view harness runs against |
 | `/docs` | Markdown documentation, including this file. Mostly incomplete |
-| `/docs/plugins` | Plugin books in Open Knowledge Format, one folder per ship, mirroring `src/plugins/`. A ship with a book gets its MZ header generated from it by `src/build-tools/okf-header.js` and has no `_annotations.js` |
+| `/docs/plugins` | Plugin books in Open Knowledge Format, one folder per ship, mirroring `src/plugins/`. A ship with a book gets its MZ header generated from it by `src/build-tools/okf-header.js` and has no `_annotations.js`. Each book's `overview.md` stamps the version it documents, which `verify:book-freshness` holds equal to the ship's `PLUGIN_VERSION` |
 | `/.backlog` | Work items: `unstarted/` and `completed/`. Historical record, not active instruction |
 
 ## `/src`

@@ -74,7 +74,7 @@ That is three phases, and it is more than a build:
 
 | Phase | What runs |
 |---|---|
-| `verify-pre-compile` | `lint`, then fifteen source gates: `verify:docs`, `no-typeof`, `no-instanceof`, `no-optional-chaining`, `no-direct-property-getset`, `no-private-before-construction`, `no-late-window-command-state`, `no-self-calling-accessors`, `no-transforming-setter-aliases`, `no-chained-call-arguments`, `no-phantom-calls`, `no-rest-parameters`, `no-sourceless-addstate`, `declared-dependencies`, `notetag-reference` |
+| `verify-pre-compile` | `lint`, then sixteen source gates: `verify:docs`, `no-typeof`, `no-instanceof`, `no-optional-chaining`, `no-direct-property-getset`, `no-private-before-construction`, `no-late-window-command-state`, `no-self-calling-accessors`, `no-transforming-setter-aliases`, `no-chained-call-arguments`, `no-phantom-calls`, `no-rest-parameters`, `no-sourceless-addstate`, `declared-dependencies`, `notetag-reference`, `book-freshness` |
 | `compile` | `clean:out`, then `build:all`, then `build:manifest` |
 | `verify-post-compile` | `verify:ships`, **the full test suite**, then `copy:to-all` |
 
@@ -816,6 +816,11 @@ naming that gap.
   `_annotations.js` for a plugin without a book. At PR time, reverse-
   analyze the diff per ship to decide major / minor / patch, then write the changelog. A ship only gets
   a version section if its tree actually changed.
+- **A version bump restamps the ship's book.** Every book's `overview.md` names the version it documents
+  in its frontmatter, `version: "1.2.0"`, and `verify:book-freshness` fails whenever that differs from
+  `PLUGIN_VERSION`. So a bump fails the build until the book catches up: bring the book up to date with
+  what changed, then move the stamp. Moving it is the claim that the book describes the new version, so
+  never move it without reading the book.
 - **A new tag ships with its glossary entry**, in the same PR — see [Tags](#tags). Unlike the version
   bump above, this is not deferred to PR time: write it whenever the tag lands, just never later than
   the PR that introduces it.

@@ -3,6 +3,7 @@ type: overview
 title: The Plugin Overview
 description: The general overview for what this plugin is about along with the when and how you might use it.
 tags: [regions-skills, overview]
+version: "1.1.2"
 ---
 
 # Overview
