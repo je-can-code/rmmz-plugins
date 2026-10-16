@@ -11,6 +11,8 @@ All the versioning and history of changes live here.
 
 ## The Actual Changelog
 
+### 2.0.1
+  - Fixed requiring J-ABS; its version check now only runs when J-ABS is installed.
 ### 2.0.0
   - Removed the main-menu Aptitude command and its menu-switch parameter.
   - Teachings list cheapest first, and AP takes its name and icon from the managers.

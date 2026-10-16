@@ -815,7 +815,9 @@ naming that gap.
   `meta.js` (`PLUGIN_VERSION`) or the changelog: a book's `changelog.md`, or the `CHANGELOG:` block in
   `_annotations.js` for a plugin without a book. At PR time, reverse-
   analyze the diff per ship to decide major / minor / patch, then write the changelog. A ship only gets
-  a version section if its tree actually changed.
+  a version section if what it does changed: its behavior, or the parameters, commands or tags it takes.
+  A documentation-only change never bumps, the book included, even when the built file's header or
+  comments change with it.
 - **A version bump restamps the ship's book.** Every book's `overview.md` names the version it documents
   in its frontmatter, `version: "1.2.0"`, and `verify:book-freshness` fails whenever that differs from
   `PLUGIN_VERSION`. So a bump fails the build until the book catches up: bring the book up to date with

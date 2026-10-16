@@ -11,6 +11,8 @@ All the versioning and history of changes live here.
 
 ## The Actual Changelog
 
+### 1.1.3
+  - Fixed saving failing on a map with region skills under J-Base-Save.
 ### 1.1.2
   - Corrected PLUGIN_NAME from J-Region-Skills to J-Regions-Skills, matching the name the ship has always been built and
     shipped under.

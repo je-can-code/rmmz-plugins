@@ -11,6 +11,8 @@ All the versioning and history of changes live here.
 
 ## The Actual Changelog
 
+### 1.4.1
+  - Fixed a crash on moving when `<removeStateOnMove>` clears a state that a `stand` rule grants.
 ### 1.4.0
   - Its tags are described in words, conditions and all, and the Passives view draws those lines under each state,
     wrapping any too long for the panel.

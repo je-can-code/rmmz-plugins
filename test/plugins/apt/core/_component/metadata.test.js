@@ -95,6 +95,32 @@ describe('J-Aptitude metadata (direct src import)', () =>
       // restore the real accessor rather than relying on restoreAllMocks.
       globalThis.J.ABS.Metadata.version.version = originalVersion;
     });
+
+    it('loads without J-ABS at all, since the J-ABS floor only applies when J-ABS is installed', async () =>
+    {
+      // Arrange: J-ABS is optional, so take it away entirely, and clear J.APT so only this import can rebuild it.
+      // the booted J-Aptitude already holds its own plugin name, so this boot registers under a name of its own.
+      vi.resetModules();
+      const originalAbs = globalThis.J.ABS;
+      const originalApt = globalThis.J.APT;
+      delete globalThis.J.ABS;
+      delete globalThis.J.APT;
+      installPluginManagerWithParams(globalThis, 'J-Aptitude-without-abs', {
+        'max-level-threshold': '-1',
+      });
+      globalThis.__PLUGIN_NAME__ = 'J-Aptitude-without-abs';
+      globalThis.__PLUGIN_VERSION__ = '1.0.0';
+
+      // Act
+      await import('../../../../../src/plugins/apt/core/_metadata/initialization.js');
+
+      // Assert: the module ran past both version checks and built its metadata under this boot's name.
+      expect(globalThis.J.APT.Metadata.name).toBe('J-Aptitude-without-abs');
+
+      // restore J-ABS and the booted J.APT so later tests in this file are unaffected.
+      globalThis.J.ABS = originalAbs;
+      globalThis.J.APT = originalApt;
+    });
   });
 });
 //endregion plugins/apt/core/_component/metadata.test.js

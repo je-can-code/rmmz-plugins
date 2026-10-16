@@ -46,7 +46,7 @@ export async function installAptHostGlobals(sandbox = globalThis, aptPluginParam
   // this fixture's callers transitively import.
   sandbox.SerializableRegistry ??= { register() {} };
 
-  // J-Aptitude's boot check requires J.ABS to already exist with a satisfying version.
+  // J-Aptitude checks J-ABS's version whenever J.ABS exists, so the stub carries a satisfying one.
   sandbox.J = sandbox.J || {};
   sandbox.J.ABS = sandbox.J.ABS || {
     Metadata: {

@@ -11,6 +11,9 @@ All the versioning and history of changes live here.
 
 ## The Actual Changelog
 
+### 4.26.2
+  - Fixed every other event losing its `<teamId>`, `<noGlobalCooldown>` never matching, and `<visAnchor>` rejecting `1.0`.
+  - `<visionMultiplier>` now scales its carrier's own sight and pursuit.
 ### 4.26.1
   - A battler that dies carrying states now dies once, so a kill counts once toward slay quests and defeat tallies.
 ### 4.26.0
