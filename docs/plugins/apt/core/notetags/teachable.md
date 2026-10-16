@@ -19,7 +19,7 @@ unlock those skills.
 If there are multiple teachable tags for the same skill id with different cost requirements, the first one completed
 will complete them all.
 
-## TAG USAGE:
+## TAG USAGE
 
 - Actors
 - Classes
@@ -27,13 +27,13 @@ will complete them all.
 - Armor
 - States
 
-## TAG FORMAT:
+## TAG FORMAT
 
 `<aptitude:[SKILL_ID, REQUIRED_AP]>`
 Where SKILL_ID is the database id of the skill to learn,
 Where REQUIRED_AP is how much AP that source needs to teach it.
 
-## TAG EXAMPLES:
+## TAG EXAMPLES
 
 `<aptitude:[12,150]>`
 This source enables learning skill of id 12 once the owner gains 150 AP.

@@ -6,4 +6,5 @@
 export const PLUGIN_NAME = 'J-Passive-Difficulty';
 export const PLUGIN_VERSION = '3.0.0';
 export const PLUGIN_DESC_TAG = 'PASSIVE-DIFFICULTY';
+export const PLUGIN_DESCRIPTION = 'Difficulty layers as passive states for everyone.';
 //endregion ship-meta

@@ -6,4 +6,5 @@
 export const PLUGIN_NAME = 'J-DropsControl';
 export const PLUGIN_VERSION = '2.7.0';
 export const PLUGIN_DESC_TAG = 'DROPS';
+export const PLUGIN_DESCRIPTION = 'Enables greater control over loot drops.';
 //endregion ship-meta

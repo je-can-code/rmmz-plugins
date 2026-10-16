@@ -582,7 +582,7 @@ class JABS_AiManager
 
   /**
    * Adds a collection of battlers to tracking.
-   * @param {JABS_Battler} battlers The battler to add to tracking.
+   * @param {JABS_Battler[]} battlers The battlers to add to tracking.
    */
   static addOrUpdateBattlers(battlers)
   {

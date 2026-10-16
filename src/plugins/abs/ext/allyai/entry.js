@@ -1,6 +1,5 @@
 import './_metadata/initialization.js';
 
-import './_metadata/_annotations.js';
 import './_models/JABS_AllyAI.js';
 import './_models/JABS_Battler.js';
 import './_models/JABS_Formation.js';

@@ -6,4 +6,5 @@
 export const PLUGIN_NAME = 'J-Pixelistics';
 export const PLUGIN_VERSION = '1.5.0';
 export const PLUGIN_DESC_TAG = 'PIXEL';
+export const PLUGIN_DESCRIPTION = 'Enables sub-tile (pixel-accurate) movement on the map.';
 //endregion ship-meta

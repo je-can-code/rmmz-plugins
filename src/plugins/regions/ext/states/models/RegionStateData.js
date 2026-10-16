@@ -43,4 +43,5 @@ class RegionStateData
 }
 
 export default RegionStateData;
+SerializableRegistry.register(RegionStateData);
 //endregion RegionStateData

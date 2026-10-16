@@ -6,4 +6,5 @@
 export const PLUGIN_NAME = 'J-Pixel-ABS';
 export const PLUGIN_VERSION = '1.2.0';
 export const PLUGIN_DESC_TAG = 'PIXEL-ABS';
+export const PLUGIN_DESCRIPTION = 'Bridges J-Pixelistics with J-ABS for combat-aware pixel movement.';
 //endregion ship-meta

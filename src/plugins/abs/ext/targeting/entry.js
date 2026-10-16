@@ -1,6 +1,5 @@
 import './_metadata/initialization.js';
 
-import './_metadata/_annotations.js';
 import './database/RPG_Skill.js';
 import './_models/JABS_TargetingSession.js';
 import './_models/JABS_TargetingCursor.js';

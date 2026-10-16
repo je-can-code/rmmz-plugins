@@ -1,6 +1,5 @@
 import './_metadata/initialization.js';
 
-import './_metadata/_annotations.js';
 import './_models/JABS_Battler.js';
 import './_models/JABS_BattlerCoreData.js';
 import './objects/Game_Actor.js';

@@ -6,4 +6,5 @@
 export const PLUGIN_NAME = 'J-Proficiency-Knowledge';
 export const PLUGIN_VERSION = '1.0.0';
 export const PLUGIN_DESC_TAG = 'PROF-KNOWLEDGE';
+export const PLUGIN_DESCRIPTION = 'A currency earned by using skills.';
 //endregion ship-meta

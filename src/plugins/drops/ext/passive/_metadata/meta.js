@@ -6,4 +6,5 @@
 export const PLUGIN_NAME = 'J-Drops-Passive';
 export const PLUGIN_VERSION = '1.0.0';
 export const PLUGIN_DESC_TAG = 'DROPS-PASSIVE';
+export const PLUGIN_DESCRIPTION = 'Lets states contribute extra drops to every enemy.';
 //endregion ship-meta

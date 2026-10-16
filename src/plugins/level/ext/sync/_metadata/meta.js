@@ -6,4 +6,5 @@
 export const PLUGIN_NAME = 'J-Level-Sync';
 export const PLUGIN_VERSION = '1.1.1';
 export const PLUGIN_DESC_TAG = 'LEVEL-SYNC';
+export const PLUGIN_DESCRIPTION = 'Content level sync for dungeons and trials.';
 //endregion ship-meta

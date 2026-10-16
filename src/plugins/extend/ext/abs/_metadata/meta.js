@@ -3,4 +3,5 @@
 export const PLUGIN_NAME = 'J-Extend-ABS';
 export const PLUGIN_VERSION = '1.0.1';
 export const PLUGIN_DESC_TAG = 'EXTEND-ABS';
+export const PLUGIN_DESCRIPTION = 'J-ABS integration for J-Extend.';
 //endregion ship-meta

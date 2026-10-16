@@ -6,4 +6,5 @@
 export const PLUGIN_NAME = 'J-Lighting';
 export const PLUGIN_VERSION = '1.0.0';
 export const PLUGIN_DESC_TAG = 'LIGHTING';
+export const PLUGIN_DESCRIPTION = 'Declarative darkness and light sources for the map.';
 //endregion ship-meta

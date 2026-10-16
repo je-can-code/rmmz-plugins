@@ -235,7 +235,7 @@ Game_Enemy.prototype.resolveDropQuantityBonus = function(killer = null)
 /**
  * Builds the drop to be found and adds it to the running list.
  * @param {RPG_DropItem} drop The drop being found.
- * @param {RPG_BaseItem} itemsFound The running list of items that have been found.
+ * @param {RPG_BaseItem[]} itemsFound The running list of items that have been found.
  */
 Game_Enemy.prototype.findLoot = function(drop, itemsFound)
 {

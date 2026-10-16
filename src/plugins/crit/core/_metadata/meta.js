@@ -6,4 +6,5 @@
 export const PLUGIN_NAME = 'J-CriticalFactors';
 export const PLUGIN_VERSION = '1.5.0';
 export const PLUGIN_DESC_TAG = 'CRIT';
+export const PLUGIN_DESCRIPTION = 'Manages critical damage multiplier/reduction of battlers.';
 //endregion ship-meta

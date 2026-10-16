@@ -6,4 +6,5 @@
 export const PLUGIN_NAME = 'J-Elementalistics';
 export const PLUGIN_VERSION = '1.5.0';
 export const PLUGIN_DESC_TAG = 'ELEM';
+export const PLUGIN_DESCRIPTION = 'Enables greater control over elements.';
 //endregion ship-meta

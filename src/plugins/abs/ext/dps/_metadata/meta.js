@@ -6,4 +6,5 @@
 export const PLUGIN_NAME = 'J-ABS-Dps';
 export const PLUGIN_VERSION = '1.0.0';
 export const PLUGIN_DESC_TAG = 'ABS-DPS';
+export const PLUGIN_DESCRIPTION = 'Measures how much damage each party member is dealing, and how fast.';
 //endregion ship-meta

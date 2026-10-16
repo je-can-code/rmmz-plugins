@@ -6,4 +6,5 @@
 export const PLUGIN_NAME = 'J-Motion-Passive';
 export const PLUGIN_VERSION = '1.0.0';
 export const PLUGIN_DESC_TAG = 'MOTION-PASSIVE';
+export const PLUGIN_DESCRIPTION = 'Passive states can declare sprite motion.';
 //endregion ship-meta

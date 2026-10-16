@@ -1534,14 +1534,10 @@ class JABS_Battler
   inPursuitRange(target, distance)
   {
     // grab the current pursuit radius.
-    let pursuitRadius = this.getPursuitRadius();
+    const basePursuitRadius = this.getPursuitRadius();
 
-    // apply the modification from the actor, if any.
-    const visionMultiplier = target.getBattler()
-      .getVisionModifier();
-
-    // apply the multiplier to the base.
-    pursuitRadius *= visionMultiplier;
+    // widen or narrow it by this battler's own vision, if anything modifies it.
+    const pursuitRadius = this.applyVisionMultiplier(basePursuitRadius);
 
     // return whether or not we're in range.
     return (distance <= pursuitRadius);
@@ -1558,8 +1554,8 @@ class JABS_Battler
     // grab the sight for this battler.
     const sightRadius = this.getSightRadius();
 
-    // apply the modification from the actor, if any.
-    const modifiedSight = this.applyVisionMultiplier(target, sightRadius);
+    // widen or narrow it by this battler's own vision, if anything modifies it.
+    const modifiedSight = this.applyVisionMultiplier(sightRadius);
 
     // determine whether or not the target is in sight.
     const isInSightRange = (distance <= modifiedSight);
@@ -1587,14 +1583,16 @@ class JABS_Battler
   };
 
   /**
-   * Applies the vision multiplier against the base vision radius in question.
-   * @param {JABS_Battler} target The target we're trying to see.
+   * Applies this battler's own vision multiplier against a base vision radius.<br/>
+   * Vision belongs to the one looking: a state that blinds or sharpens this battler shrinks or widens how far it sees
+   * and pursues, whoever it happens to be looking at.
    * @param {number} originalRadius The original vision radius.
+   * @returns {number}
    */
-  applyVisionMultiplier(target, originalRadius)
+  applyVisionMultiplier(originalRadius)
   {
     // get this battler's vision multiplier factor.
-    const visionMultiplier = target.getBattler()
+    const visionMultiplier = this.getBattler()
       .getVisionModifier();
 
     // calculate the new radius.

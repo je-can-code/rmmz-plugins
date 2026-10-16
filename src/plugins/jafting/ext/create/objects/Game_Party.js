@@ -521,6 +521,13 @@ Game_Party.prototype.unlockEverythingCompletely = function()
   this.revealAllKnownRecipes();
 };
 
+/**
+ * Totals how many recipes have been crafted across several categories, and writes it to a variable.<br/>
+ * Event scripts call this to gate dialogue on crafting progress, so the categories arrive as one array,
+ * never spread into separate arguments.
+ * @param {number} variableId The game variable to write the total into.
+ * @param {string[]} categoryKeys The key of every category to count.
+ */
 Game_Party.prototype.updateVariableWithCraftedCountByCategories = function(variableId, categoryKeys)
 {
   // initialize with zero crafted entries.

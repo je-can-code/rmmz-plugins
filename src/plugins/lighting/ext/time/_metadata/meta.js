@@ -6,4 +6,5 @@
 export const PLUGIN_NAME = 'J-Lighting-Time';
 export const PLUGIN_VERSION = '1.0.1';
 export const PLUGIN_DESC_TAG = 'LIGHTING-TIME';
+export const PLUGIN_DESCRIPTION = 'The day and night cycle, as colour and as darkness.';
 //endregion ship-meta

@@ -3,4 +3,5 @@
 export const PLUGIN_NAME = 'J-Extend-SKS';
 export const PLUGIN_VERSION = '1.0.0';
 export const PLUGIN_DESC_TAG = 'EXTEND-SKS';
+export const PLUGIN_DESCRIPTION = 'J-SKS integration for J-Extend.';
 //endregion ship-meta

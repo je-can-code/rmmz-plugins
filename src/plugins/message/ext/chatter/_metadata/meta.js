@@ -6,4 +6,5 @@
 export const PLUGIN_NAME = 'J-Message-Chatter';
 export const PLUGIN_VERSION = '1.0.3';
 export const PLUGIN_DESC_TAG = 'MESSAGE-CHATTER';
+export const PLUGIN_DESCRIPTION = 'A J-Message extension that gives idle NPCs something to say.';
 //endregion ship-meta

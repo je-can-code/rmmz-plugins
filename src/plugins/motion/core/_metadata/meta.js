@@ -6,4 +6,5 @@
 export const PLUGIN_NAME = 'J-Motion';
 export const PLUGIN_VERSION = '1.2.0';
 export const PLUGIN_DESC_TAG = 'MOTION';
+export const PLUGIN_DESCRIPTION = 'Ambient and reactive motion for character sprites.';
 //endregion ship-meta

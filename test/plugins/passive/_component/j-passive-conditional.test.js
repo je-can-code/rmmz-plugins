@@ -1083,6 +1083,30 @@ describe('J-Passive-Conditional (direct src import)', () =>
         globalThis.RPGManager.chanceIn100 = prevChance;
       });
     });
+
+    describe('MoveStateRemovalManager.process', () =>
+    {
+      it('restarts the paired stand rule cooldown through the battler\'s real stamper', () =>
+      {
+        // Arrange- a state that peels its payload on a move and rebuilds it while standing, beside a
+        // stand rule for another payload whose cooldown the move must leave alone.
+        const note = '<removeStateOnMove:[77]>\n<autoApplyState:[77, stand, 60]>\n<autoApplyState:[78, stand, 60]>';
+        const stateRow = stubMomentumStateRow(76, note);
+        const actor = buildMomentumToolkitActor([]);
+        actor.allStates = () => [ stateRow ];
+        actor.getUuid = () => 'test-actor';
+        actor.decrementStateStacks = vi.fn();
+        const pairedRuleKey = globalThis.AutoApplyStateManager.buildRuleKey(stateRow, 0, 77, 'stand');
+        const siblingRuleKey = globalThis.AutoApplyStateManager.buildRuleKey(stateRow, 1, 78, 'stand');
+
+        // Act
+        globalThis.MoveStateRemovalManager.process(actor);
+
+        // Assert
+        expect(actor.getAutoRuleLastFrame(pairedRuleKey)).toBe(600);
+        expect(actor.getAutoRuleLastFrame(siblingRuleKey)).toBe(0);
+      });
+    });
   });
 
   describe('AutoApplyStateManager.dispatch', () =>

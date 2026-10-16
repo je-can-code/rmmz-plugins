@@ -6,4 +6,5 @@
 export const PLUGIN_NAME = 'J-Regions-States';
 export const PLUGIN_VERSION = '1.1.2';
 export const PLUGIN_DESC_TAG = 'REGIONS-STATES';
+export const PLUGIN_DESCRIPTION = 'Enables application of states via region ids.';
 //endregion ship-meta

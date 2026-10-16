@@ -6,4 +6,5 @@
 export const PLUGIN_NAME = 'J-Weather-Time';
 export const PLUGIN_VERSION = '1.0.0';
 export const PLUGIN_DESC_TAG = 'WEATHER-TIME';
+export const PLUGIN_DESCRIPTION = 'A sky that changes with the clock, forecast a year ahead.';
 //endregion ship-meta

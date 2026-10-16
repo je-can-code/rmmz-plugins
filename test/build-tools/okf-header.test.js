@@ -14,6 +14,7 @@ import {
   renderDependencyLines,
   renderHeader,
   renderParameterBlock,
+  renderStructBlock,
   resolveBookDirectory,
   resolveShipPath,
 } from '../../src/build-tools/okf-header.js';
@@ -127,12 +128,26 @@ describe('orderPagesOfType', () =>
 
 describe('renderParameterBlock', () =>
 {
-  it('writes every tag the parameter sets in MZ order, whatever order the page wrote them in', () =>
+  it('writes every tag a parameter can set in the fleet\'s order, whatever order the page wrote them in', () =>
   {
     // Arrange
     const parameterPage = page('parameters/speed.md', {
       type: 'plugin-parameter',
-      param: { default: 4, desc: 'How fast.', key: 'speed', min: -1, text: 'Speed', type: 'number', parent: 'movement' },
+      param: {
+        default: 4,
+        off: 'Slow',
+        on: 'Fast',
+        desc: 'How fast.',
+        text: 'Speed',
+        max: 9,
+        min: -1,
+        decimals: 2,
+        options: [ { option: 'Brisk', value: 3 } ],
+        dir: 'img/system',
+        type: 'number',
+        parent: 'movement',
+        key: 'speed',
+      },
     });
 
     // Act
@@ -143,9 +158,16 @@ describe('renderParameterBlock', () =>
       '@param speed',
       '@parent movement',
       '@type number',
+      '@dir img/system',
+      '@option Brisk',
+      '@value 3',
+      '@decimals 2',
+      '@min -1',
+      '@max 9',
       '@text Speed',
       '@desc How fast.',
-      '@min -1',
+      '@on Fast',
+      '@off Slow',
       '@default 4',
     ]);
   });
@@ -167,14 +189,14 @@ describe('renderParameterBlock', () =>
     // Arrange
     const parameterPage = page('parameters/speed.md', {
       type: 'plugin-parameter',
-      param: { key: 'speed', type: 'number', decimals: 2 },
+      param: { key: 'speed', type: 'number', require: 1 },
     });
 
     // Act
     const render = () => renderParameterBlock(parameterPage);
 
     // Assert
-    expect(render).toThrow('parameters/speed.md (param) has unknown key(s): decimals');
+    expect(render).toThrow('parameters/speed.md (param) has unknown key(s): require');
   });
 
   it('throws when the param block has no key at all', () =>
@@ -199,6 +221,164 @@ describe('renderParameterBlock', () =>
 
     // Assert
     expect(render).toThrow('parameters/speed.md (param) is missing its key');
+  });
+});
+
+describe('tag values', () =>
+{
+  it('writes a value YAML read as blank as the bare tag, beside a tag that keeps its value', () =>
+  {
+    // Arrange
+    const parameterPage = page('parameters/speed.md', {
+      type: 'plugin-parameter',
+      param: { key: 'speed', type: 'number', default: null },
+    });
+
+    // Act
+    const lines = renderParameterBlock(parameterPage);
+
+    // Assert
+    expect(lines).toEqual([ '@param speed', '@type number', '@default' ]);
+  });
+
+  it('writes an empty string as the bare tag too', () =>
+  {
+    // Arrange
+    const parameterPage = page('parameters/speed.md', {
+      type: 'plugin-parameter',
+      param: { key: 'speed', text: 'Speed', desc: '' },
+    });
+
+    // Act
+    const lines = renderParameterBlock(parameterPage);
+
+    // Assert
+    expect(lines).toEqual([ '@param speed', '@text Speed', '@desc' ]);
+  });
+
+  it('keeps a multi-line value\'s line breaks, writing each further line beneath its tag', () =>
+  {
+    // Arrange
+    const parameterPage = page('parameters/speed.md', {
+      type: 'plugin-parameter',
+      param: { key: 'speed', desc: 'How fast the walker goes.\nFaster costs more.', default: 4 },
+    });
+
+    // Act
+    const lines = renderParameterBlock(parameterPage);
+
+    // Assert
+    expect(lines).toEqual([ '@param speed', '@desc How fast the walker goes.', 'Faster costs more.', '@default 4' ]);
+  });
+
+  it('leaves the tag bare when a multi-line value starts on the line below it', () =>
+  {
+    // Arrange
+    const commandPage = page('commands/set-skill.md', {
+      type: 'plugin-command',
+      command: { key: 'setSkill', text: 'Set Skill', desc: '\nChanges a skill in a slot.\nAny slot works.' },
+    });
+
+    // Act
+    const lines = renderCommandBlock(commandPage);
+
+    // Assert
+    expect(lines).toEqual([
+      '@command setSkill',
+      '@text Set Skill',
+      '@desc',
+      'Changes a skill in a slot.',
+      'Any slot works.',
+    ]);
+  });
+
+  it('drops the line break a YAML block value ends with, rather than writing an empty line', () =>
+  {
+    // Arrange
+    const parameterPage = page('parameters/speed.md', {
+      type: 'plugin-parameter',
+      param: { key: 'speed', desc: 'How fast the walker goes.\nFaster costs more.\n', default: 4 },
+    });
+
+    // Act
+    const lines = renderParameterBlock(parameterPage);
+
+    // Assert
+    expect(lines).toEqual([ '@param speed', '@desc How fast the walker goes.', 'Faster costs more.', '@default 4' ]);
+  });
+
+  it('throws, naming the tag, when a value is a list, the way an unquoted [] default reads in YAML', () =>
+  {
+    // Arrange
+    const parameterPage = page('parameters/icons.md', {
+      type: 'plugin-parameter',
+      param: { key: 'icons', type: 'number[]', default: [] },
+    });
+
+    // Act
+    const render = () => renderParameterBlock(parameterPage);
+
+    // Assert
+    expect(render).toThrow('parameters/icons.md (param) default is a list or a mapping; quote it to keep it as text');
+  });
+});
+
+describe('options', () =>
+{
+  it('writes each option in the order the page lists them, with its value beneath it only when it has one', () =>
+  {
+    // Arrange
+    const parameterPage = page('parameters/precision.md', {
+      type: 'plugin-parameter',
+      param: {
+        key: 'precision',
+        type: 'select',
+        options: [ { option: 'Coarse', value: 1 }, { option: 'Fine' }, { option: '' } ],
+      },
+    });
+
+    // Act
+    const lines = renderParameterBlock(parameterPage);
+
+    // Assert
+    expect(lines).toEqual([
+      '@param precision',
+      '@type select',
+      '@option Coarse',
+      '@value 1',
+      '@option Fine',
+      '@option',
+    ]);
+  });
+
+  it('throws, naming the option, when an option carries a field the header does not know', () =>
+  {
+    // Arrange
+    const parameterPage = page('parameters/precision.md', {
+      type: 'plugin-parameter',
+      param: { key: 'precision', type: 'select', options: [ { option: 'Coarse' }, { option: 'Fine', text: 'F' } ] },
+    });
+
+    // Act
+    const render = () => renderParameterBlock(parameterPage);
+
+    // Assert
+    expect(render).toThrow('parameters/precision.md (param) options[1] has unknown key(s): text');
+  });
+
+  it('throws, naming the option, when an option has no text to offer', () =>
+  {
+    // Arrange
+    const parameterPage = page('parameters/precision.md', {
+      type: 'plugin-parameter',
+      param: { key: 'precision', type: 'select', options: [ { option: 'Coarse' }, { value: 2 } ] },
+    });
+
+    // Act
+    const render = () => renderParameterBlock(parameterPage);
+
+    // Assert
+    expect(render).toThrow('parameters/precision.md (param) options[1] is missing its option');
   });
 });
 
@@ -229,7 +409,7 @@ describe('renderCommandBlock', () =>
         text: 'Give',
         args: [
           { key: 'actorId', default: 1, type: 'actor' },
-          { desc: 'How many.', key: 'amount', max: 99, min: 0, type: 'number' },
+          { desc: 'How many.', key: 'amount', text: 'Amount', max: 99, min: 0, type: 'number' },
         ],
       },
     });
@@ -248,6 +428,7 @@ describe('renderCommandBlock', () =>
       '@type number',
       '@min 0',
       '@max 99',
+      '@text Amount',
       '@desc How many.',
     ]);
   });
@@ -264,7 +445,7 @@ describe('renderCommandBlock', () =>
     expect(render).toThrow('commands/give.md has no command block');
   });
 
-  it('throws, naming the argument, when an argument carries a key the header cannot write', () =>
+  it('throws, naming the argument, when an argument carries a key only a parameter can have', () =>
   {
     // Arrange
     const commandPage = page('commands/give.md', {
@@ -273,7 +454,7 @@ describe('renderCommandBlock', () =>
         key: 'give',
         args: [
           { key: 'actorId', type: 'actor' },
-          { key: 'amount', type: 'number', decimals: 2 },
+          { key: 'amount', type: 'number', parent: 'quantities' },
         ],
       },
     });
@@ -282,23 +463,138 @@ describe('renderCommandBlock', () =>
     const render = () => renderCommandBlock(commandPage);
 
     // Assert
-    expect(render).toThrow('commands/give.md (args[1]) has unknown key(s): decimals');
+    expect(render).toThrow('commands/give.md (args[1]) has unknown key(s): parent');
+  });
+});
+
+describe('renderStructBlock', () =>
+{
+  it('writes the struct as a comment of its own, its fields set apart by an empty comment line', () =>
+  {
+    // Arrange
+    const structPage = page('structs/sound-effect.md', {
+      type: 'plugin-struct',
+      struct: {
+        key: 'soundEffect',
+        params: [
+          { key: 'name', type: 'file', dir: 'audio/se', default: '' },
+          { key: 'volume', default: 90, text: 'Volume', max: 100, min: 0, type: 'number' },
+        ],
+      },
+    });
+
+    // Act
+    const lines = renderStructBlock(structPage);
+
+    // Assert
+    expect(lines).toEqual([
+      '/*~struct~soundEffect:',
+      ' * @param name',
+      ' * @type file',
+      ' * @dir audio/se',
+      ' * @default',
+      ' *',
+      ' * @param volume',
+      ' * @type number',
+      ' * @min 0',
+      ' * @max 100',
+      ' * @text Volume',
+      ' * @default 90',
+      ' */',
+    ]);
+  });
+
+  it('throws, naming the page, when a struct page has no struct block', () =>
+  {
+    // Arrange
+    const structPage = page('structs/sound-effect.md', { type: 'plugin-struct' });
+
+    // Act
+    const render = () => renderStructBlock(structPage);
+
+    // Assert
+    expect(render).toThrow('structs/sound-effect.md has no struct block');
+  });
+
+  it('throws, naming the key, when the struct block carries a key the header cannot write', () =>
+  {
+    // Arrange
+    const structPage = page('structs/sound-effect.md', {
+      type: 'plugin-struct',
+      struct: { key: 'soundEffect', text: 'Sound Effect', params: [ { key: 'name', type: 'file' } ] },
+    });
+
+    // Act
+    const render = () => renderStructBlock(structPage);
+
+    // Assert
+    expect(render).toThrow('structs/sound-effect.md (struct) has unknown key(s): text');
+  });
+
+  it('throws when the struct has no params list at all', () =>
+  {
+    // Arrange
+    const structPage = page('structs/sound-effect.md', { type: 'plugin-struct', struct: { key: 'soundEffect' } });
+
+    // Act
+    const render = () => renderStructBlock(structPage);
+
+    // Assert
+    expect(render).toThrow('structs/sound-effect.md (struct) has no params');
+  });
+
+  it('throws when the struct\'s params list is empty', () =>
+  {
+    // Arrange
+    const structPage = page('structs/sound-effect.md', {
+      type: 'plugin-struct',
+      struct: { key: 'soundEffect', params: [] },
+    });
+
+    // Act
+    const render = () => renderStructBlock(structPage);
+
+    // Assert
+    expect(render).toThrow('structs/sound-effect.md (struct) has no params');
+  });
+
+  it('throws, naming the field, when a struct field carries a key only a parameter can have', () =>
+  {
+    // Arrange
+    const structPage = page('structs/sound-effect.md', {
+      type: 'plugin-struct',
+      struct: {
+        key: 'soundEffect',
+        params: [
+          { key: 'name', type: 'file' },
+          { key: 'volume', type: 'number', parent: 'levels' },
+        ],
+      },
+    });
+
+    // Act
+    const render = () => renderStructBlock(structPage);
+
+    // Assert
+    expect(render).toThrow('structs/sound-effect.md (params[1]) has unknown key(s): parent');
   });
 });
 
 describe('renderDependencyLines', () =>
 {
-  it('writes every base first and every orderAfter second, each in the order the page lists them', () =>
+  it('writes every base, then every orderAfter, then every orderBefore, each in the order the page lists them', () =>
   {
     // Arrange
     const pages = [
       page('dependencies.md', {
         type: 'dependencies',
         dependencies: [
+          { key: 'J-Ahead', orderBefore: true },
           { key: 'J-Required', version: '1.0.0', base: true, orderAfter: false },
-          { key: 'J-Optional', version: '2.0.0', base: false, orderAfter: true },
+          { key: 'J-Optional', version: '2.0.0', base: false, orderAfter: true, orderBefore: false },
           { key: 'J-Both', version: '3.0.0', base: true, orderAfter: true },
-          { key: 'J-Neither', version: '4.0.0', base: false, orderAfter: false },
+          { key: 'J-Neither', version: '4.0.0', base: false, orderAfter: false, orderBefore: false },
+          { key: 'J-AlsoAhead', base: false, orderBefore: true },
         ],
       }),
     ];
@@ -312,6 +608,8 @@ describe('renderDependencyLines', () =>
       '@base J-Both',
       '@orderAfter J-Optional',
       '@orderAfter J-Both',
+      '@orderBefore J-Ahead',
+      '@orderBefore J-AlsoAhead',
     ]);
   });
 
@@ -367,7 +665,7 @@ describe('renderDependencyLines', () =>
         type: 'dependencies',
         dependencies: [
           { key: 'J-Base', base: true },
-          { key: 'J-Log', orderBefore: true },
+          { key: 'J-Log', orderafter: true },
         ],
       }),
     ];
@@ -376,7 +674,7 @@ describe('renderDependencyLines', () =>
     const render = () => renderDependencyLines(pages);
 
     // Assert
-    expect(render).toThrow('dependencies.md (dependencies[1]) has unknown key(s): orderBefore');
+    expect(render).toThrow('dependencies.md (dependencies[1]) has unknown key(s): orderafter');
   });
 });
 
@@ -397,7 +695,7 @@ describe('buildBookUrl', () =>
 
 describe('renderHeader', () =>
 {
-  it('renders the complete header: identity, dependencies, help, then parameters and commands in index order', () =>
+  it('renders the complete header: identity, dependencies, help, parameters, commands, then structs in index order', () =>
   {
     // Arrange
     const book = {
@@ -410,6 +708,11 @@ describe('renderHeader', () =>
         '# plugin-parameter',
         '',
         '* [Speed](parameters/speed.md) - The only parameter.',
+        '',
+        '# plugin-struct',
+        '',
+        '* [Zeta](structs/zeta.md) - Listed first.',
+        '* [Alpha](structs/alpha.md) - Listed second.',
       ].join('\n'),
       pages: [
         page('commands/first.md', {
@@ -436,6 +739,14 @@ describe('renderHeader', () =>
         page('parameters/speed.md', {
           type: 'plugin-parameter',
           param: { key: 'speed', default: 4, type: 'number', text: 'Speed' },
+        }),
+        page('structs/alpha.md', {
+          type: 'plugin-struct',
+          struct: { key: 'Alpha', params: [ { key: 'first', type: 'number' } ] },
+        }),
+        page('structs/zeta.md', {
+          type: 'plugin-struct',
+          struct: { key: 'Zeta', params: [ { key: 'last', type: 'string' } ] },
         }),
       ],
     };
@@ -477,6 +788,14 @@ describe('renderHeader', () =>
       ' * @command first',
       ' * @text First',
       ' * @desc Runs first.',
+      ' */',
+      '/*~struct~Zeta:',
+      ' * @param last',
+      ' * @type string',
+      ' */',
+      '/*~struct~Alpha:',
+      ' * @param first',
+      ' * @type number',
       ' */',
       '//endregion annotations',
     ].join('\n'));

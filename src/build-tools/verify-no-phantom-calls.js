@@ -13,16 +13,29 @@
  * at it because nothing exercised the window; and the refinement details pane simply threw whenever
  * a player opened it. Only booting the game found it.
  *
- * The check is deliberately narrow, because narrow is what makes it trustworthy. It judges only
- * calls whose receiver is a bare capitalised identifier- `IconManager.longParam(…)`,
- * `TextManager.param(…)`- since that is the one shape where the receiver is decidable without type
- * inference. Anything reached through a variable, a property chain, or `this` is left alone.
+ * The check is deliberately narrow, because narrow is what makes it trustworthy. It judges the two
+ * shapes whose receiver is decidable without type inference:
+ *
+ * - a bare capitalised identifier- `IconManager.longParam(…)`, `TextManager.param(…)`- which names
+ *   its class outright
+ * - a parameter its function's JSDoc types wholly in classes- `battler.setAutoRuleLastFrame(…)` under
+ *   `@param {Game_Actor|Game_Enemy} battler`- which names its classes in the doc block
+ *
+ * The second shape is here because of J-Passive-Conditional, which shipped
+ * `battler.setAutoApplyLastFrame(…)` for a setter only ever named `setAutoRuleLastFrame`. Its unit test
+ * built the battler by hand with the same wrong name, so the suite stayed green, and the first battler
+ * to step off a stand-rule state threw. A typed call passes when any class its JSDoc names declares the
+ * member. A type the index cannot speak for- `object`, `Foo[]`, a class inheriting from a library the
+ * index cannot see- leaves the call unjudged rather than guessed at. Anything else- a local, a property
+ * chain, `this`- is left alone.
  *
  * Membership is resolved against the union of:
  *
- * - every class declared in `src/plugins/**`, including statics, getters, setters and fields
+ * - every class declared in `src/plugins/**`, including statics, getters, setters and fields, and the
+ *   fields its constructor and methods assign on `this`
  * - every prototype patch and static assignment the tree makes onto a class
  * - the vendored RMMZ engine, so `TextManager.param` and friends resolve as the real methods they are
+ * - the PIXI classes the engine's display classes inherit from, written down in {@link PIXI_CLASSES}
  *
  * ...and it walks the inheritance chain, so a static defined on `AutoRuleManager` resolves through
  * `AutoApplyStateManager` exactly as it does at runtime.
@@ -31,8 +44,9 @@
  * detector that is quietly broken, and this one is only as good as its index- if the engine files
  * went missing, `members` would come up short and every engine call would read as a phantom, or a
  * mis-scoped index would silently resolve everything. So the engine files are mandatory rather than
- * best-effort, and `--selftest` runs both controls: two planted defects that must be caught, and two
- * real calls that must resolve. Run it whenever the result surprises you.
+ * best-effort, and `--selftest` runs the controls: two planted defects that must be caught, two real
+ * calls that must resolve, and a planted typed-parameter method that must yield exactly the one phantom
+ * it carries. Run it whenever the result surprises you.
  *
  * Usage:
  *   bun src/build-tools/verify-no-phantom-calls.js
@@ -85,12 +99,153 @@ const UNJUDGEABLE_RECEIVERS = new Set([
 const FUNCTION_MEMBERS = new Set([ 'call', 'apply', 'bind', 'toString', 'prototype' ]);
 
 /**
+ * Members every object inherits from `Object.prototype`, which no class in the tree declares.
+ * @type {Set<string>}
+ */
+const OBJECT_MEMBERS = new Set([
+  'hasOwnProperty', 'isPrototypeOf', 'propertyIsEnumerable', 'toLocaleString', 'toString', 'valueOf',
+]);
+
+/**
+ * A JSDoc `@param` line: its type in braces, then its name, bracketed when the parameter is optional.
+ *
+ * <pre>
+ * Structure:
+ *  @param {TYPE} NAME
+ *
+ * Example:
+ *  @param {Game_Actor|Game_Enemy} battler The battler that just moved.
+ *
+ * Translation:
+ *  the parameter battler holds a Game_Actor or a Game_Enemy
+ * </pre>
+ * @type {RegExp}
+ */
+const JSDOC_PARAM = /@param\s+\{([^}]+)\}\s+\[?([A-Za-z_$][\w$]*)/g;
+
+/**
+ * A type the class index can answer for: one bare, capitalised name, with no array, generic, record or
+ * function syntax around it.
+ * @type {RegExp}
+ */
+const CLASS_TYPE = /^[A-Z][\w$]*$/;
+
+/**
+ * The node types that are functions, and so declare parameters of their own.
+ * @type {Set<string>}
+ */
+const FUNCTION_TYPES = new Set([ 'FunctionDeclaration', 'FunctionExpression', 'ArrowFunctionExpression' ]);
+
+/**
+ * The nodes a JSDoc block can sit in front of on the way down to the function it documents, as in
+ * `Foo.prototype.bar = function`, `static bar()`, `const bar = () =>` and `export function bar`.
+ * @type {Set<string>}
+ */
+const DOC_CARRIERS = new Set([
+  'ExpressionStatement',
+  'AssignmentExpression',
+  'MethodDefinition',
+  'PropertyDefinition',
+  'Property',
+  'VariableDeclaration',
+  'VariableDeclarator',
+  'ExportNamedDeclaration',
+  'ExportDefaultDeclaration',
+]);
+
+/**
+ * The PIXI classes the engine's display classes inherit from, with the methods each one declares.
+ *
+ * The engine derives from PIXI (`Sprite` from `PIXI.Sprite`, `Window` and its kin from `PIXI.Container`),
+ * but PIXI ships as a bundled library rather than as source this gate indexes, so `sprite.addChild()`
+ * would otherwise resolve nowhere. These are PIXI 5.3's own prototype methods, read out of
+ * `project/js/libs/pixi.js`. A PIXI class missing from here leaves its heirs unjudged rather than
+ * wrongly flagged, through {@link ClassIndex#isOpen}.
+ * @type {{name: string, parent: string, members: string[]}[]}
+ */
+const PIXI_CLASSES = [
+  {
+    name: 'PIXI.utils.EventEmitter',
+    parent: String(),
+    members: [
+      'addListener', 'emit', 'eventNames', 'listenerCount', 'listeners', 'off', 'on', 'once', 'removeAllListeners',
+      'removeListener',
+    ],
+  },
+  {
+    name: 'PIXI.DisplayObject',
+    parent: 'PIXI.utils.EventEmitter',
+    members: [
+      'destroy', 'disableTempParent', 'enableTempParent', 'getBounds', 'getGlobalPosition', 'getLocalBounds',
+      'setParent', 'setTransform', 'toGlobal', 'toLocal', 'updateTransform',
+    ],
+  },
+  {
+    name: 'PIXI.Container',
+    parent: 'PIXI.DisplayObject',
+    members: [
+      'addChild', 'addChildAt', 'calculateBounds', 'destroy', 'getChildAt', 'getChildByName', 'getChildIndex',
+      'getLocalBounds', 'onChildrenChange', 'removeChild', 'removeChildAt', 'removeChildren', 'render',
+      'renderAdvanced', 'setChildIndex', 'sortChildren', 'swapChildren', 'updateTransform',
+    ],
+  },
+  {
+    name: 'PIXI.Sprite',
+    parent: 'PIXI.Container',
+    members: [ 'calculateTrimmedVertices', 'calculateVertices', 'containsPoint', 'destroy', 'getLocalBounds' ],
+  },
+  {
+    name: 'PIXI.TilingSprite',
+    parent: 'PIXI.Sprite',
+    members: [ 'containsPoint', 'destroy', 'getLocalBounds' ],
+  },
+];
+
+/**
+ * A planted method making the very call J-Passive-Conditional shipped: a stand-rule cooldown stamped
+ * through a setter that has never existed, beside the real one, and a call on a parameter whose type
+ * no class describes. Exactly the phantom setter must be reported.
+ * @type {string}
+ */
+const PLANTED_TYPED_SOURCE = [
+  '/**',
+  ' * Resets a stand rule cooldown.',
+  ' * @param {Game_Actor|Game_Enemy} battler The battler that just moved.',
+  ' * @param {object} context Something no class describes.',
+  ' */',
+  'function plantedReset(battler, context)',
+  '{',
+  '  battler.setAutoRuleLastFrame(1, 2);',
+  '  battler.setAutoApplyLastFrame(1, 2);',
+  '  context.anythingAtAll();',
+  '}',
+].join('\n');
+
+/**
  * Parses source into an AST with location data.
  * @param {string} source The raw source text.
  * @param {string} sourceType Either 'module' for plugin source or 'script' for the vendored engine.
  * @returns {object} The parsed program.
  */
 const parse = (source, sourceType) => acorn.parse(source, { ecmaVersion: 'latest', sourceType, locations: true });
+
+/**
+ * Parses plugin source along with its comments, which is where the typed-parameter rule reads JSDoc from.
+ * @param {string} source The raw source text.
+ * @returns {{ast: object, comments: object[]}} The parsed program and every comment in it.
+ */
+function parseWithComments(source)
+{
+  const comments = [];
+  const ast = acorn.parse(source, {
+    ecmaVersion: 'latest',
+    sourceType: 'module',
+    locations: true,
+    onComment: comments,
+  });
+
+  return { ast, comments };
+}
 
 /**
  * Walks every node of an AST, invoking a visitor with each node.
@@ -121,6 +276,41 @@ function walk(node, visit)
       walk(child, visit);
     }
   }
+}
+
+/**
+ * Walks every node of an AST like {@link walk}, also handing the visitor the nodes above it.
+ * @param {object} node The node to walk.
+ * @param {object[]} ancestors The nodes above this one, nearest last. Shared and mutated as the walk goes.
+ * @param {(node: object, ancestors: object[]) => void} visit The visitor.
+ */
+function walkWithAncestors(node, ancestors, visit)
+{
+  // anything without a type is not a node worth descending into.
+  if (!node || !node.type) return;
+
+  visit(node, ancestors);
+  ancestors.push(node);
+
+  for (const key of Object.keys(node))
+  {
+    // skip the location bookkeeping acorn hangs off every node.
+    if (key === 'loc' || key === 'start' || key === 'end') continue;
+
+    const child = node[key];
+
+    // a node's children arrive either singly or in a list.
+    if (Array.isArray(child))
+    {
+      child.forEach(entry => walkWithAncestors(entry, ancestors, visit));
+    }
+    else if (child && child.type)
+    {
+      walkWithAncestors(child, ancestors, visit);
+    }
+  }
+
+  ancestors.pop();
 }
 
 /**
@@ -202,6 +392,75 @@ class ClassIndex
 
     return false;
   }
+
+  /**
+   * Determines whether a class inherits from something this index never saw declared, such as a
+   * library class. A member missing from everything the index holds may still exist on that parent.
+   * @param {string} className The class to check.
+   * @returns {boolean}
+   */
+  isOpen(className)
+  {
+    let current = className;
+
+    // a cycle should be impossible, but a malformed index must not hang the build.
+    const visited = new Set();
+
+    while (current !== undefined && visited.has(current) === false)
+    {
+      visited.add(current);
+
+      // a class nobody declared is one whose members the index cannot list.
+      if (this.knows(current) === false) return true;
+
+      current = this.parents.get(current);
+    }
+
+    return false;
+  }
+}
+
+/**
+ * Seeds the index with the PIXI classes the engine's display classes inherit from.
+ * @param {ClassIndex} index The index to populate.
+ */
+function indexPixi(index)
+{
+  for (const { name, parent, members } of PIXI_CLASSES)
+  {
+    members.forEach(member => index.addMember(name, member));
+
+    if (parent !== String()) index.addParent(name, parent);
+  }
+}
+
+/**
+ * Reads a plain or namespaced name: `Foo`, `PIXI.Container` or `PIXI.utils.EventEmitter`.
+ * @param {object} node The expression to read.
+ * @returns {string} The dotted name, or an empty string when the expression is anything else.
+ */
+function readQualifiedName(node)
+{
+  if (node.type === 'Identifier') return node.name;
+  if (node.type !== 'MemberExpression' || node.computed || node.property.type !== 'Identifier') return String();
+
+  const owner = readQualifiedName(node.object);
+
+  return owner === String() ? String() : `${owner}.${node.property.name}`;
+}
+
+/**
+ * Reads whose prototype an expression names: `Foo.prototype` gives `Foo`, and `PIXI.Sprite.prototype`
+ * keeps its dotted name.
+ * @param {object} node The expression naming the prototype.
+ * @returns {string} The owner's name, or an empty string when the expression names no prototype.
+ */
+function readPrototypeOwner(node)
+{
+  if (node.type !== 'MemberExpression' || node.computed) return String();
+  if (node.property.type !== 'Identifier' || node.property.name !== 'prototype') return String();
+
+  return readQualifiedName(node.object);
 }
 
 /**
@@ -277,10 +536,9 @@ function indexClass(node, index)
     index.addMember(className, 'constructor');
   }
 
-  if (node.superClass && node.superClass.type === 'Identifier')
-  {
-    index.addParent(className, node.superClass.name);
-  }
+  // a parent reached through a namespace, like PIXI.Container, keeps its dotted name.
+  const parentName = node.superClass ? readQualifiedName(node.superClass) : String();
+  if (parentName !== String()) index.addParent(className, parentName);
 
   for (const element of node.body.body)
   {
@@ -290,6 +548,17 @@ function indexClass(node, index)
 
     index.addMember(className, element.key.name);
   }
+
+  // a field a constructor or method assigns on `this` is a member too, a function-valued one included.
+  walk(node.body, inner =>
+  {
+    if (inner.type !== 'AssignmentExpression' || inner.left.type !== 'MemberExpression') return;
+
+    const { object, property, computed } = inner.left;
+    if (object.type !== 'ThisExpression' || computed || property.type !== 'Identifier') return;
+
+    index.addMember(className, property.name);
+  });
 }
 
 /**
@@ -325,9 +594,10 @@ function indexAssignment(node, index)
   if (isPrototypeTarget && left.object.type === 'Identifier' && isObjectCreateCall(right))
   {
     const [ firstArgument ] = right.arguments;
-    if (!firstArgument || firstArgument.type !== 'MemberExpression') return;
+    if (!firstArgument) return;
 
-    const parentName = readDefinePropertyTarget(firstArgument);
+    // the parent may sit in a namespace, as the engine's PIXI-derived classes do.
+    const parentName = readPrototypeOwner(firstArgument);
     if (parentName === String()) return;
 
     index.addParent(left.object.name, parentName);
@@ -444,6 +714,242 @@ function collectViolations(filePath, ast, index)
 }
 
 /**
+ * Reads the parameters a JSDoc block types entirely with class names.
+ *
+ * A parameter typed `{object}`, `{Foo[]}` or `{number|Foo}` could hold something no class describes,
+ * so it is left out rather than judged.
+ * @param {string} docText The comment's text, without its delimiters.
+ * @returns {Map<string, string[]>} Each parameter's name, to the classes its type allows.
+ */
+function readTypedParams(docText)
+{
+  const typed = new Map();
+
+  for (const [ , typeText, name ] of docText.matchAll(JSDOC_PARAM))
+  {
+    // `?Foo` and `Foo=` mark a nullable and an optional parameter; the class underneath is the same.
+    const types = typeText.split('|')
+      .map(type => type.trim()
+        .replace(/^[?!]/, '')
+        .replace(/=$/, ''));
+
+    if (types.every(type => CLASS_TYPE.test(type))) typed.set(name, types);
+  }
+
+  return typed;
+}
+
+/**
+ * Maps each JSDoc block that types a parameter to where the code it documents begins.
+ * @param {string} source The raw source text.
+ * @param {object[]} comments Every comment acorn found in the source.
+ * @returns {Map<number, Map<string, string[]>>} The offset of each documented node, to its typed parameters.
+ */
+function indexDocs(source, comments)
+{
+  const docs = new Map();
+
+  for (const comment of comments)
+  {
+    // only a `/** … */` block is JSDoc.
+    if (comment.type !== 'Block' || comment.value.startsWith('*') === false) continue;
+
+    const typed = readTypedParams(comment.value);
+    if (typed.size === 0) continue;
+
+    // the documented code starts at the first character after the block that is not blank.
+    let offset = comment.end;
+    while (offset < source.length && /\s/.test(source[offset])) offset++;
+
+    docs.set(offset, typed);
+  }
+
+  return docs;
+}
+
+/**
+ * Finds the JSDoc typing a function's parameters. A block documents a function when it ends right
+ * where the function begins, or where one of the nodes it can sit in front of begins: the statement
+ * assigning it, the class member holding it, the declaration naming it.
+ * @param {object} fn The function node.
+ * @param {object[]} ancestors The function's ancestors, nearest last.
+ * @param {Map<number, Map<string, string[]>>} docs The offset of each documented node, to its typed parameters.
+ * @returns {Map<string, string[]>} The typed parameters, empty when no block documents the function.
+ */
+function findDoc(fn, ancestors, docs)
+{
+  if (docs.has(fn.start)) return docs.get(fn.start);
+
+  for (let depth = ancestors.length - 1; depth >= 0; depth--)
+  {
+    const ancestor = ancestors[depth];
+
+    // a function handed to a call or nested in an expression is not what a block above it documents.
+    if (DOC_CARRIERS.has(ancestor.type) === false) break;
+    if (docs.has(ancestor.start)) return docs.get(ancestor.start);
+  }
+
+  return new Map();
+}
+
+/**
+ * The names a function declares as parameters, whether or not they carry a default value.
+ * @param {object} fn The function node.
+ * @returns {string[]}
+ */
+function parameterNames(fn)
+{
+  return fn.params
+    .map(param => (param.type === 'AssignmentPattern' ? param.left : param))
+    .filter(param => param.type === 'Identifier')
+    .map(param => param.name);
+}
+
+/**
+ * Determines whether a documented type is one the index can answer for.
+ * @param {string} type The class name the JSDoc gives.
+ * @param {ClassIndex} index The populated class index.
+ * @returns {boolean}
+ */
+function isJudgeableType(type, index)
+{
+  return UNJUDGEABLE_RECEIVERS.has(type) === false && index.knows(type);
+}
+
+/**
+ * Records a call when it is a method call made directly on one of the parameters being tracked.
+ * @param {object} node The call expression.
+ * @param {Map<string, string[]>} tracked Each tracked parameter in scope, to its classes.
+ * @param {{receiver: string, member: string, types: string[], line: number}[]} found Where the call is recorded.
+ */
+function recordTypedCall(node, tracked, found)
+{
+  const { callee } = node;
+  if (callee.type !== 'MemberExpression' || callee.computed) return;
+  if (callee.object.type !== 'Identifier' || callee.property.type !== 'Identifier') return;
+
+  const receiver = callee.object.name;
+  if (tracked.has(receiver) === false) return;
+
+  found.push({ receiver, member: callee.property.name, types: tracked.get(receiver), line: node.loc.start.line });
+}
+
+/**
+ * Collects the calls a function body makes on its tracked parameters. A nested function that declares
+ * a parameter by the same name hides the outer one, so the name is dropped inside it.
+ * @param {object} node The node to search.
+ * @param {Map<string, string[]>} tracked Each tracked parameter in scope, to its classes.
+ * @param {{receiver: string, member: string, types: string[], line: number}[]} found Where each call is recorded.
+ */
+function collectTypedCalls(node, tracked, found)
+{
+  // anything without a type is not a node worth descending into.
+  if (!node || !node.type) return;
+
+  let inScope = tracked;
+
+  if (FUNCTION_TYPES.has(node.type))
+  {
+    const shadowed = parameterNames(node);
+    inScope = new Map([ ...tracked ].filter(([ name ]) => shadowed.includes(name) === false));
+
+    // nothing being tracked is visible in here.
+    if (inScope.size === 0) return;
+  }
+
+  if (node.type === 'CallExpression') recordTypedCall(node, inScope, found);
+
+  for (const key of Object.keys(node))
+  {
+    // skip the location bookkeeping acorn hangs off every node.
+    if (key === 'loc' || key === 'start' || key === 'end') continue;
+
+    const child = node[key];
+
+    // a node's children arrive either singly or in a list.
+    if (Array.isArray(child))
+    {
+      child.forEach(entry => collectTypedCalls(entry, inScope, found));
+    }
+    else if (child && child.type)
+    {
+      collectTypedCalls(child, inScope, found);
+    }
+  }
+}
+
+/**
+ * Collects every method call on a typed parameter that none of the parameter's documented classes
+ * declares.
+ *
+ * A call is judged only when every class the JSDoc names is one the index knows, and it passes when
+ * any one of them declares the member, on the class itself, up its inheritance chain, through any
+ * prototype patch anywhere in the tree, or in the engine. So a finding is a method that exists on
+ * nothing the JSDoc says the value can be.
+ * @param {string} filePath The repository-relative file path.
+ * @param {object} ast The parsed source.
+ * @param {Map<number, Map<string, string[]>>} docs The offset of each documented node, to its typed parameters.
+ * @param {ClassIndex} index The populated class index.
+ * @returns {{filePath: string, line: number, receiver: string, member: string, types: string[]}[]} The violations.
+ */
+function collectTypedViolations(filePath, ast, docs, index)
+{
+  const violations = [];
+
+  walkWithAncestors(ast, [], (node, ancestors) =>
+  {
+    if (FUNCTION_TYPES.has(node.type) === false) return;
+
+    const documented = findDoc(node, ancestors, docs);
+    const declared = parameterNames(node);
+
+    // only a parameter this function declares, documented wholly in classes the index knows, is judged.
+    const tracked = new Map([ ...documented ]
+      .filter(([ name, types ]) => declared.includes(name) && types.every(type => isJudgeableType(type, index))));
+    if (tracked.size === 0) return;
+
+    const calls = [];
+    collectTypedCalls(node.body, tracked, calls);
+
+    for (const { receiver, member, types, line } of calls)
+    {
+      if (FUNCTION_MEMBERS.has(member) || OBJECT_MEMBERS.has(member)) continue;
+      if (types.some(type => index.resolves(type, member))) continue;
+
+      // a class inheriting from something the index cannot see may get the member from there.
+      if (types.some(type => index.isOpen(type))) continue;
+
+      violations.push({ filePath, line, receiver, member, types });
+    }
+  });
+
+  return violations;
+}
+
+/**
+ * Runs the typed-parameter control: the planted method must yield exactly one finding, for the
+ * setter that never existed. The real setter has to resolve through `Game_Actor`'s inheritance chain to
+ * a prototype patch in another plugin, and the parameter typed `{object}` must not be judged at all.
+ * @param {ClassIndex} index The populated class index.
+ * @returns {boolean} True when the control behaved as required.
+ */
+function runTypedControl(index)
+{
+  const { ast, comments } = parseWithComments(PLANTED_TYPED_SOURCE);
+  const docs = indexDocs(PLANTED_TYPED_SOURCE, comments);
+  const flagged = collectTypedViolations('planted', ast, docs, index)
+    .map(violation => `${violation.receiver}.${violation.member}`);
+
+  const passed = flagged.length === 1 && flagged[0] === 'battler.setAutoApplyLastFrame';
+  const reported = flagged.length === 0 ? 'nothing' : flagged.join(', ');
+  const style = passed ? LogStyle.brightGreen : LogStyle.brightRed;
+
+  Logger.logAnyway(`  [${passed ? 'PASS' : 'FAIL'}] typed parameter control -> flagged ${reported}`, style);
+
+  return passed;
+}
+
+/**
  * Runs the controls that make a green result mean something.
  *
  * Two planted defects must be caught and two real calls must resolve. A broken index fails these
@@ -491,6 +997,9 @@ async function main()
 {
   const index = new ClassIndex();
 
+  // PIXI is a bundled library rather than source, so what the engine inherits from it is written down.
+  indexPixi(index);
+
   // the engine goes in first and is mandatory. a partial index does not under-report, it
   // over-reports- every correct engine call becomes a finding- so a missing file is fatal.
   for (const filePath of ENGINE_FILES)
@@ -518,16 +1027,21 @@ async function main()
     ignore: EXEMPT_BASENAMES.map(basename => `**/${basename}`),
   });
 
-  /** @type {{filePath: string, ast: object}[]} */
+  /** @type {{filePath: string, ast: object, docs: Map<number, Map<string, string[]>>}[]} */
   const parsed = [];
 
   for (const filePath of files)
   {
     let ast;
+    let docs;
 
     try
     {
-      ast = parse(await fs.readFile(filePath, 'utf-8'), 'module');
+      const source = await fs.readFile(filePath, 'utf-8');
+      const { ast: parsedAst, comments } = parseWithComments(source);
+
+      ast = parsedAst;
+      docs = indexDocs(source, comments);
     }
     catch (error)
     {
@@ -538,14 +1052,15 @@ async function main()
 
     // indexing must finish across the whole tree before any call can be judged against it.
     indexFile(ast, index);
-    parsed.push({ filePath, ast });
+    parsed.push({ filePath, ast, docs });
   }
 
   if (process.argv.includes('--selftest'))
   {
     const controlsPassed = runControls(index);
+    const typedControlPassed = runTypedControl(index);
 
-    if (controlsPassed === false)
+    if (controlsPassed === false || typedControlPassed === false)
     {
       Logger.logAnyway('phantom-call verify FAILED: controls did not behave as required.', LogStyle.brightRed);
       Logger.logAnyway('  The index is wrong, so any result it produces is meaningless. Fix the index first.',
@@ -556,20 +1071,24 @@ async function main()
   }
 
   const violations = [];
+  const typedViolations = [];
 
-  for (const { filePath, ast } of parsed)
+  for (const { filePath, ast, docs } of parsed)
   {
     violations.push(...collectViolations(filePath, ast, index));
+    typedViolations.push(...collectTypedViolations(filePath, ast, docs, index));
   }
 
-  if (violations.length === 0)
+  if (violations.length === 0 && typedViolations.length === 0)
   {
-    Logger.logAnyway('phantom-call verify: OK (every statically-dispatched call resolves).', LogStyle.brightGreen);
+    Logger.logAnyway('phantom-call verify: OK (every statically-dispatched and typed-parameter call resolves).',
+      LogStyle.brightGreen);
 
     return 0;
   }
 
-  Logger.logAnyway(`phantom-call verify FAILED: ${violations.length} violation(s) found.`, LogStyle.brightRed);
+  const total = violations.length + typedViolations.length;
+  Logger.logAnyway(`phantom-call verify FAILED: ${total} violation(s) found.`, LogStyle.brightRed);
   Logger.logAnyway('  These calls name a method that does not exist on the receiver or anywhere up its', LogStyle.brightYellow);
   Logger.logAnyway('  inheritance chain. Each one throws the moment its line runs. Implement the method,', LogStyle.brightYellow);
   Logger.logAnyway('  or correct the call to the name that does exist.', LogStyle.brightYellow);
@@ -577,6 +1096,15 @@ async function main()
   for (const violation of violations)
   {
     Logger.logAnyway(`  • ${violation.filePath}:${violation.line}: ${violation.receiver}.${violation.member}() does not exist`,
+      LogStyle.brightRed);
+  }
+
+  for (const violation of typedViolations)
+  {
+    const typeText = violation.types.join('|');
+    const where = `${violation.filePath}:${violation.line}`;
+
+    Logger.logAnyway(`  • ${where}: ${violation.receiver}.${violation.member}() is declared on none of {${typeText}}`,
       LogStyle.brightRed);
   }
 

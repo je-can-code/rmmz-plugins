@@ -2,4 +2,5 @@
 export const PLUGIN_NAME = 'J-Aptitude-Typed';
 export const PLUGIN_VERSION = '1.2.1';
 export const PLUGIN_DESC_TAG = 'APT-TYPED';
+export const PLUGIN_DESCRIPTION = 'Adds typed (element/weapon type/skill type) AP gains and teachables.';
 //endregion ship-meta

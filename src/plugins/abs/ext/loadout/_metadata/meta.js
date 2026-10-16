@@ -6,4 +6,5 @@
 export const PLUGIN_NAME = 'J-ABS-Loadout';
 export const PLUGIN_VERSION = '1.1.0';
 export const PLUGIN_DESC_TAG = 'ABS-LOADOUT';
+export const PLUGIN_DESCRIPTION = 'A scene for managing every party member\'s combat loadout.';
 //endregion ship-meta

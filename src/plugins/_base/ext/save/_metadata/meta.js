@@ -6,4 +6,5 @@
 export const PLUGIN_NAME = 'J-Base-Save';
 export const PLUGIN_VERSION = '1.0.3';
 export const PLUGIN_DESC_TAG = 'BASE-SAVE';
+export const PLUGIN_DESCRIPTION = 'Saves as readable JSON instead of a compressed heap dump.';
 //endregion ship-meta

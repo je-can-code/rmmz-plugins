@@ -6,4 +6,5 @@
 export const PLUGIN_NAME = 'J-ABS-Boss';
 export const PLUGIN_VERSION = '1.0.1';
 export const PLUGIN_DESC_TAG = 'ABS-BOSS';
+export const PLUGIN_DESCRIPTION = 'Data-driven boss encounters for J-ABS.';
 //endregion ship-meta

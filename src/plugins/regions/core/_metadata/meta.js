@@ -6,4 +6,5 @@
 export const PLUGIN_NAME = 'J-RegionEffects';
 export const PLUGIN_VERSION = '1.3.0';
 export const PLUGIN_DESC_TAG = 'REGIONS';
+export const PLUGIN_DESCRIPTION = 'A plugin that controls passage by region ids.';
 //endregion ship-meta

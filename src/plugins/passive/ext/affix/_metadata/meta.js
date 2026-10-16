@@ -6,4 +6,5 @@
 export const PLUGIN_NAME = 'J-Passive-Affix';
 export const PLUGIN_VERSION = '1.3.0';
 export const PLUGIN_DESC_TAG = 'PASSIVE-AFFIX';
+export const PLUGIN_DESCRIPTION = 'Random passive affixes + tier presentation for JABS enemies.';
 //endregion ship-meta

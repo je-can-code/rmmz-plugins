@@ -6,4 +6,5 @@
 export const PLUGIN_NAME = 'J-ABS-Metrics';
 export const PLUGIN_VERSION = '1.0.0';
 export const PLUGIN_DESC_TAG = 'ABS-METRICS';
+export const PLUGIN_DESCRIPTION = 'Records JABS combat activity into game variables.';
 //endregion ship-meta

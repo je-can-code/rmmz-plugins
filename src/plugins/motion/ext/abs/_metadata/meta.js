@@ -6,4 +6,5 @@
 export const PLUGIN_NAME = 'J-Motion-ABS';
 export const PLUGIN_VERSION = '1.2.1';
 export const PLUGIN_DESC_TAG = 'MOTION-ABS';
+export const PLUGIN_DESCRIPTION = 'Combat-driven motion: state effects, deaths, arrivals and departures.';
 //endregion ship-meta

@@ -11,11 +11,15 @@
  * - **`@target`, `@author`, `@url`** are identical in every ship, so they live here as constants.
  * - **`@plugindesc`** is assembled from the ship's `meta.js`: its version, its description tag and its
  *   `PLUGIN_DESCRIPTION`. None of it lives in the book.
- * - **`@base` / `@orderAfter`** come from the book's `dependencies` page. In this repository
- *   `@orderAfter` is how an optional dependency gets declared, not only a claim about load order.
+ * - **`@base` / `@orderAfter` / `@orderBefore`** come from the book's `dependencies` page. In this
+ *   repository `@orderAfter` is how an optional dependency gets declared, not only a claim about load
+ *   order.
  * - **`@help`** is a pointer to the book on GitHub, because the book is the manual now.
  * - **`@param` / `@command`** come from the `plugin-parameter` and `plugin-command` pages, in the order
  *   the book's `index.md` lists them. That is also the order MZ shows them in.
+ * - **Struct blocks** come from the `plugin-struct` pages, also in index order. MZ reads each struct from
+ *   a comment of its own after the main one, and any parameter or argument can name it as
+ *   `struct<Name>`, so a struct is a page of its own rather than part of the parameters that use it.
  *
  * The work is split in two on purpose. Rendering is pure: it takes pages that were already parsed and
  * returns text, which is what lets Vitest - running on Node - test every rule here. Reading the book is
@@ -73,21 +77,34 @@ const RESERVED_FILENAMES = [ 'index.md', 'log.md' ];
 /**
  * The page types the header is built from.<br/>
  * These are the type names the books themselves use, so renaming one in a book means renaming it here.
- * @type {{ parameter: string, command: string, dependencies: string }}
+ * @type {{ parameter: string, command: string, struct: string, dependencies: string }}
  */
 const PAGE_TYPES = {
   parameter: 'plugin-parameter',
   command: 'plugin-command',
+  struct: 'plugin-struct',
   dependencies: 'dependencies',
 };
 
 /**
- * The MZ tags a parameter may set, in the order they are written.<br/>
- * A key outside this list is an error rather than something to skip, so a fact can never quietly fall
- * out of the header.
+ * The MZ tags that describe a value, in the order they are written.<br/>
+ * Parameters, command arguments and struct fields all describe a value the same way, so they share this
+ * one list. The order is the one the hand-written headers mostly use: the type and whatever narrows it,
+ * then the words a reader sees, then the default. That way a header regenerated from a book moves as few
+ * lines as possible. `options` is the one entry that is not an MZ tag itself: it holds a select's
+ * choices, each written as an `@option` and, when it has one, a `@value`.
  * @type {string[]}
  */
-const PARAMETER_TAGS = [ 'parent', 'type', 'text', 'desc', 'min', 'max', 'default' ];
+const VALUE_TAGS = [ 'type', 'dir', 'options', 'decimals', 'min', 'max', 'text', 'desc', 'on', 'off', 'default' ];
+
+/**
+ * The MZ tags a parameter may set, in the order they are written.<br/>
+ * A parameter describes a value like anything else, and may also name the group it sits under. A key
+ * outside this list is an error rather than something to skip, so a fact can never quietly fall out of
+ * the header.
+ * @type {string[]}
+ */
+const PARAMETER_TAGS = [ 'parent', ...VALUE_TAGS ];
 
 /**
  * The MZ tags a plugin command may set, in the order they are written.<br/>
@@ -97,18 +114,33 @@ const PARAMETER_TAGS = [ 'parent', 'type', 'text', 'desc', 'min', 'max', 'defaul
 const COMMAND_TAGS = [ 'text', 'desc' ];
 
 /**
- * The MZ tags a plugin command's argument may set, in the order they are written.<br/>
- * Same rule as parameters: an unknown key is an error.
+ * The fields one of a select's options may carry.<br/>
+ * Named after the MZ tags each one is written as.
  * @type {string[]}
  */
-const ARGUMENT_TAGS = [ 'type', 'min', 'max', 'desc', 'default' ];
+const OPTION_FIELDS = [ 'option', 'value' ];
+
+/**
+ * The fields a struct block may carry.<br/>
+ * Its name, and the fields MZ shows when one of these structs is edited.
+ * @type {string[]}
+ */
+const STRUCT_FIELDS = [ 'key', 'params' ];
+
+/**
+ * The MZ tags a dependency entry can declare, in the order they are written.<br/>
+ * Each is a true-or-false field on the entry. A hard requirement is a base; a plugin this one uses
+ * whenever it is present is an orderAfter; a plugin this one has to load ahead of is an orderBefore.
+ * @type {string[]}
+ */
+const DEPENDENCY_TAGS = [ 'base', 'orderAfter', 'orderBefore' ];
 
 /**
  * The fields a dependency entry may carry.<br/>
  * `version` is the minimum version the plugin needs; MZ has no tag for it, so it informs readers only.
  * @type {string[]}
  */
-const DEPENDENCY_FIELDS = [ 'key', 'version', 'base', 'orderAfter' ];
+const DEPENDENCY_FIELDS = [ 'key', 'version', ...DEPENDENCY_TAGS ];
 
 /**
  * The `meta.js` exports a ship with a book must provide.<br/>
@@ -201,7 +233,8 @@ function assertKnownKeys(fields, allowedKeys, location)
 
 /**
  * Fails loudly when a block has no `key`.<br/>
- * The key is the name MZ knows the parameter, command, argument or plugin by, so every block needs one.
+ * The key is the name MZ knows the parameter, command, argument, struct or plugin by, so every block
+ * needs one.
  * @param {object} fields The frontmatter block being checked.
  * @param {string} location Where the block lives, for the error message.
  */
@@ -214,16 +247,141 @@ function assertHasKey(fields, location)
 }
 
 /**
- * Writes the MZ tag lines a block sets, in the given order, skipping the tags it leaves out.
- * @param {object} fields The block's frontmatter fields.
- * @param {string[]} tagOrder The tags this kind of block may set, in the order they are written.
+ * Fails loudly when a tag's value is a list or a mapping instead of a single value.<br/>
+ * YAML reads an unquoted `[]` or `{…}` as structure, so a JSON default written without quotes would
+ * reach the header as an empty string or as `[object Object]`. Quoting it in the book keeps it as text.
+ * @param {*} value The tag's value, as YAML parsed it.
+ * @param {string} location Where the value lives, for the error message.
+ */
+function assertSingleValue(value, location)
+{
+  // Object() hands a list or a mapping back unchanged, and wraps every single value in something new.
+  if (Object(value) !== value) return;
+
+  throw new Error(`okf-header: ${location} is a list or a mapping; quote it to keep it as text`);
+}
+
+/**
+ * Writes one MZ tag with its value.<br/>
+ * A value that spans several lines keeps its line breaks: the first line sits beside the tag and the
+ * rest carry on beneath it, the way a long hand-written `@desc` does. Whenever that first line is empty,
+ * the tag is written bare, which is how MZ writes an empty value. YAML reads a value left blank as null,
+ * which means the same thing here. The line break a YAML block value ends with means nothing to MZ, so it
+ * is dropped rather than written as an empty line.
+ * @param {string} tag The MZ tag, without its @.
+ * @param {string|number|boolean|null} value The tag's value, as YAML parsed it.
+ * @param {string} location Where the value lives, for the error message.
  * @returns {string[]}
  */
-function renderTagLines(fields, tagOrder)
+function renderTagLines(tag, value, location)
+{
+  assertSingleValue(value, `${location} ${tag}`);
+
+  // a blank value means the same as an empty one, and trailing whitespace means nothing at all.
+  const text = `${value ?? ''}`.trimEnd();
+
+  // the first line sits beside its tag, which is left bare when that line is empty.
+  const [ firstLine, ...moreLines ] = text.split('\n');
+  const tagLine = `@${tag} ${firstLine}`.trimEnd();
+
+  // any further lines carry on beneath the tag.
+  return [ tagLine, ...moreLines ];
+}
+
+/**
+ * Writes a select's options, each followed by its value when it has one.<br/>
+ * Most hand-written options carry no `@value` at all, so an entry may leave its value out.
+ * @param {{ option: string, value: string }[]} options The options, in the order MZ lists them.
+ * @param {string} location Where the options live, for the error messages.
+ * @returns {string[]}
+ */
+function renderOptionLines(options, location)
+{
+  return options.flatMap((entry, entryIndex) =>
+  {
+    const entryLocation = `${location} options[${entryIndex}]`;
+    assertKnownKeys(entry, OPTION_FIELDS, entryLocation);
+
+    // the option's text is what MZ offers to pick, so an entry without one has nothing to offer.
+    if (entry.option === undefined)
+    {
+      throw new Error(`okf-header: ${entryLocation} is missing its option`);
+    }
+
+    const optionLines = renderTagLines('option', entry.option, entryLocation);
+
+    // an option without a value is written alone.
+    if (entry.value === undefined) return optionLines;
+
+    const valueLines = renderTagLines('value', entry.value, entryLocation);
+    return [ ...optionLines, ...valueLines ];
+  });
+}
+
+/**
+ * Writes every MZ tag a block sets, in the given order, skipping the tags it leaves out.
+ * @param {object} fields The block's frontmatter fields.
+ * @param {string[]} tagOrder The tags this kind of block may set, in the order they are written.
+ * @param {string} location Where the block lives, for the error messages.
+ * @returns {string[]}
+ */
+function renderBlockTagLines(fields, tagOrder, location)
 {
   return tagOrder
     .filter(tag => fields[tag] !== undefined)
-    .map(tag => `@${tag} ${fields[tag]}`);
+    .flatMap(tag =>
+    {
+      // a select's options are a list, written as one option after another.
+      if (tag === 'options') return renderOptionLines(fields.options, location);
+
+      return renderTagLines(tag, fields[tag], location);
+    });
+}
+
+/**
+ * Writes one named block: the tag that opens it with the block's name, then every tag it sets.<br/>
+ * Parameters, command arguments and struct fields are all written this way; only the opening tag and
+ * the tags each may set differ.
+ * @param {string} openingTag The tag that opens the block, without its @, such as `param` or `arg`.
+ * @param {object} fields The block's frontmatter fields.
+ * @param {string[]} tagOrder The tags this kind of block may set, in the order they are written.
+ * @param {string} location Where the block lives, for the error messages.
+ * @returns {string[]}
+ */
+function renderKeyedBlock(openingTag, fields, tagOrder, location)
+{
+  assertKnownKeys(fields, [ 'key', ...tagOrder ], location);
+  assertHasKey(fields, location);
+
+  const tagLines = renderBlockTagLines(fields, tagOrder, location);
+  return [ `@${openingTag} ${fields.key}`, ...tagLines ];
+}
+
+/**
+ * Wraps blocks of tag lines in one MZ comment.<br/>
+ * Blocks are separated by an empty comment line, the way every hand-written header reads, and every line
+ * is prefixed so MZ reads it as part of the comment.
+ * @param {string} opener The line that opens the comment: `/*:` for the header, or a struct's own.
+ * @param {string[][]} blocks Each block's lines, in the order they are written.
+ * @returns {string[]}
+ */
+function renderCommentBlock(opener, blocks)
+{
+  const bodyLines = blocks.flatMap((blockLines, blockIndex) =>
+  {
+    // the first block opens the comment, and every later one is set off by an empty line.
+    if (blockIndex === 0) return blockLines;
+    return [ '', ...blockLines ];
+  });
+
+  // every line sits inside the comment, with empty lines left bare.
+  const commentLines = bodyLines.map(line =>
+  {
+    if (line === '') return ' *';
+    return ` * ${line}`;
+  });
+
+  return [ opener, ...commentLines, ' */' ];
 }
 
 /**
@@ -234,7 +392,6 @@ function renderTagLines(fields, tagOrder)
 export function renderParameterBlock(page)
 {
   const { param } = page.data;
-  const location = `${page.path} (param)`;
 
   // a parameter page without its block has nothing for MZ to show.
   if (param === undefined)
@@ -242,11 +399,7 @@ export function renderParameterBlock(page)
     throw new Error(`okf-header: ${page.path} has no param block`);
   }
 
-  assertKnownKeys(param, [ 'key', ...PARAMETER_TAGS ], location);
-  assertHasKey(param, location);
-
-  const tagLines = renderTagLines(param, PARAMETER_TAGS);
-  return [ `@param ${param.key}`, ...tagLines ];
+  return renderKeyedBlock('param', param, PARAMETER_TAGS, `${page.path} (param)`);
 }
 
 /**
@@ -268,29 +421,61 @@ export function renderCommandBlock(page)
   assertKnownKeys(command, [ 'key', 'args', ...COMMAND_TAGS ], location);
   assertHasKey(command, location);
 
-  const tagLines = renderTagLines(command, COMMAND_TAGS);
+  const tagLines = renderBlockTagLines(command, COMMAND_TAGS, location);
   const lines = [ `@command ${command.key}`, ...tagLines ];
 
   // a command that takes nothing simply has no args list.
   if (command.args === undefined) return lines;
 
   // each argument is written after the command's own tags, in the order the page lists them.
-  command.args.forEach((argument, argumentIndex) =>
+  const argumentLines = command.args.flatMap((argument, argumentIndex) =>
   {
-    const argumentLocation = `${page.path} (args[${argumentIndex}])`;
-    assertKnownKeys(argument, [ 'key', ...ARGUMENT_TAGS ], argumentLocation);
-    assertHasKey(argument, argumentLocation);
-
-    const argumentTagLines = renderTagLines(argument, ARGUMENT_TAGS);
-    lines.push(`@arg ${argument.key}`, ...argumentTagLines);
+    return renderKeyedBlock('arg', argument, VALUE_TAGS, `${page.path} (args[${argumentIndex}])`);
   });
 
-  return lines;
+  return [ ...lines, ...argumentLines ];
+}
+
+/**
+ * Writes one struct's whole comment from its page.<br/>
+ * Unlike parameters and commands, a struct is not a block inside the header but a comment of its own,
+ * named after `~struct~` so that any parameter or argument can use it as `struct<Name>`.
+ * @param {{ path: string, data: object }} page A `plugin-struct` page.
+ * @returns {string[]}
+ */
+export function renderStructBlock(page)
+{
+  const { struct } = page.data;
+  const location = `${page.path} (struct)`;
+
+  // a struct page without its block has nothing for MZ to show.
+  if (struct === undefined)
+  {
+    throw new Error(`okf-header: ${page.path} has no struct block`);
+  }
+
+  assertKnownKeys(struct, STRUCT_FIELDS, location);
+  assertHasKey(struct, location);
+
+  // a struct without fields would open an empty editor in MZ, so it is a mistake rather than a choice.
+  if (struct.params === undefined || struct.params.length === 0)
+  {
+    throw new Error(`okf-header: ${location} has no params`);
+  }
+
+  // each field is a block of its own, in the order the page lists them.
+  const fieldBlocks = struct.params.map((field, fieldIndex) =>
+  {
+    return renderKeyedBlock('param', field, VALUE_TAGS, `${page.path} (params[${fieldIndex}])`);
+  });
+
+  return renderCommentBlock(`/*~struct~${struct.key}:`, fieldBlocks);
 }
 
 /**
  * Writes the dependency declarations from a book's dependencies page.<br/>
- * Every `@base` comes first and every `@orderAfter` after it, each in the order the page lists them.
+ * Every `@base` comes first, then every `@orderAfter`, then every `@orderBefore`, each in the order the
+ * page lists them.
  * @param {{ path: string, data: object }[]} pages Every parsed page in the book.
  * @returns {string[]}
  */
@@ -323,15 +508,13 @@ export function renderDependencyLines(pages)
     assertHasKey(dependency, location);
   });
 
-  // a hard requirement is a base; a plugin this one uses whenever it is present is an orderAfter.
-  const baseLines = dependencies
-    .filter(dependency => dependency.base === true)
-    .map(dependency => `@base ${dependency.key}`);
-  const orderAfterLines = dependencies
-    .filter(dependency => dependency.orderAfter === true)
-    .map(dependency => `@orderAfter ${dependency.key}`);
-
-  return [ ...baseLines, ...orderAfterLines ];
+  // each tag gathers every entry marked for it, so an entry can be both a base and an orderAfter.
+  return DEPENDENCY_TAGS.flatMap(tag =>
+  {
+    return dependencies
+      .filter(dependency => dependency[tag] === true)
+      .map(dependency => `@${tag} ${dependency.key}`);
+  });
 }
 
 /**
@@ -418,23 +601,13 @@ export function renderHeader(book, meta, shipPath)
   const commandPages = orderPagesOfType(pages, indexOrder, PAGE_TYPES.command);
   const parameterBlocks = parameterPages.map(renderParameterBlock);
   const commandBlocks = commandPages.map(renderCommandBlock);
-  const blocks = [ identityLines, ...parameterBlocks, ...commandBlocks ];
+  const headerLines = renderCommentBlock('/*:', [ identityLines, ...parameterBlocks, ...commandBlocks ]);
 
-  // blocks are separated by an empty comment line, the way every hand-written header reads.
-  const bodyLines = blocks.flatMap((blockLines, blockIndex) =>
-  {
-    if (blockIndex === 0) return blockLines;
-    return [ '', ...blockLines ];
-  });
+  // each struct follows the header as a comment of its own, in the order the index lists them.
+  const structPages = orderPagesOfType(pages, indexOrder, PAGE_TYPES.struct);
+  const structLines = structPages.flatMap(renderStructBlock);
 
-  // every line sits inside the one comment block MZ parses, with empty lines left bare.
-  const commentLines = bodyLines.map(line =>
-  {
-    if (line === '') return ' *';
-    return ` * ${line}`;
-  });
-
-  return [ '//region annotations', '/*:', ...commentLines, ' */', '//endregion annotations' ].join('\n');
+  return [ '//region annotations', ...headerLines, ...structLines, '//endregion annotations' ].join('\n');
 }
 
 /**

@@ -30,7 +30,7 @@ describe('MoveStateRemovalManager (direct src import)', () =>
     return {
       allStates: vi.fn().mockReturnValue([]),
       decrementStateStacks: vi.fn(),
-      setAutoApplyLastFrame: vi.fn(),
+      setAutoRuleLastFrame: vi.fn(),
       getUuid: vi.fn().mockReturnValue('battler-uuid'),
       ...overrides,
     };
@@ -169,8 +169,8 @@ describe('MoveStateRemovalManager (direct src import)', () =>
       MoveStateRemovalManager.process(battler);
 
       // Assert
-      expect(battler.setAutoApplyLastFrame).toHaveBeenCalledTimes(1);
-      expect(battler.setAutoApplyLastFrame).toHaveBeenCalledWith(expect.any(String), 500);
+      expect(battler.setAutoRuleLastFrame).toHaveBeenCalledTimes(1);
+      expect(battler.setAutoRuleLastFrame).toHaveBeenCalledWith(expect.any(String), 500);
     });
 
     it('does not reset a cooldown for a non-stand condition tuple matching the same state id', () =>
@@ -189,7 +189,7 @@ describe('MoveStateRemovalManager (direct src import)', () =>
       MoveStateRemovalManager.process(battler);
 
       // Assert
-      expect(battler.setAutoApplyLastFrame).not.toHaveBeenCalled();
+      expect(battler.setAutoRuleLastFrame).not.toHaveBeenCalled();
     });
   });
 });

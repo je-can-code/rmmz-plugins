@@ -40,8 +40,6 @@ import './models/StateAfflictionBattlerIdentity.js';
 import './models/StateAfflictionMapLayoutConfig.js';
 import './models/StateAfflictionProvider.js';
 import './models/JABS_Timer.js';
-import './_metadata/_annotations.js';
-import './_metadata/meta.js';
 import './_metadata/pluginCommands.js';
 import './database/RPG_BaseBattler.js';
 import './database/RPG_Class.js';

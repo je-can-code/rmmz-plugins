@@ -6,4 +6,5 @@
 export const PLUGIN_NAME = 'J-Extend';
 export const PLUGIN_VERSION = '1.9.0';
 export const PLUGIN_DESC_TAG = 'EXTEND';
+export const PLUGIN_DESCRIPTION = 'Extends the capabilities of skills/actions.';
 //endregion ship-meta

@@ -6,4 +6,5 @@
 export const PLUGIN_NAME = 'J-Weather';
 export const PLUGIN_VERSION = '1.0.1';
 export const PLUGIN_DESC_TAG = 'WEATHER';
+export const PLUGIN_DESCRIPTION = 'Named ambience and weather, declared per map.';
 //endregion ship-meta

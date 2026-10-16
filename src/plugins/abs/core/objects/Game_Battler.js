@@ -450,7 +450,8 @@ Game_Battler.prototype.getProjectileDurationModifier = function()
 
 /**
  * The sum of all flat tick-speed modifiers ({@code <tickSpeedFlat:N>}) currently affecting
- * this battler. Positive values shorten the resolved tick interval; negative values lengthen it.
+ * this battler. Positive values lengthen the resolved tick interval, so ticks come slower; negative values
+ * shorten it.
  * @returns {number}
  */
 Game_Battler.prototype.tickSpeedFlatModifier = function()

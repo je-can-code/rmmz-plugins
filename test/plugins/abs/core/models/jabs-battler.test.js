@@ -545,42 +545,74 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
 
   describe('inPursuitRange', () =>
   {
+    /**
+     * Builds a battler whose own vision modifier is the given value.
+     * @param {number} visionModifier This battler's own vision modifier.
+     * @returns {JABS_Battler} The battler, with a pursuit radius of 5.
+     */
+    const buildPursuer = visionModifier =>
+    {
+      const battler = buildGameBattler();
+      battler.getVisionModifier = () => visionModifier;
+      const jabsBattler = buildBattler({ battler });
+      jabsBattler.getPursuitRadius = () => 5;
+      return jabsBattler;
+    };
+
     it('is true when the distance is within the vision-modified pursuit radius', () =>
     {
-      const jabsBattler = buildBattler();
-      jabsBattler.getPursuitRadius = () => 5;
+      // Arrange
+      const jabsBattler = buildPursuer(1);
       const target = { getBattler: () => ({ getVisionModifier: () => 1 }) };
 
-      expect(jabsBattler.inPursuitRange(target, 5)).toBe(true);
+      // Act
+      const result = jabsBattler.inPursuitRange(target, 5);
+
+      // Assert
+      expect(result).toBe(true);
     });
 
     it('is false when the distance exceeds the vision-modified pursuit radius', () =>
     {
-      const jabsBattler = buildBattler();
-      jabsBattler.getPursuitRadius = () => 5;
+      // Arrange
+      const jabsBattler = buildPursuer(1);
       const target = { getBattler: () => ({ getVisionModifier: () => 1 }) };
 
-      expect(jabsBattler.inPursuitRange(target, 6)).toBe(false);
+      // Act
+      const result = jabsBattler.inPursuitRange(target, 6);
+
+      // Assert
+      expect(result).toBe(false);
     });
 
-    it('scales the pursuit radius by the target\'s vision modifier', () =>
+    it('scales the pursuit radius by this battler\'s own vision modifier, never the target\'s', () =>
     {
-      const jabsBattler = buildBattler();
-      jabsBattler.getPursuitRadius = () => 5;
-      const target = { getBattler: () => ({ getVisionModifier: () => 2 }) };
+      // Arrange
+      const jabsBattler = buildPursuer(2);
+      const target = { getBattler: () => ({ getVisionModifier: () => 0.5 }) };
 
-      expect(jabsBattler.inPursuitRange(target, 9)).toBe(true);
+      // Act
+      const result = jabsBattler.inPursuitRange(target, 9);
+
+      // Assert
+      expect(result).toBe(true);
     });
   });
 
   describe('applyVisionMultiplier', () =>
   {
-    it('scales the given radius by the target\'s vision modifier', () =>
+    it('scales the given radius by this battler\'s own vision modifier', () =>
     {
-      const jabsBattler = buildBattler();
-      const target = { getBattler: () => ({ getVisionModifier: () => 1.5 }) };
+      // Arrange
+      const battler = buildGameBattler();
+      battler.getVisionModifier = () => 1.5;
+      const jabsBattler = buildBattler({ battler });
 
-      expect(jabsBattler.applyVisionMultiplier(target, 10)).toBe(15);
+      // Act
+      const radius = jabsBattler.applyVisionMultiplier(10);
+
+      // Assert
+      expect(radius).toBe(15);
     });
   });
 

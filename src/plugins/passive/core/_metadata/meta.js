@@ -6,4 +6,5 @@
 export const PLUGIN_NAME = 'J-Passive';
 export const PLUGIN_VERSION = '2.4.0';
 export const PLUGIN_DESC_TAG = 'PASSIVE';
+export const PLUGIN_DESCRIPTION = 'Grants passive states from various database objects.';
 //endregion ship-meta

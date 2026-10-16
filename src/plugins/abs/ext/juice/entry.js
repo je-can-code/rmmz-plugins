@@ -1,7 +1,5 @@
 import './_metadata/initialization.js';
 
-import './_metadata/_annotations.js';
-import './_metadata/meta.js';
 import './core/JuiceIconResolver.js';
 import './database/RPG_Skill.js';
 import './helpers/JuiceFlurryStrikeRecord.js';

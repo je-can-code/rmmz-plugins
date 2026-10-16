@@ -6,4 +6,5 @@
 export const PLUGIN_NAME = 'J-Resources';
 export const PLUGIN_VERSION = '1.2.0';
 export const PLUGIN_DESC_TAG = 'RESOURCES';
+export const PLUGIN_DESCRIPTION = 'Extends skill cost/gain system to include HP, MP, and TP.';
 //endregion ship-meta

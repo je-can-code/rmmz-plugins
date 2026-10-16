@@ -6,4 +6,5 @@
 export const PLUGIN_NAME = 'J-Passive-OTIB';
 export const PLUGIN_VERSION = '1.1.1';
 export const PLUGIN_DESC_TAG = 'PASSIVE-OTIB';
+export const PLUGIN_DESCRIPTION = 'One-Time Item Boosts as permanent passive states.';
 //endregion ship-meta

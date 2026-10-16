@@ -6,4 +6,5 @@
 export const PLUGIN_NAME = 'J-Regions-Skills';
 export const PLUGIN_VERSION = '1.1.2';
 export const PLUGIN_DESC_TAG = 'REGIONS-SKILLS';
+export const PLUGIN_DESCRIPTION = 'Enables execution of skills via region ids.';
 //endregion ship-meta

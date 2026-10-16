@@ -50,4 +50,5 @@ class RegionSkillData
 }
 
 export default RegionSkillData;
+SerializableRegistry.register(RegionSkillData);
 //endregion RegionSkillData

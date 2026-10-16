@@ -56,6 +56,106 @@ describe('J-ABS initialization.js (direct src import)', () =>
       await import('../../../../../src/plugins/abs/core/_metadata/initialization.js');
     });
 
+    describe('RegExp.TeamId', () =>
+    {
+      it('finds the team id in every comment it reads, not only every other one', () =>
+      {
+        // Arrange
+        const regex = globalThis.J.ABS.RegExp.TeamId;
+
+        // Act
+        const firstMatch = regex.exec('<teamId:2>');
+        const secondMatch = regex.exec('<teamId:2>');
+
+        // Assert
+        expect(firstMatch).not.toBeNull();
+        expect(secondMatch).not.toBeNull();
+        expect(secondMatch[1]).toBe('2');
+      });
+
+      it('matches however the tag is capitalized, like every other J-ABS tag', () =>
+      {
+        // Arrange
+        const regex = globalThis.J.ABS.RegExp.TeamId;
+
+        // Act
+        const match = regex.exec('<TEAMID:3>');
+
+        // Assert
+        expect(match).not.toBeNull();
+        expect(match[1]).toBe('3');
+      });
+    });
+
+    describe('RegExp.Ogcd', () =>
+    {
+      /**
+       * Copies a tag regex without its global flag, the way RPGManager scans notes with one.
+       * @param {RegExp} regex The tag regex to copy.
+       * @returns {RegExp} A scanner that keeps no position between reads.
+       */
+      const scannerFor = regex => new RegExp(regex.source, regex.flags.replace('g', ''));
+
+      it('recognizes the noGlobalCooldown spelling the help and the glossary document', () =>
+      {
+        // Arrange
+        const scanner = scannerFor(globalThis.J.ABS.RegExp.Ogcd);
+
+        // Act
+        const matched = scanner.test('<noGlobalCooldown>');
+
+        // Assert
+        expect(matched).toBe(true);
+      });
+
+      it('still recognizes the short ogcd spelling', () =>
+      {
+        // Arrange
+        const scanner = scannerFor(globalThis.J.ABS.RegExp.Ogcd);
+
+        // Act
+        const matched = scanner.test('<ogcd>');
+
+        // Assert
+        expect(matched).toBe(true);
+      });
+    });
+
+    describe('RegExp.VisAnchor', () =>
+    {
+      /**
+       * Copies a tag regex without its global flag, the way RPGManager scans notes with one.
+       * @param {RegExp} regex The tag regex to copy.
+       * @returns {RegExp} A scanner that keeps no position between reads.
+       */
+      const scannerFor = regex => new RegExp(regex.source, regex.flags.replace('g', ''));
+
+      it('accepts 1.0, the way the help writes the right and bottom edges', () =>
+      {
+        // Arrange
+        const scanner = scannerFor(globalThis.J.ABS.RegExp.VisAnchor);
+
+        // Act
+        const match = scanner.exec('<visAnchor:[1.0, 0.5]>');
+
+        // Assert
+        expect(match).not.toBeNull();
+        expect(match[1]).toBe('[1.0, 0.5]');
+      });
+
+      it('still rejects an anchor past the right edge', () =>
+      {
+        // Arrange
+        const scanner = scannerFor(globalThis.J.ABS.RegExp.VisAnchor);
+
+        // Act
+        const match = scanner.exec('<visAnchor:[1.5, 0.5]>');
+
+        // Assert
+        expect(match).toBeNull();
+      });
+    });
+
     describe('TranslateOptionToSlot', () =>
     {
       it.each([

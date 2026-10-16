@@ -6,4 +6,5 @@
 export const PLUGIN_NAME = 'J-Level-Flat';
 export const PLUGIN_VERSION = '1.0.2';
 export const PLUGIN_DESC_TAG = 'LEVEL-FLAT';
+export const PLUGIN_DESCRIPTION = 'Flat per-level thresholds and map-based kill experience.';
 //endregion ship-meta

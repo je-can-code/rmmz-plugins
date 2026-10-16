@@ -1,0 +1,26 @@
+---
+type: changelog
+title: Changelog
+description: The list of all version updates this plugin has gone through and major change points.
+tags: [changes, versions]
+---
+
+# Changelog
+
+All the versioning and history of changes live here.
+
+## The Actual Changelog
+
+### 1.1.2
+  - Corrected PLUGIN_NAME from J-Region-Skills to J-Regions-Skills, matching the name the ship has always been built and
+    shipped under.
+### 1.1.1
+  - Adapted to the RPGManager array read signature.
+### 1.1.0
+  - Region skill step tracking is no longer written to savefiles for the player, followers, or vehicles; it is per-step
+    bookkeeping that means nothing across a load, and it now starts fresh.
+### 1.0.1
+  - Region skill triggers now roll through the shared on-chance system (lucky/cursed rolls, Accumulate Mode, Encore)
+    instead of a flat percent check, and can proc more than once per step.
+### 1.0.0
+  - Initial release.

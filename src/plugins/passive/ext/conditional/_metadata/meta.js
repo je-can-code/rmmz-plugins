@@ -6,4 +6,5 @@
 export const PLUGIN_NAME = 'J-Passive-Conditional';
 export const PLUGIN_VERSION = '1.4.0';
 export const PLUGIN_DESC_TAG = 'PASSIVE-CONDITIONAL';
+export const PLUGIN_DESCRIPTION = 'Gates passives and auto-applies combat states (JABS map).';
 //endregion ship-meta

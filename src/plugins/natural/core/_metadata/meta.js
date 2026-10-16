@@ -6,4 +6,5 @@
 export const PLUGIN_NAME = 'J-NaturalGrowth';
 export const PLUGIN_VERSION = '3.1.0';
 export const PLUGIN_DESC_TAG = 'NATURAL';
+export const PLUGIN_DESCRIPTION = 'Enables level-based growth of all parameters.';
 //endregion ship-meta

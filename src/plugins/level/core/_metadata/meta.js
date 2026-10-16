@@ -6,4 +6,5 @@
 export const PLUGIN_NAME = 'J-LevelMaster';
 export const PLUGIN_VERSION = '1.6.4';
 export const PLUGIN_DESC_TAG = 'LEVEL';
+export const PLUGIN_DESCRIPTION = 'Allows levels to have greater control and purpose.';
 //endregion ship-meta
