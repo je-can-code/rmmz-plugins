@@ -36,7 +36,7 @@
  *    a prefix to recognise them by.
  *
  * Usage:
- *   node src/build-tools/verify-no-self-calling-accessors.js
+ *   bun src/build-tools/verify-no-self-calling-accessors.js
  */
 import * as fs from 'fs/promises';
 import { glob } from 'glob';

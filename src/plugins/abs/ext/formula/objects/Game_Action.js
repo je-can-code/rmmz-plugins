@@ -435,7 +435,7 @@ Game_Action.prototype.onFormulaResourceDelta = function(recipient, amount, resou
  * Generates an action log entry for FORMULA and child-skill packets for any resource.
  * Healing may also be critical depending on the action result.
  * Only guards once against logging plugin presence.
- * @param {Game_Battler} recipient The battler who received the effect.
+ * @param {Game_Actor|Game_Enemy} recipient The battler who received the effect.
  * @param {number} amount The signed amount (positive => damage/loss, negative => heal/gain).
  * @param {"hp"|"mp"|"tp"} resource Which resource this packet targeted.
  * @param {number} skillId The skill id attributed to this packet (parent or child).

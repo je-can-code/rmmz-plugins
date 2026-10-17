@@ -262,7 +262,7 @@ Scene_Equip.prototype.switchToMoreDataFromEquipSlots = function()
  *
  * The slots and the items wanted the same nine lines with two words changed, so they share them. Which
  * list is underneath, and where cancelling returns to, is the whole of the difference.
- * @param {Window_Selectable} sourceWindow The list the panel was summoned from.
+ * @param {Window_EquipSlot|Window_EquipItem} sourceWindow The list the panel was summoned from.
  * @param {Function} onCancel What backing out of the panel should do.
  */
 Scene_Equip.prototype.toggleMoreData = function(sourceWindow, onCancel)

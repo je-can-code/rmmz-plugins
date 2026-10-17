@@ -1,5 +1,4 @@
 //region initialization
-import AptitudeTeachable from './../_models/AptitudeTeachable.js';
 import JAptitude_PluginMetadata from './_pluginMetadata.js';
 
 /**
@@ -18,12 +17,16 @@ globalThis.J ||= {};
     throw new Error(`Either missing J-Base or has a lower version than the required: ${requiredBaseVersion}`);
   }
 
-  // check to ensure we have the minimum required version of the j-abs plugin.
-  const requiredJabsVersion = '4.13.0';
-  const hasJabsRequirement = J.BASE.Helpers.satisfies(J.ABS.Metadata.version.version(), requiredJabsVersion);
-  if (hasJabsRequirement === false)
+  // we only check the JABS version if JABS is present.
+  if (J.ABS)
   {
-    throw new Error(`Either missing J-ABS or has a lower version than the required: ${requiredJabsVersion}`);
+    // check to ensure we have the minimum required version of the j-abs plugin.
+    const requiredJabsVersion = '4.13.0';
+    const hasJabsRequirement = J.BASE.Helpers.satisfies(J.ABS.Metadata.version.version(), requiredJabsVersion);
+    if (hasJabsRequirement === false)
+    {
+      throw new Error(`Either missing J-ABS or has a lower version than the required: ${requiredJabsVersion}`);
+    }
   }
 })();
 //endregion version check

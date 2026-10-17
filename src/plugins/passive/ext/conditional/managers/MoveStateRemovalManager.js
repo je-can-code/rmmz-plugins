@@ -67,7 +67,7 @@ class MoveStateRemovalManager
 
       const ruleKey = AutoApplyStateManager.buildRuleKey(sourceState, tupleIndex, payloadStateId, 'stand');
 
-      battler.setAutoApplyLastFrame(ruleKey, Graphics.frameCount);
+      battler.setAutoRuleLastFrame(ruleKey, Graphics.frameCount);
     }
   }
 

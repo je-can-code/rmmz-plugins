@@ -28,7 +28,7 @@
  * receives a function rather than the chain's result.
  *
  * Usage:
- *   node src/build-tools/verify-no-chained-call-arguments.js
+ *   bun src/build-tools/verify-no-chained-call-arguments.js
  */
 import * as fs from 'fs/promises';
 import { glob } from 'glob';

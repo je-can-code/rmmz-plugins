@@ -35,7 +35,7 @@
  * constructor function when the class is defined, long before any instance exists.
  *
  * Usage:
- *   node src/build-tools/verify-no-private-before-construction.js
+ *   bun src/build-tools/verify-no-private-before-construction.js
  */
 import * as fs from 'fs/promises';
 import { glob } from 'glob';

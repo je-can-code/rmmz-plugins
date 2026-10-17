@@ -82,9 +82,9 @@
  * target - and is the thing to run when a result surprises you.
  *
  * Usage:
- *   node src/build-tools/verify-notetag-reference.js
- *   node src/build-tools/verify-notetag-reference.js --verbose
- *   node src/build-tools/verify-notetag-reference.js --selftest
+ *   bun src/build-tools/verify-notetag-reference.js
+ *   bun src/build-tools/verify-notetag-reference.js --verbose
+ *   bun src/build-tools/verify-notetag-reference.js --selftest
  */
 import * as fs from 'fs/promises';
 import { glob } from 'glob';

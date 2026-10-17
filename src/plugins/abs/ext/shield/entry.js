@@ -1,6 +1,5 @@
 import './_metadata/initialization.js';
 
-import './_metadata/_annotations.js';
 import './_models/JABS_Shield.js';
 import './_models/JABS_State.js';
 import './_models/JABS_StateBuilder.js';

@@ -3,4 +3,5 @@
 export const PLUGIN_NAME = 'J-Resources-ABS';
 export const PLUGIN_VERSION = '1.2.0';
 export const PLUGIN_DESC_TAG = 'RESOURCES-ABS';
+export const PLUGIN_DESCRIPTION = 'Damage-linked HP, MP, and TP resource effects.';
 //endregion ship-meta

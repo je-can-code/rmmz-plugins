@@ -2,4 +2,5 @@
 export const PLUGIN_NAME = 'J-ABS-Hitstop';
 export const PLUGIN_VERSION = '1.0.3';
 export const PLUGIN_DESC_TAG = 'ABS-HITSTOP';
+export const PLUGIN_DESCRIPTION = 'An extension for JABS that adds hitstop functionality.';
 //endregion ship-meta

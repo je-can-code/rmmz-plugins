@@ -37,7 +37,7 @@
  * signature, which is the opposite situation and entirely fine.
  *
  * Usage:
- *   node src/build-tools/verify-no-rest-parameters.js
+ *   bun src/build-tools/verify-no-rest-parameters.js
  */
 import * as fs from 'fs/promises';
 import { glob } from 'glob';

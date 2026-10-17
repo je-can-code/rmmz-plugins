@@ -1,7 +1,8 @@
 //region verify-declared-dependencies
 /**
  * Verifies that every cross-ship namespace a plugin reaches for at runtime is declared as a
- * dependency in that plugin's `_annotations.js`.
+ * dependency in that plugin's header: generated from its book when it has one, and its own
+ * `_annotations.js` when it does not.
  *
  * `verify:ships` already forbids one ship from importing another ship's source, and that boundary
  * is airtight because it is a build-time concern - the bundler cannot silently reach across trees.
@@ -50,12 +51,13 @@
  * resolving to J-ABS when J-ABS-InputManager is the ship that actually defines it.
  *
  * Usage:
- *   node src/build-tools/verify-declared-dependencies.js
+ *   bun src/build-tools/verify-declared-dependencies.js
  */
 import * as fs from 'fs/promises';
 import { glob } from 'glob';
 import path from 'node:path';
 import Logger, { LogStyle } from './logger.js';
+import { generateShipHeader, hasBook, resolveBookDirectory } from './okf-header.js';
 
 const SRC_PLUGINS_DIR = './src/plugins';
 
@@ -277,20 +279,53 @@ function findOwnedNamespace(initializationText)
 }
 
 /**
+ * Reads the header text a ship's dependency declarations live in, and where an author fixes them.<br/>
+ * A ship with a book has no `_annotations.js`. Its header is generated from the book, so the gate
+ * reads the exact text the build will prepend, and the place to fix a declaration is the book's
+ * dependencies page. Every other ship still declares in its own `_annotations.js`.
+ * @param {string} shipDirectory Repository-relative path to the ship's root directory.
+ * @returns {Promise<{annotationsPath: string, annotationsText: string, declarationHint: string}>}
+ */
+async function readDeclarationSource(shipDirectory)
+{
+  if (hasBook(shipDirectory) === true)
+  {
+    const absoluteBookDirectory = resolveBookDirectory(shipDirectory);
+    const bookDirectory = path.relative(process.cwd(), absoluteBookDirectory);
+    const annotationsText = await generateShipHeader(shipDirectory);
+
+    return {
+      // reported line numbers count lines of the generated header, so the label says which text it is.
+      annotationsPath: `${bookDirectory} [generated header]`,
+      annotationsText,
+      declarationHint: `the dependencies page of its book in ${bookDirectory}`,
+    };
+  }
+
+  const annotationsPath = path.join(shipDirectory, '_metadata/_annotations.js');
+  const annotationsText = await fs.readFile(annotationsPath, 'utf-8');
+
+  return {
+    annotationsPath,
+    annotationsText,
+    declarationHint: 'its _annotations.js',
+  };
+}
+
+/**
  * Reads the identity of a single ship: what it is called, what namespace it owns, what namespaces
  * it declares, and which plugins it names as dependencies.
  * @param {string} shipDirectory Repository-relative path to the ship's root directory.
  * @returns {Promise<{directory: string, pluginName: string, declaredPluginName: string,
  *   ownedNamespace: string, declaredNamespaces: string[], declaredDependencies: Set<string>,
- *   tagViolations: string[], annotationsPath: string, annotationsText: string}>}
+ *   tagViolations: string[], annotationsPath: string, annotationsText: string,
+ *   declarationHint: string}>}
  */
 async function readShipIdentity(shipDirectory)
 {
   const initializationPath = path.join(shipDirectory, '_metadata/initialization.js');
-  const annotationsPath = path.join(shipDirectory, '_metadata/_annotations.js');
-
   const initializationText = await fs.readFile(initializationPath, 'utf-8');
-  const annotationsText = await fs.readFile(annotationsPath, 'utf-8');
+  const { annotationsPath, annotationsText, declarationHint } = await readDeclarationSource(shipDirectory);
 
   // the name a declaration must use is the shipped *filename*, which the vite config's input key
   // decides. `meta.js` carries a PLUGIN_NAME that usually agrees but is not authoritative and has
@@ -330,6 +365,7 @@ async function readShipIdentity(shipDirectory)
     tagViolations: collectMalformedTagViolations(normalizedAnnotationsPath, annotationsText),
     annotationsPath: normalizedAnnotationsPath,
     annotationsText,
+    declarationHint,
   };
 }
 
@@ -532,14 +568,14 @@ function collectFileViolations(filePath, contents, ship, ownership, knownNamespa
       {
         violations.push(
           `${preamble} — this probe runs while plugins are loading, so add ` +
-          `\`@orderAfter ${owner.pluginName}\` to its _annotations.js or the check silently fails`
+          `\`@orderAfter ${owner.pluginName}\` to ${ship.declarationHint} or the check silently fails`
         );
         return;
       }
 
       violations.push(
         `${preamble} — add \`@base ${owner.pluginName}\` (hard requirement) or ` +
-        `\`@orderAfter ${owner.pluginName}\` (load order only) to its _annotations.js`
+        `\`@orderAfter ${owner.pluginName}\` (load order only) to ${ship.declarationHint}`
       );
     });
   });

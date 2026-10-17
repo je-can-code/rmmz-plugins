@@ -27,7 +27,7 @@
  * out an exception for engine-owned storage would just relocate the problem into GGG's namespace.
  *
  * Usage:
- *   node src/build-tools/verify-no-direct-property-getset.js
+ *   bun src/build-tools/verify-no-direct-property-getset.js
  */
 import * as fs from 'fs/promises';
 import { glob } from 'glob';

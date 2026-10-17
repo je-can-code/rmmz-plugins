@@ -31,8 +31,10 @@ the D-pad. Do not say "A/B/X/Y" unless Jeremy asks for a cross-platform mapping 
 - **Never modify code with regex, `sed`, or `perl`.** Read the file, then edit it. If a change is
   genuinely mechanical across many files, ask before starting the pass.
 - **Bun only** for anything you run. Never `npm`, never `yarn`, never `node`, never Python — a
-  throwaway data script is `bun script.js`. (Some `package.json` scripts shell out to `node`
-  internally; that is existing wiring, not license to invoke it yourself.)
+  throwaway data script is `bun script.js`. Every build tool runs on Bun too, Vite included:
+  `build-all.js` launches it with `bunx --bun`, overriding the Node shebang Vite ships with. Vitest is
+  the one exception. It launches on Node by itself, because its coverage provider is V8 and Bun runs on
+  JavaScriptCore. That is existing wiring, not license to invoke `node` yourself.
 - When you are about to say "make sure X exists" or "ensure you've implemented Y" — go look. Confirm it
   exists, or say plainly that it does not.
 - If a needed method or property is genuinely missing, implement it. Do not work around its absence with
@@ -72,7 +74,7 @@ That is three phases, and it is more than a build:
 
 | Phase | What runs |
 |---|---|
-| `verify-pre-compile` | `lint`, then fifteen source gates: `verify:docs`, `no-typeof`, `no-instanceof`, `no-optional-chaining`, `no-direct-property-getset`, `no-private-before-construction`, `no-late-window-command-state`, `no-self-calling-accessors`, `no-transforming-setter-aliases`, `no-chained-call-arguments`, `no-phantom-calls`, `no-rest-parameters`, `no-sourceless-addstate`, `declared-dependencies`, `notetag-reference` |
+| `verify-pre-compile` | `lint`, then sixteen source gates: `verify:docs`, `no-typeof`, `no-instanceof`, `no-optional-chaining`, `no-direct-property-getset`, `no-private-before-construction`, `no-late-window-command-state`, `no-self-calling-accessors`, `no-transforming-setter-aliases`, `no-chained-call-arguments`, `no-phantom-calls`, `no-rest-parameters`, `no-sourceless-addstate`, `declared-dependencies`, `notetag-reference`, `book-freshness` |
 | `compile` | `clean:out`, then `build:all`, then `build:manifest` |
 | `verify-post-compile` | `verify:ships`, **the full test suite**, then `copy:to-all` |
 
@@ -416,7 +418,8 @@ only the what.
   including any `_` prefix.
 - `@returns` is type-only; the summary carries the meaning.
 - **Never echo Jeremy's feedback into a JSDoc.** Document what the method is for, never the history of
-  how it got there. Changelogs live in `_annotations.js`, nowhere else.
+  how it got there. Changelogs live in the plugin's book (`docs/plugins/<ship>/changelog.md`), or in
+  `_annotations.js` for a plugin that has no book yet, and nowhere else.
 - Never write "this replaced X" or "used to be Y" in any comment.
 - Regex definitions get a `<pre>` block with the structure, an example, and the parsed translation:
 
@@ -636,9 +639,9 @@ source anyway, which is the whole cost the document exists to remove.
 
 So the entry lands in the same PR as the tag, never as follow-up work. Match the surrounding format —
 entries are grouped by plugin, and a tag family with several variants shares one entry with a variants
-table rather than one entry per variant. The plugin's own `_annotations.js` remains the authoritative
-source the entry is written from; the reference is the lookup built on top of it, and the two are
-expected to agree.
+table rather than one entry per variant. The plugin's own book (or its `_annotations.js`, for a plugin
+without one) remains the authoritative source the entry is written from; the reference is the lookup
+built on top of it, and the two are expected to agree.
 
 **A tag whose payload names a database row also gets an id target.** Chef Adventure's data validator
 resolves every id a note names — `<drops:[a,ID,N]>` against `Armors.json`, `<passive:[…]>` against
@@ -809,9 +812,17 @@ naming that gap.
 - **Commit the full tree.** PR scope is explained in the description, not by omitting files. Include the
   built output under `project/js/plugins/` that `hotfix` produced.
 - **Version bumps and changelogs are PR-time work only.** While building a feature, do not edit
-  `meta.js` (`PLUGIN_VERSION`) or the `CHANGELOG:` blocks in `_annotations.js`. At PR time, reverse-
+  `meta.js` (`PLUGIN_VERSION`) or the changelog: a book's `changelog.md`, or the `CHANGELOG:` block in
+  `_annotations.js` for a plugin without a book. At PR time, reverse-
   analyze the diff per ship to decide major / minor / patch, then write the changelog. A ship only gets
-  a version section if its tree actually changed.
+  a version section if what it does changed: its behavior, or the parameters, commands or tags it takes.
+  A documentation-only change never bumps, the book included, even when the built file's header or
+  comments change with it.
+- **A version bump restamps the ship's book.** Every book's `overview.md` names the version it documents
+  in its frontmatter, `version: "1.2.0"`, and `verify:book-freshness` fails whenever that differs from
+  `PLUGIN_VERSION`. So a bump fails the build until the book catches up: bring the book up to date with
+  what changed, then move the stamp. Moving it is the claim that the book describes the new version, so
+  never move it without reading the book.
 - **A new tag ships with its glossary entry**, in the same PR — see [Tags](#tags). Unlike the version
   bump above, this is not deferred to PR time: write it whenever the tag lands, just never later than
   the PR that introduces it.

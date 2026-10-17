@@ -462,8 +462,8 @@ J.ABS.RegExp = {
   // post-execution-related.
   Cooldown: /<cooldown:[ ]?(\d+)>/gi,
   UniqueCooldown: /<uniqueCooldown>/gi,
-  // exempt from GCD stamp and block.
-  Ogcd: /<ogcd>/gi,
+  // exempt from GCD stamp and block; either spelling works.
+  Ogcd: /<(?:ogcd|noGlobalCooldown)>/gi,
   // optional per-skill GCD duration override in frames.
   GlobalCooldownFrames: /<gcd:[ ]?(\d+)>/gi,
   // battler-wide GCD reduction rate; positive values shorten GCD, negative lengthen it.
@@ -743,7 +743,7 @@ J.ABS.RegExp = {
 
   // visual metadata (per-skill; optional; sprites only; hitboxes unchanged).
   VisOffset: /<visOffset:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi,
-  VisAnchor: /<visAnchor:[ ]?(\[(?:0|1|0?\.\d+),[ ]?(?:0|1|0?\.\d+)])>/gi,
+  VisAnchor: /<visAnchor:[ ]?(\[(?:1(?:\.0+)?|0?\.\d+|0),[ ]?(?:1(?:\.0+)?|0?\.\d+|0)])>/gi,
   VisRotate: /<visRotate>/gi,
   VisScale: /<visScale:[ ]?(\[-?\d+(?:\.\d+)?,[ ]?-?\d+(?:\.\d+)?])>/gi,
   VisZ: /<visZ:[ ]?(-?\d+)>/gi,
@@ -905,7 +905,7 @@ J.ABS.RegExp = {
   //region ON BATTLERS
   // core concepts.
   EnemyId: /<enemyId:[ ]?(\d+)>/i,
-  TeamId: /<teamId:[ ]?(\d+)>/g,
+  TeamId: /<teamId:[ ]?(\d+)>/i,
   Sight: /<sight:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/i,
   Pursuit: /<pursuit:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/i,
   GuardRange: /<guardRange:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/i,

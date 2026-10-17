@@ -12,7 +12,7 @@
  * human-at-a-keyboard boundary where a `typeof` guard could be meaningful.
  *
  * Usage:
- *   node src/build-tools/verify-no-typeof.js
+ *   bun src/build-tools/verify-no-typeof.js
  */
 import * as fs from 'fs/promises';
 import { glob } from 'glob';

@@ -1,6 +1,5 @@
 import './_metadata/initialization.js';
 
-import './_metadata/_annotations.js';
 import './_models/JABS_Battler.js';
 import './_models/JABS_ChargingTier.js';
 import './_models/JABS_InputAdapter.js';

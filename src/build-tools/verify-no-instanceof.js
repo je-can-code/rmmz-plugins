@@ -27,7 +27,7 @@
  *                            cache keying; same root cause as the RPGManager.js entry above.
  *
  * Usage:
- *   node src/build-tools/verify-no-instanceof.js
+ *   bun src/build-tools/verify-no-instanceof.js
  */
 import * as fs from 'fs/promises';
 import { glob } from 'glob';
