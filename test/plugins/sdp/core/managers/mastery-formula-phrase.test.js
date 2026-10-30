@@ -36,7 +36,7 @@ describe('MasteryFormulaPhrase (direct src import)', () =>
       const result = MasteryFormulaPhrase.phraseFor('a.mat * 3');
 
       // Assert
-      expect(result).toBe('3x your Force');
+      expect(result).toBe('3x your Sorcery');
     });
 
     it('distinguishes the target from the caster', () =>
@@ -45,7 +45,7 @@ describe('MasteryFormulaPhrase (direct src import)', () =>
       const result = MasteryFormulaPhrase.phraseFor('b.mat * 3');
 
       // Assert
-      expect(result).toBe('3x their Force');
+      expect(result).toBe('3x their Sorcery');
     });
 
     it('omits a coefficient of one entirely', () =>
@@ -72,7 +72,7 @@ describe('MasteryFormulaPhrase (direct src import)', () =>
       const result = MasteryFormulaPhrase.phraseFor('(a.mat*3) - (b.mdf*1)');
 
       // Assert
-      expect(result).toBe('3x your Force less their Resist');
+      expect(result).toBe('3x your Sorcery less their Resist');
     });
 
     it('reads a bare context variable without a subject word', () =>

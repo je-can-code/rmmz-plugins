@@ -203,7 +203,7 @@ TextManager.bparamDescription = function(paramId)
     // AGI (AGIlity)
     case 6:
       return [
-        "The base stat that governs movement and agility.", "The effects of this are unknown at higher levels."
+        "The base stat that influences precision damage.", "Higher amounts of this yield higher precision damage output."
       ];
     // LUK (LUcK)
     case 7:

@@ -11,6 +11,8 @@ All the versioning and history of changes live here.
 
 ## The Actual Changelog
 
+### 4.2.1
+  - AGI's description now reads as precision damage rather than movement and agility.
 ### 4.2.0
   - Characters far off-screen stop updating and drawing until they come back near.
   - Added TilePathSearch and PathSearchMemory.

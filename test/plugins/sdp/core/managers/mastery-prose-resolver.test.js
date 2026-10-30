@@ -982,7 +982,7 @@ describe('MasteryProseResolver (direct src import)', () =>
       const result = MasteryProseResolver.resolve('bites for {s.payload}', 1121);
 
       // Assert
-      expect(result).toBe('bites for \\C[3]3x your Force\\C[0]');
+      expect(result).toBe('bites for \\C[3]3x your Sorcery\\C[0]');
     });
 
     it('prefers a shield formula tag over a damage formula', () =>

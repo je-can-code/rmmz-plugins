@@ -11,6 +11,8 @@ All the versioning and history of changes live here.
 
 ## The Actual Changelog
 
+### 4.8.1
+  - Mastery formulas call MAT "Sorcery" and AGI "Finesse".
 ### 4.8.0
   - Added natural growth tags for SDP rate (sdr).
 ### 4.7.0

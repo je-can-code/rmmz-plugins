@@ -197,8 +197,8 @@ describe('TextManager (direct src import)', () =>
         'Higher amounts of this will reduce incoming magical damage.',
       ] ],
       [ 6, [
-        'The base stat that governs movement and agility.',
-        'The effects of this are unknown at higher levels.',
+        'The base stat that influences precision damage.',
+        'Higher amounts of this yield higher precision damage output.',
       ] ],
       [ 7, [
         'The base stat that governs fortune and luck.',
