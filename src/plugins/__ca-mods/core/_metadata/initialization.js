@@ -26,7 +26,6 @@ J.CAMods.PluginParameters = J.CAMods.Metadata.parsedPluginParameters;
  */
 J.CAMods.Aliased = {};
 J.CAMods.Aliased.JABS_Battler = new Map();
-J.CAMods.Aliased.JABS_Engine = new Map();
 J.CAMods.Aliased.Game_Actor = new Map();
 J.CAMods.Aliased.Game_BattlerBase = new Map();
 J.CAMods.Aliased.Game_Map = new Map();

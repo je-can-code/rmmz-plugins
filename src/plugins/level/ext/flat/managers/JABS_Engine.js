@@ -11,7 +11,7 @@ if (J.ABS)
    */
   JABS_Engine.prototype.determineExperienceGained = function(defeatedEnemy, victoriousActor)
   {
-    // check the reward policy gate; inanimates and any future exclusions bail here.
+    // check the reward policy gate; anything a game excludes bails here.
     if (this.canGainReward(defeatedEnemy, victoriousActor) === false) return 0;
 
     // determine the flat experience gained based on the rewardee and defeated target.
