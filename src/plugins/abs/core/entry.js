@@ -56,6 +56,7 @@ import './managers/TextManager.js';
 import './managers/JABS_ActionSpawner.js';
 import './managers/JABS_AiManager.js';
 import './managers/JABS_Engine.js';
+import './managers/JABS_EnemyPool.js';
 import './managers/JABS_HitboxPulseManager.js';
 import './managers/JABS_RespawnManager.js';
 import './managers/JABS_TeamRules.js';

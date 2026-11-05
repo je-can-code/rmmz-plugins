@@ -1818,7 +1818,77 @@ an enemy — this is one of only two tags (with move speed) that isn't optional.
 ```
 This event acts as enemy id 12 from the database.
 
-**See also:** `<sight>`, `<pursuit>`, `<moveSpeed>`
+**See also:** `<sight>`, `<pursuit>`, `<moveSpeed>`, `<enemyIds>`
+
+---
+
+### `<enemyIds:[ENEMY_IDS]>`
+
+**Applies to:**
+Map events (comment command), beside `<enemyId>`
+
+**When:**
+each time the event is built: on map entry, on load, and on a respawn
+
+**Effect:**
+gives this spot a pool of enemies it may turn out to be, rolled by `<enemy-weight>`. Landing on the
+spot's own `<enemyId>` leaves the page as authored, with every tag on it applying. Landing on anyone
+else swaps in that enemy's whole page from the enemy map: its sprite, its speed and its comments, so
+it arrives at its own default level rather than the spot's. The page's conditions stay the spot's, so
+a time-gated spot stays time-gated whoever it rolls. List the spot's own id if it should ever roll
+itself. Named ids must have an event on the enemy map.
+
+```
+<enemyId:301>
+<enemyIds:[301,302,303,304,305]>
+```
+This spot usually holds enemy 301, and can roll any of the other four.
+
+**See also:** `<enemyId>`, `<enemy-weight>`, `<enemy-weight-override>`
+
+---
+
+### `<enemy-weight:WEIGHT>`
+
+**Applies to:**
+Enemies (database)
+
+**When:**
+a pooled spot rolls this enemy
+
+**Effect:**
+this enemy's chance in a pool, relative to everyone else in it. An enemy without the tag is never
+chosen. The enemy actually placed on a spot ignores this and counts for the
+`defaultEnemyPoolHomeWeight` plugin parameter instead, so a spot holding a rare enemy still mostly
+holds that enemy.
+
+```
+<enemy-weight:8>
+```
+This enemy carries a weight of 8 in any pool that names it.
+
+**See also:** `<enemyIds>`, `<enemy-weight-override>`
+
+---
+
+### `<enemy-weight-override:[ENEMY_ID, WEIGHT]>`
+
+**Applies to:**
+Maps (note box)
+
+**When:**
+a pooled spot on this map rolls enemy ENEMY_ID
+
+**Effect:**
+replaces that enemy's weight while on this map, the spot's own enemy included. A weight of 0 keeps
+the enemy out of this map's rolls. One tag per enemy, one per line.
+
+```
+<enemy-weight-override:[302, 30]>
+```
+On this map, enemy 302 carries a weight of 30 in any pool that names it.
+
+**See also:** `<enemyIds>`, `<enemy-weight>`
 
 ---
 

@@ -402,6 +402,21 @@ describe('J-ABS Game_Enemy (unit, all downstream dependencies mocked)', () =>
     });
   });
 
+  describe('enemyWeight()', () =>
+  {
+    it('returns the weight from the notes of the battler', () =>
+    {
+      // Arrange
+      const enemy = buildEnemy({ databaseData: () => buildReferenceData({ jabsEnemyWeight: 8 }) });
+
+      // Act
+      const result = enemy.enemyWeight();
+
+      // Assert
+      expect(result).toBe(8);
+    });
+  });
+
   describe('respawnData()', () =>
   {
     it('returns the tagged pair when present', () =>

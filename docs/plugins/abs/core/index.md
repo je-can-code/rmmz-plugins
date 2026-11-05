@@ -166,6 +166,7 @@
 * [Default Respawn Method Plugin Parameter](parameters/default-respawn-method.md) - The world-default respawn method for defeated enemies. Leave blank for no respawn tracking at all.
 * [Default Respawn Param Plugin Parameter](parameters/default-respawn-param.md) - The parameter fed to the world-default respawn method, such as the number of seconds.
 * [Default Respawn Animation Plugin Parameter](parameters/default-respawn-animation-id.md) - The default animation to play on an event when its battler respawns. Set to 0 for no animation.
+* [Default Enemy Pool Home Weight Plugin Parameter](parameters/default-enemy-pool-home-weight.md) - The weight a pooled spot gives the enemy actually placed there, whatever that enemy's own weight says.
 * [Parameter Group: WHEN UNASSIGNED](parameters/default-configs.md) - The heading the WHEN UNASSIGNED parameters sit under in the plugin manager.
 * [Default Tool Cooldown Time Plugin Parameter](parameters/default-tool-cooldown-time.md) - The default number of frames for an item's cooldown if one isn't specified.
 * [Default Loot Duration Plugin Parameter](parameters/default-loot-expiration.md) - The default number of frames before an item expires from the map. Set to -1 for no expiration.

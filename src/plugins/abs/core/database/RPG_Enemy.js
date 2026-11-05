@@ -92,6 +92,21 @@ Object.defineProperty(RPG_BaseBattler.prototype, 'jabsGuardSkillId', {
 });
 //endregion guard skillId
 
+//region enemy weight
+/**
+ * How likely this battler is to be chosen when a pooled spot rolls it, relative to the rest of the
+ * pool. A map's own `<enemy-weight-override:[ENEMY_ID, WEIGHT]>` may replace this while on that map.
+ * A battler without the tag reads as zero, which keeps it out of every roll.
+ * @type {number}
+ */
+Object.defineProperty(RPG_BaseBattler.prototype, 'jabsEnemyWeight', {
+  get: function()
+  {
+    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.EnemyWeight);
+  },
+});
+//endregion enemy weight
+
 //region respawn
 /**
  * The JABS respawn declaration for this battler, as a `[METHOD, PARAM]` pair.

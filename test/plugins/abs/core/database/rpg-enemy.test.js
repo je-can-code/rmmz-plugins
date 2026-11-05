@@ -22,7 +22,7 @@ describe('J-ABS RPG_BaseBattler jabs* properties (unit, all downstream dependenc
     // every regex value just needs to be a distinct, identifiable token- RPGManager itself is
     // mocked, so the getters never actually run a real regex against a real note string.
     const regexKeys = [
-      'TeamId', 'PrepareTime', 'Sight', 'Pursuit', 'GuardRange', 'GuardSkillId', 'AlertDuration', 'AlertedSightBoost',
+      'EnemyWeight', 'TeamId', 'PrepareTime', 'Sight', 'Pursuit', 'GuardRange', 'GuardSkillId', 'AlertDuration', 'AlertedSightBoost',
       'AlertedPursuitBoost', 'AiTraitCareful', 'AiTraitExecutor', 'AiTraitReckless', 'AiTraitHealer',
       'AiTraitFollower', 'AiTraitLeader', 'AiTraitCleanser', 'AiTraitBuffer', 'AiTraitTactical',
       'AiTraitBerserker', 'AiRoleLeader', 'AiRoleFollower', 'AiRoleGuardian', 'AiRoleWard', 'AiRoleSolo',
@@ -96,6 +96,23 @@ describe('J-ABS RPG_BaseBattler jabs* properties (unit, all downstream dependenc
     });
   });
   //endregion numeric note-value properties
+
+  describe('jabsEnemyWeight', () =>
+  {
+    it('delegates to RPGManager.getNumberFromNoteByRegex without nullIfEmpty, so an untagged enemy reads as zero', () =>
+    {
+      // Arrange
+      globalThis.RPGManager.getNumberFromNoteByRegex.mockReturnValue(8);
+
+      // Act
+      const result = battler.jabsEnemyWeight;
+
+      // Assert
+      expect(result).toBe(8);
+      expect(globalThis.RPGManager.getNumberFromNoteByRegex)
+        .toHaveBeenCalledWith(battler, globalThis.J.ABS.RegExp.EnemyWeight);
+    });
+  });
 
   describe('jabsRespawnData', () =>
   {

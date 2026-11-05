@@ -304,6 +304,7 @@
     "JABS_Cooldown": "writable",
     "JABS_DeathContext": "writable",
     "JABS_EnemyAI": "writable",
+    "JABS_EnemyPool": "writable",
     "JABS_Engine": "writable",
     "JABS_FoodChainPlan": "writable",
     "JABS_FoodChainResolver": "writable",

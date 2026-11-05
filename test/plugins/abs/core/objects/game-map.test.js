@@ -447,6 +447,86 @@ describe('J-ABS Game_Map (unit, all downstream dependencies mocked)', () =>
     });
   });
 
+  describe('restoreDynamicEventData()', () =>
+  {
+    /**
+     * Builds a live event as the restore sees it, spawned at runtime when it carries data.
+     * @param {number} eventId The event's id.
+     * @param {object|null} eventData The data it was spawned from, or null for an authored event.
+     * @returns {object} A stubbed live event.
+     */
+    function buildLiveEvent(eventId, eventData)
+    {
+      return {
+        eventId: () => eventId,
+        isDynamicSpawn: () => eventData !== null,
+        getDynamicEventData: () => eventData,
+      };
+    }
+
+    it('puts a spawned event back into the slot its own id names', () =>
+    {
+      // Arrange
+      // the reloaded file only knows the authored event, and the spawn sat past the end of it.
+      const spawnData = { id: 120, x: 5, y: 8 };
+      globalThis.$dataMap = { events: [ null, { id: 1 } ] };
+      const map = buildMap({ events: () => [ buildLiveEvent(1, null), buildLiveEvent(3, spawnData) ] });
+
+      // Act
+      map.restoreDynamicEventData();
+
+      // Assert
+      expect(globalThis.$dataMap.events[3]).toBe(spawnData);
+    });
+
+    it('fills a slot below the end of the list, which is where loot drops land', () =>
+    {
+      // Arrange
+      // slot zero is the first hole a drop finds, and the reload just emptied it again.
+      const lootData = { id: 1, lootIndex: 0 };
+      globalThis.$dataMap = { events: [ null, { id: 1 } ] };
+      const map = buildMap({ events: () => [ buildLiveEvent(0, lootData), buildLiveEvent(1, null) ] });
+
+      // Act
+      map.restoreDynamicEventData();
+
+      // Assert
+      expect(globalThis.$dataMap.events[0]).toBe(lootData);
+    });
+
+    it('leaves an authored event with the data the file just gave it', () =>
+    {
+      // Arrange
+      // the authored event must survive beside a real spawn: "restore this one" and "restore
+      // everyone" are the same program when only one event is on the map.
+      const authoredData = { id: 1, fromTheFile: true };
+      const spawnData = { id: 120 };
+      globalThis.$dataMap = { events: [ null, authoredData ] };
+      const map = buildMap({ events: () => [ buildLiveEvent(1, null), buildLiveEvent(2, spawnData) ] });
+
+      // Act
+      map.restoreDynamicEventData();
+
+      // Assert
+      expect(globalThis.$dataMap.events[1]).toBe(authoredData);
+      expect(globalThis.$dataMap.events[2]).toBe(spawnData);
+    });
+
+    it('changes nothing on a map where nothing was spawned', () =>
+    {
+      // Arrange
+      const authoredData = { id: 1 };
+      globalThis.$dataMap = { events: [ null, authoredData ] };
+      const map = buildMap({ events: () => [ buildLiveEvent(1, null) ] });
+
+      // Act
+      map.restoreDynamicEventData();
+
+      // Assert
+      expect(globalThis.$dataMap.events).toEqual([ null, authoredData ]);
+    });
+  });
+
   describe('removeEvent()', () =>
   {
     it('does nothing when the event is not tracked', () =>

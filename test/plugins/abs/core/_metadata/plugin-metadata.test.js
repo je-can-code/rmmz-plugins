@@ -185,6 +185,7 @@ describe('J-ABS _pluginMetadata.js (direct src import, via initialization.js con
       [ 'defaultRespawnMethod', 'DefaultRespawnMethod', 'seconds', 'seconds', '' ],
       [ 'defaultRespawnParam', 'DefaultRespawnParam', '300', '300', '' ],
       [ 'defaultRespawnAnimationId', 'DefaultRespawnAnimationId', '25', 25, 0 ],
+      [ 'defaultEnemyPoolHomeWeight', 'DefaultEnemyPoolHomeWeight', '60', 60, 85 ],
     ];
 
     it.each(FALLBACK_PARAMETERS)(

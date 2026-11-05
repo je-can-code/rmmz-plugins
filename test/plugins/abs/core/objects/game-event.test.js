@@ -17,6 +17,8 @@ describe('J-ABS Game_Event (unit, all downstream dependencies mocked)', () =>
   let originalFindProperPageIndex;
   let originalPage;
   let originalClearPageSettings;
+  let originalSetupPageSettings;
+  let JABS_EnemyPool_mock;
 
   beforeAll(async () =>
   {
@@ -27,6 +29,7 @@ describe('J-ABS Game_Event (unit, all downstream dependencies mocked)', () =>
         Aliased: { Game_Event: new Map() },
         RegExp: {
           EnemyId: /enemyId:(\d+)/i,
+          EnemyIds: /enemyIds:(\[.+])/i,
           TeamId: /teamId:(\d+)/i,
           Sight: /sight:(\d+)/i,
           AlertedSightBoost: /alertedSightBoost:(\d+)/i,
@@ -82,11 +85,13 @@ describe('J-ABS Game_Event (unit, all downstream dependencies mocked)', () =>
     originalFindProperPageIndex = vi.fn(() => 0);
     originalPage = vi.fn(() => 'the-page');
     originalClearPageSettings = vi.fn();
-    [ 'initMembers', 'event', 'refresh', 'setupPageSettings' ]
+    originalSetupPageSettings = vi.fn();
+    [ 'initMembers', 'event', 'refresh' ]
       .forEach(key => { Game_Event.prototype[key] = function() {}; });
     Game_Event.prototype.findProperPageIndex = originalFindProperPageIndex;
     Game_Event.prototype.page = originalPage;
     Game_Event.prototype.clearPageSettings = originalClearPageSettings;
+    Game_Event.prototype.setupPageSettings = originalSetupPageSettings;
     // vanilla accessor the abs layer reads through.
     Game_Event.prototype.eventId = function() { return this._eventId; };
 
@@ -124,6 +129,9 @@ describe('J-ABS Game_Event (unit, all downstream dependencies mocked)', () =>
       },
     }));
 
+    JABS_EnemyPool_mock = { roll: vi.fn(), pageOf: vi.fn() };
+    vi.doMock('../../../../../src/plugins/abs/core/managers/JABS_EnemyPool.js', () => ({ default: JABS_EnemyPool_mock }));
+
     await import('../../../../../src/plugins/abs/core/objects/Game_Event.js');
 
     // RMMZ exposes map coordinates as native properties on Game_CharacterBase.
@@ -150,6 +158,10 @@ describe('J-ABS Game_Event (unit, all downstream dependencies mocked)', () =>
   {
     JABS_EnemyAI_ctor.mockClear();
     JABS_BattlerRole_ctor.mockClear();
+    JABS_EnemyPool_mock.roll.mockReset();
+    JABS_EnemyPool_mock.pageOf.mockReset();
+    originalPage.mockClear();
+    originalSetupPageSettings.mockClear();
     globalThis.$jabsEngine = { absEnabled: true, event: vi.fn() };
     globalThis.$gameMap = { refreshOneBattler: vi.fn() };
     globalThis.$gameEnemies = { enemy: vi.fn(() => buildEnemyBattler()) };
@@ -240,6 +252,84 @@ describe('J-ABS Game_Event (unit, all downstream dependencies mocked)', () =>
       expect(event._j._abs._initialDirection).toEqual(0);
       expect(event._j._abs._castedDirection).toEqual(0);
       expect(event._j._abs._dynamicSpawn).toEqual(false);
+      expect(event._j._abs._rolledEnemyId).toEqual(0);
+    });
+  });
+
+  describe('getRolledEnemyId()/setRolledEnemyId()', () =>
+  {
+    it('reads back the enemy that was set', () =>
+    {
+      // Arrange
+      const event = buildEvent();
+
+      // Act
+      event.setRolledEnemyId(302);
+
+      // Assert
+      expect(event.getRolledEnemyId()).toEqual(302);
+    });
+  });
+
+  describe('rollEnemyPool()', () =>
+  {
+    it('does nothing further for an event with no pool, without rolling', () =>
+    {
+      // Arrange
+      const event = buildEvent({ getValidCommentCommands: () => buildCommentCommands([ 'enemyId:301' ]) });
+
+      // Act
+      event.rollEnemyPool();
+
+      // Assert
+      expect(JABS_EnemyPool_mock.roll).not.toHaveBeenCalled();
+      expect(event.getRolledEnemyId()).toEqual(0);
+    });
+
+    it('forgets what the last page rolled, even when this page has no pool', () =>
+    {
+      // Arrange
+      const event = buildEvent({ getValidCommentCommands: () => [] });
+      event.setRolledEnemyId(302);
+
+      // Act
+      event.rollEnemyPool();
+
+      // Assert
+      expect(event.getRolledEnemyId()).toEqual(0);
+    });
+
+    it('keeps the authored page when the roll lands on the page\'s own enemy', () =>
+    {
+      // Arrange
+      globalThis.JsonMapper.parseObject.mockReturnValue([ 301, 302 ]);
+      JABS_EnemyPool_mock.roll.mockReturnValue(301);
+      const event = buildEvent({
+        getValidCommentCommands: () => buildCommentCommands([ 'enemyId:301', 'enemyIds:[301,302]' ]),
+      });
+
+      // Act
+      event.rollEnemyPool();
+
+      // Assert
+      expect(JABS_EnemyPool_mock.roll).toHaveBeenCalledWith(301, [ 301, 302 ]);
+      expect(event.getRolledEnemyId()).toEqual(0);
+    });
+
+    it('remembers who it rolled when that is anyone else', () =>
+    {
+      // Arrange
+      globalThis.JsonMapper.parseObject.mockReturnValue([ 301, 302 ]);
+      JABS_EnemyPool_mock.roll.mockReturnValue(302);
+      const event = buildEvent({
+        getValidCommentCommands: () => buildCommentCommands([ 'enemyId:301', 'enemyIds:[301,302]' ]),
+      });
+
+      // Act
+      event.rollEnemyPool();
+
+      // Assert
+      expect(event.getRolledEnemyId()).toEqual(302);
     });
   });
 
@@ -265,10 +355,37 @@ describe('J-ABS Game_Event (unit, all downstream dependencies mocked)', () =>
       event.initMembers();
 
       // Act
-      event.flagAsDynamicSpawn();
+      event.flagAsDynamicSpawn({ id: 120 });
 
       // Assert
       expect(event.isDynamicSpawn()).toEqual(true);
+    });
+
+    it('holds onto the event data a spawned event was built from', () =>
+    {
+      // Arrange
+      const event = Object.create(globalThis.Game_Event.prototype);
+      event.initMembers();
+      const eventData = { id: 120, x: 5, y: 8 };
+
+      // Act
+      event.flagAsDynamicSpawn(eventData);
+
+      // Assert
+      // the same object rather than a copy, because loot goes on writing to its data after flagging.
+      expect(event.getDynamicEventData()).toBe(eventData);
+    });
+
+    it('holds no spawn data for an event authored in the editor', () =>
+    {
+      // Arrange
+      const event = Object.create(globalThis.Game_Event.prototype);
+
+      // Act
+      event.initMembers();
+
+      // Assert
+      expect(event.getDynamicEventData()).toBeNull();
     });
   });
 
@@ -515,6 +632,22 @@ describe('J-ABS Game_Event (unit, all downstream dependencies mocked)', () =>
       expect(event.page()).toEqual('the-page');
     });
 
+    it('wears the rolled enemy\'s page instead of the authored one', () =>
+    {
+      // Arrange
+      JABS_EnemyPool_mock.pageOf.mockReturnValue('the-rolled-page');
+      const event = buildEvent({ event: () => ({}) });
+      event.setRolledEnemyId(302);
+
+      // Act
+      const result = event.page();
+
+      // Assert
+      expect(result).toEqual('the-rolled-page');
+      expect(JABS_EnemyPool_mock.pageOf).toHaveBeenCalledWith(302);
+      expect(originalPage).not.toHaveBeenCalled();
+    });
+
     it('warns and returns null when event data is missing', () =>
     {
       vi.spyOn(console, 'warn').mockImplementation(() => {});
@@ -563,14 +696,22 @@ describe('J-ABS Game_Event (unit, all downstream dependencies mocked)', () =>
 
   describe('setupPageSettings()', () =>
   {
-    it('parses enemy comments after the original logic', () =>
+    it('rolls the pool before the original logic reads the page, then parses enemy comments after it', () =>
     {
+      // Arrange
       const event = buildEvent();
+      const rollSpy = vi.spyOn(event, 'rollEnemyPool').mockImplementation(() => {});
       const parseSpy = vi.spyOn(event, 'parseEnemyComments').mockImplementation(() => {});
 
+      // Act
       event.setupPageSettings();
 
-      expect(parseSpy).toHaveBeenCalled();
+      // Assert
+      const [ rollOrder ] = rollSpy.mock.invocationCallOrder;
+      const [ originalOrder ] = originalSetupPageSettings.mock.invocationCallOrder;
+      const [ parseOrder ] = parseSpy.mock.invocationCallOrder;
+      expect(rollOrder).toBeLessThan(originalOrder);
+      expect(originalOrder).toBeLessThan(parseOrder);
     });
   });
 
@@ -589,6 +730,19 @@ describe('J-ABS Game_Event (unit, all downstream dependencies mocked)', () =>
       expect(event.getBattlerCoreData()).toBeNull();
       expect(event.isJabsBattler()).toEqual(false);
       expect(originalClearPageSettings.mock.contexts).toContain(event);
+    });
+
+    it('forgets who the lost page rolled', () =>
+    {
+      // Arrange
+      const event = buildEvent();
+      event.setRolledEnemyId(302);
+
+      // Act
+      event.clearPageSettings();
+
+      // Assert
+      expect(event.getRolledEnemyId()).toEqual(0);
     });
   });
   //endregion initialization
@@ -734,6 +888,38 @@ describe('J-ABS Game_Event (unit, all downstream dependencies mocked)', () =>
       const event = buildEvent({ getValidCommentCommands: () => buildCommentCommands([ matchingComment ]) });
 
       expect(event[method]()).toEqual(expectedValue);
+    });
+  });
+
+  describe('getEnemyPoolOverrides()', () =>
+  {
+    it('returns an empty list when no comment declares a pool', () =>
+    {
+      // Arrange
+      const event = buildEvent({ getValidCommentCommands: () => buildCommentCommands([ 'enemyId:301' ]) });
+
+      // Act
+      const result = event.getEnemyPoolOverrides();
+
+      // Assert
+      expect(result).toEqual([]);
+    });
+
+    it('parses the captured list through JsonMapper from a matching comment', () =>
+    {
+      // Arrange
+      const parsedPool = [ 301, 302 ];
+      globalThis.JsonMapper.parseObject.mockReturnValue(parsedPool);
+      const event = buildEvent({
+        getValidCommentCommands: () => buildCommentCommands([ 'enemyId:301', 'enemyIds:[301,302]' ]),
+      });
+
+      // Act
+      const result = event.getEnemyPoolOverrides();
+
+      // Assert
+      expect(globalThis.JsonMapper.parseObject).toHaveBeenCalledWith('[301,302]');
+      expect(result).toBe(parsedPool);
     });
   });
 

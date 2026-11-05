@@ -127,6 +127,10 @@ class J_AbsPluginMetadata
     this.DefaultRespawnParam = this.parsedPluginParameters['defaultRespawnParam'] || String.empty;
     // older parameter sets predate this parameter entirely, so the parse falls back to "no animation".
     this.DefaultRespawnAnimationId = Number(this.parsedPluginParameters['defaultRespawnAnimationId'] || 0);
+
+    // older parameter sets predate this one too, and a home weight of zero would mean no pooled spot
+    // ever rolled the enemy actually placed there, so the fallback is the shipped default.
+    this.DefaultEnemyPoolHomeWeight = Number(this.parsedPluginParameters['defaultEnemyPoolHomeWeight'] || 85);
   }
 
   /**

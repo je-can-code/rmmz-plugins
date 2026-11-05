@@ -1,17 +1,17 @@
 ---
 type: plugin-parameter
 title: Enemy Map Id Plugin Parameter
-description: The id of the map used for cloning enemy events off of.
+description: The id of the map used for cloning enemy events off of, by the Spawn Enemy command and by pooled spots.
 tags: [abs, parameter]
 param:
   key: enemyMapId
   parent: baseConfigs
   type: number
   text: Enemy Map Id
-  desc: The id of the map used for cloning enemy events off of.
+  desc: The id of the map used for cloning enemy events off of, by the Spawn Enemy command and by pooled spots.
   default: ''
 ---
 
 # Parameter: `enemyMapId`
 
-The id of the map used for cloning enemy events off of.
+The id of the map used for cloning enemy events off of, by the Spawn Enemy command and by pooled spots.

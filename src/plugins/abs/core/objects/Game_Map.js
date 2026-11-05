@@ -367,6 +367,28 @@ Game_Map.prototype.addEvent = function(event)
 };
 
 /**
+ * Puts the data of everything spawned at runtime back into `$dataMap.events`.
+ *
+ * Vanilla reloads `$dataMap` from its file every time a scene returns to the map, and the file only
+ * knows what was authored, while the live events carry on untouched. That leaves the two lists
+ * describing different worlds, which is the one thing the invariant on {@link Game_Map#addEvent}
+ * forbids: a spawned enemy can no longer find its pages and loses its body, and the slot it sits in
+ * reads as free, so the next thing dropped lands on top of whatever is still standing there.
+ */
+Game_Map.prototype.restoreDynamicEventData = function()
+{
+  // only events put here at runtime carry data the file has never heard of.
+  const dynamicEvents = this.events()
+    .filter(event => event.isDynamicSpawn());
+
+  // each one goes back into the slot its own id names.
+  dynamicEvents.forEach(event =>
+  {
+    $dataMap.events[event.eventId()] = event.getDynamicEventData();
+  });
+};
+
+/**
  * Removes a provided event from the current map's event list.
  * @param {Game_Event} eventToRemove The `Game_Event` to remove from this map.
  */

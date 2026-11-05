@@ -20,6 +20,25 @@ Scene_Map.prototype.onMapLoaded = function()
     .call(this);
 };
 
+/**
+ * Extends {@link #createDisplayObjects}.<br/>
+ * Also restores everything spawned at runtime to the map data before any sprite reads it.
+ *
+ * This is the one safe moment, and {@link #onMapLoaded} is too early for it. Vanilla gets here only
+ * after a transfer has settled, so a move to a different map has already rebuilt every event and left
+ * nothing spawned to restore, which means the old map's data can never land in the new one.
+ */
+J.ABS.Aliased.Scene_Map.set('createDisplayObjects', Scene_Map.prototype.createDisplayObjects);
+Scene_Map.prototype.createDisplayObjects = function()
+{
+  // the map file was just reloaded, and it has never heard of anything spawned at runtime.
+  $gameMap.restoreDynamicEventData();
+
+  // perform original logic.
+  J.ABS.Aliased.Scene_Map.get('createDisplayObjects')
+    .call(this);
+};
+
 //region update
 /**
  * Extends {@link #update}.<br/>

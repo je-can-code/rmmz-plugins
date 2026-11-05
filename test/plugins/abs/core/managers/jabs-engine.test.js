@@ -3674,6 +3674,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
         this.eventId = eventId;
         this.setJabsLoot = vi.fn();
         this.setLootNeedsAdding = vi.fn();
+        this.flagAsDynamicSpawn = vi.fn();
       });
       globalThis.J.ABS.Metadata.DefaultLootExpiration = 300;
     });
@@ -3709,6 +3710,19 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       const result = engine.addLootDropToMap(1, 2, { id: 1 });
       expect(globalThis.$gameMap.addEvent).toHaveBeenCalledWith(result);
       expect(engine.requestLootRendering).toBe(true);
+    });
+
+    it('hands the loot event its own data to carry through a map reload', () =>
+    {
+      // Arrange
+      const engine = new JABS_Engine();
+
+      // Act
+      const result = engine.addLootDropToMap(1, 2, { id: 1 });
+
+      // Assert
+      // the same object the data map holds, so the uuid written onto it afterwards comes along too.
+      expect(result.flagAsDynamicSpawn.mock.calls[0][0]).toBe(globalThis.$dataMap.events[0]);
     });
 
     it('uses the item\'s tagged expiration when present, otherwise the metadata default', () =>
@@ -3791,6 +3805,18 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       expect(globalThis.$gameMap.addEvent).toHaveBeenCalledWith(result);
       expect(result.flagBattlerForAdding).toHaveBeenCalledTimes(1);
       expect(engine.requestBattlerRendering).toBe(true);
+    });
+
+    it('hands the clone its own data to carry through a map reload', () =>
+    {
+      // Arrange
+      const engine = new JABS_Engine();
+
+      // Act
+      const result = engine.addEnemyToMap(10, 20, 0);
+
+      // Assert
+      expect(result.flagAsDynamicSpawn.mock.calls[0][0]).toBe(globalThis.$dataMap.events.at(-1));
     });
   });
   //endregion map spawning

@@ -3193,6 +3193,9 @@ class JABS_Engine
     // attach loot.
     lootEvent.setJabsLoot(jabsLootData);
 
+    // loot is put here at runtime like any spawn, so it needs the same way back from a map reload.
+    lootEvent.flagAsDynamicSpawn(lootEventData);
+
     // flag for adding a character sprite later via HUD/spriteset integration (unchanged elsewhere).
     // if your code uses such a flag.
     lootEvent.setLootNeedsAdding();
@@ -3259,8 +3262,9 @@ class JABS_Engine
     const newEnemy = new Game_Event($gameMap.mapId(), normalizedIndex);
 
     // clones take appended indices that evaporate on the next map setup, so respawn tracking
-    // must be able to tell them apart from authored events and ignore them.
-    newEnemy.flagAsDynamicSpawn();
+    // must be able to tell them apart from authored events and ignore them. they also hold onto
+    // their data, because the map file reloading mid-session would otherwise take it with it.
+    newEnemy.flagAsDynamicSpawn(enemyData);
 
     // add the enemy to the map and flag it for adding (visually).
     $gameMap.addEvent(newEnemy);
