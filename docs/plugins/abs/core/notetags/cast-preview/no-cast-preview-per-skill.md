@@ -13,7 +13,8 @@ Disables the preview for this specific skill while it is being cast.
 
 The preview shows the skill's real hitbox, from where it will spawn and aimed where it will fire. A skill whose action
 flies straight also shows a lane down its aim, as wide as what is flying and as long as its first second of flight,
-fading out at the far end. An action that stays put, or whose move route does anything but step forward, gets no lane.
+fading out at the far end. An action that leaves on any other path shows the same lane reaching just one tile past its
+hitbox, since the way it sets off is all anyone can promise. An action that stays put gets no lane.
 
 Use this for skills where showing the hitbox preview would be too much of a hint or ruin the surprise.
 

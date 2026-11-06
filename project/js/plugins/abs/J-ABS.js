@@ -21140,6 +21140,12 @@ var JABS_CastPreviewAction = class JABS_CastPreviewAction {
 	*/
 	static FlightPreviewFrames = 60;
 	/**
+	* How many tiles past its own hitbox a telegraph reaches for a shot that won't fly straight. All
+	* anyone knows about that path is the way it sets off, so this is a hint rather than a promise.
+	* @type {number}
+	*/
+	static WanderPreviewTiles = 1;
+	/**
 	* The event page move type that runs its move route; a template on any other ignores it.
 	* @type {number}
 	*/
@@ -21187,27 +21193,39 @@ var JABS_CastPreviewAction = class JABS_CastPreviewAction {
 		this.#character.setImage(characterName, characterIndex);
 	}
 	/**
-	* How far the action will fly in the stretch of its flight a telegraph shows, in tiles.
-	* @returns {number} The distance; 0 for an action that stays where it spawns, or whose route
-	* can't promise where it is going.
+	* How far ahead of the action a telegraph reaches, in tiles: the stretch of its flight it shows
+	* if it flies straight, or a little past its own hitbox if nobody can promise where it's going.
+	* @returns {number} The distance; 0 for an action that stays where it spawns.
 	*/
 	flightPreviewTiles() {
-		if (this.#fliesStraight() === false) return 0;
+		const steps = this.#routeSteps();
+		const forwardSteps = steps.filter((command) => command.code === Game_Character.ROUTE_MOVE_FORWARD);
+		if (forwardSteps.length === 0) return 0;
+		if (this.#page.moveRoute.repeat && forwardSteps.length === steps.length) {
+			return this.#straightFlightTiles();
+		}
+		if (steps.length === 1) return 0;
+		const hitboxTiles = this.#jabsAction.getCollisionRange() ?? 0;
+		return hitboxTiles + JABS_CastPreviewAction.WanderPreviewTiles;
+	}
+	/**
+	* The commands of the action's route that will really run, which on some actions is none.
+	* @returns {RPG_MoveRouteCommand[]}
+	*/
+	#routeSteps() {
+		if (this.#jabsAction.isDirectAction()) return [];
+		const { moveType, moveRoute } = this.#page;
+		if (moveType !== JABS_CastPreviewAction.CustomMoveType) return [];
+		return moveRoute.list.filter((command) => command.code !== Game_Character.ROUTE_END);
+	}
+	/**
+	* How far a straight shot gets in the stretch of its flight a telegraph shows, in tiles.
+	* @returns {number}
+	*/
+	#straightFlightTiles() {
 		const frames = Math.min(JABS_CastPreviewAction.FlightPreviewFrames, this.#jabsAction.getMaxDuration());
 		this.#character.setMoveSpeed(this.#templateMoveSpeed());
 		return this.#character.distancePerFrame() * frames;
-	}
-	/**
-	* Whether the action will leave its spawn in a straight line along its aim.
-	* @returns {boolean} True if it will fly straight, false otherwise.
-	*/
-	#fliesStraight() {
-		if (this.#jabsAction.isDirectAction()) return false;
-		const { moveType, moveRoute } = this.#page;
-		if (moveType !== JABS_CastPreviewAction.CustomMoveType) return false;
-		if (moveRoute.repeat === false) return false;
-		const steps = moveRoute.list.filter((command) => command.code !== Game_Character.ROUTE_END);
-		return steps.length > 0 && steps.every((command) => command.code === Game_Character.ROUTE_MOVE_FORWARD);
 	}
 	/**
 	* The speed the action's template will give its event: its comments outrank the page.

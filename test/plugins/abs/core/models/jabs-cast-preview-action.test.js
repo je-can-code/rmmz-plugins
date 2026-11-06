@@ -103,6 +103,7 @@ describe('JABS_CastPreviewAction (direct src import)', () =>
       getActionId: () => 70,
       isDirectAction: () => false,
       getMaxDuration: () => 240,
+      getCollisionRange: () => 1.5,
       ...overrides,
     };
   };
@@ -317,7 +318,7 @@ describe('JABS_CastPreviewAction (direct src import)', () =>
       expect(result).toBe(0);
     });
 
-    it('reaches nowhere on a route that only runs once', () =>
+    it('reaches nowhere on a single step that never repeats, which only nudges it', () =>
     {
       // Arrange
       standIn.set(buildFlyingAction({ repeat: false }));
@@ -341,16 +342,52 @@ describe('JABS_CastPreviewAction (direct src import)', () =>
       expect(result).toBe(0);
     });
 
-    it('reaches nowhere on a route that does anything but step forward', () =>
+    it('reaches nowhere on a custom route with no step forward, like staying on the caster', () =>
     {
-      // Arrange: the forward step sitting beside the script is what makes this a near miss.
-      standIn.set(buildFlyingAction({ route: [ 12, 45, 0 ] }));
+      // Arrange: most of the game's casts ride this exact shape, so it has to stay quiet.
+      standIn.set(buildFlyingAction({ route: [ 45, 0 ] }));
 
       // Act
       const result = standIn.flightPreviewTiles();
 
       // Assert
       expect(result).toBe(0);
+    });
+
+    it('reaches a tile past its hitbox on a looping route that does more than step forward', () =>
+    {
+      // Arrange: Rending Chaos, a step forward beside a script that turns it who knows which way.
+      standIn.set(buildFlyingAction({ route: [ 12, 45, 0 ] }));
+
+      // Act
+      const result = standIn.flightPreviewTiles();
+
+      // Assert
+      expect(result).toBe(2.5);
+    });
+
+    it('reaches a tile past its hitbox on a one-shot route of many steps', () =>
+    {
+      // Arrange: Ruthless Wing, which changes speed between its steps and then stops.
+      standIn.set(buildFlyingAction({ repeat: false, route: [ 45, 12, 45, 12, 0 ] }));
+
+      // Act
+      const result = standIn.flightPreviewTiles();
+
+      // Assert
+      expect(result).toBe(2.5);
+    });
+
+    it('reaches just the tile for a wandering action with no hitbox size of its own', () =>
+    {
+      // Arrange
+      standIn.set(buildFlyingAction({ route: [ 12, 45, 0 ] }, { getCollisionRange: () => null }));
+
+      // Act
+      const result = standIn.flightPreviewTiles();
+
+      // Assert
+      expect(result).toBe(1);
     });
   });
 });

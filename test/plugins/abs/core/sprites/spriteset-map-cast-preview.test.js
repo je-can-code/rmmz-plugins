@@ -160,6 +160,19 @@ describe('Spriteset_Map cast previews', () =>
       },
     };
 
+    // and a shot that turns as it goes, the way Rending Chaos does.
+    globalThis.$actionMap.events[57] = {
+      pages: [
+        {
+          moveType: 3,
+          moveSpeed: 4,
+          moveRoute: { repeat: true, list: [ { code: 12 }, { code: 45 }, { code: 0 } ] },
+          list: [],
+          image: { tileId: 0, characterName: '$a_slash-6', characterIndex: 0 },
+        },
+      ],
+    };
+
     // the comment reading J-Base and J-ABS add to the engine's Game_Event.
     globalThis.Game_Event.getValidCommentCommandsFromPage = page => page.list;
     globalThis.Game_Event.readCustomMoveSpeed = () => null;
@@ -637,6 +650,20 @@ describe('Spriteset_Map cast previews', () =>
       expect(geometry.containsPoint(new PIXI.Point(0, -179))).toBe(true);
       expect(geometry.containsPoint(new PIXI.Point(0, -181))).toBe(false);
       expect(geometry.containsPoint(new PIXI.Point(0, 179))).toBe(false);
+    });
+
+    it('hints a tile past the hitbox for a shot that won\'t fly straight, then stops', () =>
+    {
+      // Arrange: a 1 tile arc, so the hint reaches 2 tiles, 96 pixels, down the aim.
+      const action = buildAction({ shape: 'arc', range: 1, degrees: 150, facing: 8, actionId: 57 });
+
+      // Act
+      const sprite = telegraph(action);
+      const { geometry } = sprite._jabsCastPreviewG;
+
+      // Assert: well past the 48 pixel hitbox, then nothing beyond the end of the hint.
+      expect(geometry.containsPoint(new PIXI.Point(0, -95))).toBe(true);
+      expect(geometry.containsPoint(new PIXI.Point(0, -97))).toBe(false);
     });
 
     it('draws no lane for an action that stays put', () =>
