@@ -493,7 +493,7 @@ class Sprite_HitboxPulse
     g.lineStyle(this.lineWidth(), this.lineColor(), this.lineAlpha());
     g.beginFill(this.fillColor(), this.fillAlpha());
 
-    // set by the Arc/default branch when it bakes the dead zone into its own polygon,
+    // set by the Arc branch when it bakes the dead zone into its own polygon,
     // so the generic hole-punch below doesn't double-apply on top of it.
     let holeAlreadyBaked = false;
 
@@ -503,16 +503,6 @@ class Sprite_HitboxPulse
     // resolve per-shape drawing.
     switch (this.shape())
     {
-      case J.ABS.Shapes.Circle:
-      {
-        // compute world-space pixel radius.
-        const r = this.range() * tile;
-
-        // draw the circle centered at local origin.
-        g.drawCircle(0, 0, r);
-        break;
-      }
-
       case J.ABS.Shapes.Square:
       case J.ABS.Shapes.Rhombus:     // approximation for pulse visualization
       case J.ABS.Shapes.Cross:       // approximation for pulse visualization
@@ -534,7 +524,6 @@ class Sprite_HitboxPulse
       }
 
       case J.ABS.Shapes.Arc:
-      default:
       {
         // draw a sector (wedge) oriented along +X (we rotate the sprite externally).
         const r = this.range() * tile;
@@ -590,10 +579,22 @@ class Sprite_HitboxPulse
 
         break;
       }
+
+      // a skill with no <hitbox> tag collides as a circle, so it has to pulse as one.
+      case J.ABS.Shapes.Circle:
+      default:
+      {
+        // compute world-space pixel radius.
+        const r = this.range() * tile;
+
+        // draw the circle centered at local origin.
+        g.drawCircle(0, 0, r);
+        break;
+      }
     }
 
     // punch the universal dead zone out of every shape that didn't already bake it directly
-    // into its own polygon above (Arc, and any unrecognized shape sharing its fallback path).
+    // into its own polygon above (just Arc).
     if (this.innerRadius() > 0 && holeAlreadyBaked === false)
     {
       const innerRadiusPx = this.innerRadius() * tile;

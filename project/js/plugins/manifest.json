@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "generatedBy": "rmmz-plugins src/build-tools/generate-manifest.js - generated, never edit by hand",
   "files": {
-    "abs/J-ABS.js": "f55a98142c0b530e9d5621cef4303265ac9a69ccbffb53721968939325bb58a0",
+    "abs/J-ABS.js": "06d207b5ec14aff792e8b0d51bf25c79bcb96c909de7475cf60a23625273875c",
     "abs/ext/J-ABS-AllyAI.js": "97354c203a158cc0b89e92d21fc259a045b9b3a9f75bd1dbea258a33e2b8b681",
     "abs/ext/J-ABS-Boss.js": "469b9752b880a4069fdef5eafaf217be6bbc25a7f598190059c961f796232398",
     "abs/ext/J-ABS-Charge.js": "2d7d5bddab9327c8d47194fba3b241fbba0a280b83fb7e1a6c56011e2c62c1ff",

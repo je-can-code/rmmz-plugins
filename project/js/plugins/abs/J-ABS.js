@@ -3792,11 +3792,6 @@ var Sprite_HitboxPulse = class extends Sprite {
 		let holeAlreadyBaked = false;
 		const tile = $gameMap.tileWidth();
 		switch (this.shape()) {
-			case J.ABS.Shapes.Circle: {
-				const r = this.range() * tile;
-				g.drawCircle(0, 0, r);
-				break;
-			}
 			case J.ABS.Shapes.Square:
 			case J.ABS.Shapes.Rhombus:
 			case J.ABS.Shapes.Cross:
@@ -3811,8 +3806,7 @@ var Sprite_HitboxPulse = class extends Sprite {
 				g.drawRect(0, -thick * .5, length, thick);
 				break;
 			}
-			case J.ABS.Shapes.Arc:
-			default: {
+			case J.ABS.Shapes.Arc: {
 				const r = this.range() * tile;
 				const deg = Math.max(0, Math.min(360, this.degrees()));
 				const rad = deg * Math.PI / 180;
@@ -3842,6 +3836,12 @@ var Sprite_HitboxPulse = class extends Sprite {
 					}
 					g.lineTo(0, 0);
 				}
+				break;
+			}
+			case J.ABS.Shapes.Circle:
+			default: {
+				const r = this.range() * tile;
+				g.drawCircle(0, 0, r);
 				break;
 			}
 		}
@@ -5051,10 +5051,10 @@ var JABS_AI = class {
 			return testAction.isForAliveFriend() && testAction.isRecover() && testAction.isHpEffect();
 		});
 		if (healingTypeSkills.length === 0) return 0;
-		const lowestAlly = this.determineLowestHpAlly(user);
-		user.setAllyTarget(lowestAlly);
 		const below60 = this.countLowHpAllies(user);
 		if (below60 === 0) return 0;
+		const lowestAlly = this.determineLowestHpAlly(user);
+		user.setAllyTarget(lowestAlly);
 		const lowestAllyBattler = lowestAlly.getBattler();
 		const healerBattler = user.getBattler();
 		if (below60 === 1) {
@@ -5074,6 +5074,9 @@ var JABS_AI = class {
 		let bestSkillId = 0;
 		let chosenAlly = null;
 		availableSkills.forEach((skillId) => {
+			const testAction = new Game_Action(user.getBattler());
+			testAction.setSkill(skillId);
+			if (!testAction.isForFriend()) return;
 			const skill = user.getSkill(skillId);
 			const stateAddingEffects = skill.effects.filter((fx) => fx.code === 21);
 			if (stateAddingEffects.length === 0) return;
@@ -17131,13 +17134,7 @@ var JABS_Engine = class JABS_Engine {
 	buildActionEventData(caster, action, x, y) {
 		const eventId = action.getActionId();
 		const actionEventData = JsonEx.makeDeepCopy($actionMap.events[eventId]);
-		let spawnX = x ?? caster.getX();
-		let spawnY = y ?? caster.getY();
-		const options = action.getActionOptions();
-		if (options) {
-			spawnX += options.getSpawnOffsetX();
-			spawnY += options.getSpawnOffsetY();
-		}
+		const [spawnX, spawnY] = this.determineActionSpawnCoordinates(caster, action, x, y);
 		actionEventData.x = spawnX;
 		actionEventData.y = spawnY;
 		actionEventData.isAction = true;
@@ -17145,6 +17142,25 @@ var JABS_Engine = class JABS_Engine {
 		actionEventData.uniqueId = action.getUuid();
 		actionEventData.actionDeleted = false;
 		return actionEventData;
+	}
+	/**
+	* Determines where on the map an action appears: on the given coordinates when there are any,
+	* otherwise on its caster, either way shifted by whatever offset its place in a volley gave it.
+	* @param {JABS_Battler} caster The `JABS_Battler` executing the JABS action.
+	* @param {JABS_Action} action The JABS action being placed.
+	* @param {number|null} x The target's `x` coordinate, if applicable.
+	* @param {number|null} y The target's `y` coordinate, if applicable.
+	* @returns {[number, number]} The `[x, y]` coordinates the action spawns at.
+	*/
+	determineActionSpawnCoordinates(caster, action, x, y) {
+		let spawnX = x ?? caster.getX();
+		let spawnY = y ?? caster.getY();
+		const options = action.getActionOptions();
+		if (options) {
+			spawnX += options.getSpawnOffsetX();
+			spawnY += options.getSpawnOffsetY();
+		}
+		return [spawnX, spawnY];
 	}
 	/**
 	* Determines the directions of all projectiles for a given formation and count.
@@ -20864,6 +20880,77 @@ var JABS_BattlerName = class {
 };
 
 //#endregion
+//#region src/plugins/abs/core/models/JABS_CastPreviewAction.js
+/**
+* A stand-in for the action event a cast has yet to spawn, so its telegraph can be drawn by the
+* same code, and from the same origin, as the hit it warns about.<br/>
+* Answers the three members every hitbox helper reads from a real action event: `screenX()`,
+* `screenY()`, and `getJabsAction()`. Meant to be one reusable instance per telegraph, re-`set()`
+* every frame so it follows the cast.
+*/
+var JABS_CastPreviewAction = class {
+	/**
+	* The headless character reporting the spawn position in screen pixels, the same way the event
+	* placed there will.
+	* @type {Game_Character}
+	*/
+	#character = new Game_Character();
+	/**
+	* The real action winding up, or null until one is assigned.
+	* @type {JABS_Action|null}
+	*/
+	#jabsAction = null;
+	/**
+	* Stands in for the given action, on the spot it would spawn if its cast finished now.
+	* @param {JABS_Action} jabsAction The real action winding up.
+	*/
+	set(jabsAction) {
+		this.#jabsAction = jabsAction;
+		this.#wearTemplateArt(jabsAction);
+		const caster = jabsAction.getCaster();
+		const [targetX, targetY] = caster.resolveActionTargetCoordinates(jabsAction);
+		const [spawnX, spawnY] = $jabsEngine.determineActionSpawnCoordinates(caster, jabsAction, targetX, targetY);
+		this.#character.locate(spawnX, spawnY);
+	}
+	/**
+	* Dresses the headless character in the art the action's template will give its event. A tile or
+	* an object sheet rests on its tile where a character stands a few pixels above it, and that
+	* difference carries through to the screen position.
+	* @param {JABS_Action} jabsAction The real action winding up.
+	*/
+	#wearTemplateArt(jabsAction) {
+		const [page] = $actionMap.events[jabsAction.getActionId()].pages;
+		const { tileId, characterName, characterIndex } = page.image;
+		if (tileId > 0) {
+			this.#character.setTileImage(tileId);
+			return;
+		}
+		this.#character.setImage(characterName, characterIndex);
+	}
+	/**
+	* The screen X the spawned action event would report.
+	* @returns {number}
+	*/
+	screenX() {
+		return this.#character.screenX();
+	}
+	/**
+	* The screen Y the spawned action event would report.
+	* @returns {number}
+	*/
+	screenY() {
+		return this.#character.screenY();
+	}
+	/**
+	* The real action this stands in for, or null until one is assigned.
+	* @returns {JABS_Action|null}
+	*/
+	getJabsAction() {
+		return this.#jabsAction;
+	}
+};
+
+//#endregion
 //#region src/plugins/abs/core/models/JABS_OnChanceEffect.js
 /**
 * A class defining the structure of an on-death skill, either for ally or enemy.
@@ -24201,9 +24288,24 @@ Game_Action.prototype.subject = function() {
 	if (this.subjectActorId() > 0) {
 		subject = $gameActors.actor(this.subjectActorId());
 	} else {
-		subject = $gameEnemies.enemy(this.subjectEnemyIndex());
+		subject = this.enemySubject();
 	}
 	return subject;
+};
+/**
+* Finds the enemy performing this action.<br/>
+* A database id names a row, and any number of enemies on the map can share a row, so the live battler is
+* found by its uuid. Its level, states and skill history belong to that one enemy, and all of them feed
+* into what this action does.
+*
+* The {@link Game_Enemies} dictionary answers only when no live battler does: for an enemy that was never on
+* the map, such as the stand-in behind terrain damage, or one removed from the map before its action landed.
+* @returns {Game_Enemy}
+*/
+Game_Action.prototype.enemySubject = function() {
+	const liveBattler = JABS_AiManager.getBattlerByUuid(this.subjectEnemyUuid());
+	if (!liveBattler) return $gameEnemies.enemy(this.subjectEnemyIndex());
+	return liveBattler.getBattler();
 };
 /**
 * Overwrites {@link #setSubject}.<br/>
@@ -24218,12 +24320,28 @@ Game_Action.prototype.setSubject = function(subject) {
 		case subject.isActor():
 			this.setSubjectActorId(subject.battlerId());
 			this.setSubjectEnemyIndex(-1);
+			this.setSubjectEnemyUuid(String.empty);
 			break;
 		case subject.isEnemy():
 			this.setSubjectEnemyIndex(subject.battlerId());
 			this.setSubjectActorId(0);
+			this.setSubjectEnemyUuid(subject.getUuid());
 			break;
 	}
+};
+/**
+* Gets the uuid of the enemy performing this action, or an empty string when an actor.
+* @returns {string} The subjectEnemyUuid.
+*/
+Game_Action.prototype.subjectEnemyUuid = function() {
+	return this._subjectEnemyUuid;
+};
+/**
+* Sets the uuid of the enemy performing this action, or an empty string when an actor.
+* @param {string} newSubjectEnemyUuid The new subjectEnemyUuid.
+*/
+Game_Action.prototype.setSubjectEnemyUuid = function(newSubjectEnemyUuid) {
+	this._subjectEnemyUuid = newSubjectEnemyUuid;
 };
 /**
 * Overwrites {@link #apply}.<br/>
@@ -30050,24 +30168,19 @@ Game_Map.prototype.clearExpiredLootEvent = function(lootEvent) {
 Game_Map.prototype.hasInteractableEventInFront = function(jabsBattler) {
 	const player = jabsBattler.getCharacter();
 	const direction = player.direction();
-	const triggers = [
-		0,
-		1,
-		2
-	];
 	const x1 = player.occupiedTileX();
 	const y1 = player.occupiedTileY();
 	const x2 = $gameMap.roundXWithDirection(x1, direction);
 	const y2 = $gameMap.roundYWithDirection(y1, direction);
 	for (const event of this.eventsXy(x1, y1)) {
 		if (event.isJabsBattler()) return false;
-		if (event.isTriggerIn(triggers) && event.isNormalPriority() === true) {
+		if (this.isInteractableEvent(event)) {
 			return true;
 		}
 	}
 	for (const event of this.eventsXy(x2, y2)) {
 		if (event.isJabsBattler()) return false;
-		if (event.isTriggerIn(triggers) && event.isNormalPriority() === true) {
+		if (this.isInteractableEvent(event)) {
 			return true;
 		}
 	}
@@ -30076,12 +30189,29 @@ Game_Map.prototype.hasInteractableEventInFront = function(jabsBattler) {
 		const y3 = $gameMap.roundYWithDirection(y2, direction);
 		for (const event of $gameMap.eventsXy(x3, y3)) {
 			if (event.isJabsBattler()) return false;
-			if (event.isTriggerIn(triggers) && event.isNormalPriority() === true) {
+			if (this.isInteractableEvent(event)) {
 				return true;
 			}
 		}
 	}
 	return false;
+};
+/**
+* Determines whether an event near the player is something a button press could mean to reach.<br/>
+* What a battle leaves on the map are events too, and they read exactly like an NPC: actions and loot
+* alike are built from a normal-priority, action-button template. An action is born on its caster's tile
+* and loot lands wherever its enemy fell, so counting either one would have a player's own swing, or the
+* gold it just knocked loose, refuse the next swing.
+* @param {Game_Event} event The event to check.
+* @returns {boolean} True if the button means this event, false otherwise.
+*/
+Game_Map.prototype.isInteractableEvent = function(event) {
+	if (event.isJabsAction() || event.isJabsLoot()) return false;
+	return event.isTriggerIn([
+		0,
+		1,
+		2
+	]) && event.isNormalPriority() === true;
 };
 
 //#endregion
@@ -32515,8 +32645,8 @@ Spriteset_Map.prototype.createJabsLayer = function() {
 	*/
 	this.setDebugBattlerHitboxSprites({});
 	/**
-	* Direct tracking for cast preview sprites by battler uuid.
-	* Keys are of the form: `castpreview:${uuid}`.
+	* Direct tracking for cast preview sprites by battler uuid and place in the volley.
+	* Keys are of the form: `castpreview:${uuid}:${index}`.
 	* @type {Record<string, Sprite>}
 	*/
 	this.setCastPreviewSprites({});
@@ -32854,11 +32984,11 @@ Spriteset_Map.prototype.handleCastPreviewOverlays = function() {
 	this.purgeOrphanedCastPreviewSprites();
 };
 /**
-* Collects all enemy battlers that are currently casting and should show a preview.
-* @returns {{ key:string, source: Game_CharacterBase, battler:JABS_Battler, action:JABS_Action, skill:RPG_Skill }[]}
+* Collects the actions of all enemy battlers that are currently casting and should show a preview.
+* @returns {{ key:string, action:JABS_Action }[]}
 */
 Spriteset_Map.prototype.collectActiveCastPreviewItems = function() {
-	/** @type {{ key:string, source: Game_CharacterBase, battler:JABS_Battler, action:JABS_Action, skill:RPG_Skill }[]} */
+	/** @type {{ key:string, action:JABS_Action }[]} */
 	const items = [];
 	$gameMap.events().filter((ev) => ev.isJabsBattler()).forEach((ev) => {
 		const jabsBattler = ev.getJabsBattler();
@@ -32880,13 +33010,11 @@ Spriteset_Map.prototype.collectActiveCastPreviewItems = function() {
 		}
 		const uuid = ev.getJabsBattlerUuid();
 		if (!uuid) return;
-		const key = `castpreview:${uuid}`;
-		items.push({
-			key,
-			source: ev,
-			battler: jabsBattler,
-			action,
-			skill
+		decided.forEach((decidedAction, index) => {
+			items.push({
+				key: `castpreview:${uuid}:${index}`,
+				action: decidedAction
+			});
 		});
 	});
 	return items;
@@ -32916,36 +33044,12 @@ Spriteset_Map.prototype.refreshExistingCastPreviewSprites = function() {
 		const sprite = dict[key];
 		const item = active.get(key);
 		if (!item) return;
-		let screenX = item.source.screenX();
-		let screenY = item.source.screenY();
-		if (item.action.isDirectAction && item.action.isDirectAction()) {
-			const baseSkill = item.action.getBaseSkill();
-			const isLocked = !!baseSkill.jabsDirectLock;
-			let tx = null;
-			let ty = null;
-			if (!isLocked) {
-				const options = item.action.getActionOptions();
-				const loc = options ? options.getTargetLocation() : null;
-				if (loc) {
-					tx = loc.getX();
-					ty = loc.getY();
-				}
-			}
-			if (tx === null || ty === null || isLocked) {
-				const [resolvedX, resolvedY] = item.battler.resolveDirectActionTargetCoordinates(item.action);
-				tx = resolvedX;
-				ty = resolvedY;
-			}
-			if (tx !== null && ty !== null) {
-				const tw = $gameMap.tileWidth();
-				const th = $gameMap.tileHeight();
-				screenX = Math.round(($gameMap.adjustX(tx) + .5) * tw);
-				screenY = Math.round(($gameMap.adjustY(ty) + .5) * th);
-			}
-		}
-		sprite.x = screenX;
-		sprite.y = screenY;
-		this.drawCastPreviewInto(sprite, item);
+		const standIn = sprite._jabsCastPreviewAction;
+		standIn.set(item.action);
+		const origin = JABS_Engine.getActionOriginPixels(standIn);
+		sprite.x = origin.x;
+		sprite.y = origin.y;
+		this.drawCastPreviewInto(sprite);
 	});
 };
 /**
@@ -32976,6 +33080,7 @@ Spriteset_Map.prototype.createCastPreviewSprite = function(item) {
 	/** @type {PIXI.Graphics} */
 	const g = new PIXI.Graphics();
 	sprite._jabsCastPreviewG = g;
+	sprite._jabsCastPreviewAction = new JABS_CastPreviewAction();
 	sprite._cpKey = item.key;
 	sprite.addChild(g);
 	sprite.anchor.set(.5, .5);
@@ -33008,86 +33113,22 @@ Spriteset_Map.prototype.getCastPreviewStyleFor = function(shape) {
 	};
 };
 /**
-* Draws the cast preview shape for the item’s primary action/skill.
-* Draws around local origin (0,0); sprite is already at caster feet.
+* Draws the cast preview shape for the action this sprite stands in for.
+* Draws around local origin (0,0); sprite is already at the action's origin.
 * @param {Sprite} sprite The target preview sprite.
-* @param {{ source:Game_CharacterBase, action:JABS_Action, skill:RPG_Skill }} item The item containing data.
 */
-Spriteset_Map.prototype.drawCastPreviewInto = function(sprite, item) {
+Spriteset_Map.prototype.drawCastPreviewInto = function(sprite) {
 	/** @type {PIXI.Graphics} */
 	const g = sprite._jabsCastPreviewG;
 	g.clear();
-	const shape = item.action.getShape && item.action.getShape();
-	const range = item.action.getRange && item.action.getRange();
-	const facing = item.source.direction();
-	const tw = $gameMap.tileWidth();
-	const th = $gameMap.tileHeight();
+	const standIn = sprite._jabsCastPreviewAction;
+	const action = standIn.getJabsAction();
+	const shape = action.getShape();
 	const style = this.getCastPreviewStyleFor(shape);
 	this.applyHitboxStyle(g, style);
-	const thicknessTiles = 1;
-	const thicknessX = Math.max(.5, thicknessTiles * tw);
-	const thicknessY = Math.max(.5, thicknessTiles * th);
-	const degrees = RPGManager.getNumberFromNoteByRegex(item.skill, J.ABS.RegExp.Degrees, true) ?? 180;
-	const sweepRad = degrees * Math.PI / 180;
-	switch (shape) {
-		case J.ABS.Shapes.Circle: {
-			const r = range * tw;
-			g.drawCircle(0, 0, r);
-			break;
-		}
-		case J.ABS.Shapes.Rhombus: {
-			this.drawRhombusG(g, range * tw, range * th);
-			break;
-		}
-		case J.ABS.Shapes.Square: {
-			const w = (2 * range + 1) * tw;
-			const h = (2 * range + 1) * th;
-			g.drawRect(-w / 2, -h / 2, w, h);
-			break;
-		}
-		case J.ABS.Shapes.Line: {
-			const lengthPx = range * Math.max(tw, th);
-			if (facing === J.ABS.Directions.DOWN) {
-				g.drawRect(-(thicknessX / 2), 0, thicknessX, lengthPx + th / 2);
-			} else if (facing === J.ABS.Directions.UP) {
-				g.drawRect(-(thicknessX / 2), -lengthPx - th / 2, thicknessX, lengthPx + th / 2);
-			} else if (facing === J.ABS.Directions.RIGHT) {
-				g.drawRect(0, -(thicknessY / 2), lengthPx + tw / 2, thicknessY);
-			} else {
-				g.drawRect(-lengthPx - tw / 2, -(thicknessY / 2), lengthPx + tw / 2, thicknessY);
-			}
-			break;
-		}
-		case J.ABS.Shapes.Wall: {
-			const lenTiles = 2 * range + 1;
-			if (facing === J.ABS.Directions.DOWN || facing === J.ABS.Directions.UP) {
-				const w = lenTiles * tw;
-				g.drawRect(-w / 2, -thicknessY / 2, w, thicknessY);
-			} else {
-				const h = lenTiles * th;
-				g.drawRect(-thicknessX / 2, -h / 2, thicknessX, h);
-			}
-			break;
-		}
-		case J.ABS.Shapes.Cross: {
-			const w = (2 * range + 1) * tw;
-			const h = (2 * range + 1) * th;
-			g.drawRect(-thicknessX / 2, -h / 2, thicknessX, h);
-			g.drawRect(-w / 2, -thicknessY / 2, w, thicknessY);
-			break;
-		}
-		case J.ABS.Shapes.Arc:
-		default: {
-			let centerRad = 0;
-			if (facing === J.ABS.Directions.DOWN) centerRad = Math.PI / 2;
-			if (facing === J.ABS.Directions.LEFT) centerRad = Math.PI;
-			if (facing === J.ABS.Directions.UP) centerRad = -Math.PI / 2;
-			const r = range * tw;
-			this.drawSectorG(g, 0, 0, r, centerRad, sweepRad);
-			break;
-		}
-	}
-	g.endFill();
+	const tw = $gameMap.tileWidth();
+	const th = $gameMap.tileHeight();
+	this.drawHitboxShapeG(g, shape, action.getRange(), action.direction(), tw, th, standIn, action.getInnerRadius());
 };
 /**
 * Renders translucent overlays for action hitboxes.
@@ -33372,7 +33413,6 @@ Spriteset_Map.prototype.drawOrientedHitboxQuadG = function(g, facing, lengthPx, 
 };
 /**
 * Draws the collision/visual hitbox into the provided sprite’s internal PIXI.Graphics.
-* Honors <thickness:N> for line, wall, and cross.
 *
 * @param {Sprite} sprite The container sprite that owns the PIXI.Graphics.
 * @param {string} shape One of J.ABS.Shapes.* values.
@@ -33389,17 +33429,30 @@ Spriteset_Map.prototype.drawActionHitboxInto = function(sprite, shape, range, fa
 	g.clear();
 	const style = this.getActionHitboxStyleFor(shape);
 	this.applyHitboxStyle(g, style);
+	this.drawHitboxShapeG(g, shape, range, facing, tw, th, actionEvent, innerRadius);
+};
+/**
+* Draws a hitbox's geometry around local (0,0) and completes the fill, on whatever style the
+* caller already applied. A telegraph and a live hitbox both draw through here, so an action cannot
+* look one way while it winds up and another once it fires.
+* Honors <thickness:N> for line, wall, and cross.
+*
+* @param {PIXI.Graphics} g The graphics to draw on.
+* @param {string} shape One of J.ABS.Shapes.* values.
+* @param {number} range Size in tiles for the shape (semantics vary by shape; see individual cases).
+* @param {1|2|3|4|6|7|8|9} facing Logical dir8 travel direction for the action.
+* @param {number} tw Tile width in pixels.
+* @param {number} th Tile height in pixels.
+* @param {Game_Event|JABS_CastPreviewAction} actionEvent The action event for tag resolution.
+* @param {number} innerRadius The universal dead zone in tiles; 0 disables it.
+*/
+Spriteset_Map.prototype.drawHitboxShapeG = function(g, shape, range, facing, tw, th, actionEvent, innerRadius) {
 	const thicknessTiles = $jabsEngine.getActionThicknessTiles(actionEvent) ?? 1;
 	const minPx = .5;
 	const thicknessX = Math.max(minPx, thicknessTiles * tw);
 	const thicknessY = Math.max(minPx, thicknessTiles * th);
 	let holeAlreadyBaked = false;
 	switch (shape) {
-		case J.ABS.Shapes.Circle: {
-			const r = range * tw;
-			g.drawCircle(0, 0, r);
-			break;
-		}
 		case J.ABS.Shapes.Rhombus: {
 			this.drawRhombusG(g, range * tw, range * th);
 			break;
@@ -33435,8 +33488,7 @@ Spriteset_Map.prototype.drawActionHitboxInto = function(sprite, shape, range, fa
 			g.drawRect(-w / 2, -thicknessY / 2, w, thicknessY);
 			break;
 		}
-		case J.ABS.Shapes.Arc:
-		default: {
+		case J.ABS.Shapes.Arc: {
 			const degrees = $jabsEngine.getActionDegrees(actionEvent) ?? 180;
 			const { x: fx, y: fy } = $jabsEngine.dir8ToUnitVector(facing);
 			const centerRad = Math.atan2(fy, fx);
@@ -33445,6 +33497,12 @@ Spriteset_Map.prototype.drawActionHitboxInto = function(sprite, shape, range, fa
 			const innerRadiusPxArc = innerRadius * tw;
 			if (innerRadiusPxArc > 0) holeAlreadyBaked = true;
 			this.drawSectorG(g, 0, 0, r, centerRad, sweepRad, innerRadiusPxArc);
+			break;
+		}
+		case J.ABS.Shapes.Circle:
+		default: {
+			const r = range * tw;
+			g.drawCircle(0, 0, r);
 			break;
 		}
 	}

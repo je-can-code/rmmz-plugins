@@ -2387,7 +2387,8 @@ always
 
 **Effect:**
 sets the tile-measured size of the skill's hitbox. Must be positive. Interpreted differently
-depending on the `<hitbox:...>` shape (side length for square, line length for line, etc.).
+depending on the `<hitbox:...>` shape (line length for line, `2 × radius + 1` tiles to a side for
+square, etc.).
 
 ```
 <radius:2>
@@ -2528,9 +2529,11 @@ always
 **Effect:**
 the collision shape used by the skill's action event, always centered on the action event with
 some exceptions. `circle`/`rhombus` grow with radius; `arc` is a forward wedge whose width is set
-by `<degrees:VAL>` (default 90°); `square` uses radius as side length; `line` uses radius as
-length (1 tile wide); `wall` is an inverted line (1 tile tall, radius as width); `cross` combines
-both axes. All projectiles from one skill share the same hitbox shape.
+by `<degrees:VAL>` (default 180°); `square` is `2 × radius + 1` tiles to a side; `line` uses radius
+as length (1 tile wide unless `<thickness:VAL>` says otherwise); `wall` is a bar directly ahead,
+`2 × radius + 1` tiles across and 1 tile deep unless `<thickness:VAL>` says otherwise; `cross`
+combines both axes. A skill with no `<hitbox>` tag collides, draws and pulses as a circle. All
+projectiles from one skill share the same hitbox shape.
 
 ```
 <hitbox:arc>
@@ -2552,9 +2555,10 @@ Skills, Items
 always (shape-modifier tags)
 
 **Effect:**
-`degrees` (1-359) sets the angular width of an `arc` hitbox only (ignored elsewhere) — 180+
-becomes a full forward hemisphere. `thickness` adds perpendicular width to `line` (sideways) or
-`wall` (up/down) hitboxes only. `innerRadius` carves a universal dead zone out of the middle of
+`degrees` (1-359) sets the angular width of an `arc` hitbox only (ignored elsewhere), defaulting
+to 180, a full forward hemisphere. `thickness` sets the full width of a `line` or of a `cross`'s
+arms, or the depth of a `wall`, in tiles (1 when omitted), and affects only those three.
+`innerRadius` carves a universal dead zone out of the middle of
 any hitbox shape (a donut), measured from the target's center point; keep `radius - innerRadius`
 at least 0.5 tiles since targeting precision bottoms out around there.
 

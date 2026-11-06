@@ -34,7 +34,7 @@
 * [Formation](notetags/skills/formation.md) - The tag defining the direction pattern in which a skill's projectiles fire.
 * [Hitbox](notetags/skills/hitbox.md) - The tag defining the shape of collision for a skill.
 * [Degrees](notetags/skills/degrees.md) - The tag defining the angular width of an ARC hitbox.
-* [Thickness](notetags/skills/thickness.md) - The tag defining how many extra tiles of width a LINE or WALL hitbox occupies.
+* [Thickness](notetags/skills/thickness.md) - The tag defining how wide a LINE or the arms of a CROSS are, or how deep a WALL is.
 * [Inner Radius](notetags/skills/inner-radius.md) - The tag carving a dead zone out of the middle of a skill's hitbox, around the action's origin.
 * [Cast Time](notetags/skills/cast-time.md) - The tag defining how many frames a battler must wait before a skill fires.
 * [Cast Animation](notetags/skills/cast-animation.md) - The tag defining an animation that loops on the caster while a skill is being cast.

@@ -9,8 +9,8 @@ tags: [abs, tag, skill, hitbox, arc]
 
 ## Description
 
-Controls the angular width of an ARC hitbox. Values from 1 to 359. If degrees is 180 or more, the arc effectively
-becomes a full forward hemisphere with width equal to double the radius.
+Controls the angular width of an ARC hitbox. Values from 1 to 359. Defaults to 180 when omitted, a full forward
+hemisphere with width equal to double the radius.
 
 ## NOTE ABOUT HITBOX TYPES
 

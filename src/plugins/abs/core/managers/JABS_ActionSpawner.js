@@ -246,7 +246,7 @@ class JABS_ActionSpawner
 
       // clone/compose a new options instance per projectile, storing only the lateral delta.
       // the absolute spawn position is resolved at fire time by applying this offset to the
-      // caster's current coordinates in JABS_Engine.buildActionEventData.
+      // caster's current coordinates in JABS_Engine.determineActionSpawnCoordinates.
       const optionsBuilder = JABS_ActionOptions.Builder()
         .setIsRetaliation(actionOptions.isActionRetaliation())
         .setCooldownKey(actionOptions.getCooldownKey())

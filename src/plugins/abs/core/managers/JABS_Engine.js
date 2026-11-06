@@ -2385,23 +2385,8 @@ class JABS_Engine
     // copy the event data from the action map for this action.
     const actionEventData = JsonEx.makeDeepCopy($actionMap.events[eventId]);
 
-    // derive spawn coordinates from provided or caster position.
-    let spawnX = x ?? caster.getX();
-
-    // this aligns with AABB/collision using `screenY() - (th / 2)` for origin.
-    let spawnY = (y ?? caster.getY());
-
-    // apply per-projectile lateral offset if present; defaults are 0 so single-projectile
-    // skills are unaffected. for multi-projectile volleys, the delta was stored at decision
-    // time and is applied here against the caster's fire-time position.
-    const options = action.getActionOptions();
-    if (options)
-    {
-      spawnX += options.getSpawnOffsetX();
-      spawnY += options.getSpawnOffsetY();
-    }
-
     // assign the spawn coordinates to the action event.
+    const [ spawnX, spawnY ] = this.determineActionSpawnCoordinates(caster, action, x, y);
     actionEventData.x = spawnX;
     actionEventData.y = spawnY;
 
@@ -2420,6 +2405,36 @@ class JABS_Engine
 
     // return the mutated copy.
     return actionEventData;
+  }
+
+  /**
+   * Determines where on the map an action appears: on the given coordinates when there are any,
+   * otherwise on its caster, either way shifted by whatever offset its place in a volley gave it.
+   * @param {JABS_Battler} caster The `JABS_Battler` executing the JABS action.
+   * @param {JABS_Action} action The JABS action being placed.
+   * @param {number|null} x The target's `x` coordinate, if applicable.
+   * @param {number|null} y The target's `y` coordinate, if applicable.
+   * @returns {[number, number]} The `[x, y]` coordinates the action spawns at.
+   */
+  determineActionSpawnCoordinates(caster, action, x, y)
+  {
+    // derive spawn coordinates from provided or caster position.
+    let spawnX = x ?? caster.getX();
+
+    // this aligns with AABB/collision using `screenY() - (th / 2)` for origin.
+    let spawnY = (y ?? caster.getY());
+
+    // apply per-projectile lateral offset if present; defaults are 0 so single-projectile
+    // skills are unaffected. for multi-projectile volleys, the delta was stored at decision
+    // time and is applied here against the caster's fire-time position.
+    const options = action.getActionOptions();
+    if (options)
+    {
+      spawnX += options.getSpawnOffsetX();
+      spawnY += options.getSpawnOffsetY();
+    }
+
+    return [ spawnX, spawnY ];
   }
 
   /**

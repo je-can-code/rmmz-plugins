@@ -3040,6 +3040,78 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
     });
   });
 
+  describe('determineActionSpawnCoordinates', () =>
+  {
+    const caster = { getX: () => 5, getY: () => 6 };
+
+    it('lands on the caster when no coordinates are provided', () =>
+    {
+      // Arrange
+      const engine = new JABS_Engine();
+      const action = { getActionOptions: () => null };
+
+      // Act
+      const result = engine.determineActionSpawnCoordinates(caster, action, null, null);
+
+      // Assert
+      expect(result).toEqual([ 5, 6 ]);
+    });
+
+    it('lands on the provided coordinates when given', () =>
+    {
+      // Arrange
+      const engine = new JABS_Engine();
+      const action = { getActionOptions: () => null };
+
+      // Act
+      const result = engine.determineActionSpawnCoordinates(caster, action, 10, 20);
+
+      // Assert
+      expect(result).toEqual([ 10, 20 ]);
+    });
+
+    it('falls back to the caster on just the axis left unprovided', () =>
+    {
+      // Arrange
+      const engine = new JABS_Engine();
+      const action = { getActionOptions: () => null };
+
+      // Act
+      const onlyX = engine.determineActionSpawnCoordinates(caster, action, 10, null);
+      const onlyY = engine.determineActionSpawnCoordinates(caster, action, null, 20);
+
+      // Assert
+      expect(onlyX).toEqual([ 10, 6 ]);
+      expect(onlyY).toEqual([ 5, 20 ]);
+    });
+
+    it('treats a coordinate of zero as provided rather than absent', () =>
+    {
+      // Arrange: the top-left tile is a real place, and must not read as "use the caster".
+      const engine = new JABS_Engine();
+      const action = { getActionOptions: () => null };
+
+      // Act
+      const result = engine.determineActionSpawnCoordinates(caster, action, 0, 0);
+
+      // Assert
+      expect(result).toEqual([ 0, 0 ]);
+    });
+
+    it('shifts the spawn by the offset its place in a volley gave it', () =>
+    {
+      // Arrange
+      const engine = new JABS_Engine();
+      const action = { getActionOptions: () => ({ getSpawnOffsetX: () => 2, getSpawnOffsetY: () => -1 }) };
+
+      // Act
+      const result = engine.determineActionSpawnCoordinates(caster, action, 10, 20);
+
+      // Assert
+      expect(result).toEqual([ 12, 19 ]);
+    });
+  });
+
   describe('determineActionDirections', () =>
   {
     it('repeats each spoke direction "count" times for a per-spoke formation', () =>
