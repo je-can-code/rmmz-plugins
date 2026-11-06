@@ -652,6 +652,42 @@ describe('J-ABS Game_Map (unit, all downstream dependencies mocked)', () =>
       };
     }
 
+    /**
+     * Builds a fake event that answers the way a plain NPC does, with any answer swapped out as given.
+     * @param {object} overrides The answers that differ from an NPC's.
+     * @returns {object} A fake event.
+     */
+    function buildEvent(overrides = {})
+    {
+      return {
+        isJabsBattler: () => false,
+        isJabsAction: () => false,
+        isJabsLoot: () => false,
+        isTriggerIn: () => true,
+        isNormalPriority: () => true,
+        ...overrides,
+      };
+    }
+
+    /**
+     * Builds a fake event that answers the way a battle's action does: everything about it reads as an
+     * NPC, which is why it takes a check of its own to tell the two apart.
+     * @returns {object} A fake action event.
+     */
+    function buildActionEvent()
+    {
+      return buildEvent({ isJabsAction: () => true });
+    }
+
+    /**
+     * Builds a fake event that answers the way dropped loot does, which reads as an NPC just the same.
+     * @returns {object} A fake loot event.
+     */
+    function buildLootEvent()
+    {
+      return buildEvent({ isJabsLoot: () => true });
+    }
+
     it('returns false when an enemy battler event is directly in front', () =>
     {
       const map = buildMap({
@@ -664,7 +700,7 @@ describe('J-ABS Game_Map (unit, all downstream dependencies mocked)', () =>
     it('returns true when a normal-priority, triggerable event is directly in front', () =>
     {
       const map = buildMap({
-        eventsXy: () => [ { isJabsBattler: () => false, isTriggerIn: () => true, isNormalPriority: () => true } ],
+        eventsXy: () => [ buildEvent() ],
       });
 
       expect(map.hasInteractableEventInFront(buildJabsBattler(0, 0, 2))).toEqual(true);
@@ -673,7 +709,7 @@ describe('J-ABS Game_Map (unit, all downstream dependencies mocked)', () =>
     it('returns false when the event in front is not interactable', () =>
     {
       const map = buildMap({
-        eventsXy: () => [ { isJabsBattler: () => false, isTriggerIn: () => false, isNormalPriority: () => true } ],
+        eventsXy: () => [ buildEvent({ isTriggerIn: () => false }) ],
       });
 
       expect(map.hasInteractableEventInFront(buildJabsBattler(0, 0, 2))).toEqual(false);
@@ -683,7 +719,7 @@ describe('J-ABS Game_Map (unit, all downstream dependencies mocked)', () =>
     {
       globalThis.$gameMap.isCounter = () => true;
       globalThis.$gameMap.eventsXy = vi.fn(() => [
-        { isJabsBattler: () => false, isTriggerIn: () => true, isNormalPriority: () => true },
+        buildEvent(),
       ]);
       const map = buildMap({ eventsXy: () => [] });
 
@@ -694,7 +730,7 @@ describe('J-ABS Game_Map (unit, all downstream dependencies mocked)', () =>
     {
       globalThis.$gameMap.isCounter = () => true;
       globalThis.$gameMap.eventsXy = vi.fn(() => [
-        { isJabsBattler: () => false, isTriggerIn: () => false, isNormalPriority: () => true },
+        buildEvent({ isTriggerIn: () => false }),
       ]);
       const map = buildMap({ eventsXy: () => [] });
 
@@ -707,12 +743,27 @@ describe('J-ABS Game_Map (unit, all downstream dependencies mocked)', () =>
       // above/below priority as the only reason the reach across the counter can fail.
       globalThis.$gameMap.isCounter = () => true;
       globalThis.$gameMap.eventsXy = vi.fn(() => [
-        { isJabsBattler: () => false, isTriggerIn: () => true, isNormalPriority: () => false },
+        buildEvent({ isNormalPriority: () => false }),
       ]);
       const map = buildMap({ eventsXy: () => [] });
 
       // Act & Assert
       expect(map.hasInteractableEventInFront(buildJabsBattler(0, 0, 2))).toEqual(false);
+    });
+
+    it('swings through an action beyond a counter', () =>
+    {
+      // Arrange
+      globalThis.$gameMap.isCounter = () => true;
+      globalThis.$gameMap.eventsXy = vi.fn(() => [ buildActionEvent() ]);
+      const map = buildMap({ eventsXy: () => [] });
+
+      // Act
+      const result = map.hasInteractableEventInFront(buildJabsBattler(0, 0, 2));
+
+      // Assert
+      expect(result).toEqual(false);
+      expect(globalThis.$gameMap.eventsXy).toHaveBeenCalled();
     });
 
     it('does not look beyond the front tile when it is not a counter', () =>
@@ -721,7 +772,7 @@ describe('J-ABS Game_Map (unit, all downstream dependencies mocked)', () =>
       // both nearer tiles are empty, so the counter check is the only gate that can hold it back.
       globalThis.$gameMap.isCounter = () => false;
       globalThis.$gameMap.eventsXy = vi.fn(() => [
-        { isJabsBattler: () => false, isTriggerIn: () => true, isNormalPriority: () => true },
+        buildEvent(),
       ]);
       const map = buildMap({ eventsXy: () => [] });
 
@@ -785,11 +836,7 @@ describe('J-ABS Game_Map (unit, all downstream dependencies mocked)', () =>
       {
         // Arrange
         const map = mapWithTiles([], [
-          {
-            isJabsBattler: () => false,
-            isTriggerIn: () => true,
-            isNormalPriority: () => true,
-          },
+          buildEvent(),
         ]);
 
         // Act
@@ -803,11 +850,7 @@ describe('J-ABS Game_Map (unit, all downstream dependencies mocked)', () =>
       {
         // Arrange
         const map = mapWithTiles([], [
-          {
-            isJabsBattler: () => false,
-            isTriggerIn: () => false,
-            isNormalPriority: () => true,
-          },
+          buildEvent({ isTriggerIn: () => false }),
         ]);
 
         // Act
@@ -821,11 +864,7 @@ describe('J-ABS Game_Map (unit, all downstream dependencies mocked)', () =>
       {
         // Arrange
         const map = mapWithTiles([], [
-          {
-            isJabsBattler: () => false,
-            isTriggerIn: () => true,
-            isNormalPriority: () => false,
-          },
+          buildEvent({ isNormalPriority: () => false }),
         ]);
 
         // Act
@@ -843,11 +882,7 @@ describe('J-ABS Game_Map (unit, all downstream dependencies mocked)', () =>
         // underfoot event- and its above/below priority is the only reason it must not.
         const map = mapWithTiles(
           [
-            {
-              isJabsBattler: () => false,
-              isTriggerIn: () => true,
-              isNormalPriority: () => false,
-            },
+            buildEvent({ isNormalPriority: () => false }),
           ],
           []);
 
@@ -860,16 +895,96 @@ describe('J-ABS Game_Map (unit, all downstream dependencies mocked)', () =>
         expect(result).toEqual(false);
       });
 
+      it('swings through an action underfoot', () =>
+      {
+        // Arrange: this is exactly what a swing leaves behind, an on-caster action under the caster.
+        const map = mapWithTiles([ buildActionEvent() ], []);
+
+        // Act
+        const result = map.hasInteractableEventInFront(buildJabsBattler(0, 0, 2));
+
+        // Assert
+        expect(result).toEqual(false);
+      });
+
+      it('swings through an action ahead', () =>
+      {
+        // Arrange
+        const map = mapWithTiles([], [ buildActionEvent() ]);
+
+        // Act
+        const result = map.hasInteractableEventInFront(buildJabsBattler(0, 0, 2));
+
+        // Assert
+        expect(result).toEqual(false);
+      });
+
+      it('swings through loot underfoot', () =>
+      {
+        // Arrange
+        const map = mapWithTiles([ buildLootEvent() ], []);
+
+        // Act
+        const result = map.hasInteractableEventInFront(buildJabsBattler(0, 0, 2));
+
+        // Assert
+        expect(result).toEqual(false);
+      });
+
+      it('swings through loot ahead', () =>
+      {
+        // Arrange
+        const map = mapWithTiles([], [ buildLootEvent() ]);
+
+        // Act
+        const result = map.hasInteractableEventInFront(buildJabsBattler(0, 0, 2));
+
+        // Assert
+        expect(result).toEqual(false);
+      });
+
+      it('still reaches an NPC sharing a tile with an action', () =>
+      {
+        // Arrange: the action is seen first and has to be passed over, not treated as the answer.
+        const map = mapWithTiles([ buildActionEvent(), buildEvent() ], []);
+
+        // Act
+        const result = map.hasInteractableEventInFront(buildJabsBattler(0, 0, 2));
+
+        // Assert
+        expect(result).toEqual(true);
+      });
+
+      it('still reaches an NPC ahead with an action underfoot', () =>
+      {
+        // Arrange: an action underfoot ends nothing, so the tile ahead still gets its say.
+        const map = mapWithTiles([ buildActionEvent() ], [ buildEvent() ]);
+
+        // Act
+        const result = map.hasInteractableEventInFront(buildJabsBattler(0, 0, 2));
+
+        // Assert
+        expect(result).toEqual(true);
+      });
+
+      it('still swings at an enemy sharing a tile with an action', () =>
+      {
+        // Arrange: an enemy always leaves its attack on its own tile, and it must stay a target.
+        const map = mapWithTiles([ buildActionEvent(), { isJabsBattler: () => true } ], [ buildEvent() ]);
+
+        // Act
+        const result = map.hasInteractableEventInFront(buildJabsBattler(0, 0, 2));
+
+        // Assert
+        expect(result).toEqual(false);
+      });
+
       it('prefers the event underfoot over the one ahead', () =>
       {
         // Arrange
         const map = mapWithTiles(
           [
-            {
-              isJabsBattler: () => false,
-              isTriggerIn: () => true,
-              isNormalPriority: () => true,
-            },
+            buildEvent(),
           ],
           [ { isJabsBattler: () => true } ]);
 
@@ -896,7 +1011,7 @@ describe('J-ABS Game_Map (unit, all downstream dependencies mocked)', () =>
       // genuinely differ- this is the doorstep case, where the interactable event is underfoot
       // rather than strictly ahead.
       globalThis.$gameMap.roundYWithDirection = (y, d) => y + (d === 8 ? -1 : 0);
-      const onBaseTile = { isJabsBattler: () => false, isTriggerIn: () => true, isNormalPriority: () => true };
+      const onBaseTile = buildEvent();
       const map = buildMap({
         eventsXy: (x, y) => (y === 0 ? [ onBaseTile ] : []),
       });

@@ -525,8 +525,6 @@ Game_Map.prototype.hasInteractableEventInFront = function(jabsBattler)
   const player = jabsBattler.getCharacter();
   const direction = player.direction();
 
-  const triggers = [ 0, 1, 2 ];
-
   // resolve the tile this character's body actually occupies.
   const x1 = player.occupiedTileX();
   const y1 = player.occupiedTileY();
@@ -540,7 +538,7 @@ Game_Map.prototype.hasInteractableEventInFront = function(jabsBattler)
     // if the player is standing on/overlapping an enemy, let them continue attacking.
     if (event.isJabsBattler()) return false;
 
-    if (event.isTriggerIn(triggers) && event.isNormalPriority() === true)
+    if (this.isInteractableEvent(event))
     {
       return true;
     }
@@ -552,7 +550,7 @@ Game_Map.prototype.hasInteractableEventInFront = function(jabsBattler)
     // if the player is mashing the button at an enemy, let them continue.
     if (event.isJabsBattler()) return false;
 
-    if (event.isTriggerIn(triggers) && event.isNormalPriority() === true)
+    if (this.isInteractableEvent(event))
     {
       return true;
     }
@@ -568,7 +566,7 @@ Game_Map.prototype.hasInteractableEventInFront = function(jabsBattler)
       // if the player is mashing the button at an enemy, let them continue.
       if (event.isJabsBattler()) return false;
 
-      if (event.isTriggerIn(triggers) && event.isNormalPriority() === true)
+      if (this.isInteractableEvent(event))
       {
         return true;
       }
@@ -576,5 +574,23 @@ Game_Map.prototype.hasInteractableEventInFront = function(jabsBattler)
   }
 
   return false;
+};
+
+/**
+ * Determines whether an event near the player is something a button press could mean to reach.<br/>
+ * What a battle leaves on the map are events too, and they read exactly like an NPC: actions and loot
+ * alike are built from a normal-priority, action-button template. An action is born on its caster's tile
+ * and loot lands wherever its enemy fell, so counting either one would have a player's own swing, or the
+ * gold it just knocked loose, refuse the next swing.
+ * @param {Game_Event} event The event to check.
+ * @returns {boolean} True if the button means this event, false otherwise.
+ */
+Game_Map.prototype.isInteractableEvent = function(event)
+{
+  // nothing a battle leaves behind has anything to say.
+  if (event.isJabsAction() || event.isJabsLoot()) return false;
+
+  // it has to answer to a button or a touch, and stand at the player's level to be reached.
+  return event.isTriggerIn([ 0, 1, 2 ]) && event.isNormalPriority() === true;
 };
 //endregion Game_Map
