@@ -7848,7 +7848,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
         getCaster: () => ({ getAllyTarget: () => null, isEnemy: () => false }),
         getActionOptions: () => null,
         getActionSprite: () => null,
-        getRange: () => 1,
+        getCollisionRange: () => 1,
         isDirectAction: () => false,
         getShape: () => 'circle',
         getInnerRadius: () => 0,
@@ -7995,31 +7995,6 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       const jabsAction = buildJabsAction({ getActionSprite: () => actionSprite });
 
       expect(engine.getCollisionTargets(jabsAction)).toEqual([ first ]);
-    });
-
-    it('falls back to a 1-tile point-contact range for a direct action with no explicit range tag', async () =>
-    {
-      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
-      JABS_AiManager.queryBattlersInAabb = vi.fn(() => []);
-      const engine = new JABS_Engine();
-      const jabsAction = buildJabsAction({
-        getRange: () => null,
-        isDirectAction: () => true,
-        getProximity: () => 0,
-        getCaster: () => ({ getAllyTarget: () => null, isEnemy: () => false, getX: () => 0, getY: () => 0 }),
-      });
-
-      expect(() => engine.getCollisionTargets(jabsAction)).not.toThrow();
-    });
-
-    it('falls back to a null range for a non-direct action with no explicit range tag', async () =>
-    {
-      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
-      JABS_AiManager.getAllBattlers = vi.fn(() => []);
-      const engine = new JABS_Engine();
-      const jabsAction = buildJabsAction({ getRange: () => null, isDirectAction: () => false });
-
-      expect(() => engine.getCollisionTargets(jabsAction)).not.toThrow();
     });
 
     it('excludes candidates that fail a non-direct action\'s spatial collision check', async () =>

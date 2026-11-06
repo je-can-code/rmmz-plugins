@@ -3461,11 +3461,237 @@ var JABS_HitboxPulseOptions = class JABS_HitboxPulseOptions {
 };
 
 //#endregion
+//#region src/plugins/abs/core/managers/JABS_HitboxPainter.js
+/**
+* Draws hitbox geometry. Telegraphs, live hitboxes and hit pulses all draw through here, so the
+* shape that warns a player, the shape that teaches them, and the shape collision tests are one
+* and the same.
+*/
+var JABS_HitboxPainter = class JABS_HitboxPainter {
+	/**
+	* The narrowest a thickness may draw, in pixels, matching the floor collision gives it.
+	* @type {number}
+	*/
+	static MinimumThicknessPx = 1;
+	/**
+	* Draws the hitbox of an action, read the same way collision reads it.
+	* @param {PIXI.Graphics} g The graphics to draw on.
+	* @param {Game_Event|JABS_CastPreviewAction} actionEvent The action event, or the stand-in for one.
+	*/
+	static drawAction(g, actionEvent) {
+		const action = actionEvent.getJabsAction();
+		JABS_HitboxPainter.draw(g, {
+			shape: action.getShape(),
+			range: action.getCollisionRange(),
+			facing: action.direction(),
+			degrees: $jabsEngine.getActionDegrees(actionEvent) ?? 180,
+			thickness: $jabsEngine.getActionThicknessTiles(actionEvent),
+			innerRadius: action.getInnerRadius()
+		});
+	}
+	/**
+	* Draws a hitbox around the graphics' local (0,0) and completes the fill, on whatever style the
+	* caller already applied. Honors <thickness:N> for line, wall, and cross.
+	* @param {PIXI.Graphics} g The graphics to draw on.
+	* @param {{ shape:string|null, range:number, facing:number, degrees:number, thickness:number, innerRadius:number }} hitbox
+	* The hitbox to draw: its shape, its size in tiles, its dir8 aim, and its tag values.
+	*/
+	static draw(g, hitbox) {
+		const { shape, innerRadius } = hitbox;
+		switch (shape) {
+			case J.ABS.Shapes.Rhombus:
+				JABS_HitboxPainter.drawRhombus(g, hitbox);
+				break;
+			case J.ABS.Shapes.Square:
+				JABS_HitboxPainter.drawSquare(g, hitbox);
+				break;
+			case J.ABS.Shapes.Line:
+				JABS_HitboxPainter.drawLine(g, hitbox);
+				break;
+			case J.ABS.Shapes.Wall:
+				JABS_HitboxPainter.drawWall(g, hitbox);
+				break;
+			case J.ABS.Shapes.Cross:
+				JABS_HitboxPainter.drawCross(g, hitbox);
+				break;
+			case J.ABS.Shapes.Arc:
+				JABS_HitboxPainter.drawArc(g, hitbox);
+				break;
+			case J.ABS.Shapes.Circle:
+			default:
+				JABS_HitboxPainter.drawCircle(g, hitbox);
+				break;
+		}
+		if (innerRadius > 0 && shape !== J.ABS.Shapes.Arc) {
+			g.beginHole();
+			g.drawCircle(0, 0, innerRadius * $gameMap.tileWidth());
+			g.endHole();
+		}
+		g.endFill();
+	}
+	/**
+	* Draws a circle, its radius in tile widths for consistency with collision.
+	* @param {PIXI.Graphics} g The graphics to draw on.
+	* @param {Object} hitbox The hitbox to draw; see {@link JABS_HitboxPainter.draw}.
+	*/
+	static drawCircle(g, hitbox) {
+		g.drawCircle(0, 0, hitbox.range * $gameMap.tileWidth());
+	}
+	/**
+	* Draws a diamond centered on the origin.
+	* @param {PIXI.Graphics} g The graphics to draw on.
+	* @param {Object} hitbox The hitbox to draw; see {@link JABS_HitboxPainter.draw}.
+	*/
+	static drawRhombus(g, hitbox) {
+		const rx = hitbox.range * $gameMap.tileWidth();
+		const ry = hitbox.range * $gameMap.tileHeight();
+		g.moveTo(0, -ry);
+		g.lineTo(rx, 0);
+		g.lineTo(0, ry);
+		g.lineTo(-rx, 0);
+		g.closePath();
+	}
+	/**
+	* Draws a full square centered on the origin.
+	* @param {PIXI.Graphics} g The graphics to draw on.
+	* @param {Object} hitbox The hitbox to draw; see {@link JABS_HitboxPainter.draw}.
+	*/
+	static drawSquare(g, hitbox) {
+		const tilesAcross = 2 * hitbox.range + 1;
+		const w = tilesAcross * $gameMap.tileWidth();
+		const h = tilesAcross * $gameMap.tileHeight();
+		g.drawRect(-w / 2, -h / 2, w, h);
+	}
+	/**
+	* Draws a bar reaching forward from the origin along the aim.
+	* @param {PIXI.Graphics} g The graphics to draw on.
+	* @param {Object} hitbox The hitbox to draw; see {@link JABS_HitboxPainter.draw}.
+	*/
+	static drawLine(g, hitbox) {
+		const { range, facing, thickness } = hitbox;
+		const tile = JABS_HitboxPainter.majorTilePx();
+		const lengthPx = range * tile + tile / 2;
+		const breadthPx = Math.max(JABS_HitboxPainter.MinimumThicknessPx, thickness * tile);
+		JABS_HitboxPainter.drawOrientedQuad(g, facing, lengthPx, breadthPx / 2);
+	}
+	/**
+	* Draws a wide, shallow bar directly ahead of the origin.
+	* @param {PIXI.Graphics} g The graphics to draw on.
+	* @param {Object} hitbox The hitbox to draw; see {@link JABS_HitboxPainter.draw}.
+	*/
+	static drawWall(g, hitbox) {
+		const { range, facing, thickness } = hitbox;
+		const tile = JABS_HitboxPainter.majorTilePx();
+		const depthPx = Math.max(JABS_HitboxPainter.MinimumThicknessPx, thickness * tile);
+		const breadthPx = (2 * range + 1) * tile;
+		JABS_HitboxPainter.drawOrientedQuad(g, facing, depthPx, breadthPx / 2);
+	}
+	/**
+	* Draws the union of a vertical and a horizontal bar, centered on the origin. A cross never
+	* turns with the aim, the same as its collision.
+	* @param {PIXI.Graphics} g The graphics to draw on.
+	* @param {Object} hitbox The hitbox to draw; see {@link JABS_HitboxPainter.draw}.
+	*/
+	static drawCross(g, hitbox) {
+		const { range, thickness } = hitbox;
+		const tw = $gameMap.tileWidth();
+		const th = $gameMap.tileHeight();
+		const tilesAcross = 2 * range + 1;
+		const w = tilesAcross * tw;
+		const h = tilesAcross * th;
+		const thicknessX = Math.max(JABS_HitboxPainter.MinimumThicknessPx, thickness * tw);
+		const thicknessY = Math.max(JABS_HitboxPainter.MinimumThicknessPx, thickness * th);
+		g.drawRect(-thicknessX / 2, -h / 2, thicknessX, h);
+		g.drawRect(-w / 2, -thicknessY / 2, w, thicknessY);
+	}
+	/**
+	* Draws a wedge centered on the aim.
+	* @param {PIXI.Graphics} g The graphics to draw on.
+	* @param {Object} hitbox The hitbox to draw; see {@link JABS_HitboxPainter.draw}.
+	*/
+	static drawArc(g, hitbox) {
+		const { range, facing, degrees, innerRadius } = hitbox;
+		const tw = $gameMap.tileWidth();
+		const { x: fx, y: fy } = $jabsEngine.dir8ToUnitVector(facing);
+		const centerRad = Math.atan2(fy, fx);
+		const sweepRad = degrees * Math.PI / 180;
+		JABS_HitboxPainter.drawSector(g, range * tw, centerRad, sweepRad, innerRadius * tw);
+	}
+	/**
+	* Draws a filled sector around the origin, or a full circle when the sweep covers the whole way
+	* around.
+	* @param {PIXI.Graphics} g The graphics to draw on.
+	* @param {number} r The radius in pixels.
+	* @param {number} centerRad The center angle in radians. 0 = right, π/2 = down, π = left, -π/2 = up.
+	* @param {number} sweepRad The total sweep in radians (0–2π].
+	* @param {number} innerR The dead-zone radius in pixels; a positive one bakes an annular sector
+	* (donut slice) instead of a pivot fan.
+	*/
+	static drawSector(g, r, centerRad, sweepRad, innerR) {
+		const TAU = Math.PI * 2;
+		const sweep = Math.max(0, Math.min(TAU, sweepRad));
+		if (sweep >= TAU - 1e-6) {
+			g.drawCircle(0, 0, r);
+			if (innerR > 0) {
+				g.beginHole();
+				g.drawCircle(0, 0, innerR);
+				g.endHole();
+			}
+			return;
+		}
+		const start = centerRad - sweep / 2;
+		const end = centerRad + sweep / 2;
+		if (innerR > 0) {
+			g.moveTo(innerR * Math.cos(start), innerR * Math.sin(start));
+			g.lineTo(r * Math.cos(start), r * Math.sin(start));
+			g.arc(0, 0, r, start, end);
+			g.lineTo(innerR * Math.cos(end), innerR * Math.sin(end));
+			g.arc(0, 0, innerR, end, start, true);
+			g.closePath();
+			return;
+		}
+		g.moveTo(0, 0);
+		g.lineTo(r * Math.cos(start), r * Math.sin(start));
+		g.arc(0, 0, r, start, end);
+		g.lineTo(0, 0);
+		g.closePath();
+	}
+	/**
+	* Draws a filled rectangle starting at the origin and extending forward along the dir8 unit
+	* vector, with its breadth split evenly either side of that axis.
+	* @param {PIXI.Graphics} g The graphics to draw on.
+	* @param {number} facing The dir8 facing for the forward axis.
+	* @param {number} lengthPx The forward length in pixels.
+	* @param {number} halfBreadthPx The half-width in pixels along the perpendicular axis.
+	*/
+	static drawOrientedQuad(g, facing, lengthPx, halfBreadthPx) {
+		const { x: fx, y: fy } = $jabsEngine.dir8ToUnitVector(facing);
+		const px = fy;
+		const py = -fx;
+		const ax = -px * halfBreadthPx;
+		const ay = -py * halfBreadthPx;
+		const bx = px * halfBreadthPx;
+		const by = py * halfBreadthPx;
+		g.moveTo(ax, ay);
+		g.lineTo(bx, by);
+		g.lineTo(fx * lengthPx + bx, fy * lengthPx + by);
+		g.lineTo(fx * lengthPx + ax, fy * lengthPx + ay);
+		g.closePath();
+	}
+	/**
+	* The longer side of a tile in pixels, which is what collision measures its oriented bars with.
+	* @returns {number}
+	*/
+	static majorTilePx() {
+		return Math.max($gameMap.tileWidth(), $gameMap.tileHeight());
+	}
+};
+
+//#endregion
 //#region src/plugins/abs/core/sprites/Sprite_HitboxPulse.js
 /**
 * A lightweight graphics sprite that renders a transient hitbox visualization.
-* It supports several common JABS shapes: Circle, Square, Line, Arc (sector).
-* Geometry is drawn in local space; caller sets world x/y and rotation.
+* Geometry is drawn in local space, already aimed; caller sets world x/y.
 */
 var Sprite_HitboxPulse = class extends Sprite {
 	/**
@@ -3651,6 +3877,20 @@ var Sprite_HitboxPulse = class extends Sprite {
 		this._shape = newShape;
 	}
 	/**
+	* Gets the facing.
+	* @returns {number} The facing.
+	*/
+	facing() {
+		return this._facing;
+	}
+	/**
+	* Sets the facing.
+	* @param {number} newFacing The new facing.
+	*/
+	setFacing(newFacing) {
+		this._facing = newFacing;
+	}
+	/**
 	* Gets the range.
 	* @returns {number} The range.
 	*/
@@ -3744,12 +3984,12 @@ var Sprite_HitboxPulse = class extends Sprite {
 		this.setFillAlpha(.18);
 		this.blendMode = PIXI.BLEND_MODES.ADD;
 		this.setShape(J.ABS.Shapes.Circle);
+		this.setFacing(2);
 		this.setRange(1);
 		this.setDegrees(180);
 		this.setThickness(1);
 		this.setInnerRadius(0);
 		this.setSustained(false);
-		this.rotation = 0;
 		this.alpha = 1;
 		this.scale.set(1, 1);
 		this.graphics().clear();
@@ -3770,6 +4010,7 @@ var Sprite_HitboxPulse = class extends Sprite {
 		this.setFillAlpha(opts.fillAlpha);
 		this.blendMode = opts.blendMode;
 		this.setShape(opts.shape);
+		this.setFacing(opts.facing);
 		this.setRange(Math.max(0, opts.range));
 		this.setDegrees(opts.degrees !== undefined ? opts.degrees : 180);
 		this.setThickness(opts.thickness !== undefined ? Math.max(0, opts.thickness) : 1);
@@ -3787,71 +4028,16 @@ var Sprite_HitboxPulse = class extends Sprite {
 	drawGeometry() {
 		const g = this.graphics();
 		g.clear();
-		g.lineStyle(this.lineWidth(), this.lineColor(), this.lineAlpha());
+		g.lineStyle(this.lineWidth(), this.lineColor(), this.lineAlpha(), 0);
 		g.beginFill(this.fillColor(), this.fillAlpha());
-		let holeAlreadyBaked = false;
-		const tile = $gameMap.tileWidth();
-		switch (this.shape()) {
-			case J.ABS.Shapes.Square:
-			case J.ABS.Shapes.Rhombus:
-			case J.ABS.Shapes.Cross:
-			case J.ABS.Shapes.Wall: {
-				const half = this.range() * tile;
-				g.drawRect(-half, -half, half * 2, half * 2);
-				break;
-			}
-			case J.ABS.Shapes.Line: {
-				const length = this.range() * tile;
-				const thick = Math.max(1, this.thickness() * tile);
-				g.drawRect(0, -thick * .5, length, thick);
-				break;
-			}
-			case J.ABS.Shapes.Arc: {
-				const r = this.range() * tile;
-				const deg = Math.max(0, Math.min(360, this.degrees()));
-				const rad = deg * Math.PI / 180;
-				const startAngle = -rad / 2;
-				const endAngle = rad / 2;
-				const steps = Math.max(2, Math.ceil(deg / 8));
-				const innerRadiusPx = this.innerRadius() * tile;
-				if (innerRadiusPx > 0) {
-					holeAlreadyBaked = true;
-					g.moveTo(Math.cos(startAngle) * innerRadiusPx, Math.sin(startAngle) * innerRadiusPx);
-					for (let i = 0; i <= steps; i++) {
-						const t = i / steps;
-						const a = startAngle + (endAngle - startAngle) * t;
-						g.lineTo(Math.cos(a) * r, Math.sin(a) * r);
-					}
-					for (let i = steps; i >= 0; i--) {
-						const t = i / steps;
-						const a = startAngle + (endAngle - startAngle) * t;
-						g.lineTo(Math.cos(a) * innerRadiusPx, Math.sin(a) * innerRadiusPx);
-					}
-				} else {
-					g.moveTo(0, 0);
-					for (let i = 0; i <= steps; i++) {
-						const t = i / steps;
-						const a = startAngle + (endAngle - startAngle) * t;
-						g.lineTo(Math.cos(a) * r, Math.sin(a) * r);
-					}
-					g.lineTo(0, 0);
-				}
-				break;
-			}
-			case J.ABS.Shapes.Circle:
-			default: {
-				const r = this.range() * tile;
-				g.drawCircle(0, 0, r);
-				break;
-			}
-		}
-		if (this.innerRadius() > 0 && holeAlreadyBaked === false) {
-			const innerRadiusPx = this.innerRadius() * tile;
-			g.beginHole();
-			g.drawCircle(0, 0, innerRadiusPx);
-			g.endHole();
-		}
-		g.endFill();
+		JABS_HitboxPainter.draw(g, {
+			shape: this.shape(),
+			range: this.range(),
+			facing: this.facing(),
+			degrees: this.degrees(),
+			thickness: this.thickness(),
+			innerRadius: this.innerRadius()
+		});
 	}
 	/**
 	* Sets the world position (tile-space aligned with JABS action sprites).
@@ -3861,13 +4047,6 @@ var Sprite_HitboxPulse = class extends Sprite {
 	setWorldPosition(x, y) {
 		this.x = x;
 		this.y = y;
-	}
-	/**
-	* Sets the rotation for directional shapes (in radians).
-	* @param {number} r The rotation to set.
-	*/
-	setRotation(r) {
-		this.rotation = r;
 	}
 	/**
 	* Updates the pulse animation (alpha fade and gentle scale pulse).
@@ -4033,7 +4212,6 @@ var JABS_HitboxPulseManager = class JABS_HitboxPulseManager {
 		pulse.reset();
 		pulse.setup(plain);
 		pulse.setWorldPosition(plain.x, plain.y);
-		pulse.setRotation(JABS_HitboxPulseManager.directionToRadians(plain.facing));
 	}
 	/**
 	* Detaches a sustained pulse by action uuid (cleanup / disable paths).
@@ -4072,7 +4250,6 @@ var JABS_HitboxPulseManager = class JABS_HitboxPulseManager {
 		pulse.reset();
 		pulse.setup(options.toPlain());
 		pulse.setWorldPosition(options.x, options.y);
-		pulse.setRotation(JABS_HitboxPulseManager.directionToRadians(options.facing));
 		layer.addChild(pulse);
 		active.push(pulse);
 	}
@@ -4114,31 +4291,6 @@ var JABS_HitboxPulseManager = class JABS_HitboxPulseManager {
 		}
 		active.length = 0;
 		pool.length = 0;
-	}
-	/**
-	* Converts numeric direction (1,2,3,4,6,7,8,9) to radians for pulse rotation.
-	* Baseline is Right (6) → 0 rad, because geometry is authored along +X.
-	* @param {number} dir The numeric direction.
-	* @returns {number} Radians.
-	*/
-	static directionToRadians(dir) {
-		const RAD_0 = 0;
-		const RAD_45 = Math.PI / 4;
-		const RAD_90 = Math.PI / 2;
-		const RAD_180 = Math.PI;
-		const RAD_N90 = -Math.PI / 2;
-		const RAD_N45 = -Math.PI / 4;
-		switch (dir) {
-			case 6: return RAD_0;
-			case 3: return RAD_45;
-			case 2: return RAD_90;
-			case 1: return RAD_180 - RAD_45;
-			case 4: return RAD_180;
-			case 7: return -RAD_180 + RAD_45;
-			case 8: return RAD_N90;
-			case 9: return RAD_N45;
-		}
-		return 0;
 	}
 };
 
@@ -18593,7 +18745,7 @@ var JABS_Engine = class JABS_Engine {
 			return true;
 		};
 		const actionSprite = jabsAction.getActionSprite();
-		const range = jabsAction.getRange() ?? (jabsAction.isDirectAction() ? 1 : null);
+		const range = jabsAction.getCollisionRange();
 		const shape = jabsAction.getShape();
 		const innerRadius = jabsAction.getInnerRadius();
 		const targetsHit = [];
@@ -20566,7 +20718,7 @@ var JABS_Action = class JABS_Action {
 			x: originX,
 			y: originY,
 			shape: this.getShape(),
-			range: this.getRange(),
+			range: this.getCollisionRange(),
 			facing,
 			degrees,
 			thickness,
@@ -20631,6 +20783,14 @@ var JABS_Action = class JABS_Action {
 		const base = this.getBaseSkill().jabsRadius;
 		if (base === null) return null;
 		return this.applyRadiusModifiers(base);
+	}
+	/**
+	* Gets the range collision tests this action at, which is also the size anything showing its
+	* hitbox has to draw.
+	* @returns {number|null} The collision range, or null for a non-direct action with no radius.
+	*/
+	getCollisionRange() {
+		return this.getRange() ?? (this.isDirectAction() ? 1 : null);
 	}
 	/**
 	* Gets the cast time for this skill.
@@ -33123,12 +33283,9 @@ Spriteset_Map.prototype.drawCastPreviewInto = function(sprite) {
 	g.clear();
 	const standIn = sprite._jabsCastPreviewAction;
 	const action = standIn.getJabsAction();
-	const shape = action.getShape();
-	const style = this.getCastPreviewStyleFor(shape);
+	const style = this.getCastPreviewStyleFor(action.getShape());
 	this.applyHitboxStyle(g, style);
-	const tw = $gameMap.tileWidth();
-	const th = $gameMap.tileHeight();
-	this.drawHitboxShapeG(g, shape, action.getRange(), action.direction(), tw, th, standIn, action.getInnerRadius());
+	JABS_HitboxPainter.drawAction(g, standIn);
 };
 /**
 * Renders translucent overlays for action hitboxes.
@@ -33220,7 +33377,7 @@ Spriteset_Map.prototype.isBattlerCollidingWithAnyAction = function(item) {
 		const jabsAction = actionEvent.getJabsAction();
 		if (!jabsAction) continue;
 		const shape = jabsAction.getShape();
-		const range = jabsAction.getRange();
+		const range = jabsAction.getCollisionRange();
 		const facing = jabsAction.direction();
 		const innerRadius = jabsAction.getInnerRadius();
 		if (jabsAction.isDirectAction()) {
@@ -33308,21 +33465,15 @@ Spriteset_Map.prototype.buildMissingActionHitboxSprites = function() {
 * Synchronizes position and appearance of existing hitbox sprites.
 */
 Spriteset_Map.prototype.refreshExistingActionHitboxSprites = function() {
-	const tw = $gameMap.tileWidth();
-	const th = $gameMap.tileHeight();
 	const actions = $gameMap.actionEvents();
 	actions.forEach((actionEvent) => {
 		const jabsAction = actionEvent.getJabsAction();
 		if (!jabsAction) return;
-		const shape = jabsAction.getShape();
-		const range = jabsAction.getRange();
-		const facing = jabsAction.direction();
-		const innerRadius = jabsAction.getInnerRadius();
 		const sprite = this.getOrCreateActionHitboxSpriteFor(actionEvent);
 		const origin = JABS_Engine.getActionOriginPixels(actionEvent);
 		sprite.x = origin.x;
 		sprite.y = origin.y;
-		this.drawActionHitboxInto(sprite, shape, range, facing, tw, th, actionEvent, innerRadius);
+		this.drawActionHitboxInto(sprite, actionEvent);
 	});
 };
 /**
@@ -33385,197 +33536,18 @@ Spriteset_Map.prototype.destroyActionHitboxSprite = function(sprite) {
 	sprite.destroy();
 };
 /**
-* Draws a filled convex quad for an oriented rectangle starting at local (0,0) and extending
-* forward along the dir8 unit vector from `$jabsEngine.dir8ToUnitVector`, with half-breadth perpendicular.
-* @param {PIXI.Graphics} g The graphics to draw on.
-* @param {1|2|3|4|6|7|8|9} facing The dir8 facing for the forward axis.
-* @param {number} lengthPx Forward length in pixels.
-* @param {number} halfBreadthPx Half-width in pixels along the perpendicular axis.
-* @returns {void}
-*/
-Spriteset_Map.prototype.drawOrientedHitboxQuadG = function(g, facing, lengthPx, halfBreadthPx) {
-	const { x: fx, y: fy } = $jabsEngine.dir8ToUnitVector(facing);
-	const px = fy;
-	const py = -fx;
-	const ax = -px * halfBreadthPx;
-	const ay = -py * halfBreadthPx;
-	const bx = px * halfBreadthPx;
-	const by = py * halfBreadthPx;
-	const cx = fx * lengthPx + bx;
-	const cy = fy * lengthPx + by;
-	const dx = fx * lengthPx + ax;
-	const dy = fy * lengthPx + ay;
-	g.moveTo(ax, ay);
-	g.lineTo(bx, by);
-	g.lineTo(cx, cy);
-	g.lineTo(dx, dy);
-	g.closePath();
-};
-/**
 * Draws the collision/visual hitbox into the provided sprite’s internal PIXI.Graphics.
-*
 * @param {Sprite} sprite The container sprite that owns the PIXI.Graphics.
-* @param {string} shape One of J.ABS.Shapes.* values.
-* @param {number} range Size in tiles for the shape (semantics vary by shape; see individual cases).
-* @param {1|2|3|4|6|7|8|9} facing Logical dir8 travel direction for the action.
-* @param {number} tw Tile width in pixels.
-* @param {number} th Tile height in pixels.
-* @param {Game_Event} actionEvent The action event for tag resolution.
-* @param {number} [innerRadius=0] The universal dead zone in tiles; 0 disables it.
+* @param {Game_Event} actionEvent The action event whose hitbox is being drawn.
 */
-Spriteset_Map.prototype.drawActionHitboxInto = function(sprite, shape, range, facing, tw, th, actionEvent, innerRadius = 0) {
+Spriteset_Map.prototype.drawActionHitboxInto = function(sprite, actionEvent) {
 	/** @type {PIXI.Graphics} */
 	const g = sprite._jabsHitboxG;
 	g.clear();
+	const shape = actionEvent.getJabsAction().getShape();
 	const style = this.getActionHitboxStyleFor(shape);
 	this.applyHitboxStyle(g, style);
-	this.drawHitboxShapeG(g, shape, range, facing, tw, th, actionEvent, innerRadius);
-};
-/**
-* Draws a hitbox's geometry around local (0,0) and completes the fill, on whatever style the
-* caller already applied. A telegraph and a live hitbox both draw through here, so an action cannot
-* look one way while it winds up and another once it fires.
-* Honors <thickness:N> for line, wall, and cross.
-*
-* @param {PIXI.Graphics} g The graphics to draw on.
-* @param {string} shape One of J.ABS.Shapes.* values.
-* @param {number} range Size in tiles for the shape (semantics vary by shape; see individual cases).
-* @param {1|2|3|4|6|7|8|9} facing Logical dir8 travel direction for the action.
-* @param {number} tw Tile width in pixels.
-* @param {number} th Tile height in pixels.
-* @param {Game_Event|JABS_CastPreviewAction} actionEvent The action event for tag resolution.
-* @param {number} innerRadius The universal dead zone in tiles; 0 disables it.
-*/
-Spriteset_Map.prototype.drawHitboxShapeG = function(g, shape, range, facing, tw, th, actionEvent, innerRadius) {
-	const thicknessTiles = $jabsEngine.getActionThicknessTiles(actionEvent) ?? 1;
-	const minPx = .5;
-	const thicknessX = Math.max(minPx, thicknessTiles * tw);
-	const thicknessY = Math.max(minPx, thicknessTiles * th);
-	let holeAlreadyBaked = false;
-	switch (shape) {
-		case J.ABS.Shapes.Rhombus: {
-			this.drawRhombusG(g, range * tw, range * th);
-			break;
-		}
-		case J.ABS.Shapes.Square: {
-			const w = (2 * range + 1) * tw;
-			const h = (2 * range + 1) * th;
-			g.drawRect(-w / 2, -h / 2, w, h);
-			break;
-		}
-		case J.ABS.Shapes.Line: {
-			const lengthPx = range * Math.max(tw, th);
-			const lengthWithPad = lengthPx + Math.max(tw, th) / 2;
-			const halfBreadth = Math.max(thicknessX, thicknessY) / 2;
-			this.drawOrientedHitboxQuadG(g, facing, lengthWithPad, halfBreadth);
-			break;
-		}
-		case J.ABS.Shapes.Wall: {
-			const lenTiles = 2 * range + 1;
-			const breadthW = lenTiles * tw;
-			const breadthH = lenTiles * th;
-			const depthW = Math.max(minPx, thicknessTiles * tw);
-			const depthH = Math.max(minPx, thicknessTiles * th);
-			const depthPx = Math.max(depthW, depthH);
-			const halfBreadth = Math.max(breadthW, breadthH) / 2;
-			this.drawOrientedHitboxQuadG(g, facing, depthPx, halfBreadth);
-			break;
-		}
-		case J.ABS.Shapes.Cross: {
-			const w = (2 * range + 1) * tw;
-			const h = (2 * range + 1) * th;
-			g.drawRect(-thicknessX / 2, -h / 2, thicknessX, h);
-			g.drawRect(-w / 2, -thicknessY / 2, w, thicknessY);
-			break;
-		}
-		case J.ABS.Shapes.Arc: {
-			const degrees = $jabsEngine.getActionDegrees(actionEvent) ?? 180;
-			const { x: fx, y: fy } = $jabsEngine.dir8ToUnitVector(facing);
-			const centerRad = Math.atan2(fy, fx);
-			const sweepRad = degrees * Math.PI / 180;
-			const r = range * tw;
-			const innerRadiusPxArc = innerRadius * tw;
-			if (innerRadiusPxArc > 0) holeAlreadyBaked = true;
-			this.drawSectorG(g, 0, 0, r, centerRad, sweepRad, innerRadiusPxArc);
-			break;
-		}
-		case J.ABS.Shapes.Circle:
-		default: {
-			const r = range * tw;
-			g.drawCircle(0, 0, r);
-			break;
-		}
-	}
-	if (innerRadius > 0 && holeAlreadyBaked === false) {
-		const innerRadiusPx = innerRadius * tw;
-		g.beginHole();
-		g.drawCircle(0, 0, innerRadiusPx);
-		g.endHole();
-	}
-	g.endFill();
-};
-/**
-* Draws a diamond (rhombus) centered on the graphics' local origin.
-* @param {PIXI.Graphics} g The graphics to draw on.
-* @param {number} rx Horizontal radius in px.
-* @param {number} ry Vertical radius in px.
-*/
-Spriteset_Map.prototype.drawRhombusG = function(g, rx, ry) {
-	g.moveTo(0, -ry);
-	g.lineTo(rx, 0);
-	g.lineTo(0, ry);
-	g.lineTo(-rx, 0);
-	g.closePath();
-};
-/**
-* Draws a filled sector (wedge) into a PIXI.Graphics.
-* If sweepRad >= 2π (or ~360°), a full circle is drawn.
-* @param {PIXI.Graphics} g The graphics to draw on.
-* @param {number} cx Center X (local space).
-* @param {number} cy Center Y (local space).
-* @param {number} r Radius in pixels.
-* @param {number} centerRad Center angle in radians. 0 = right, π/2 = down, π = left, -π/2 = up.
-* @param {number} sweepRad Total sweep in radians (0–2π].
-* @param {number} [innerR=0] Inner dead-zone radius in pixels; bakes an annular sector (donut
-* slice) instead of a pivot fan when positive. A hole punched at the pivot would break PIXI's
-* triangulation since the fan's own path already touches that exact point.
-*/
-Spriteset_Map.prototype.drawSectorG = function(g, cx, cy, r, centerRad, sweepRad, innerR = 0) {
-	const TAU = Math.PI * 2;
-	const sweep = Math.max(0, Math.min(TAU, sweepRad || 0));
-	if (sweep >= TAU - 1e-6) {
-		g.drawCircle(cx, cy, r);
-		if (innerR > 0) {
-			g.beginHole();
-			g.drawCircle(cx, cy, innerR);
-			g.endHole();
-		}
-		return;
-	}
-	const start = centerRad - sweep / 2;
-	const end = centerRad + sweep / 2;
-	if (innerR > 0) {
-		const startInnerX = cx + innerR * Math.cos(start);
-		const startInnerY = cy + innerR * Math.sin(start);
-		const endInnerX = cx + innerR * Math.cos(end);
-		const endInnerY = cy + innerR * Math.sin(end);
-		const startOuterX = cx + r * Math.cos(start);
-		const startOuterY = cy + r * Math.sin(start);
-		g.moveTo(startInnerX, startInnerY);
-		g.lineTo(startOuterX, startOuterY);
-		g.arc(cx, cy, r, start, end);
-		g.lineTo(endInnerX, endInnerY);
-		g.arc(cx, cy, innerR, end, start, true);
-		g.closePath();
-		return;
-	}
-	const sx = cx + r * Math.cos(start);
-	const sy = cy + r * Math.sin(start);
-	g.moveTo(cx, cy);
-	g.lineTo(sx, sy);
-	g.arc(cx, cy, r, start, end);
-	g.lineTo(cx, cy);
-	g.closePath();
+	JABS_HitboxPainter.drawAction(g, actionEvent);
 };
 /**
 * Handle the overlays for all battler-based hitboxes.

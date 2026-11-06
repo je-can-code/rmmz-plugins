@@ -1,9 +1,9 @@
 //region Sprite_HitboxPulse
 import JABS_HitboxPulseManager from './../managers/JABS_HitboxPulseManager.js';
+import JABS_HitboxPainter from './../managers/JABS_HitboxPainter.js';
 /**
  * A lightweight graphics sprite that renders a transient hitbox visualization.
- * It supports several common JABS shapes: Circle, Square, Line, Arc (sector).
- * Geometry is drawn in local space; caller sets world x/y and rotation.
+ * Geometry is drawn in local space, already aimed; caller sets world x/y.
  */
 class Sprite_HitboxPulse
   extends Sprite
@@ -271,6 +271,26 @@ class Sprite_HitboxPulse
   }
 
   /**
+   * Gets the facing.
+   * @returns {number} The facing.
+   */
+  facing()
+  {
+    // hand back the facing.
+    return this._facing;
+  }
+
+  /**
+   * Sets the facing.
+   * @param {number} newFacing The new facing.
+   */
+  setFacing(newFacing)
+  {
+    // assign the facing.
+    this._facing = newFacing;
+  }
+
+  /**
    * Gets the range.
    * @returns {number} The range.
    */
@@ -412,6 +432,7 @@ class Sprite_HitboxPulse
 
     // geometry settings.
     this.setShape(J.ABS.Shapes.Circle);
+    this.setFacing(2);        // dir8
     this.setRange(1);         // in tiles
     this.setDegrees(180);     // for Arc shape
     this.setThickness(1);     // for Line/Wall width (tiles)
@@ -421,7 +442,6 @@ class Sprite_HitboxPulse
     this.setSustained(false);
 
     // snap transforms.
-    this.rotation = 0;
     this.alpha = 1.0;
     this.scale.set(1.0, 1.0);
 
@@ -451,6 +471,7 @@ class Sprite_HitboxPulse
 
     // cache geometry.
     this.setShape(opts.shape);
+    this.setFacing(opts.facing);
     this.setRange(Math.max(0, opts.range));
     this.setDegrees(opts.degrees !== undefined
       ? opts.degrees
@@ -489,122 +510,19 @@ class Sprite_HitboxPulse
     const g = this.graphics();
     g.clear();
 
-    // apply outline and fill.
-    g.lineStyle(this.lineWidth(), this.lineColor(), this.lineAlpha());
+    // apply outline and fill, stroked inward so the visible edge stays honest to the real geometry.
+    g.lineStyle(this.lineWidth(), this.lineColor(), this.lineAlpha(), 0);
     g.beginFill(this.fillColor(), this.fillAlpha());
 
-    // set by the Arc branch when it bakes the dead zone into its own polygon,
-    // so the generic hole-punch below doesn't double-apply on top of it.
-    let holeAlreadyBaked = false;
-
-    // convert tiles→pixels for sizes using current map tile size.
-    const tile = $gameMap.tileWidth();
-
-    // resolve per-shape drawing.
-    switch (this.shape())
-    {
-      case J.ABS.Shapes.Square:
-      case J.ABS.Shapes.Rhombus:     // approximation for pulse visualization
-      case J.ABS.Shapes.Cross:       // approximation for pulse visualization
-      case J.ABS.Shapes.Wall:        // approximation (wall uses Line in engine; see Line branch below if needed)
-      {
-        // use a square AABB centered on origin with half-extent = range.
-        const half = this.range() * tile;
-        g.drawRect(-half, -half, half * 2, half * 2);
-        break;
-      }
-
-      case J.ABS.Shapes.Line:
-      {
-        // a rectangle extending forward from origin by `range` with thickness.
-        const length = this.range() * tile;
-        const thick = Math.max(1, this.thickness() * tile);
-        g.drawRect(0, -thick * 0.5, length, thick);
-        break;
-      }
-
-      case J.ABS.Shapes.Arc:
-      {
-        // draw a sector (wedge) oriented along +X (we rotate the sprite externally).
-        const r = this.range() * tile;
-        const deg = Math.max(0, Math.min(360, this.degrees()));
-        const rad = deg * Math.PI / 180;
-        const startAngle = -rad / 2;  // symmetric about +X axis
-        const endAngle = rad / 2;
-
-        // sample the arc with a reasonable step for smoothness; ~1 sample per 8°.
-        const steps = Math.max(2, Math.ceil(deg / 8));
-        const innerRadiusPx = this.innerRadius() * tile;
-
-        if (innerRadiusPx > 0)
-        {
-          // bake the dead zone directly into the polygon as a true annular sector (a
-          // donut slice), rather than holing a circle out of a fan that touches the
-          // origin- a hole centered exactly on a point the host path also visits breaks
-          // PIXI's triangulation and renders as two overlapping shapes instead of one cut wedge.
-          holeAlreadyBaked = true;
-
-          g.moveTo(Math.cos(startAngle) * innerRadiusPx, Math.sin(startAngle) * innerRadiusPx);
-
-          // trace the outer rim forward from startAngle to endAngle.
-          for (let i = 0; i <= steps; i++)
-          {
-            const t = i / steps;
-            const a = startAngle + (endAngle - startAngle) * t;
-            g.lineTo(Math.cos(a) * r, Math.sin(a) * r);
-          }
-
-          // walk the inner rim backward from endAngle to startAngle, closing the slice.
-          for (let i = steps; i >= 0; i--)
-          {
-            const t = i / steps;
-            const a = startAngle + (endAngle - startAngle) * t;
-            g.lineTo(Math.cos(a) * innerRadiusPx, Math.sin(a) * innerRadiusPx);
-          }
-        }
-        else
-        {
-          // no dead zone- original pivot-to-rim fan.
-          g.moveTo(0, 0);
-
-          for (let i = 0; i <= steps; i++)
-          {
-            const t = i / steps;
-            const a = startAngle + (endAngle - startAngle) * t;
-            g.lineTo(Math.cos(a) * r, Math.sin(a) * r);
-          }
-
-          g.lineTo(0, 0);
-        }
-
-        break;
-      }
-
-      // a skill with no <hitbox> tag collides as a circle, so it has to pulse as one.
-      case J.ABS.Shapes.Circle:
-      default:
-      {
-        // compute world-space pixel radius.
-        const r = this.range() * tile;
-
-        // draw the circle centered at local origin.
-        g.drawCircle(0, 0, r);
-        break;
-      }
-    }
-
-    // punch the universal dead zone out of every shape that didn't already bake it directly
-    // into its own polygon above (just Arc).
-    if (this.innerRadius() > 0 && holeAlreadyBaked === false)
-    {
-      const innerRadiusPx = this.innerRadius() * tile;
-      g.beginHole();
-      g.drawCircle(0, 0, innerRadiusPx);
-      g.endHole();
-    }
-
-    // finish fill.
-    g.endFill();
+    // this is what teaches a player what just hit them, so it draws the true shape.
+    JABS_HitboxPainter.draw(g, {
+      shape: this.shape(),
+      range: this.range(),
+      facing: this.facing(),
+      degrees: this.degrees(),
+      thickness: this.thickness(),
+      innerRadius: this.innerRadius(),
+    });
   }
 
   //endregion geometry
@@ -620,16 +538,6 @@ class Sprite_HitboxPulse
     // assign the position.
     this.x = x;
     this.y = y;
-  }
-
-  /**
-   * Sets the rotation for directional shapes (in radians).
-   * @param {number} r The rotation to set.
-   */
-  setRotation(r)
-  {
-    // assign the rotation in radians.
-    this.rotation = r;
   }
 
   //endregion transforms

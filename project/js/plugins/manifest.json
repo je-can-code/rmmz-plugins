@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "generatedBy": "rmmz-plugins src/build-tools/generate-manifest.js - generated, never edit by hand",
   "files": {
-    "abs/J-ABS.js": "06d207b5ec14aff792e8b0d51bf25c79bcb96c909de7475cf60a23625273875c",
+    "abs/J-ABS.js": "1b1afa86048dc7b2db8e3b8f2791e5660969f04a37a47a7da0793b664599403c",
     "abs/ext/J-ABS-AllyAI.js": "97354c203a158cc0b89e92d21fc259a045b9b3a9f75bd1dbea258a33e2b8b681",
     "abs/ext/J-ABS-Boss.js": "469b9752b880a4069fdef5eafaf217be6bbc25a7f598190059c961f796232398",
     "abs/ext/J-ABS-Charge.js": "2d7d5bddab9327c8d47194fba3b241fbba0a280b83fb7e1a6c56011e2c62c1ff",
@@ -20,7 +20,7 @@
     "abs/ext/J-ABS-Shield.js": "98625e066d3f0de8c2b099480c1285891fa0b8e80585d9e61d7adfe09cc95442",
     "abs/ext/J-ABS-Speed.js": "787f9d42b9c452159a3a23158fdb0d8ce3025e2ebd52227804ea6bcce0fcfa50",
     "abs/ext/J-ABS-Star.js": "106b07d36ef24ccbdccff64ce8b1137e22241743237d83df7b1a830de5fb9f0a",
-    "abs/ext/J-ABS-Targeting.js": "399b177b7b59e7d2661dbd91ebc9405b42430782866c0c157243165f7c0b4289",
+    "abs/ext/J-ABS-Targeting.js": "3997e42c75854edba1335e6c6d7887cd17c7d3346274e314bbfa5d7717576dec",
     "abs/ext/J-ABS-Time.js": "66752305a7add3796d88db6a04356b5c5e7226ad0f8ad3d21838e6de72695d65",
     "abs/ext/J-ABS-Timing.js": "0a2da42008d3bd97be9b7a211fb9e5ac7190d4cb25b5ff6171671be211e6f14c",
     "abs/ext/J-ABS-Tools.js": "c0660e89d1e37f868ce06e0ee9e3bc5d9f30af1df58c1391c1d9c6436fc53f00",

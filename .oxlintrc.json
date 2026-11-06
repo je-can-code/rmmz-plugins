@@ -314,6 +314,7 @@
     "JABS_FormationStall": "writable",
     "JABS_GlobalCooldown": "writable",
     "JABS_GuardData": "writable",
+    "JABS_HitboxPainter": "writable",
     "JABS_HitboxPulseManager": "writable",
     "JABS_HitboxPulseOptions": "writable",
     "JABS_HitstopData": "writable",

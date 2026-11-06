@@ -4935,11 +4935,7 @@ class JABS_Engine
     // a few definitions used within collision processing.
     const actionSprite = jabsAction.getActionSprite();
 
-    // direct skills without an explicit <radius> tag spawn ON the target tile;
-    // their proximity describes targeting reach, not collision size.
-    // falling back to proximity caused a 12-tile circle that hit every enemy on the map.
-    // a 1-tile footprint is the correct point-contact for a teleport landing.
-    const range = jabsAction.getRange() ?? (jabsAction.isDirectAction() ? 1 : null);
+    const range = jabsAction.getCollisionRange();
     const shape = jabsAction.getShape();
 
     // the universal dead zone- 0 when untagged, meaning no exclusion ever triggers below.

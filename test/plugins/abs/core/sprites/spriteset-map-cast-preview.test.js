@@ -63,8 +63,10 @@ describe('Spriteset_Map cast previews', () =>
     { name: 'a cross', shape: 'cross', range: 2 },
     { name: 'a thick cross', shape: 'cross', range: 2, thickness: 2 },
     { name: 'a skill with no hitbox tag', shape: null, range: 2 },
+    { name: 'a direct skill with no radius', shape: null, range: null, isDirect: true },
   ];
 
+  let JABS_Action;
   let JABS_Engine;
   let Sprite_HitboxPulse;
 
@@ -109,6 +111,18 @@ describe('Spriteset_Map cast previews', () =>
           HitboxMeleeOriginExtraPxYFacingDown: 0,
           HitboxMeleeOriginExtraPxYFacingUp: 0,
           HitboxMeleeOriginLiftReductionPxFacingDown: 28,
+          HitboxPulse: {
+            useFadeAnimation: false,
+            duration: 60,
+            startAlpha: 0.5,
+            scaleStart: 1,
+            lineColor: 0xFFFFFF,
+            lineAlpha: 1,
+            lineWidth: 1,
+            fillColor: 0xFFFFFF,
+            fillAlpha: 0.5,
+            blendMode: 0,
+          },
         },
       },
     };
@@ -149,6 +163,7 @@ describe('Spriteset_Map cast previews', () =>
     };
 
     await import('../../../../../src/plugins/abs/core/sprites/Spriteset_Map.js');
+    ({ default: JABS_Action } = await import('../../../../../src/plugins/abs/core/models/JABS_Action.js'));
     ({ default: JABS_Engine } = await import('../../../../../src/plugins/abs/core/managers/JABS_Engine.js'));
     ({ default: Sprite_HitboxPulse } = await import('../../../../../src/plugins/abs/core/sprites/Sprite_HitboxPulse.js'));
     const { default: JABS_Aabb } = await import('../../../../../src/plugins/abs/core/models/JABS_Aabb.js');
@@ -181,6 +196,7 @@ describe('Spriteset_Map cast previews', () =>
     target = [ null, null ],
     options = null,
     actionId = 1,
+    isDirect = false,
   }) =>
   {
     const [ casterX, casterY ] = CasterTile;
@@ -189,6 +205,11 @@ describe('Spriteset_Map cast previews', () =>
       getActionId: () => actionId,
       getShape: () => shape,
       getRange: () => range,
+      isDirectAction: () => isDirect,
+      getCollisionRange: () => JABS_Action.prototype.getCollisionRange.call({
+        getRange: () => range,
+        isDirectAction: () => isDirect,
+      }),
       direction: () => facing,
       getInnerRadius: () => innerRadius,
       getThicknessTiles: () => thickness,
@@ -225,16 +246,13 @@ describe('Spriteset_Map cast previews', () =>
   };
 
   /**
-   * Tests a grid of points around the real hit against both the telegraph and the collision.
-   * @param {Sprite} sprite The drawn preview sprite.
-   * @param {Object} action The action it warned about.
-   * @param {[number, number]} spawnTile Where the action actually spawned, in tiles.
-   * @returns {{ hits:number, disagreements:Object[] }} How many samples the hit caught, and every
-   * sample the telegraph and the hit answered differently.
+   * Places the event firing spawns, without consulting anything a telegraph worked out.
+   * @param {Object} action The action firing.
+   * @param {[number, number]} spawnTile Where it spawns, in tiles.
+   * @returns {Game_Character} A stand-in for the spawned `Game_Event`.
    */
-  const compareWithTheHit = (sprite, action, [ spawnX, spawnY ]) =>
+  const spawnEvent = (action, [ spawnX, spawnY ]) =>
   {
-    // the event firing spawns, placed without consulting anything the telegraph worked out.
     const [ page ] = globalThis.$actionMap.events[action.getActionId()].pages;
     const spawned = new Game_Character();
     if (page.image.tileId > 0)
@@ -249,8 +267,21 @@ describe('Spriteset_Map cast previews', () =>
     spawned.locate(spawnX, spawnY);
     spawned.getJabsAction = () => action;
 
+    return spawned;
+  };
+
+  /**
+   * Tests a grid of points around the real hit against both the drawing and the collision.
+   * @param {Sprite} sprite The sprite the drawing sits at.
+   * @param {PIXI.Graphics} graphics The drawing itself.
+   * @param {Object} action The action drawn.
+   * @param {Game_Character} spawned The event the action really spawned as.
+   * @returns {{ hits:number, disagreements:Object[] }} How many samples the hit caught, and every
+   * sample the drawing and the hit answered differently.
+   */
+  const compareWithTheHit = (sprite, graphics, action, spawned) =>
+  {
     const origin = JABS_Engine.getActionOriginPixels(spawned);
-    const graphics = sprite._jabsCastPreviewG;
     const outcome = { hits: 0, disagreements: [] };
 
     for (let offsetY = RowPhasePx - ReachPx; offsetY <= ReachPx; offsetY += StepPx)
@@ -268,7 +299,7 @@ describe('Spriteset_Map cast previews', () =>
           action.direction(),
           { screenX, screenY },
           spawned,
-          action.getRange(),
+          action.getCollisionRange(),
           action.getShape(),
           action.getInnerRadius());
         if (isHit) outcome.hits += 1;
@@ -286,6 +317,38 @@ describe('Spriteset_Map cast previews', () =>
     }
 
     return outcome;
+  };
+
+  /**
+   * Tests a telegraph against the hit of the event its action really spawned as.
+   * @param {Sprite} sprite The drawn preview sprite.
+   * @param {Object} action The action it warned about.
+   * @param {[number, number]} spawnTile Where the action actually spawned, in tiles.
+   * @returns {{ hits:number, disagreements:Object[] }} What {@link compareWithTheHit} found.
+   */
+  const compareTelegraphWithTheHit = (sprite, action, spawnTile) =>
+  {
+    const spawned = spawnEvent(action, spawnTile);
+    return compareWithTheHit(sprite, sprite._jabsCastPreviewG, action, spawned);
+  };
+
+  /**
+   * Pulses a live action the way a frame does: the options the action really composes, handed to a
+   * real pulse sprite.
+   * @param {Object} action The live action.
+   * @param {Game_Character} spawned The event the action spawned as.
+   * @returns {Sprite_HitboxPulse} The placed and drawn pulse.
+   */
+  const pulseFor = (action, spawned) =>
+  {
+    const live = { ...action, getActionSprite: () => spawned };
+    const options = JABS_Action.prototype.composeHitboxPulsePlainOptions.call(live);
+
+    const pulse = new Sprite_HitboxPulse();
+    pulse.setup(options);
+    pulse.setWorldPosition(options.x, options.y);
+
+    return pulse;
   };
 
   /**
@@ -317,7 +380,7 @@ describe('Spriteset_Map cast previews', () =>
 
       // Act
       const sprite = telegraph(action);
-      const { hits, disagreements } = compareWithTheHit(sprite, action, CasterTile);
+      const { hits, disagreements } = compareTelegraphWithTheHit(sprite, action, CasterTile);
 
       // Assert: the anchor proves the grid reached the shape, not that two empty answers agreed.
       expect(hits).toBeGreaterThan(0);
@@ -331,7 +394,7 @@ describe('Spriteset_Map cast previews', () =>
 
       // Act
       const sprite = telegraph(action);
-      const { hits, disagreements } = compareWithTheHit(sprite, action, [ 13, 4 ]);
+      const { hits, disagreements } = compareTelegraphWithTheHit(sprite, action, [ 13, 4 ]);
 
       // Assert
       expect(hits).toBeGreaterThan(0);
@@ -346,7 +409,7 @@ describe('Spriteset_Map cast previews', () =>
 
       // Act
       const sprite = telegraph(action);
-      const { hits, disagreements } = compareWithTheHit(sprite, action, [ 11.25, 6.5 ]);
+      const { hits, disagreements } = compareTelegraphWithTheHit(sprite, action, [ 11.25, 6.5 ]);
 
       // Assert
       expect(hits).toBeGreaterThan(0);
@@ -360,7 +423,7 @@ describe('Spriteset_Map cast previews', () =>
 
       // Act
       const sprite = telegraph(action);
-      const { hits, disagreements } = compareWithTheHit(sprite, action, CasterTile);
+      const { hits, disagreements } = compareTelegraphWithTheHit(sprite, action, CasterTile);
 
       // Assert
       expect(hits).toBeGreaterThan(0);
@@ -374,7 +437,7 @@ describe('Spriteset_Map cast previews', () =>
 
       // Act
       const sprite = telegraph(action);
-      const { hits, disagreements } = compareWithTheHit(sprite, action, CasterTile);
+      const { hits, disagreements } = compareTelegraphWithTheHit(sprite, action, CasterTile);
 
       // Assert
       expect(hits).toBeGreaterThan(0);
@@ -441,47 +504,59 @@ describe('Spriteset_Map cast previews', () =>
     });
   });
 
-  describe('a skill with no hitbox tag', () =>
+  describe('a hit pulse', () =>
   {
-    it('draws as a whole circle on the live hitbox overlay', () =>
+    const cases = Hitboxes.flatMap(hitbox => Facings.map(facing => ({ ...hitbox, facing })));
+
+    it.each(cases)('$name aimed toward $facing pulses exactly what it hits', hitbox =>
+    {
+      // Arrange
+      const action = buildAction(hitbox);
+      const spawned = spawnEvent(action, CasterTile);
+
+      // Act
+      const pulse = pulseFor(action, spawned);
+      const { hits, disagreements } = compareWithTheHit(pulse, pulse.graphics(), action, spawned);
+
+      // Assert: this is the shape that teaches a player what just got them.
+      expect(hits).toBeGreaterThan(0);
+      expect(disagreements).toEqual([]);
+    });
+
+    it('never turns the sprite itself, because the drawing is already aimed', () =>
+    {
+      // Arrange
+      const action = buildAction({ shape: 'line', range: 3, facing: 9 });
+      const spawned = spawnEvent(action, CasterTile);
+
+      // Act
+      const pulse = pulseFor(action, spawned);
+
+      // Assert
+      expect(pulse.rotation).toBe(0);
+    });
+  });
+
+  describe('the live hitbox overlay', () =>
+  {
+    it('draws what the action will test, aimed where it is aimed', () =>
     {
       // Arrange
       const spriteset = Object.create(globalThis.Spriteset_Map.prototype);
-      const sprite = { _jabsHitboxG: new PIXI.Graphics() };
-      const event = { getJabsAction: () => buildAction({ shape: null, range: 2, facing: 6 }) };
+      const sprite = { _jabsHitboxG: new PIXI.Graphics(), x: 0, y: 0 };
+      const action = buildAction({ shape: 'arc', range: 2.5, degrees: 135, facing: 9 });
+      const spawned = spawnEvent(action, CasterTile);
+      const origin = JABS_Engine.getActionOriginPixels(spawned);
+      sprite.x = origin.x;
+      sprite.y = origin.y;
 
       // Act
-      spriteset.drawActionHitboxInto(sprite, null, 2, 6, 48, 48, event);
+      spriteset.drawActionHitboxInto(sprite, spawned);
+      const { hits, disagreements } = compareWithTheHit(sprite, sprite._jabsHitboxG, action, spawned);
 
-      // Assert: directly behind the aim, which any wedge aimed forward would leave out.
-      expect(sprite._jabsHitboxG.geometry.containsPoint(new PIXI.Point(-48, 0))).toBe(true);
-    });
-
-    it('pulses as a whole circle', () =>
-    {
-      // Arrange
-      const pulse = new Sprite_HitboxPulse();
-      const options = {
-        shape: null,
-        range: 2,
-        duration: 60,
-        startAlpha: 1,
-        endAlpha: 1,
-        scaleStart: 1,
-        scaleEnd: 1,
-        lineColor: 0xFFFFFF,
-        lineAlpha: 1,
-        lineWidth: 1,
-        fillColor: 0xFFFFFF,
-        fillAlpha: 1,
-        blendMode: PIXI.BLEND_MODES.NORMAL,
-      };
-
-      // Act
-      pulse.setup(options);
-
-      // Assert: the pulse draws along +X, so this point is directly behind its aim.
-      expect(pulse.graphics().geometry.containsPoint(new PIXI.Point(-48, 0))).toBe(true);
+      // Assert
+      expect(hits).toBeGreaterThan(0);
+      expect(disagreements).toEqual([]);
     });
   });
 });
