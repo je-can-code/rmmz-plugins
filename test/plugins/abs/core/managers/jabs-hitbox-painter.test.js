@@ -198,7 +198,7 @@ describe('JABS_HitboxPainter (direct src import)', () =>
       JABS_HitboxPainter.draw(g, buildHitbox({ shape: 'line', range: 3, thickness: 2, facing: 6 }));
 
       // Assert
-      expect(g.moveTo).toHaveBeenCalledWith(-0, 48);
+      expect(g.moveTo).toHaveBeenCalledWith(0, 48);
       expect(g.lineTo.mock.calls).toEqual([ [ 0, -48 ], [ 168, -48 ], [ 168, 48 ] ]);
     });
 
@@ -208,7 +208,7 @@ describe('JABS_HitboxPainter (direct src import)', () =>
       JABS_HitboxPainter.draw(g, buildHitbox({ shape: 'line', range: 1, thickness: 0, facing: 6 }));
 
       // Assert
-      expect(g.moveTo).toHaveBeenCalledWith(-0, 0.5);
+      expect(g.moveTo).toHaveBeenCalledWith(0, 0.5);
     });
 
     it('draws a wall as deep as its thickness and two ranges and a tile across', () =>
@@ -217,7 +217,7 @@ describe('JABS_HitboxPainter (direct src import)', () =>
       JABS_HitboxPainter.draw(g, buildHitbox({ shape: 'wall', range: 1, thickness: 0.5, facing: 6 }));
 
       // Assert
-      expect(g.moveTo).toHaveBeenCalledWith(-0, 72);
+      expect(g.moveTo).toHaveBeenCalledWith(0, 72);
       expect(g.lineTo.mock.calls).toEqual([ [ 0, -72 ], [ 24, -72 ], [ 24, 72 ] ]);
     });
 
@@ -288,6 +288,142 @@ describe('JABS_HitboxPainter (direct src import)', () =>
 
       // Assert
       expect(g.arc).toHaveBeenCalledWith(0, 0, 96, 0, 0);
+    });
+  });
+
+  describe('breadthTiles', () =>
+  {
+    it('is a line\'s thickness', () =>
+    {
+      // Arrange & Act
+      const result = JABS_HitboxPainter.breadthTiles(buildHitbox({ shape: 'line', range: 4, thickness: 1.5 }));
+
+      // Assert
+      expect(result).toBe(1.5);
+    });
+
+    it.each([ 'wall', 'square', 'cross' ])('is two ranges and a tile across a %s', shape =>
+    {
+      // Arrange & Act
+      const result = JABS_HitboxPainter.breadthTiles(buildHitbox({ shape, range: 2 }));
+
+      // Assert
+      expect(result).toBe(5);
+    });
+
+    it.each([ 'circle', 'rhombus', null ])('is two ranges across a %s', shape =>
+    {
+      // Arrange & Act
+      const result = JABS_HitboxPainter.breadthTiles(buildHitbox({ shape, range: 2 }));
+
+      // Assert
+      expect(result).toBe(4);
+    });
+
+    it('is the span between the tips of a narrow wedge', () =>
+    {
+      // Arrange & Act
+      const result = JABS_HitboxPainter.breadthTiles(buildHitbox({ shape: 'arc', range: 1, degrees: 60 }));
+
+      // Assert: a 60 degree wedge spans exactly one radius tip to tip.
+      expect(result).toBeCloseTo(1, 10);
+    });
+
+    it('is two ranges from a half circle onward, the tips having stopped mattering', () =>
+    {
+      // Arrange & Act
+      const halfCircle = JABS_HitboxPainter.breadthTiles(buildHitbox({ shape: 'arc', range: 1, degrees: 180 }));
+      const pastThat = JABS_HitboxPainter.breadthTiles(buildHitbox({ shape: 'arc', range: 1, degrees: 270 }));
+
+      // Assert
+      expect(halfCircle).toBe(2);
+      expect(pastThat).toBe(2);
+    });
+  });
+
+  describe('laneOpacityAt', () =>
+  {
+    it('stays solid up to where the fade begins', () =>
+    {
+      // Arrange & Act
+      const results = [ 0, 19, 20 ].map(slice => JABS_HitboxPainter.laneOpacityAt(slice));
+
+      // Assert: of thirty-two slices, the last twelve fade.
+      expect(results).toEqual([ 1, 1, 1 ]);
+    });
+
+    it('thins out toward the far end without ever quite reaching nothing', () =>
+    {
+      // Arrange & Act
+      const results = [ 21, 26, 31 ].map(slice => JABS_HitboxPainter.laneOpacityAt(slice));
+
+      // Assert
+      expect(results).toEqual([ 11 / 12, 6 / 12, 1 / 12 ]);
+    });
+  });
+
+  describe('drawFlightLane', () =>
+  {
+    /**
+     * A stand-in for a shot with a 2-radius circle hitbox, aimed right.
+     * @param {number} laneTiles How far its lane reaches.
+     * @returns {Object} A stand-in for the {@link JABS_CastPreviewAction}.
+     */
+    const buildStandIn = laneTiles => ({
+      flightPreviewTiles: () => laneTiles,
+      getJabsAction: () => ({
+        getShape: () => 'circle',
+        getCollisionRange: () => 2,
+        direction: () => 6,
+        getInnerRadius: () => 0,
+      }),
+    });
+
+    const style = { fillColor: 0xFF5533, fillAlpha: 0.6 };
+
+    beforeEach(() =>
+    {
+      g.beginFill = vi.fn();
+      g.lineStyle = vi.fn();
+    });
+
+    it('draws nothing for an action that does not fly', () =>
+    {
+      // Arrange & Act
+      JABS_HitboxPainter.drawFlightLane(g, buildStandIn(0), style);
+
+      // Assert
+      expect(g.beginFill).not.toHaveBeenCalled();
+      expect(g.moveTo).not.toHaveBeenCalled();
+    });
+
+    it('draws its slices edge to edge, as wide as the hitbox and as long as the flight', () =>
+    {
+      // Arrange: 8 tiles over 32 slices is a quarter of a major tile, 12 pixels, each.
+      const standIn = buildStandIn(8);
+
+      // Act
+      JABS_HitboxPainter.drawFlightLane(g, standIn, style);
+
+      // Assert: the first slice, then the last one finishing exactly at the far end.
+      expect(g.moveTo).toHaveBeenCalledTimes(32);
+      expect(g.moveTo.mock.calls[0]).toEqual([ 0, 96 ]);
+      expect(g.lineTo.mock.calls[1]).toEqual([ 12, -96 ]);
+      expect(g.moveTo.mock.calls[31]).toEqual([ 372, 96 ]);
+      expect(g.lineTo.mock.calls[95]).toEqual([ 384, 96 ]);
+    });
+
+    it('fades the far end out of the telegraph\'s own fill, with no outline', () =>
+    {
+      // Arrange & Act
+      JABS_HitboxPainter.drawFlightLane(g, buildStandIn(8), style);
+
+      // Assert
+      expect(g.lineStyle).toHaveBeenCalledWith(0);
+      expect(g.beginFill.mock.calls[0]).toEqual([ 0xFF5533, 0.6 ]);
+      expect(g.beginFill.mock.calls[31][0]).toBe(0xFF5533);
+      expect(g.beginFill.mock.calls[31][1]).toBeCloseTo(0.05, 10);
+      expect(g.endFill).toHaveBeenCalledTimes(32);
     });
   });
 

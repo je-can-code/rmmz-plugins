@@ -40,6 +40,12 @@ describe('Spriteset_Map cast previews', () =>
   const EdgeNudges = [ [ -1, -1 ], [ 1, -1 ], [ -1, 1 ], [ 1, 1 ] ];
 
   /**
+   * How many stops a shot makes along its lane when flown for real, and it need not be every frame:
+   * a sample it skips only makes the test easier to pass by the width of one stop.
+   */
+  const FlightSamples = 15;
+
+  /**
    * Every direction an action can be aimed. Enemies only ever face four ways on the map, and the
    * diagonals are exactly where a telegraph reading the caster instead of the action comes apart.
    */
@@ -133,14 +139,30 @@ describe('Spriteset_Map cast previews', () =>
     // a J-Base addition the hitbox styling leans on.
     String.empty = '';
 
-    // the action map's templates, one each of character art, an object sheet, and a tile.
+    // the action map's templates: character art, an object sheet, a tile, and a straight shot.
+    const stayPut = { moveType: 0, moveSpeed: 4, moveRoute: { repeat: true, list: [ { code: 0 } ] }, list: [] };
     globalThis.$actionMap = {
       events: {
-        1: { pages: [ { image: { tileId: 0, characterName: '', characterIndex: 0 } } ] },
-        46: { pages: [ { image: { tileId: 0, characterName: '!Spirals', characterIndex: 0 } } ] },
-        60: { pages: [ { image: { tileId: 5, characterName: '', characterIndex: 0 } } ] },
+        1: { pages: [ { ...stayPut, image: { tileId: 0, characterName: '', characterIndex: 0 } } ] },
+        46: { pages: [ { ...stayPut, image: { tileId: 0, characterName: '!Spirals', characterIndex: 0 } } ] },
+        60: { pages: [ { ...stayPut, image: { tileId: 5, characterName: '', characterIndex: 0 } } ] },
+        3: {
+          pages: [
+            {
+              moveType: 3,
+              moveSpeed: 4,
+              moveRoute: { repeat: true, list: [ { code: 12 }, { code: 0 } ] },
+              list: [],
+              image: { tileId: 0, characterName: '$a_fireball', characterIndex: 0 },
+            },
+          ],
+        },
       },
     };
+
+    // the comment reading J-Base and J-ABS add to the engine's Game_Event.
+    globalThis.Game_Event.getValidCommentCommandsFromPage = page => page.list;
+    globalThis.Game_Event.readCustomMoveSpeed = () => null;
 
     // reads a skill's note, the one place the drawing and the hit look up their degrees.
     globalThis.RPGManager = {
@@ -211,6 +233,7 @@ describe('Spriteset_Map cast previews', () =>
         isDirectAction: () => isDirect,
       }),
       direction: () => facing,
+      getMaxDuration: () => 240,
       getInnerRadius: () => innerRadius,
       getThicknessTiles: () => thickness,
       getActionOptions: () => options,
@@ -330,6 +353,73 @@ describe('Spriteset_Map cast previews', () =>
   {
     const spawned = spawnEvent(action, spawnTile);
     return compareWithTheHit(sprite, sprite._jabsCastPreviewG, action, spawned);
+  };
+
+  /**
+   * Flies a shot through the stretch of its flight a telegraph shows, and lists every sample it
+   * hit along the way that the telegraph left undrawn. Samples past the far end of the lane don't
+   * count: what is flying has a front edge of its own, and that is what the fade is for.
+   * @param {Sprite} sprite The drawn preview sprite.
+   * @param {Object} action The shot it warned about.
+   * @returns {{ hits:number, escapes:Object[] }} How many samples the shot hit, and those the
+   * telegraph missed.
+   */
+  const compareFlightWithTelegraph = (sprite, action) =>
+  {
+    const graphics = sprite._jabsCastPreviewG;
+    const standIn = sprite._jabsCastPreviewAction;
+    const laneTiles = standIn.flightPreviewTiles();
+    const facing = action.direction();
+    const aim = globalThis.$jabsEngine.dir8ToUnitVector(facing);
+    const [ casterX, casterY ] = CasterTile;
+    const spawned = spawnEvent(action, CasterTile);
+    const origin = JABS_Engine.getActionOriginPixels(spawned);
+    const lanePx = laneTiles * 48;
+    const outcome = { hits: 0, escapes: [] };
+    const flightStepTiles = laneTiles / FlightSamples;
+
+    for (let offsetY = RowPhasePx - ReachPx; offsetY <= ReachPx; offsetY += StepPx)
+    {
+      for (let offsetX = -ReachPx; offsetX <= ReachPx; offsetX += StepPx)
+      {
+        const screenX = origin.x + offsetX;
+        const screenY = origin.y + offsetY;
+        let isHit = false;
+
+        // walk the shot down its path, the way its route will.
+        for (let step = 0; step <= FlightSamples && isHit === false; step += 1)
+        {
+          spawned.locate(casterX + (aim.x * flightStepTiles * step), casterY + (aim.y * flightStepTiles * step));
+          isHit = globalThis.$jabsEngine.isTargetWithinRange(
+            facing,
+            { screenX, screenY },
+            spawned,
+            action.getCollisionRange(),
+            action.getShape(),
+            action.getInnerRadius());
+        }
+
+        if (isHit === false) continue;
+        outcome.hits += 1;
+
+        // how far along the lane this sample sits.
+        const alongPx = (offsetX * aim.x) + (offsetY * aim.y);
+        if (alongPx > lanePx) continue;
+
+        // a sample straddling the drawn edge is too close to call; see EdgeNudges.
+        const localX = screenX - sprite.x;
+        const localY = screenY - sprite.y;
+        const isClearlyOutside = [ [ 0, 0 ], ...EdgeNudges ].every(([ nudgeX, nudgeY ]) =>
+        {
+          const nudged = new PIXI.Point(localX + nudgeX, localY + nudgeY);
+          return graphics.geometry.containsPoint(nudged) === false;
+        });
+
+        if (isClearlyOutside) outcome.escapes.push({ offsetX, offsetY });
+      }
+    }
+
+    return outcome;
   };
 
   /**
@@ -501,6 +591,65 @@ describe('Spriteset_Map cast previews', () =>
       // Assert
       expect(items.map(item => item.key)).toEqual([ 'castpreview:foe:0', 'castpreview:foe:1', 'castpreview:foe:2' ]);
       expect(items.map(item => item.action)).toEqual(spokes);
+    });
+  });
+
+  describe('a flight lane', () =>
+  {
+    /**
+     * One of each hitbox a shot in the game really flies with.
+     */
+    const Shots = [
+      { name: 'a bolt', shape: 'circle', range: 0.8 },
+      { name: 'a bolt with no hitbox tag', shape: null, range: 1 },
+      { name: 'a narrow arc', shape: 'arc', range: 1, degrees: 60 },
+      { name: 'a wide arc', shape: 'arc', range: 1, degrees: 150 },
+      { name: 'a thin line', shape: 'line', range: 1, thickness: 0.5 },
+      { name: 'a wall', shape: 'wall', range: 1, thickness: 0.5 },
+    ];
+
+    const cases = Shots.flatMap(shot => Facings.map(facing => ({ ...shot, facing, actionId: 3 })));
+
+    it.each(cases)('$name flying toward $facing never leaves what its telegraph drew', shot =>
+    {
+      // Arrange
+      const action = buildAction(shot);
+
+      // Act
+      const sprite = telegraph(action);
+      const { hits, escapes } = compareFlightWithTelegraph(sprite, action);
+
+      // Assert: the shot hit the grid somewhere, and nowhere the player wasn't warned about.
+      expect(hits).toBeGreaterThan(0);
+      expect(escapes).toEqual([]);
+    });
+
+    it('reaches a second of flight down the aim from the origin', () =>
+    {
+      // Arrange: a sixteenth of a tile a frame is 180 pixels in a second, and the facing is 8.
+      const action = buildAction({ shape: 'circle', range: 0.5, facing: 8, actionId: 3 });
+
+      // Act
+      const sprite = telegraph(action);
+      const { geometry } = sprite._jabsCastPreviewG;
+
+      // Assert: inside the very end of the lane, and just past it, and the same behind the caster.
+      expect(geometry.containsPoint(new PIXI.Point(0, -179))).toBe(true);
+      expect(geometry.containsPoint(new PIXI.Point(0, -181))).toBe(false);
+      expect(geometry.containsPoint(new PIXI.Point(0, 179))).toBe(false);
+    });
+
+    it('draws no lane for an action that stays put', () =>
+    {
+      // Arrange: where the lane would have been had this shot flown.
+      const action = buildAction({ shape: 'circle', range: 0.5, facing: 8 });
+
+      // Act
+      const sprite = telegraph(action);
+      const { geometry } = sprite._jabsCastPreviewG;
+
+      // Assert
+      expect(geometry.containsPoint(new PIXI.Point(0, -100))).toBe(false);
     });
   });
 

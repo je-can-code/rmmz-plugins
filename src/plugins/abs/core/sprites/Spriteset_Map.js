@@ -902,8 +902,11 @@ Spriteset_Map.prototype.drawCastPreviewInto = function (sprite)
   const standIn = sprite._jabsCastPreviewAction;
   const action = standIn.getJabsAction();
 
-  // apply style.
+  // a shot gets the lane it is about to fly down, under the shape it starts as.
   const style = this.getCastPreviewStyleFor(action.getShape());
+  JABS_HitboxPainter.drawFlightLane(g, standIn, style);
+
+  // apply style.
   this.applyHitboxStyle(g, style);
 
   // draw the same geometry the live hitbox draws, aimed where the action is aimed.

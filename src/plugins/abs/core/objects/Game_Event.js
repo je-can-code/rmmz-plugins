@@ -1299,13 +1299,12 @@ Game_Event.prototype.initializeCoreData = function(battlerCoreData)
 };
 
 /**
- * Applies the custom move speed if available.
+ * Reads the custom move speed out of a list of comments.
+ * @param {RPG_EventListCommand[]} commentCommandList The comment commands to read.
+ * @returns {number|null} The last custom move speed found, or null when none of them declare one.
  */
-Game_Event.prototype.applyCustomMoveSpeed = function()
+Game_Event.readCustomMoveSpeed = function(commentCommandList)
 {
-  // grab the list of valid comments.
-  const commentCommandList = this.getValidCommentCommands();
-
   // initialize the move speed.
   let moveSpeed = null;
 
@@ -1324,6 +1323,17 @@ Game_Event.prototype.applyCustomMoveSpeed = function()
     // parse the value out of the regex capture group.
     moveSpeed = parseFloat(regexResult[1]);
   });
+
+  return moveSpeed;
+};
+
+/**
+ * Applies the custom move speed if available.
+ */
+Game_Event.prototype.applyCustomMoveSpeed = function()
+{
+  // read the speed off this event's own comments.
+  const moveSpeed = Game_Event.readCustomMoveSpeed(this.getValidCommentCommands());
 
   // check if we encountered additional move speed modifiers.
   if (moveSpeed !== null)

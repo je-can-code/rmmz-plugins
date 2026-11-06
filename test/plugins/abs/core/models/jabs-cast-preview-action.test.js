@@ -13,6 +13,20 @@ describe('JABS_CastPreviewAction (direct src import)', () =>
     // a few pixels higher unless it wears a tile or an object sheet, same as the real thing.
     globalThis.Game_Character = class
     {
+      static ROUTE_END = 0;
+
+      static ROUTE_MOVE_FORWARD = 12;
+
+      setMoveSpeed(moveSpeed)
+      {
+        this.moveSpeed = moveSpeed;
+      }
+
+      distancePerFrame()
+      {
+        return (2 ** this.moveSpeed) / 256;
+      }
+
       setImage(characterName)
       {
         this.shiftY = characterName.startsWith('!')
@@ -42,6 +56,12 @@ describe('JABS_CastPreviewAction (direct src import)', () =>
       }
     };
 
+    // the comment reading J-Base and J-ABS add to the engine's Game_Event.
+    globalThis.Game_Event = {
+      getValidCommentCommandsFromPage: page => page.list,
+      readCustomMoveSpeed: comments => (comments.length > 0 ? comments[0].parameters[0] : null),
+    };
+
     ({ default: JABS_CastPreviewAction } = await import(
       '../../../../../src/plugins/abs/core/models/JABS_CastPreviewAction.js'
     ));
@@ -50,6 +70,42 @@ describe('JABS_CastPreviewAction (direct src import)', () =>
   let standIn;
   let caster;
   let action;
+
+  /**
+   * Builds an action map template whose single page moves as described.
+   * @param {Object} movement The fields of the page's movement that matter to the test.
+   * @returns {Object} The action map event.
+   */
+  const buildTemplate = ({ moveType = 3, moveSpeed = 4, repeat = true, route = [ 12, 0 ], list = [] }) => ({
+    pages: [
+      {
+        image: { tileId: 0, characterName: '$a_shot', characterIndex: 0 },
+        moveType,
+        moveSpeed,
+        moveRoute: { repeat, list: route.map(code => ({ code })) },
+        list,
+      },
+    ],
+  });
+
+  /**
+   * Builds an action spawning from the given template, living as long as it says.
+   * @param {Object} movement The fields of the template's movement that matter to the test.
+   * @param {Object} overrides Anything else the action should answer differently.
+   * @returns {Object} A stand-in for the {@link JABS_Action}.
+   */
+  const buildFlyingAction = (movement, overrides = {}) =>
+  {
+    globalThis.$actionMap.events[70] = buildTemplate(movement);
+
+    return {
+      getCaster: () => caster,
+      getActionId: () => 70,
+      isDirectAction: () => false,
+      getMaxDuration: () => 240,
+      ...overrides,
+    };
+  };
 
   beforeEach(() =>
   {
@@ -195,6 +251,106 @@ describe('JABS_CastPreviewAction (direct src import)', () =>
 
       // Assert
       expect(standIn.screenY()).toBe(234);
+    });
+  });
+
+  describe('flightPreviewTiles', () =>
+  {
+    it('reaches as far as the first second of flight takes it', () =>
+    {
+      // Arrange: speed 4 is a sixteenth of a tile a frame.
+      standIn.set(buildFlyingAction({ moveSpeed: 4 }));
+
+      // Act
+      const result = standIn.flightPreviewTiles();
+
+      // Assert
+      expect(result).toBe(3.75);
+    });
+
+    it('stops short when the shot expires inside that second', () =>
+    {
+      // Arrange
+      standIn.set(buildFlyingAction({ moveSpeed: 4 }, { getMaxDuration: () => 20 }));
+
+      // Act
+      const result = standIn.flightPreviewTiles();
+
+      // Assert
+      expect(result).toBe(1.25);
+    });
+
+    it('reads a comment over the speed on the page, as a spawned event does', () =>
+    {
+      // Arrange: Shock's real numbers, a page at speed 4 and a comment at 7.
+      const list = [ { code: 108, parameters: [ 7 ] } ];
+      standIn.set(buildFlyingAction({ moveSpeed: 4, list }));
+
+      // Act
+      const result = standIn.flightPreviewTiles();
+
+      // Assert
+      expect(result).toBe(30);
+    });
+
+    it('reaches nowhere for a direct action, which lands rather than flies', () =>
+    {
+      // Arrange: everything else about it would fly, so only being direct can answer no.
+      standIn.set(buildFlyingAction({}, { isDirectAction: () => true }));
+
+      // Act
+      const result = standIn.flightPreviewTiles();
+
+      // Assert
+      expect(result).toBe(0);
+    });
+
+    it('reaches nowhere from a template set to fixed, whose route never runs', () =>
+    {
+      // Arrange
+      standIn.set(buildFlyingAction({ moveType: 0 }));
+
+      // Act
+      const result = standIn.flightPreviewTiles();
+
+      // Assert
+      expect(result).toBe(0);
+    });
+
+    it('reaches nowhere on a route that only runs once', () =>
+    {
+      // Arrange
+      standIn.set(buildFlyingAction({ repeat: false }));
+
+      // Act
+      const result = standIn.flightPreviewTiles();
+
+      // Assert
+      expect(result).toBe(0);
+    });
+
+    it('reaches nowhere on a route with no steps in it', () =>
+    {
+      // Arrange
+      standIn.set(buildFlyingAction({ route: [ 0 ] }));
+
+      // Act
+      const result = standIn.flightPreviewTiles();
+
+      // Assert
+      expect(result).toBe(0);
+    });
+
+    it('reaches nowhere on a route that does anything but step forward', () =>
+    {
+      // Arrange: the forward step sitting beside the script is what makes this a near miss.
+      standIn.set(buildFlyingAction({ route: [ 12, 45, 0 ] }));
+
+      // Act
+      const result = standIn.flightPreviewTiles();
+
+      // Assert
+      expect(result).toBe(0);
     });
   });
 });

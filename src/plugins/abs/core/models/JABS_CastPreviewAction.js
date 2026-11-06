@@ -9,6 +9,19 @@
 class JABS_CastPreviewAction
 {
   /**
+   * How many frames of a flight a telegraph shows. Past this a shot can be sidestepped on sight,
+   * so drawing further would only claim danger that is seconds away.
+   * @type {number}
+   */
+  static FlightPreviewFrames = 60;
+
+  /**
+   * The event page move type that runs its move route; a template on any other ignores it.
+   * @type {number}
+   */
+  static CustomMoveType = 3;
+
+  /**
    * The headless character reporting the spawn position in screen pixels, the same way the event
    * placed there will.
    * @type {Game_Character}
@@ -22,13 +35,20 @@ class JABS_CastPreviewAction
   #jabsAction = null;
 
   /**
+   * The action map template page the action will spawn from, or null until one is assigned.
+   * @type {RPG_MapEventPage|null}
+   */
+  #page = null;
+
+  /**
    * Stands in for the given action, on the spot it would spawn if its cast finished now.
    * @param {JABS_Action} jabsAction The real action winding up.
    */
   set(jabsAction)
   {
     this.#jabsAction = jabsAction;
-    this.#wearTemplateArt(jabsAction);
+    [ this.#page ] = $actionMap.events[jabsAction.getActionId()].pages;
+    this.#wearTemplateArt();
 
     // ask what firing will ask, so the telegraph lands wherever the action does.
     const caster = jabsAction.getCaster();
@@ -43,12 +63,10 @@ class JABS_CastPreviewAction
    * Dresses the headless character in the art the action's template will give its event. A tile or
    * an object sheet rests on its tile where a character stands a few pixels above it, and that
    * difference carries through to the screen position.
-   * @param {JABS_Action} jabsAction The real action winding up.
    */
-  #wearTemplateArt(jabsAction)
+  #wearTemplateArt()
   {
-    const [ page ] = $actionMap.events[jabsAction.getActionId()].pages;
-    const { tileId, characterName, characterIndex } = page.image;
+    const { tileId, characterName, characterIndex } = this.#page.image;
 
     // a page shows a tile or a sheet, which is the same fork a real event's page takes.
     if (tileId > 0)
@@ -58,6 +76,52 @@ class JABS_CastPreviewAction
     }
 
     this.#character.setImage(characterName, characterIndex);
+  }
+
+  /**
+   * How far the action will fly in the stretch of its flight a telegraph shows, in tiles.
+   * @returns {number} The distance; 0 for an action that stays where it spawns, or whose route
+   * can't promise where it is going.
+   */
+  flightPreviewTiles()
+  {
+    if (this.#fliesStraight() === false) return 0;
+
+    // a short-lived shot stops when it expires, however far the rest of the preview would reach.
+    const frames = Math.min(JABS_CastPreviewAction.FlightPreviewFrames, this.#jabsAction.getMaxDuration());
+
+    // the headless character does the speed math, the same way the event will.
+    this.#character.setMoveSpeed(this.#templateMoveSpeed());
+    return this.#character.distancePerFrame() * frames;
+  }
+
+  /**
+   * Whether the action will leave its spawn in a straight line along its aim.
+   * @returns {boolean} True if it will fly straight, false otherwise.
+   */
+  #fliesStraight()
+  {
+    // a direct action lands on its target, it does not fly there.
+    if (this.#jabsAction.isDirectAction()) return false;
+
+    // a route only runs at all on a custom template, and only a looping one keeps going.
+    const { moveType, moveRoute } = this.#page;
+    if (moveType !== JABS_CastPreviewAction.CustomMoveType) return false;
+    if (moveRoute.repeat === false) return false;
+
+    // anything but stepping forward could end up anywhere, so stepping forward is all that's promised.
+    const steps = moveRoute.list.filter(command => command.code !== Game_Character.ROUTE_END);
+    return steps.length > 0 && steps.every(command => command.code === Game_Character.ROUTE_MOVE_FORWARD);
+  }
+
+  /**
+   * The speed the action's template will give its event: its comments outrank the page.
+   * @returns {number}
+   */
+  #templateMoveSpeed()
+  {
+    const comments = Game_Event.getValidCommentCommandsFromPage(this.#page);
+    return Game_Event.readCustomMoveSpeed(comments) ?? this.#page.moveSpeed;
   }
 
   /**

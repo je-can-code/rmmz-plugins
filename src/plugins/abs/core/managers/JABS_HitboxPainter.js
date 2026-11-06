@@ -13,22 +13,132 @@ class JABS_HitboxPainter
   static MinimumThicknessPx = 1;
 
   /**
-   * Draws the hitbox of an action, read the same way collision reads it.
-   * @param {PIXI.Graphics} g The graphics to draw on.
-   * @param {Game_Event|JABS_CastPreviewAction} actionEvent The action event, or the stand-in for one.
+   * How many slices a flight lane is drawn in. PIXI's fills are flat, so the fade is a staircase of
+   * them, and this many steps reads as a gradient.
+   * @type {number}
    */
-  static drawAction(g, actionEvent)
+  static LaneSlices = 32;
+
+  /**
+   * How many slices at the far end of a flight lane fade out, where the rest are solid.
+   * @type {number}
+   */
+  static LaneFadeSlices = 12;
+
+  /**
+   * Reads the hitbox of an action, the same way collision reads it.
+   * @param {Game_Event|JABS_CastPreviewAction} actionEvent The action event, or the stand-in for one.
+   * @returns {{ shape:string|null, range:number, facing:number, degrees:number, thickness:number, innerRadius:number }}
+   */
+  static hitboxOf(actionEvent)
   {
     const action = actionEvent.getJabsAction();
 
-    JABS_HitboxPainter.draw(g, {
+    return {
       shape: action.getShape(),
       range: action.getCollisionRange(),
       facing: action.direction(),
       degrees: $jabsEngine.getActionDegrees(actionEvent) ?? 180,
       thickness: $jabsEngine.getActionThicknessTiles(actionEvent),
       innerRadius: action.getInnerRadius(),
-    });
+    };
+  }
+
+  /**
+   * Draws the hitbox of an action.
+   * @param {PIXI.Graphics} g The graphics to draw on.
+   * @param {Game_Event|JABS_CastPreviewAction} actionEvent The action event, or the stand-in for one.
+   */
+  static drawAction(g, actionEvent)
+  {
+    const hitbox = JABS_HitboxPainter.hitboxOf(actionEvent);
+    JABS_HitboxPainter.draw(g, hitbox);
+  }
+
+  /**
+   * Draws the lane a shot is about to fly down: as wide as what is flying, reaching as far as it
+   * will get in the stretch a telegraph shows, and fading out at the far end because that is a
+   * horizon rather than a place the shot stops. Draws nothing for an action that doesn't fly.
+   * @param {PIXI.Graphics} g The graphics to draw on.
+   * @param {JABS_CastPreviewAction} standIn The stand-in for the action about to fly.
+   * @param {{ fillColor:number, fillAlpha:number }} style The telegraph's style.
+   */
+  static drawFlightLane(g, standIn, style)
+  {
+    const laneTiles = standIn.flightPreviewTiles();
+    if (laneTiles === 0) return;
+
+    const hitbox = JABS_HitboxPainter.hitboxOf(standIn);
+    const tile = JABS_HitboxPainter.majorTilePx();
+    const sliceLengthPx = (laneTiles * tile) / JABS_HitboxPainter.LaneSlices;
+    const halfBreadthPx = (JABS_HitboxPainter.breadthTiles(hitbox) * tile) / 2;
+
+    // the slices sit edge to edge, and an outline on each would rule lines across the lane.
+    g.lineStyle(0);
+
+    for (let slice = 0; slice < JABS_HitboxPainter.LaneSlices; slice += 1)
+    {
+      const opacity = JABS_HitboxPainter.laneOpacityAt(slice);
+      g.beginFill(style.fillColor, style.fillAlpha * opacity);
+      JABS_HitboxPainter.drawOrientedQuad(g, hitbox.facing, sliceLengthPx, halfBreadthPx, sliceLengthPx * slice);
+      g.endFill();
+    }
+  }
+
+  /**
+   * How opaque a slice of a flight lane is, as a share of the telegraph's own fill.
+   * @param {number} slice The slice's index, counted out from the origin.
+   * @returns {number} From 1 where the lane is solid, down toward 0 at the far end.
+   */
+  static laneOpacityAt(slice)
+  {
+    const slicesFromTheEnd = JABS_HitboxPainter.LaneSlices - slice;
+    return Math.min(1, slicesFromTheEnd / JABS_HitboxPainter.LaneFadeSlices);
+  }
+
+  /**
+   * How wide a hitbox is across its own aim, in tiles, which is the width of the path it sweeps as
+   * it flies.
+   * @param {Object} hitbox The hitbox to measure; see {@link JABS_HitboxPainter.draw}.
+   * @returns {number}
+   */
+  static breadthTiles(hitbox)
+  {
+    const { shape, range, degrees, thickness } = hitbox;
+
+    switch (shape)
+    {
+      case J.ABS.Shapes.Line:
+        return thickness;
+
+      case J.ABS.Shapes.Wall:
+      case J.ABS.Shapes.Square:
+      case J.ABS.Shapes.Cross:
+        return (2 * range) + 1;
+
+      case J.ABS.Shapes.Arc:
+        return JABS_HitboxPainter.arcBreadthTiles(range, degrees);
+
+      case J.ABS.Shapes.Circle:
+      case J.ABS.Shapes.Rhombus:
+      default:
+        return range * 2;
+    }
+  }
+
+  /**
+   * How wide a wedge is across its aim, in tiles: a narrow one is as wide as its two tips, and from
+   * a half circle onward it is as wide as it can get.
+   * @param {number} range The wedge's radius in tiles.
+   * @param {number} degrees The wedge's sweep in degrees.
+   * @returns {number}
+   */
+  static arcBreadthTiles(range, degrees)
+  {
+    if (degrees >= 180) return range * 2;
+
+    const halfSweepRad = ((degrees / 2) * Math.PI) / 180;
+    return range * 2 * Math.sin(halfSweepRad);
   }
 
   /**
@@ -261,27 +371,28 @@ class JABS_HitboxPainter
   }
 
   /**
-   * Draws a filled rectangle starting at the origin and extending forward along the dir8 unit
-   * vector, with its breadth split evenly either side of that axis.
+   * Draws a filled rectangle extending forward along the dir8 unit vector, with its breadth split
+   * evenly either side of that axis.
    * @param {PIXI.Graphics} g The graphics to draw on.
    * @param {number} facing The dir8 facing for the forward axis.
    * @param {number} lengthPx The forward length in pixels.
    * @param {number} halfBreadthPx The half-width in pixels along the perpendicular axis.
+   * @param {number} [startPx=0] How far along the forward axis it starts, in pixels.
    */
-  static drawOrientedQuad(g, facing, lengthPx, halfBreadthPx)
+  static drawOrientedQuad(g, facing, lengthPx, halfBreadthPx, startPx = 0)
   {
     const { x: fx, y: fy } = $jabsEngine.dir8ToUnitVector(facing);
-    const px = fy;
-    const py = -fx;
-    const ax = -px * halfBreadthPx;
-    const ay = -py * halfBreadthPx;
-    const bx = px * halfBreadthPx;
-    const by = py * halfBreadthPx;
+    const px = fy * halfBreadthPx;
+    const py = -fx * halfBreadthPx;
+    const nearX = fx * startPx;
+    const nearY = fy * startPx;
+    const farX = fx * (startPx + lengthPx);
+    const farY = fy * (startPx + lengthPx);
 
-    g.moveTo(ax, ay);
-    g.lineTo(bx, by);
-    g.lineTo((fx * lengthPx) + bx, (fy * lengthPx) + by);
-    g.lineTo((fx * lengthPx) + ax, (fy * lengthPx) + ay);
+    g.moveTo(nearX - px, nearY - py);
+    g.lineTo(nearX + px, nearY + py);
+    g.lineTo(farX + px, farY + py);
+    g.lineTo(farX - px, farY - py);
     g.closePath();
   }
 

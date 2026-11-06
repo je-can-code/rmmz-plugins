@@ -3474,20 +3474,103 @@ var JABS_HitboxPainter = class JABS_HitboxPainter {
 	*/
 	static MinimumThicknessPx = 1;
 	/**
-	* Draws the hitbox of an action, read the same way collision reads it.
-	* @param {PIXI.Graphics} g The graphics to draw on.
-	* @param {Game_Event|JABS_CastPreviewAction} actionEvent The action event, or the stand-in for one.
+	* How many slices a flight lane is drawn in. PIXI's fills are flat, so the fade is a staircase of
+	* them, and this many steps reads as a gradient.
+	* @type {number}
 	*/
-	static drawAction(g, actionEvent) {
+	static LaneSlices = 32;
+	/**
+	* How many slices at the far end of a flight lane fade out, where the rest are solid.
+	* @type {number}
+	*/
+	static LaneFadeSlices = 12;
+	/**
+	* Reads the hitbox of an action, the same way collision reads it.
+	* @param {Game_Event|JABS_CastPreviewAction} actionEvent The action event, or the stand-in for one.
+	* @returns {{ shape:string|null, range:number, facing:number, degrees:number, thickness:number, innerRadius:number }}
+	*/
+	static hitboxOf(actionEvent) {
 		const action = actionEvent.getJabsAction();
-		JABS_HitboxPainter.draw(g, {
+		return {
 			shape: action.getShape(),
 			range: action.getCollisionRange(),
 			facing: action.direction(),
 			degrees: $jabsEngine.getActionDegrees(actionEvent) ?? 180,
 			thickness: $jabsEngine.getActionThicknessTiles(actionEvent),
 			innerRadius: action.getInnerRadius()
-		});
+		};
+	}
+	/**
+	* Draws the hitbox of an action.
+	* @param {PIXI.Graphics} g The graphics to draw on.
+	* @param {Game_Event|JABS_CastPreviewAction} actionEvent The action event, or the stand-in for one.
+	*/
+	static drawAction(g, actionEvent) {
+		const hitbox = JABS_HitboxPainter.hitboxOf(actionEvent);
+		JABS_HitboxPainter.draw(g, hitbox);
+	}
+	/**
+	* Draws the lane a shot is about to fly down: as wide as what is flying, reaching as far as it
+	* will get in the stretch a telegraph shows, and fading out at the far end because that is a
+	* horizon rather than a place the shot stops. Draws nothing for an action that doesn't fly.
+	* @param {PIXI.Graphics} g The graphics to draw on.
+	* @param {JABS_CastPreviewAction} standIn The stand-in for the action about to fly.
+	* @param {{ fillColor:number, fillAlpha:number }} style The telegraph's style.
+	*/
+	static drawFlightLane(g, standIn, style) {
+		const laneTiles = standIn.flightPreviewTiles();
+		if (laneTiles === 0) return;
+		const hitbox = JABS_HitboxPainter.hitboxOf(standIn);
+		const tile = JABS_HitboxPainter.majorTilePx();
+		const sliceLengthPx = laneTiles * tile / JABS_HitboxPainter.LaneSlices;
+		const halfBreadthPx = JABS_HitboxPainter.breadthTiles(hitbox) * tile / 2;
+		g.lineStyle(0);
+		for (let slice = 0; slice < JABS_HitboxPainter.LaneSlices; slice += 1) {
+			const opacity = JABS_HitboxPainter.laneOpacityAt(slice);
+			g.beginFill(style.fillColor, style.fillAlpha * opacity);
+			JABS_HitboxPainter.drawOrientedQuad(g, hitbox.facing, sliceLengthPx, halfBreadthPx, sliceLengthPx * slice);
+			g.endFill();
+		}
+	}
+	/**
+	* How opaque a slice of a flight lane is, as a share of the telegraph's own fill.
+	* @param {number} slice The slice's index, counted out from the origin.
+	* @returns {number} From 1 where the lane is solid, down toward 0 at the far end.
+	*/
+	static laneOpacityAt(slice) {
+		const slicesFromTheEnd = JABS_HitboxPainter.LaneSlices - slice;
+		return Math.min(1, slicesFromTheEnd / JABS_HitboxPainter.LaneFadeSlices);
+	}
+	/**
+	* How wide a hitbox is across its own aim, in tiles, which is the width of the path it sweeps as
+	* it flies.
+	* @param {Object} hitbox The hitbox to measure; see {@link JABS_HitboxPainter.draw}.
+	* @returns {number}
+	*/
+	static breadthTiles(hitbox) {
+		const { shape, range, degrees, thickness } = hitbox;
+		switch (shape) {
+			case J.ABS.Shapes.Line: return thickness;
+			case J.ABS.Shapes.Wall:
+			case J.ABS.Shapes.Square:
+			case J.ABS.Shapes.Cross: return 2 * range + 1;
+			case J.ABS.Shapes.Arc: return JABS_HitboxPainter.arcBreadthTiles(range, degrees);
+			case J.ABS.Shapes.Circle:
+			case J.ABS.Shapes.Rhombus:
+			default: return range * 2;
+		}
+	}
+	/**
+	* How wide a wedge is across its aim, in tiles: a narrow one is as wide as its two tips, and from
+	* a half circle onward it is as wide as it can get.
+	* @param {number} range The wedge's radius in tiles.
+	* @param {number} degrees The wedge's sweep in degrees.
+	* @returns {number}
+	*/
+	static arcBreadthTiles(range, degrees) {
+		if (degrees >= 180) return range * 2;
+		const halfSweepRad = degrees / 2 * Math.PI / 180;
+		return range * 2 * Math.sin(halfSweepRad);
 	}
 	/**
 	* Draws a hitbox around the graphics' local (0,0) and completes the fill, on whatever style the
@@ -3657,25 +3740,26 @@ var JABS_HitboxPainter = class JABS_HitboxPainter {
 		g.closePath();
 	}
 	/**
-	* Draws a filled rectangle starting at the origin and extending forward along the dir8 unit
-	* vector, with its breadth split evenly either side of that axis.
+	* Draws a filled rectangle extending forward along the dir8 unit vector, with its breadth split
+	* evenly either side of that axis.
 	* @param {PIXI.Graphics} g The graphics to draw on.
 	* @param {number} facing The dir8 facing for the forward axis.
 	* @param {number} lengthPx The forward length in pixels.
 	* @param {number} halfBreadthPx The half-width in pixels along the perpendicular axis.
+	* @param {number} [startPx=0] How far along the forward axis it starts, in pixels.
 	*/
-	static drawOrientedQuad(g, facing, lengthPx, halfBreadthPx) {
+	static drawOrientedQuad(g, facing, lengthPx, halfBreadthPx, startPx = 0) {
 		const { x: fx, y: fy } = $jabsEngine.dir8ToUnitVector(facing);
-		const px = fy;
-		const py = -fx;
-		const ax = -px * halfBreadthPx;
-		const ay = -py * halfBreadthPx;
-		const bx = px * halfBreadthPx;
-		const by = py * halfBreadthPx;
-		g.moveTo(ax, ay);
-		g.lineTo(bx, by);
-		g.lineTo(fx * lengthPx + bx, fy * lengthPx + by);
-		g.lineTo(fx * lengthPx + ax, fy * lengthPx + ay);
+		const px = fy * halfBreadthPx;
+		const py = -fx * halfBreadthPx;
+		const nearX = fx * startPx;
+		const nearY = fy * startPx;
+		const farX = fx * (startPx + lengthPx);
+		const farY = fy * (startPx + lengthPx);
+		g.moveTo(nearX - px, nearY - py);
+		g.lineTo(nearX + px, nearY + py);
+		g.lineTo(farX + px, farY + py);
+		g.lineTo(farX - px, farY - py);
 		g.closePath();
 	}
 	/**
@@ -21048,7 +21132,18 @@ var JABS_BattlerName = class {
 * `screenY()`, and `getJabsAction()`. Meant to be one reusable instance per telegraph, re-`set()`
 * every frame so it follows the cast.
 */
-var JABS_CastPreviewAction = class {
+var JABS_CastPreviewAction = class JABS_CastPreviewAction {
+	/**
+	* How many frames of a flight a telegraph shows. Past this a shot can be sidestepped on sight,
+	* so drawing further would only claim danger that is seconds away.
+	* @type {number}
+	*/
+	static FlightPreviewFrames = 60;
+	/**
+	* The event page move type that runs its move route; a template on any other ignores it.
+	* @type {number}
+	*/
+	static CustomMoveType = 3;
 	/**
 	* The headless character reporting the spawn position in screen pixels, the same way the event
 	* placed there will.
@@ -21061,12 +21156,18 @@ var JABS_CastPreviewAction = class {
 	*/
 	#jabsAction = null;
 	/**
+	* The action map template page the action will spawn from, or null until one is assigned.
+	* @type {RPG_MapEventPage|null}
+	*/
+	#page = null;
+	/**
 	* Stands in for the given action, on the spot it would spawn if its cast finished now.
 	* @param {JABS_Action} jabsAction The real action winding up.
 	*/
 	set(jabsAction) {
 		this.#jabsAction = jabsAction;
-		this.#wearTemplateArt(jabsAction);
+		[this.#page] = $actionMap.events[jabsAction.getActionId()].pages;
+		this.#wearTemplateArt();
 		const caster = jabsAction.getCaster();
 		const [targetX, targetY] = caster.resolveActionTargetCoordinates(jabsAction);
 		const [spawnX, spawnY] = $jabsEngine.determineActionSpawnCoordinates(caster, jabsAction, targetX, targetY);
@@ -21076,16 +21177,45 @@ var JABS_CastPreviewAction = class {
 	* Dresses the headless character in the art the action's template will give its event. A tile or
 	* an object sheet rests on its tile where a character stands a few pixels above it, and that
 	* difference carries through to the screen position.
-	* @param {JABS_Action} jabsAction The real action winding up.
 	*/
-	#wearTemplateArt(jabsAction) {
-		const [page] = $actionMap.events[jabsAction.getActionId()].pages;
-		const { tileId, characterName, characterIndex } = page.image;
+	#wearTemplateArt() {
+		const { tileId, characterName, characterIndex } = this.#page.image;
 		if (tileId > 0) {
 			this.#character.setTileImage(tileId);
 			return;
 		}
 		this.#character.setImage(characterName, characterIndex);
+	}
+	/**
+	* How far the action will fly in the stretch of its flight a telegraph shows, in tiles.
+	* @returns {number} The distance; 0 for an action that stays where it spawns, or whose route
+	* can't promise where it is going.
+	*/
+	flightPreviewTiles() {
+		if (this.#fliesStraight() === false) return 0;
+		const frames = Math.min(JABS_CastPreviewAction.FlightPreviewFrames, this.#jabsAction.getMaxDuration());
+		this.#character.setMoveSpeed(this.#templateMoveSpeed());
+		return this.#character.distancePerFrame() * frames;
+	}
+	/**
+	* Whether the action will leave its spawn in a straight line along its aim.
+	* @returns {boolean} True if it will fly straight, false otherwise.
+	*/
+	#fliesStraight() {
+		if (this.#jabsAction.isDirectAction()) return false;
+		const { moveType, moveRoute } = this.#page;
+		if (moveType !== JABS_CastPreviewAction.CustomMoveType) return false;
+		if (moveRoute.repeat === false) return false;
+		const steps = moveRoute.list.filter((command) => command.code !== Game_Character.ROUTE_END);
+		return steps.length > 0 && steps.every((command) => command.code === Game_Character.ROUTE_MOVE_FORWARD);
+	}
+	/**
+	* The speed the action's template will give its event: its comments outrank the page.
+	* @returns {number}
+	*/
+	#templateMoveSpeed() {
+		const comments = Game_Event.getValidCommentCommandsFromPage(this.#page);
+		return Game_Event.readCustomMoveSpeed(comments) ?? this.#page.moveSpeed;
 	}
 	/**
 	* The screen X the spawned action event would report.
@@ -29740,10 +29870,11 @@ Game_Event.prototype.initializeCoreData = function(battlerCoreData) {
 	this.setBattlerCoreData(battlerCoreData);
 };
 /**
-* Applies the custom move speed if available.
+* Reads the custom move speed out of a list of comments.
+* @param {RPG_EventListCommand[]} commentCommandList The comment commands to read.
+* @returns {number|null} The last custom move speed found, or null when none of them declare one.
 */
-Game_Event.prototype.applyCustomMoveSpeed = function() {
-	const commentCommandList = this.getValidCommentCommands();
+Game_Event.readCustomMoveSpeed = function(commentCommandList) {
 	let moveSpeed = null;
 	commentCommandList.forEach((command) => {
 		const [comment] = command.parameters;
@@ -29751,6 +29882,13 @@ Game_Event.prototype.applyCustomMoveSpeed = function() {
 		if (!regexResult) return;
 		moveSpeed = parseFloat(regexResult[1]);
 	});
+	return moveSpeed;
+};
+/**
+* Applies the custom move speed if available.
+*/
+Game_Event.prototype.applyCustomMoveSpeed = function() {
+	const moveSpeed = Game_Event.readCustomMoveSpeed(this.getValidCommentCommands());
 	if (moveSpeed !== null) {
 		this.setMoveSpeed(moveSpeed);
 	}
@@ -33284,6 +33422,7 @@ Spriteset_Map.prototype.drawCastPreviewInto = function(sprite) {
 	const standIn = sprite._jabsCastPreviewAction;
 	const action = standIn.getJabsAction();
 	const style = this.getCastPreviewStyleFor(action.getShape());
+	JABS_HitboxPainter.drawFlightLane(g, standIn, style);
 	this.applyHitboxStyle(g, style);
 	JABS_HitboxPainter.drawAction(g, standIn);
 };
