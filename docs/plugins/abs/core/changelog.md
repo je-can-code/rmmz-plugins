@@ -11,6 +11,21 @@ All the versioning and history of changes live here.
 
 ## The Actual Changelog
 
+### 4.27.0
+  - Enemy spots can roll from a pool: `<enemyIds:[...]>` lists every enemy an event may turn out to be, weighted by
+    each enemy's `<enemy-weight>`, a map's `<enemy-weight-override>`, and the Default Enemy Pool Home Weight parameter
+    for the enemy actually placed.
+  - Spawned enemy events stay through a map reload.
+  - Events you can't talk to no longer eat a swing: actions, loot, and comment-only events like torches.
+  - Cast telegraphs draw from the same origin, aim and shapes as the hit they warn of, and hit pulses draw the hit's
+    true shape.
+  - A shot's telegraph shows its first second of flight, and hints at the path when the shot won't fly straight.
+  - Enemy actions find their subject by uuid, so a monster's level, states and drains apply to the live body on the
+    map.
+  - Buffers only pick skills that target friends, and healers aim only after finding someone hurt.
+  - A battler pacing toward a combo follow-up waits for it instead of deciding something else. Pacing caps at 300
+    frames, a code default.
+  - The spatial query only walks tiles on the map, so a direct skill with unlimited reach no longer stalls the game.
 ### 4.26.2
   - Fixed every other event losing its `<teamId>`, `<noGlobalCooldown>` never matching, and `<visAnchor>` rejecting `1.0`.
   - `<visionMultiplier>` now scales its carrier's own sight and pursuit.

@@ -229,6 +229,20 @@ Game_Enemy.prototype.ai = function()
 };
 
 /**
+ * Gets how likely this enemy is to be chosen when a pooled spot rolls it.
+ * Having no weight at all means the same as a weight of zero: this enemy is never chosen.
+ * @returns {number}
+ */
+Game_Enemy.prototype.enemyWeight = function()
+{
+  // grab the reference data for this battler.
+  const referenceData = this.databaseData();
+
+  // return the weight from the notes of the battler.
+  return referenceData.jabsEnemyWeight;
+};
+
+/**
  * Gets the enemy's respawn declaration from their notes, as a `[METHOD, PARAM]` pair.
  * This will be overwritten by values provided from an event.
  * Falls back to the world default from plugin parameters; when the world declares no default

@@ -30,11 +30,12 @@ class JABS_AI
   }
 
   /**
-   * Determines whether or not the attacker should continue with their combo.
+   * Determines whether or not the attacker has a combo follow-up it is able to perform, whether or
+   * not the moment to perform it has arrived yet.
    * @param {JABS_Battler} user The user potentially pursuing a combo skill.
-   * @returns {boolean} True if the user should follow with combo, false otherwise.
+   * @returns {boolean} True if the user has a performable follow-up queued, false otherwise.
    */
-  shouldFollowWithCombo(user)
+  canFollowWithCombo(user)
   {
     // if the AI-controlled battler has no combos ready, they don't combo.
     if (!user.hasComboReady()) return false;
@@ -48,10 +49,40 @@ class JABS_AI
     // if the battler doesn't meet the criteria to perform the skill, then don't combo.
     if (!user.canExecuteSkill(comboSkillId)) return false;
 
+    return true;
+  }
+
+  /**
+   * Determines whether or not the attacker should continue with their combo.
+   * @param {JABS_Battler} user The user potentially pursuing a combo skill.
+   * @returns {boolean} True if the user should follow with combo, false otherwise.
+   */
+  shouldFollowWithCombo(user)
+  {
+    // without a performable follow-up, there is nothing to continue with.
+    if (!this.canFollowWithCombo(user)) return false;
+
     // respect humanized pacing so AI does not mash at frame-perfect earliest legality vs human reflex.
     if (!user.isAiComboHumanizationTimingReady()) return false;
 
     return true;
+  }
+
+  /**
+   * Determines whether or not the attacker should spend this moment waiting on its combo.<br/>
+   * A queued follow-up lives on the slot that opened it, so deciding on anything else while the
+   * humanized pacing runs moves the last used slot and strands the follow-up there for good. Holding
+   * is what keeps the chain alive, and because pacing is a frame in the near future, the hold ends.
+   * @param {JABS_Battler} user The user potentially holding for a combo skill.
+   * @returns {boolean} True if the user should hold for its combo, false otherwise.
+   */
+  shouldHoldForCombo(user)
+  {
+    // without a performable follow-up, there is nothing to wait for.
+    if (!this.canFollowWithCombo(user)) return false;
+
+    // once the pacing has elapsed the follow-up is due, and the decision is no longer a wait.
+    return !user.isAiComboHumanizationTimingReady();
   }
 
   /**
@@ -285,12 +316,14 @@ class JABS_AI
 
     if (healingTypeSkills.length === 0) return 0;
 
-    const lowestAlly = this.determineLowestHpAlly(user);
-    user.setAllyTarget(lowestAlly);
-
     const below60 = this.countLowHpAllies(user);
 
     if (below60 === 0) return 0;
+
+    // only a heal that is really happening takes aim at an ally: an aim left standing with nobody
+    // to heal drags whatever this battler does next off the enemy and toward that ally.
+    const lowestAlly = this.determineLowestHpAlly(user);
+    user.setAllyTarget(lowestAlly);
 
     const lowestAllyBattler = lowestAlly.getBattler();
     const healerBattler = user.getBattler();
@@ -318,6 +351,12 @@ class JABS_AI
 
     availableSkills.forEach(skillId =>
     {
+      // only a skill aimed at allies can buff one. a basic attack carries a state-adding effect
+      // too, its normal attack line, but that lands on the opposition.
+      const testAction = new Game_Action(user.getBattler());
+      testAction.setSkill(skillId);
+      if (!testAction.isForFriend()) return;
+
       const skill = user.getSkill(skillId);
       const stateAddingEffects = skill.effects.filter(fx => fx.code === 21);
       if (stateAddingEffects.length === 0) return;

@@ -905,6 +905,61 @@ J.ABS.RegExp = {
   //region ON BATTLERS
   // core concepts.
   EnemyId: /<enemyId:[ ]?(\d+)>/i,
+
+  /**
+   * Every enemy a placed event may turn out to be, rolled each time the event is built.
+   * The event still names its own enemy with `<enemyId:N>`, and that id belongs in this list too if
+   * the spot should ever roll itself.
+   *
+   * <pre>
+   * Structure:
+   *  <enemyIds:[ENEMY_ID, ENEMY_ID, ...]>
+   *
+   * Example:
+   *  <enemyIds:[301, 302, 303]>
+   *
+   * Translation:
+   *  This spot rolls between enemies 301, 302 and 303 each time it is built.
+   * </pre>
+   * @type {RegExp}
+   */
+  EnemyIds: /<enemyIds:[ ]?(\[\d+(?:,[ ]?\d+)*])>/i,
+
+  /**
+   * How likely an enemy is to be chosen when a pooled spot rolls it, relative to the rest of the pool.
+   * An enemy without one is never chosen, which is the same as being reserved at a weight of zero.
+   *
+   * <pre>
+   * Structure:
+   *  <enemy-weight:WEIGHT>
+   *
+   * Example:
+   *  <enemy-weight:8>
+   *
+   * Translation:
+   *  This enemy carries a weight of 8 in any pool that names it.
+   * </pre>
+   * @type {RegExp}
+   */
+  EnemyWeight: /<enemy-weight:[ ]?(\d+)>/i,
+
+  /**
+   * One map's own opinion of how likely an enemy is, replacing that enemy's weight while on this map.
+   * A weight of zero keeps the enemy off the map's rolls entirely.
+   *
+   * <pre>
+   * Structure:
+   *  <enemy-weight-override:[ENEMY_ID, WEIGHT]>
+   *
+   * Example:
+   *  <enemy-weight-override:[302, 30]>
+   *
+   * Translation:
+   *  On this map, enemy 302 carries a weight of 30 in any pool that names it.
+   * </pre>
+   * @type {RegExp}
+   */
+  EnemyWeightOverride: /<enemy-weight-override:[ ]?(\[\d+,[ ]?\d+])>/i,
   TeamId: /<teamId:[ ]?(\d+)>/i,
   Sight: /<sight:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/i,
   Pursuit: /<pursuit:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/i,

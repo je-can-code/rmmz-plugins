@@ -3,6 +3,7 @@ import JABS_EnemyAI from '../models/JABS_EnemyAI.js';
 import JABS_BattlerRole from '../models/JABS_BattlerRole.js';
 import JABS_BattlerCoreData from '../models/JABS_BattlerCoreData.js';
 import JABS_Battler from '../models/JABS_Battler.js';
+import JABS_EnemyPool from '../managers/JABS_EnemyPool.js';
 /**
  * Extends {@link Game_Event.initMembers}.<br/>
  * Bootstraps JABS battler storage on map events.
@@ -48,17 +49,85 @@ Game_Event.prototype.initMembers = function()
    */
   this._j._abs._dynamicSpawn = false;
 
+  /**
+   * The event data this event was built from, when it was put on the map at runtime. `$dataMap` is
+   * reloaded from its file every time a scene returns to the map, and that file only knows what was
+   * authored, so an event like this has to carry its own data to be restored from.
+   * @type {RPG_MapEvent|null}
+   */
+  this._j._abs._dynamicEventData = null;
+
+  /**
+   * The enemy this event rolled from its `<enemyIds:[...]>` pool, when that is someone other than
+   * the enemy its page names. Zero means this event is wearing its own authored page.
+   * @type {number}
+   */
+  this._j._abs._rolledEnemyId = 0;
+
   // perform original logic.
   J.ABS.Aliased.Game_Event.get('initMembers')
     .call(this);
 };
 
 /**
- * Flags this event as having been dynamically spawned onto the map at runtime.
+ * Gets the enemy this event rolled from its pool, if that was anyone but its own.
+ * @returns {number} The rolled enemy's id, or zero when this event wears its authored page.
  */
-Game_Event.prototype.flagAsDynamicSpawn = function()
+Game_Event.prototype.getRolledEnemyId = function()
+{
+  return this._j._abs._rolledEnemyId;
+};
+
+/**
+ * Sets the enemy this event rolled from its pool.
+ * @param {number} enemyId The rolled enemy's id, or zero to return to the authored page.
+ */
+Game_Event.prototype.setRolledEnemyId = function(enemyId)
+{
+  this._j._abs._rolledEnemyId = enemyId;
+};
+
+/**
+ * Decides who stands on this event's page, for events that declare a pool with `<enemyIds:[...]>`.
+ *
+ * This has to run before the page's settings are read, because a rolled enemy replaces the whole
+ * page: its sprite, its speed and every comment on it. The page's conditions are the exception, and
+ * they survive for free. {@link #findProperPageIndex} chooses a page by reading the authored ones
+ * directly, so when a spot appears is still the spot's decision, and only who appears is the roll's.
+ */
+Game_Event.prototype.rollEnemyPool = function()
+{
+  // whatever the last page rolled belongs to that page, and this page's comments must be its own.
+  this.setRolledEnemyId(0);
+
+  // most events are exactly who they say they are.
+  const enemyIds = this.getEnemyPoolOverrides();
+  if (enemyIds.length === 0) return;
+
+  // the page's own enemy is who the spot falls back on.
+  const homeId = this.getBattlerIdOverrides();
+
+  // see who turned up.
+  const chosenId = JABS_EnemyPool.roll(homeId, enemyIds);
+
+  // landing on its own enemy leaves the page as authored, with every tag on it still applying.
+  if (chosenId === homeId) return;
+
+  // anyone else wears their own page from the enemy map.
+  this.setRolledEnemyId(chosenId);
+};
+
+/**
+ * Flags this event as having been dynamically spawned onto the map at runtime, and holds onto the
+ * data it was built from so that data can be put back whenever the map file reloads.
+ * @param {RPG_MapEvent} eventData The event data this event was built from.
+ */
+Game_Event.prototype.flagAsDynamicSpawn = function(eventData)
 {
   this._j._abs._dynamicSpawn = true;
+
+  // the data comes along, because the flag alone is no use once the map file reloads.
+  this.setDynamicEventData(eventData);
 };
 
 /**
@@ -68,6 +137,24 @@ Game_Event.prototype.flagAsDynamicSpawn = function()
 Game_Event.prototype.isDynamicSpawn = function()
 {
   return this._j._abs._dynamicSpawn;
+};
+
+/**
+ * Gets the event data this dynamically spawned event was built from.
+ * @returns {RPG_MapEvent|null} The event data, or null for an event authored in the editor.
+ */
+Game_Event.prototype.getDynamicEventData = function()
+{
+  return this._j._abs._dynamicEventData;
+};
+
+/**
+ * Sets the event data this dynamically spawned event was built from.
+ * @param {RPG_MapEvent} eventData The event data this event was built from.
+ */
+Game_Event.prototype.setDynamicEventData = function(eventData)
+{
+  this._j._abs._dynamicEventData = eventData;
 };
 
 /**
@@ -240,6 +327,9 @@ Game_Event.prototype.page = function()
   // check to make sure we have an event to build a page from first.
   if (this.event())
   {
+    // a spot that rolled someone else wears that enemy's page instead of its own.
+    if (this.getRolledEnemyId() !== 0) return JABS_EnemyPool.pageOf(this.getRolledEnemyId());
+
     // perform original logic.
     return J.ABS.Aliased.Game_Event.get('page')
       .call(this);
@@ -291,6 +381,9 @@ Game_Event.prototype.transformBattler = function()
 J.ABS.Aliased.Game_Event.set('setupPageSettings', Game_Event.prototype.setupPageSettings);
 Game_Event.prototype.setupPageSettings = function()
 {
+  // decide who stands here before anything reads the page.
+  this.rollEnemyPool();
+
   // perform original logic.
   J.ABS.Aliased.Game_Event.get('setupPageSettings')
     .call(this);
@@ -321,6 +414,9 @@ Game_Event.prototype.clearPageSettings = function()
 
   // no page means no battler, so forget whatever the last page described.
   this.initializeCoreData(null);
+
+  // and no page means nobody rolled, so the next page gets to roll for itself.
+  this.setRolledEnemyId(0);
 };
 
 /**
@@ -465,6 +561,36 @@ Game_Event.prototype.getBattlerIdOverrides = function()
 
   // return what we found.
   return battlerId;
+};
+
+/**
+ * Parses out the pool of enemies this event may turn out to be from a list of event commands.
+ * @returns {number[]} The ids in the pool, or an empty list if this event is not pooled.
+ */
+Game_Event.prototype.getEnemyPoolOverrides = function()
+{
+  // no pool by default; the event simply is the enemy it names.
+  let enemyIds = [];
+
+  // check all the valid event commands to see if this event declares a pool.
+  this.getValidCommentCommands()
+    .forEach(command =>
+    {
+      // shorthand the comment into a variable.
+      const [ comment, ] = command.parameters;
+
+      // check if the comment matches the regex.
+      const regexResult = J.ABS.RegExp.EnemyIds.exec(comment);
+
+      // if the comment didn't match, then don't try to parse it.
+      if (!regexResult) return;
+
+      // parse the value out of the regex capture group.
+      enemyIds = JsonMapper.parseObject(regexResult[1]);
+    });
+
+  // return what we found.
+  return enemyIds;
 };
 
 /**
@@ -1173,13 +1299,12 @@ Game_Event.prototype.initializeCoreData = function(battlerCoreData)
 };
 
 /**
- * Applies the custom move speed if available.
+ * Reads the custom move speed out of a list of comments.
+ * @param {RPG_EventListCommand[]} commentCommandList The comment commands to read.
+ * @returns {number|null} The last custom move speed found, or null when none of them declare one.
  */
-Game_Event.prototype.applyCustomMoveSpeed = function()
+Game_Event.readCustomMoveSpeed = function(commentCommandList)
 {
-  // grab the list of valid comments.
-  const commentCommandList = this.getValidCommentCommands();
-
   // initialize the move speed.
   let moveSpeed = null;
 
@@ -1198,6 +1323,17 @@ Game_Event.prototype.applyCustomMoveSpeed = function()
     // parse the value out of the regex capture group.
     moveSpeed = parseFloat(regexResult[1]);
   });
+
+  return moveSpeed;
+};
+
+/**
+ * Applies the custom move speed if available.
+ */
+Game_Event.prototype.applyCustomMoveSpeed = function()
+{
+  // read the speed off this event's own comments.
+  const moveSpeed = Game_Event.readCustomMoveSpeed(this.getValidCommentCommands());
 
   // check if we encountered additional move speed modifiers.
   if (moveSpeed !== null)
@@ -1232,6 +1368,21 @@ Game_Event.prototype.setBattlerCoreData = function(data)
 Game_Event.prototype.isJabsBattler = function()
 {
   return !!this.getBattlerCoreData();
+};
+
+/**
+ * Gets whether or not this event's active page has anything on it to run.<br/>
+ * A page of nothing but comments is how a torch carries its light: it reads as an NPC in every way the
+ * engine can tell, but a button pressed at it reaches nothing.
+ * @returns {boolean} True if at least one command on the page does something, false otherwise.
+ */
+Game_Event.prototype.hasRunnableCommands = function()
+{
+  // every list ends on a terminator, and comments are there to be read rather than run.
+  const isRunnable = command => command.code !== 0 && Game_Event.matchesControlCode(command.code) === false;
+
+  return this.list()
+    .some(isRunnable);
 };
 
 /**

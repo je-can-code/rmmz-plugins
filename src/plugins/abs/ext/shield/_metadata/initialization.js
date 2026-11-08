@@ -127,8 +127,8 @@ J.ABS.EXT.SHIELD.SdpParamId = {
   SER: 39,
 };
 
-// register 's' as a formula context variable so damage formulas fired on shield break
-// can reference the broken shield's original cap value directly.
-// 's' is 0 for all non-shield-break actions (lastShieldBreakValue is reset after break skills fire).
-Game_Action.registerFormulaContext('s', (_action, a) => a.lastShieldBreakValue);
+// register 's' as a formula context variable so a shield break skill's damage formula can reference
+// the broken shield's original cap directly. the cap is written onto each break skill's own action as
+// it is built, so it is still there when that action's hit lands; every other action reads 0.
+Game_Action.registerFormulaContext('s', action => action.shieldBreakValue());
 //endregion initialization

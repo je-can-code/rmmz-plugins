@@ -467,7 +467,8 @@ class JABS_Engine
   /**
    * Picks when AI may attempt this combo link: random point between
    * {@link J.ABS.Metadata.AiComboHumanizeWindowMinPercent} and
-   * {@link J.ABS.Metadata.AiComboHumanizeWindowMaxPercent} through the window from combo delay through cooldown tag.
+   * {@link J.ABS.Metadata.AiComboHumanizeWindowMaxPercent} through the window from combo delay through cooldown tag,
+   * with the window capped at {@link J.ABS.Metadata.AiComboHumanizeWindowMaxFrames}.
    * @param {RPG_Skill} skill The skill that just unlocked the next link.
    * @returns {number} Global frame ({@link Graphics#frameCount}) when AI follow-up attempts become fair game.
    */
@@ -479,7 +480,7 @@ class JABS_Engine
     // maxFrames is always at least delayFrames + 1 (one of the two Math.max candidates), so
     // windowWidth can never be <= 0- there is no untagged/misconfigured case to guard against here.
     const maxFrames = Math.max(cooldownFrames, delayFrames + 1);
-    const windowWidth = maxFrames - delayFrames;
+    const windowWidth = Math.min(maxFrames - delayFrames, J.ABS.Metadata.AiComboHumanizeWindowMaxFrames);
     const minPct = J.ABS.Metadata.AiComboHumanizeWindowMinPercent;
     const maxPct = J.ABS.Metadata.AiComboHumanizeWindowMaxPercent;
 
@@ -2385,23 +2386,8 @@ class JABS_Engine
     // copy the event data from the action map for this action.
     const actionEventData = JsonEx.makeDeepCopy($actionMap.events[eventId]);
 
-    // derive spawn coordinates from provided or caster position.
-    let spawnX = x ?? caster.getX();
-
-    // this aligns with AABB/collision using `screenY() - (th / 2)` for origin.
-    let spawnY = (y ?? caster.getY());
-
-    // apply per-projectile lateral offset if present; defaults are 0 so single-projectile
-    // skills are unaffected. for multi-projectile volleys, the delta was stored at decision
-    // time and is applied here against the caster's fire-time position.
-    const options = action.getActionOptions();
-    if (options)
-    {
-      spawnX += options.getSpawnOffsetX();
-      spawnY += options.getSpawnOffsetY();
-    }
-
     // assign the spawn coordinates to the action event.
+    const [ spawnX, spawnY ] = this.determineActionSpawnCoordinates(caster, action, x, y);
     actionEventData.x = spawnX;
     actionEventData.y = spawnY;
 
@@ -2420,6 +2406,36 @@ class JABS_Engine
 
     // return the mutated copy.
     return actionEventData;
+  }
+
+  /**
+   * Determines where on the map an action appears: on the given coordinates when there are any,
+   * otherwise on its caster, either way shifted by whatever offset its place in a volley gave it.
+   * @param {JABS_Battler} caster The `JABS_Battler` executing the JABS action.
+   * @param {JABS_Action} action The JABS action being placed.
+   * @param {number|null} x The target's `x` coordinate, if applicable.
+   * @param {number|null} y The target's `y` coordinate, if applicable.
+   * @returns {[number, number]} The `[x, y]` coordinates the action spawns at.
+   */
+  determineActionSpawnCoordinates(caster, action, x, y)
+  {
+    // derive spawn coordinates from provided or caster position.
+    let spawnX = x ?? caster.getX();
+
+    // this aligns with AABB/collision using `screenY() - (th / 2)` for origin.
+    let spawnY = (y ?? caster.getY());
+
+    // apply per-projectile lateral offset if present; defaults are 0 so single-projectile
+    // skills are unaffected. for multi-projectile volleys, the delta was stored at decision
+    // time and is applied here against the caster's fire-time position.
+    const options = action.getActionOptions();
+    if (options)
+    {
+      spawnX += options.getSpawnOffsetX();
+      spawnY += options.getSpawnOffsetY();
+    }
+
+    return [ spawnX, spawnY ];
   }
 
   /**
@@ -3193,6 +3209,9 @@ class JABS_Engine
     // attach loot.
     lootEvent.setJabsLoot(jabsLootData);
 
+    // loot is put here at runtime like any spawn, so it needs the same way back from a map reload.
+    lootEvent.flagAsDynamicSpawn(lootEventData);
+
     // flag for adding a character sprite later via HUD/spriteset integration (unchanged elsewhere).
     // if your code uses such a flag.
     lootEvent.setLootNeedsAdding();
@@ -3259,8 +3278,9 @@ class JABS_Engine
     const newEnemy = new Game_Event($gameMap.mapId(), normalizedIndex);
 
     // clones take appended indices that evaporate on the next map setup, so respawn tracking
-    // must be able to tell them apart from authored events and ignore them.
-    newEnemy.flagAsDynamicSpawn();
+    // must be able to tell them apart from authored events and ignore them. they also hold onto
+    // their data, because the map file reloading mid-session would otherwise take it with it.
+    newEnemy.flagAsDynamicSpawn(enemyData);
 
     // add the enemy to the map and flag it for adding (visually).
     $gameMap.addEvent(newEnemy);
@@ -4916,11 +4936,7 @@ class JABS_Engine
     // a few definitions used within collision processing.
     const actionSprite = jabsAction.getActionSprite();
 
-    // direct skills without an explicit <radius> tag spawn ON the target tile;
-    // their proximity describes targeting reach, not collision size.
-    // falling back to proximity caused a 12-tile circle that hit every enemy on the map.
-    // a 1-tile footprint is the correct point-contact for a teleport landing.
-    const range = jabsAction.getRange() ?? (jabsAction.isDirectAction() ? 1 : null);
+    const range = jabsAction.getCollisionRange();
     const shape = jabsAction.getShape();
 
     // the universal dead zone- 0 when untagged, meaning no exclusion ever triggers below.
@@ -5918,7 +5934,7 @@ class JABS_Engine
    * Determines whether the victorious actor is eligible to gain rewards from the defeated enemy.
    * This is the central policy gate for all four reward types (EXP, gold, SDP, AP).
    * Returns true by default — all defeated enemies grant rewards. Alias this method to introduce
-   * game-specific exclusion conditions (e.g. inanimate objects, zero-yield flags, kill-type filters).
+   * game-specific exclusion conditions (e.g. zero-yield flags, kill-type filters).
    * @param {Game_Enemy} defeatedEnemy The enemy that was defeated.
    * @param {Game_Actor} victoriousActor The actor that defeated the enemy.
    * @returns {boolean} True if rewards should be granted, false to skip all reward calculation.

@@ -1634,7 +1634,7 @@ class JABS_Action
       x: originX,
       y: originY,
       shape: this.getShape(),
-      range: this.getRange(),
+      range: this.getCollisionRange(),
       facing,
       degrees,
       thickness,
@@ -1727,6 +1727,20 @@ class JABS_Action
 
     // apply buff and rate modifiers sourced from the caster's battler getters.
     return this.applyRadiusModifiers(base);
+  }
+
+  /**
+   * Gets the range collision tests this action at, which is also the size anything showing its
+   * hitbox has to draw.
+   * @returns {number|null} The collision range, or null for a non-direct action with no radius.
+   */
+  getCollisionRange()
+  {
+    // direct skills without an explicit <radius> tag spawn ON the target tile;
+    // their proximity describes targeting reach, not collision size.
+    // falling back to proximity caused a 12-tile circle that hit every enemy on the map.
+    // a 1-tile footprint is the correct point-contact for a teleport landing.
+    return this.getRange() ?? (this.isDirectAction() ? 1 : null);
   }
 
   /**

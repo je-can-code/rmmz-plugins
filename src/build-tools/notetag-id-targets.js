@@ -105,6 +105,8 @@ export const NotetagIdTargets = {
   counterParry: [ { position: 0, table: 'Skills' } ],
   directStateTarget: [ { position: 0, table: 'States' } ],
   enemyId: [ { position: 0, table: 'Enemies' } ],
+  enemyIds: [ { position: 'each', table: 'Enemies' } ],
+  'enemy-weight-override': [ { position: 0, table: 'Enemies' } ],
   guardSkillId: [ { position: 0, table: 'Skills' } ],
   noAutoAssignType: [ { position: 'each', table: 'SkillTypes' } ],
   offhandSkillId: [ { position: 0, table: 'Skills' } ],

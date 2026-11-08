@@ -151,26 +151,18 @@ Game_Battler.prototype.currentShieldStacks = function()
 };
 
 /**
- * An event hook fired when a shield is broken.
- * Stores the broken shield's cap on the battler so that break skills can
- * reference it as `s` inside their damage formulas.
+ * An event hook fired when a shield is broken.<br/>
+ * Fires every shield break skill this battler carries, handing each one the broken shield's cap so
+ * that its damage formula can reference it as `s`.
  * @param {number} shieldBreakValue The cap of the shield that just broke.
  */
 Game_Battler.prototype.onShieldBreak = function(shieldBreakValue = 0)
 {
-  // store the broken shield's cap so damage formulas fired from here can use it as 's'.
-  this.lastShieldBreakValue = shieldBreakValue;
-
   // resolve the bearer's JABS battler.
   const caster = JABS_AiManager.getBattlerByUuid(this.getUuid());
 
-  // check if we have a valid caster.
-  if (!caster)
-  {
-    // clear the stored value before bailing out.
-    this.lastShieldBreakValue = 0;
-    return;
-  }
+  // a battler with no presence on the map has nowhere to fire break skills from.
+  if (!caster) return;
 
   // identify all the sources from which shield break skills can be pulled from.
   const sources = this.shieldBreakSources();
@@ -192,29 +184,50 @@ Game_Battler.prototype.onShieldBreak = function(shieldBreakValue = 0)
   // grab all the shield break skills.
   const breakSkillIds = sources.reduce(reducer, []);
 
-  // if no skillIds were found, then we can skip processing.
-  if (breakSkillIds.length === 0)
-  {
-    // clear the stored value so non-break actions don't see a stale 's'.
-    this.lastShieldBreakValue = 0;
-    return;
-  }
-
-  // trigger all skills in succession while 's' holds the shield cap.
-  breakSkillIds.forEach(skillId => $jabsEngine.forceMapAction(caster, skillId, true));
-
-  // clear the stored value after all break skills have been fired.
-  this.lastShieldBreakValue = 0;
+  // fire each of them from the bearer, every one carrying the broken shield's cap.
+  breakSkillIds.forEach(skillId => this.fireShieldBreakSkill(caster, skillId, shieldBreakValue));
 };
 
 /**
- * Gets all the sources from which shield break skills can be pulled from.
- * @returns {[RPG_Actor|RPG_Enemy|RPG_State]}
+ * Fires a single shield break skill from the bearer of the broken shield.<br/>
+ * The actions are built here and executed directly, rather than forced through the engine, because
+ * the broken shield's cap has to be written onto each action before it leaves: a break skill's hit
+ * can land frames after the break that fired it, and `s` is read at the moment of that hit.
+ * @param {JABS_Battler} caster The JABS battler whose shield broke.
+ * @param {number} skillId The id of the shield break skill to fire.
+ * @param {number} shieldBreakValue The cap of the shield that just broke.
+ */
+Game_Battler.prototype.fireShieldBreakSkill = function(caster, skillId, shieldBreakValue)
+{
+  // a break skill answers the hit that broke the shield, so it goes out as a retaliation.
+  const actionOptions = JABS_ActionOptions.Builder()
+    .setIsRetaliation(true)
+    .build();
+
+  // build the actions for the break skill.
+  const actions = caster.createJabsActionFromSkill(skillId, actionOptions);
+
+  // write the broken shield's cap onto every action, which is where 's' reads it from.
+  actions.forEach(action =>
+    action.getAction().setShieldBreakValue(shieldBreakValue));
+
+  // if the engine will not execute these actions, then do not.
+  if (!$jabsEngine.canExecuteMapActions(caster, actions)) return;
+
+  // execute every action from the bearer itself, since a break skill has no target coordinates.
+  actions.forEach(action => $jabsEngine.executeMapAction(caster, action, null, null));
+};
+
+/**
+ * Gets all the sources from which shield break skills can be pulled from.<br/>
+ * Every state counts, passive states included, so a break skill granted by a passive fires the same
+ * as one granted by a state that was applied.
+ * @returns {(RPG_Actor|RPG_Enemy|RPG_State)[]}
  */
 Game_Battler.prototype.shieldBreakSources = function()
 {
   return [
-    this.databaseData(), ...this.states(),
+    this.databaseData(), ...this.allStates(),
   ];
 };
 //endregion Game_Battler

@@ -12,6 +12,8 @@ tags: [abs, tag, skill, hitbox, shape]
 The hitbox defines the shape of collision for this skill. The hitbox is always centered on the action event (with some
 exceptions).
 
+A skill with no hitbox tag collides as a circle, and its cast preview draws as one too.
+
 ### Circle
 
 A circle that grows in size with greater radius.
@@ -27,15 +29,17 @@ controlled by the `<degrees: VAL>` tag (see [Degrees](degrees.md)). Defaults to 
 
 ### Square
 
-An equal square. The `<radius>` defines the length of each side.
+An equal square, `2 × radius + 1` tiles to a side.
 
 ### Line
 
-A single 1-tile-wide line. The `<radius>` defines the line's length.
+A line reaching forward from the action. The `<radius>` defines the line's length, and it is 1 tile wide unless
+`<thickness>` says otherwise (see [Thickness](thickness.md)).
 
 ### Wall
 
-A single 1-tile-tall horizontal wall. The `<radius>` defines its width. Think of it as an inverted line hitbox.
+A bar directly ahead of the action, `2 × radius + 1` tiles across and 1 tile deep unless `<thickness>` says otherwise.
+Think of it as an inverted line hitbox.
 
 ### Cross
 

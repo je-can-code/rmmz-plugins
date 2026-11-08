@@ -40,6 +40,7 @@ describe('JABS_AI (unit, all downstream dependencies mocked)', () =>
       this.setItemObject = vi.fn((item) => { this._item = item; });
       this.setSkill = vi.fn((skillId) => { this._item = { skillId }; });
       this.isForAliveFriend = vi.fn(() => this._item?.isForAliveFriend ?? false);
+      this.isForFriend = vi.fn(() => this._item?.isForFriend ?? true);
       this.isRecover = vi.fn(() => this._item?.isRecover ?? false);
       this.isHpEffect = vi.fn(() => this._item?.isHpEffect ?? false);
       this.isForUser = vi.fn(() => this._item?.isForUser ?? false);
@@ -140,6 +141,136 @@ describe('JABS_AI (unit, all downstream dependencies mocked)', () =>
       const user = buildBattler({ hasComboReady: () => true, getComboNextActionId: () => 5 });
 
       expect(ai.shouldFollowWithCombo(user)).toEqual(true);
+    });
+  });
+
+  describe('canFollowWithCombo()', () =>
+  {
+    it('returns false when no combo is ready', () =>
+    {
+      // Arrange: every later gate is left open, so only this guard can answer.
+      const ai = new JABS_AI();
+      const user = buildBattler({ hasComboReady: () => false, getComboNextActionId: () => 5 });
+
+      // Act
+      const canFollow = ai.canFollowWithCombo(user);
+
+      // Assert
+      expect(canFollow).toEqual(false);
+    });
+
+    it('returns false when nothing is queued for the last used slot', () =>
+    {
+      // Arrange
+      const ai = new JABS_AI();
+      const user = buildBattler({ hasComboReady: () => true, getComboNextActionId: () => 0 });
+
+      // Act
+      const canFollow = ai.canFollowWithCombo(user);
+
+      // Assert
+      expect(canFollow).toEqual(false);
+    });
+
+    it('returns false when the battler cannot execute the queued skill', () =>
+    {
+      // Arrange
+      const ai = new JABS_AI();
+      const user = buildBattler({
+        hasComboReady: () => true,
+        getComboNextActionId: () => 5,
+        canExecuteSkill: () => false,
+      });
+
+      // Act
+      const canFollow = ai.canFollowWithCombo(user);
+
+      // Assert
+      expect(canFollow).toEqual(false);
+    });
+
+    it('returns true with a performable follow-up even while pacing is still running', () =>
+    {
+      // Arrange: pacing is not this question's business.
+      const ai = new JABS_AI();
+      const user = buildBattler({
+        hasComboReady: () => true,
+        getComboNextActionId: () => 5,
+        isAiComboHumanizationTimingReady: () => false,
+      });
+
+      // Act
+      const canFollow = ai.canFollowWithCombo(user);
+
+      // Assert
+      expect(canFollow).toEqual(true);
+    });
+
+    it('reads the queued skill from the slot the battler last used', () =>
+    {
+      // Arrange: the skill is only queued on one slot, and it is not the last one used.
+      const ai = new JABS_AI();
+      const user = buildBattler({
+        hasComboReady: () => true,
+        getLastUsedSlot: () => 'combat-2',
+        getComboNextActionId: slot => (slot === 'combat-1' ? 5 : 0),
+      });
+
+      // Act
+      const canFollow = ai.canFollowWithCombo(user);
+
+      // Assert
+      expect(canFollow).toEqual(false);
+    });
+  });
+
+  describe('shouldHoldForCombo()', () =>
+  {
+    it('does not hold when there is no performable follow-up to wait for', () =>
+    {
+      // Arrange: pacing is deliberately still running, so only the missing follow-up can answer.
+      const ai = new JABS_AI();
+      const user = buildBattler({ hasComboReady: () => false, isAiComboHumanizationTimingReady: () => false });
+
+      // Act
+      const shouldHold = ai.shouldHoldForCombo(user);
+
+      // Assert
+      expect(shouldHold).toEqual(false);
+    });
+
+    it('holds while a performable follow-up is still pacing', () =>
+    {
+      // Arrange
+      const ai = new JABS_AI();
+      const user = buildBattler({
+        hasComboReady: () => true,
+        getComboNextActionId: () => 5,
+        isAiComboHumanizationTimingReady: () => false,
+      });
+
+      // Act
+      const shouldHold = ai.shouldHoldForCombo(user);
+
+      // Assert
+      expect(shouldHold).toEqual(true);
+    });
+
+    it('stops holding the moment the pacing has elapsed', () =>
+    {
+      // Arrange
+      const ai = new JABS_AI();
+      const user = buildBattler({
+        hasComboReady: () => true,
+        getComboNextActionId: () => 5,
+        isAiComboHumanizationTimingReady: () => true,
+      });
+
+      // Act
+      const shouldHold = ai.shouldHoldForCombo(user);
+
+      // Assert
+      expect(shouldHold).toEqual(false);
     });
   });
 
@@ -501,7 +632,13 @@ describe('JABS_AI (unit, all downstream dependencies mocked)', () =>
         this.isHpEffect = () => true;
       });
 
-      expect(ai.decideHealing(user, [ 1 ])).toEqual(0);
+      // Act
+      const chosenSkillId = ai.decideHealing(user, [ 1 ]);
+
+      // Assert: nobody needs a heal, so nobody is aimed at. An aim left behind here would pull the
+      // healer's next attack off the enemy and walk it toward a healthy ally.
+      expect(chosenSkillId).toEqual(0);
+      expect(user.setAllyTarget).not.toHaveBeenCalled();
     });
 
     it('delegates to bestFitHealingOneSkill when exactly one ally is low', () =>
@@ -521,6 +658,7 @@ describe('JABS_AI (unit, all downstream dependencies mocked)', () =>
 
       expect(ai.decideHealing(user, [ 1 ])).toEqual(42);
       expect(spy).toHaveBeenCalled();
+      expect(user.setAllyTarget).toHaveBeenCalledWith(ally);
     });
 
     it('delegates to bestFitHealingAllSkill when multiple allies are low', () =>
@@ -595,6 +733,57 @@ describe('JABS_AI (unit, all downstream dependencies mocked)', () =>
 
       // Act
       const chosenSkillId = ai.decideBuffing(user, [ 1 ]);
+
+      // Assert
+      expect(chosenSkillId).toEqual(0);
+      expect(user.setAllyTarget).not.toHaveBeenCalled();
+    });
+
+    it('never reads a skill aimed at the opposition as a buff, whatever state effects it carries', () =>
+    {
+      // Arrange: the real shape of the list. Every enemy's basic attack is pushed last and carries a
+      // state-adding effect of its own, its normal attack line, so it has to lose to the buff beside
+      // it rather than overwrite it and send the battler after an ally with an attack.
+      const ai = new JABS_AI();
+      globalThis.$jabsEngine.getJabsStateByUuidAndStateId.mockReturnValue(null);
+      const ally = { getUuid: () => 'ally-uuid' };
+      const user = buildBattler({
+        getAllNearbyAllies: () => [ ally ],
+        getSkill: skillId => ({ effects: [ { code: 21, dataId: skillId === 7 ? 0 : 3 } ] }),
+      });
+      GameActionMock.mockImplementation(function(battler)
+      {
+        this.battler = battler;
+        this.setSkill = skillId => { this.skillId = skillId; };
+        this.isForFriend = () => this.skillId !== 7;
+      });
+
+      // Act
+      const chosenSkillId = ai.decideBuffing(user, [ 5, 7 ]);
+
+      // Assert
+      expect(chosenSkillId).toEqual(5);
+    });
+
+    it('returns 0 and aims at nobody when only an attack is ready', () =>
+    {
+      // Arrange: the buff is on cooldown, which leaves the attack alone in the list.
+      const ai = new JABS_AI();
+      globalThis.$jabsEngine.getJabsStateByUuidAndStateId.mockReturnValue(null);
+      const ally = { getUuid: () => 'ally-uuid' };
+      const user = buildBattler({
+        getAllNearbyAllies: () => [ ally ],
+        getSkill: () => ({ effects: [ { code: 21, dataId: 0 } ] }),
+      });
+      GameActionMock.mockImplementation(function(battler)
+      {
+        this.battler = battler;
+        this.setSkill = () => {};
+        this.isForFriend = () => false;
+      });
+
+      // Act
+      const chosenSkillId = ai.decideBuffing(user, [ 7 ]);
 
       // Assert
       expect(chosenSkillId).toEqual(0);

@@ -4,6 +4,8 @@ import JABS_Engine from './../managers/JABS_Engine.js';
 import JABS_Battler from '../models/JABS_Battler.js';
 import JABS_Action from '../models/JABS_Action.js';
 import JABS_Aabb from '../models/JABS_Aabb.js';
+import JABS_CastPreviewAction from '../models/JABS_CastPreviewAction.js';
+import JABS_HitboxPainter from './../managers/JABS_HitboxPainter.js';
 //region init
 /**
  * Extends {@link Spriteset_Map.createLowerLayer}.<br/>
@@ -55,8 +57,8 @@ Spriteset_Map.prototype.createJabsLayer = function ()
   this.setDebugBattlerHitboxSprites({});
 
   /**
-   * Direct tracking for cast preview sprites by battler uuid.
-   * Keys are of the form: `castpreview:${uuid}`.
+   * Direct tracking for cast preview sprites by battler uuid and place in the volley.
+   * Keys are of the form: `castpreview:${uuid}:${index}`.
    * @type {Record<string, Sprite>}
    */
   this.setCastPreviewSprites({});
@@ -659,12 +661,12 @@ Spriteset_Map.prototype.handleCastPreviewOverlays = function ()
 };
 
 /**
- * Collects all enemy battlers that are currently casting and should show a preview.
- * @returns {{ key:string, source: Game_CharacterBase, battler:JABS_Battler, action:JABS_Action, skill:RPG_Skill }[]}
+ * Collects the actions of all enemy battlers that are currently casting and should show a preview.
+ * @returns {{ key:string, action:JABS_Action }[]}
  */
 Spriteset_Map.prototype.collectActiveCastPreviewItems = function ()
 {
-  /** @type {{ key:string, source: Game_CharacterBase, battler:JABS_Battler, action:JABS_Action, skill:RPG_Skill }[]} */
+  /** @type {{ key:string, action:JABS_Action }[]} */
   const items = [];
 
   // scan map events that are JABS battlers (enemies live as events).
@@ -704,18 +706,18 @@ Spriteset_Map.prototype.collectActiveCastPreviewItems = function ()
         if (remaining > warnAt) return;
       }
 
-      // construct a stable key per battler.
+      // the stable part of the key, shared by the whole volley.
       const uuid = ev.getJabsBattlerUuid();
       if (!uuid) return; // cannot key the sprite.
-      const key = `castpreview:${uuid}`;
 
-      // build and add the item for this frame.
-      items.push({
-        key,
-        source: ev,
-        battler: jabsBattler,
-        action,
-        skill
+      // every action in a volley is a hit of its own, with its own aim and spawn offset.
+      decided.forEach((decidedAction, index) =>
+      {
+        // build and add the item for this frame.
+        items.push({
+          key: `castpreview:${uuid}:${index}`,
+          action: decidedAction,
+        });
       });
     });
 
@@ -773,65 +775,17 @@ Spriteset_Map.prototype.refreshExistingCastPreviewSprites = function ()
       // if this preview isn't active this frame, leave cleanup to the purge step.
       if (!item) return;
 
-      // default the preview position to the caster's feet.
-      let screenX = item.source.screenX();
-      let screenY = item.source.screenY();
+      // stand in for the action event this cast has yet to spawn.
+      const standIn = sprite._jabsCastPreviewAction;
+      standIn.set(item.action);
 
-      // if the action is a direct-target action, try to spatialize appropriately.
-      if (item.action.isDirectAction && item.action.isDirectAction())
-      {
-        // derive base skill and lock behavior.
-        const baseSkill = item.action.getBaseSkill();
-        const isLocked = !!baseSkill.jabsDirectLock;
-
-        // default to nulls for target tile.
-        let tx = null;
-        let ty = null;
-
-        // if not locked, prefer decision-time frozen coordinates from options.
-        if (!isLocked)
-        {
-          // read the options and location.
-          const options = item.action.getActionOptions();
-          const loc = options
-            ? options.getTargetLocation()
-            : null;
-
-          // if a frozen location exists, extract x,y.
-          if (loc)
-          {
-            tx = loc.getX();
-            ty = loc.getY();
-          }
-        }
-
-        // if not frozen or is locked, follow the live resolver fallback.
-        if (tx === null || ty === null || isLocked)
-        {
-          const [resolvedX, resolvedY] = item.battler.resolveDirectActionTargetCoordinates(item.action);
-          tx = resolvedX;
-          ty = resolvedY;
-        }
-
-        // if we successfully resolved coords, convert them from tile to screen space.
-        if (tx !== null && ty !== null)
-        {
-          // grab tile dimensions for conversion.
-          const tw = $gameMap.tileWidth();
-          const th = $gameMap.tileHeight();
-
-          // convert tile coords to screen coords centered on the tile.
-          screenX = Math.round(($gameMap.adjustX(tx) + 0.5) * tw);
-          screenY = Math.round(($gameMap.adjustY(ty) + 0.5) * th);
-        }
-      }
-
-      // place the sprite at the decided origin for the preview.
-      sprite.x = screenX;
-      sprite.y = screenY;
+      // place the sprite at the origin the hit will be tested from.
+      const origin = JABS_Engine.getActionOriginPixels(standIn);
+      sprite.x = origin.x;
+      sprite.y = origin.y;
 
       // draw the preview geometry for this frame.
-      this.drawCastPreviewInto(sprite, item);
+      this.drawCastPreviewInto(sprite);
     });
 };
 
@@ -885,12 +839,13 @@ Spriteset_Map.prototype.createCastPreviewSprite = function (item)
 
   // stash a few references.
   sprite._jabsCastPreviewG = g; // internal preview graphics.
+  sprite._jabsCastPreviewAction = new JABS_CastPreviewAction(); // stands in for the unspawned action.
   sprite._cpKey = item.key; // stable key for debugging.
 
   // attach graphics under sprite.
   sprite.addChild(g);
 
-  // center origin so our drawing at (0,0) aligns to battler feet center.
+  // center origin so our drawing at (0,0) aligns to the action's origin.
   sprite.anchor.set(0.5, 0.5);
 
   return sprite;
@@ -931,15 +886,11 @@ Spriteset_Map.prototype.getCastPreviewStyleFor = function (shape)
 };
 
 /**
- * Draws the cast preview shape for the item’s primary action/skill.
- * Draws around local origin (0,0); sprite is already at caster feet.
+ * Draws the cast preview shape for the action this sprite stands in for.
+ * Draws around local origin (0,0); sprite is already at the action's origin.
  * @param {Sprite} sprite The target preview sprite.
- * @param {{ source:Game_CharacterBase, action:JABS_Action, skill:RPG_Skill }} item The item containing data.
  */
-Spriteset_Map.prototype.drawCastPreviewInto = function (
-  sprite,
-  item
-)
+Spriteset_Map.prototype.drawCastPreviewInto = function (sprite)
 {
   /** @type {PIXI.Graphics} */
   const g = sprite._jabsCastPreviewG; // graphics to draw into.
@@ -947,118 +898,19 @@ Spriteset_Map.prototype.drawCastPreviewInto = function (
   // clear previous frame.
   g.clear();
 
-  // derive shape parameters.
-  const shape = item.action.getShape && item.action.getShape();
-  const range = item.action.getRange && item.action.getRange();
-  const facing = item.source.direction(); // 2/4/6/8.
+  // the stand-in carries everything the hit itself will read.
+  const standIn = sprite._jabsCastPreviewAction;
+  const action = standIn.getJabsAction();
 
-  // quick access to tile size.
-  const tw = $gameMap.tileWidth();
-  const th = $gameMap.tileHeight();
+  // a shot gets the lane it is about to fly down, under the shape it starts as.
+  const style = this.getCastPreviewStyleFor(action.getShape());
+  JABS_HitboxPainter.drawFlightLane(g, standIn, style);
 
   // apply style.
-  const style = this.getCastPreviewStyleFor(shape);
   this.applyHitboxStyle(g, style);
 
-  // Defaults for things we cannot derive without a live action event:
-  //  - thickness (tiles) -> 1 tile.
-  //  - arc degrees -> try skill tag if present; fallback 180°.
-  const thicknessTiles = 1;
-  const thicknessX = Math.max(0.5, thicknessTiles * tw);
-  const thicknessY = Math.max(0.5, thicknessTiles * th);
-
-  // try to pull <degrees:N> from the skill if present.
-  const degrees = RPGManager.getNumberFromNoteByRegex(item.skill, J.ABS.RegExp.Degrees, true) ?? 180;
-  const sweepRad = (degrees * Math.PI) / 180;
-
-  // draw around local (0,0) since sprite sits at caster center.
-  switch (shape)
-  {
-    case J.ABS.Shapes.Circle:
-    {
-      const r = range * tw;
-      g.drawCircle(0, 0, r);
-      break;
-    }
-
-    case J.ABS.Shapes.Rhombus:
-    {
-      this.drawRhombusG(g, range * tw, range * th);
-      break;
-    }
-
-    case J.ABS.Shapes.Square:
-    {
-      const w = (2 * range + 1) * tw;
-      const h = (2 * range + 1) * th;
-      g.drawRect(-w / 2, -h / 2, w, h);
-      break;
-    }
-
-    case J.ABS.Shapes.Line:
-    {
-      const lengthPx = range * Math.max(tw, th);
-      if (facing === J.ABS.Directions.DOWN)
-      {
-        g.drawRect(-(thicknessX / 2), 0, thicknessX, lengthPx + (th / 2));
-      }
-      else if (facing === J.ABS.Directions.UP)
-      {
-        g.drawRect(-(thicknessX / 2), -lengthPx - (th / 2), thicknessX, lengthPx + (th / 2));
-      }
-      else if (facing === J.ABS.Directions.RIGHT)
-      {
-        g.drawRect(0, -(thicknessY / 2), lengthPx + (tw / 2), thicknessY);
-      }
-      else // LEFT
-      {
-        g.drawRect(-lengthPx - (tw / 2), -(thicknessY / 2), lengthPx + (tw / 2), thicknessY);
-      }
-      break;
-    }
-
-    case J.ABS.Shapes.Wall:
-    {
-      const lenTiles = (2 * range + 1);
-      if (facing === J.ABS.Directions.DOWN || facing === J.ABS.Directions.UP)
-      {
-        const w = lenTiles * tw;
-        g.drawRect(-w / 2, -thicknessY / 2, w, thicknessY);
-      }
-      else // RIGHT or LEFT
-      {
-        const h = lenTiles * th;
-        g.drawRect(-thicknessX / 2, -h / 2, thicknessX, h);
-      }
-      break;
-    }
-
-    case J.ABS.Shapes.Cross:
-    {
-      const w = (2 * range + 1) * tw;
-      const h = (2 * range + 1) * th;
-      g.drawRect(-thicknessX / 2, -h / 2, thicknessX, h);
-      g.drawRect(-w / 2, -thicknessY / 2, w, thicknessY);
-      break;
-    }
-
-    case J.ABS.Shapes.Arc:
-    default:
-    {
-      // derive a center angle from facing.
-      let centerRad = 0; // right.
-      if (facing === J.ABS.Directions.DOWN) centerRad = Math.PI / 2;
-      if (facing === J.ABS.Directions.LEFT) centerRad = Math.PI;
-      if (facing === J.ABS.Directions.UP) centerRad = -Math.PI / 2;
-
-      const r = range * tw;
-      this.drawSectorG(g, 0, 0, r, centerRad, sweepRad);
-      break;
-    }
-  }
-
-  // finalize fill.
-  g.endFill();
+  // draw the same geometry the live hitbox draws, aimed where the action is aimed.
+  JABS_HitboxPainter.drawAction(g, standIn);
 };
 //endregion cast preview sprites (MVP)
 
@@ -1229,7 +1081,7 @@ Spriteset_Map.prototype.isBattlerCollidingWithAnyAction = function (item)
     if (!jabsAction) continue; // skip invalid action entries.
 
     const shape = jabsAction.getShape();
-    const range = jabsAction.getRange();
+    const range = jabsAction.getCollisionRange();
     const facing = jabsAction.direction();
     const innerRadius = jabsAction.getInnerRadius();
 
@@ -1377,10 +1229,6 @@ Spriteset_Map.prototype.buildMissingActionHitboxSprites = function ()
  */
 Spriteset_Map.prototype.refreshExistingActionHitboxSprites = function ()
 {
-  // quick access to tile size.
-  const tw = $gameMap.tileWidth(); // tile width in pixels.
-  const th = $gameMap.tileHeight(); // tile height in pixels.
-
   // iterate all current action events and refresh their hitbox sprites.
   const actions = $gameMap.actionEvents(); // current action events to render.
   actions.forEach(actionEvent =>
@@ -1388,12 +1236,6 @@ Spriteset_Map.prototype.refreshExistingActionHitboxSprites = function ()
     // read essentials from the action/event.
     const jabsAction = actionEvent.getJabsAction(); // the underlying JABS action model.
     if (!jabsAction) return; // guard: no action means nothing to draw.
-
-    const shape = jabsAction.getShape(); // the action's hitbox shape.
-    const range = jabsAction.getRange(); // the action's range.
-    // logical travel dir8 on the action model (map event direction may be cardinal for `$` sheet rows).
-    const facing = jabsAction.direction();
-    const innerRadius = jabsAction.getInnerRadius(); // universal dead zone, in tiles.
 
     // locate the sprite for this action.
     const sprite = this.getOrCreateActionHitboxSpriteFor(actionEvent); // ensure we have a sprite.
@@ -1404,8 +1246,7 @@ Spriteset_Map.prototype.refreshExistingActionHitboxSprites = function ()
     sprite.y = origin.y; // place sprite at y.
 
     // redraw the shape into the sprite's internal graphics (around local 0,0).
-    // pass the actionEvent so Arc can resolve <degrees:N> from notes via engine helper.
-    this.drawActionHitboxInto(sprite, shape, range, facing, tw, th, actionEvent, innerRadius); // draw shape for this frame.
+    this.drawActionHitboxInto(sprite, actionEvent); // draw shape for this frame.
   });
 };
 
@@ -1510,63 +1351,11 @@ Spriteset_Map.prototype.destroyActionHitboxSprite = function (sprite)
 };
 
 /**
- * Draws a filled convex quad for an oriented rectangle starting at local (0,0) and extending
- * forward along the dir8 unit vector from `$jabsEngine.dir8ToUnitVector`, with half-breadth perpendicular.
- * @param {PIXI.Graphics} g The graphics to draw on.
- * @param {1|2|3|4|6|7|8|9} facing The dir8 facing for the forward axis.
- * @param {number} lengthPx Forward length in pixels.
- * @param {number} halfBreadthPx Half-width in pixels along the perpendicular axis.
- * @returns {void}
- */
-Spriteset_Map.prototype.drawOrientedHitboxQuadG = function (
-  g,
-  facing,
-  lengthPx,
-  halfBreadthPx
-)
-{
-  const { x: fx, y: fy } = $jabsEngine.dir8ToUnitVector(facing);
-  const px = fy;
-  const py = -fx;
-  const ax = -px * halfBreadthPx;
-  const ay = -py * halfBreadthPx;
-  const bx = px * halfBreadthPx;
-  const by = py * halfBreadthPx;
-  const cx = (fx * lengthPx) + bx;
-  const cy = (fy * lengthPx) + by;
-  const dx = (fx * lengthPx) + ax;
-  const dy = (fy * lengthPx) + ay;
-
-  g.moveTo(ax, ay);
-  g.lineTo(bx, by);
-  g.lineTo(cx, cy);
-  g.lineTo(dx, dy);
-  g.closePath();
-};
-
-/**
  * Draws the collision/visual hitbox into the provided sprite’s internal PIXI.Graphics.
- * Honors <thickness:N> for line, wall, and cross.
- *
  * @param {Sprite} sprite The container sprite that owns the PIXI.Graphics.
- * @param {string} shape One of J.ABS.Shapes.* values.
- * @param {number} range Size in tiles for the shape (semantics vary by shape; see individual cases).
- * @param {1|2|3|4|6|7|8|9} facing Logical dir8 travel direction for the action.
- * @param {number} tw Tile width in pixels.
- * @param {number} th Tile height in pixels.
- * @param {Game_Event} actionEvent The action event for tag resolution.
- * @param {number} [innerRadius=0] The universal dead zone in tiles; 0 disables it.
+ * @param {Game_Event} actionEvent The action event whose hitbox is being drawn.
  */
-Spriteset_Map.prototype.drawActionHitboxInto = function (
-  sprite,
-  shape,
-  range,
-  facing,
-  tw,
-  th,
-  actionEvent,
-  innerRadius = 0
-)
+Spriteset_Map.prototype.drawActionHitboxInto = function (sprite, actionEvent)
 {
   // access the graphics used to draw.
   /** @type {PIXI.Graphics} */
@@ -1576,212 +1365,13 @@ Spriteset_Map.prototype.drawActionHitboxInto = function (
   g.clear(); // remove any prior shapes.
 
   // resolve and apply centralized style for this shape.
+  const shape = actionEvent.getJabsAction()
+    .getShape();
   const style = this.getActionHitboxStyleFor(shape); // centralized style resolution.
   this.applyHitboxStyle(g, style); // apply style to graphics.
 
-  // precompute thickness (in tiles) once for any shapes that use it.
-  const thicknessTiles = ($jabsEngine.getActionThicknessTiles(actionEvent) ?? 1);
-  const minPx = 0.5; // small positive thickness minimum to avoid degenerate shapes.
-  const thicknessX = Math.max(minPx, thicknessTiles * tw);
-  const thicknessY = Math.max(minPx, thicknessTiles * th);
-
-  // set by the Arc/default branch when it bakes the dead zone into its own polygon via
-  // drawSectorG's innerR parameter, so the generic hole-punch below doesn't double-apply.
-  let holeAlreadyBaked = false;
-
-  // draw around local (0,0) since sprite is positioned at the action center.
-  switch (shape)
-  {
-    case J.ABS.Shapes.Circle:
-    {
-      // circle radius uses tile width for consistency with collision.
-      const r = range * tw;
-      g.drawCircle(0, 0, r);
-      break;
-    }
-
-    case J.ABS.Shapes.Rhombus:
-    {
-      // diamond visualization.
-      this.drawRhombusG(g, range * tw, range * th);
-      break;
-    }
-
-    case J.ABS.Shapes.Square:
-    {
-      // full square centered at the origin.
-      const w = (2 * range + 1) * tw;
-      const h = (2 * range + 1) * th;
-      g.drawRect(-w / 2, -h / 2, w, h);
-      break;
-    }
-
-    case J.ABS.Shapes.Line:
-    {
-      // length uses major axis regardless of orientation.
-      const lengthPx = range * Math.max(tw, th);
-
-      // draw oriented rect with a small extra half-tile pad like engine collision.
-      const lengthWithPad = lengthPx + (Math.max(tw, th) / 2);
-      const halfBreadth = Math.max(thicknessX, thicknessY) / 2;
-      this.drawOrientedHitboxQuadG(g, facing, lengthWithPad, halfBreadth);
-      break;
-    }
-
-    case J.ABS.Shapes.Wall:
-    {
-      // breadth spans (2*range+1) tiles across the perpendicular axis.
-      const lenTiles = (2 * range + 1);
-      const breadthW = lenTiles * tw;
-      const breadthH = lenTiles * th;
-      const depthW = Math.max(minPx, thicknessTiles * tw);
-      const depthH = Math.max(minPx, thicknessTiles * th);
-      const depthPx = Math.max(depthW, depthH);
-      const halfBreadth = Math.max(breadthW, breadthH) / 2;
-      this.drawOrientedHitboxQuadG(g, facing, depthPx, halfBreadth);
-      break;
-    }
-
-    case J.ABS.Shapes.Cross:
-    {
-      // cross is the union of a vertical and horizontal bar.
-      const w = (2 * range + 1) * tw;
-      const h = (2 * range + 1) * th;
-      g.drawRect(-thicknessX / 2, -h / 2, thicknessX, h); // vertical bar
-      g.drawRect(-w / 2, -thicknessY / 2, w, thicknessY); // horizontal bar
-      break;
-    }
-
-    case J.ABS.Shapes.Arc:
-    default:
-    {
-      // sector wedge; resolve degrees via engine helper.
-      const degrees = ($jabsEngine.getActionDegrees(actionEvent) ?? 180);
-
-      // compute center angle from logical dir8 (0 = right, π/2 = down in canvas atan2 space).
-      const { x: fx, y: fy } = $jabsEngine.dir8ToUnitVector(facing);
-      const centerRad = Math.atan2(fy, fx);
-
-      // compute sweep in radians and draw.
-      const sweepRad = (degrees * Math.PI) / 180;
-      const r = range * tw; // radius in px
-      const innerRadiusPxArc = innerRadius * tw;
-      if (innerRadiusPxArc > 0) holeAlreadyBaked = true;
-      this.drawSectorG(g, 0, 0, r, centerRad, sweepRad, innerRadiusPxArc);
-      break;
-    }
-  }
-
-  // punch the universal dead zone out of every shape that didn't already bake it directly
-  // into its own polygon above (Arc, and any unrecognized shape sharing its fallback path).
-  if (innerRadius > 0 && holeAlreadyBaked === false)
-  {
-    const innerRadiusPx = innerRadius * tw;
-    g.beginHole();
-    g.drawCircle(0, 0, innerRadiusPx);
-    g.endHole();
-  }
-
-  // complete fill for this shape.
-  g.endFill();
-};
-
-/**
- * Draws a diamond (rhombus) centered on the graphics' local origin.
- * @param {PIXI.Graphics} g The graphics to draw on.
- * @param {number} rx Horizontal radius in px.
- * @param {number} ry Vertical radius in px.
- */
-Spriteset_Map.prototype.drawRhombusG = function (
-  g,
-  rx,
-  ry
-)
-{
-  g.moveTo(0, -ry); // top.
-  g.lineTo(rx, 0); // right.
-  g.lineTo(0, ry); // bottom.
-  g.lineTo(-rx, 0); // left.
-  g.closePath(); // close.
-};
-
-/**
- * Draws a filled sector (wedge) into a PIXI.Graphics.
- * If sweepRad >= 2π (or ~360°), a full circle is drawn.
- * @param {PIXI.Graphics} g The graphics to draw on.
- * @param {number} cx Center X (local space).
- * @param {number} cy Center Y (local space).
- * @param {number} r Radius in pixels.
- * @param {number} centerRad Center angle in radians. 0 = right, π/2 = down, π = left, -π/2 = up.
- * @param {number} sweepRad Total sweep in radians (0–2π].
- * @param {number} [innerR=0] Inner dead-zone radius in pixels; bakes an annular sector (donut
- * slice) instead of a pivot fan when positive. A hole punched at the pivot would break PIXI's
- * triangulation since the fan's own path already touches that exact point.
- */
-Spriteset_Map.prototype.drawSectorG = function (
-  g,
-  cx,
-  cy,
-  r,
-  centerRad,
-  sweepRad,
-  innerR = 0
-)
-{
-  // normalize sweep to [0, 2π].
-  const TAU = Math.PI * 2; // 2π constant.
-  const sweep = Math.max(0, Math.min(TAU, sweepRad || 0)); // clamp.
-
-  // if the sweep is effectively a full circle, a plain hole punch is safe- the ring never
-  // touches the pivot the way a wedge fan does.
-  if (sweep >= TAU - 1e-6)
-  {
-    g.drawCircle(cx, cy, r);
-
-    if (innerR > 0)
-    {
-      g.beginHole();
-      g.drawCircle(cx, cy, innerR);
-      g.endHole();
-    }
-
-    return;
-  }
-
-  // derive start/end angles about the center angle.
-  const start = centerRad - (sweep / 2);
-  const end = centerRad + (sweep / 2);
-
-  if (innerR > 0)
-  {
-    // bake the dead zone directly into the polygon as a true annular sector: out along the
-    // outer rim, then back along the inner rim, closing the donut slice.
-    const startInnerX = cx + (innerR * Math.cos(start));
-    const startInnerY = cy + (innerR * Math.sin(start));
-    const endInnerX = cx + (innerR * Math.cos(end));
-    const endInnerY = cy + (innerR * Math.sin(end));
-    const startOuterX = cx + (r * Math.cos(start));
-    const startOuterY = cy + (r * Math.sin(start));
-
-    g.moveTo(startInnerX, startInnerY);
-    g.lineTo(startOuterX, startOuterY);
-    g.arc(cx, cy, r, start, end); // clockwise along the outer rim.
-    g.lineTo(endInnerX, endInnerY);
-    g.arc(cx, cy, innerR, end, start, true); // counter-clockwise back along the inner rim.
-    g.closePath();
-    return;
-  }
-
-  // compute the start point on the circumference.
-  const sx = cx + (r * Math.cos(start));
-  const sy = cy + (r * Math.sin(start));
-
-  // start from center → line to arc start → arc to end → back to center → fill.
-  g.moveTo(cx, cy);
-  g.lineTo(sx, sy);
-  g.arc(cx, cy, r, start, end); // clockwise sector edge.
-  g.lineTo(cx, cy);
-  g.closePath();
+  // draw the geometry itself.
+  JABS_HitboxPainter.drawAction(g, actionEvent);
 };
 
 //endregion action hitboxes

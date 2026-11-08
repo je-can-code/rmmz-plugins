@@ -1818,7 +1818,77 @@ an enemy — this is one of only two tags (with move speed) that isn't optional.
 ```
 This event acts as enemy id 12 from the database.
 
-**See also:** `<sight>`, `<pursuit>`, `<moveSpeed>`
+**See also:** `<sight>`, `<pursuit>`, `<moveSpeed>`, `<enemyIds>`
+
+---
+
+### `<enemyIds:[ENEMY_IDS]>`
+
+**Applies to:**
+Map events (comment command), beside `<enemyId>`
+
+**When:**
+each time the event is built: on map entry, on load, and on a respawn
+
+**Effect:**
+gives this spot a pool of enemies it may turn out to be, rolled by `<enemy-weight>`. Landing on the
+spot's own `<enemyId>` leaves the page as authored, with every tag on it applying. Landing on anyone
+else swaps in that enemy's whole page from the enemy map: its sprite, its speed and its comments, so
+it arrives at its own default level rather than the spot's. The page's conditions stay the spot's, so
+a time-gated spot stays time-gated whoever it rolls. List the spot's own id if it should ever roll
+itself. Named ids must have an event on the enemy map.
+
+```
+<enemyId:301>
+<enemyIds:[301,302,303,304,305]>
+```
+This spot usually holds enemy 301, and can roll any of the other four.
+
+**See also:** `<enemyId>`, `<enemy-weight>`, `<enemy-weight-override>`
+
+---
+
+### `<enemy-weight:WEIGHT>`
+
+**Applies to:**
+Enemies (database)
+
+**When:**
+a pooled spot rolls this enemy
+
+**Effect:**
+this enemy's chance in a pool, relative to everyone else in it. An enemy without the tag is never
+chosen. The enemy actually placed on a spot ignores this and counts for the
+`defaultEnemyPoolHomeWeight` plugin parameter instead, so a spot holding a rare enemy still mostly
+holds that enemy.
+
+```
+<enemy-weight:8>
+```
+This enemy carries a weight of 8 in any pool that names it.
+
+**See also:** `<enemyIds>`, `<enemy-weight-override>`
+
+---
+
+### `<enemy-weight-override:[ENEMY_ID, WEIGHT]>`
+
+**Applies to:**
+Maps (note box)
+
+**When:**
+a pooled spot on this map rolls enemy ENEMY_ID
+
+**Effect:**
+replaces that enemy's weight while on this map, the spot's own enemy included. A weight of 0 keeps
+the enemy out of this map's rolls. One tag per enemy, one per line.
+
+```
+<enemy-weight-override:[302, 30]>
+```
+On this map, enemy 302 carries a weight of 30 in any pool that names it.
+
+**See also:** `<enemyIds>`, `<enemy-weight>`
 
 ---
 
@@ -2317,7 +2387,8 @@ always
 
 **Effect:**
 sets the tile-measured size of the skill's hitbox. Must be positive. Interpreted differently
-depending on the `<hitbox:...>` shape (side length for square, line length for line, etc.).
+depending on the `<hitbox:...>` shape (line length for line, `2 × radius + 1` tiles to a side for
+square, etc.).
 
 ```
 <radius:2>
@@ -2417,13 +2488,21 @@ execution (non-direct skills)
 **Effect:**
 `projectile` sets how many projectiles fire in parallel toward the caster's facing. `formation`
 sets the direction pattern: line (straight), spray (W-shaped), cross (4 cardinal), xburst (4
-diagonal), nova (all 8). No hard cap on projectile count, but keep it reasonable for performance.
+diagonal), nova (all 8). `projectile` counts per spoke of the formation, so spray fires three for
+each and nova fires eight for each. No hard cap on projectile count, but keep it reasonable for
+performance. Each projectile is its own action, so on-cast payloads such as `<onCastExecuteSkill>`
+fire once per projectile.
 
 ```
-<projectile:8>
 <formation:nova>
 ```
-Fires 8 projectiles outward in all 8 directions simultaneously.
+Fires 1 projectile outward in each of the 8 directions, 8 in all.
+
+```
+<projectile:2>
+<formation:nova>
+```
+Fires 2 projectiles in each of the 8 directions, 16 in all.
 
 ---
 
@@ -2458,9 +2537,11 @@ always
 **Effect:**
 the collision shape used by the skill's action event, always centered on the action event with
 some exceptions. `circle`/`rhombus` grow with radius; `arc` is a forward wedge whose width is set
-by `<degrees:VAL>` (default 90°); `square` uses radius as side length; `line` uses radius as
-length (1 tile wide); `wall` is an inverted line (1 tile tall, radius as width); `cross` combines
-both axes. All projectiles from one skill share the same hitbox shape.
+by `<degrees:VAL>` (default 180°); `square` is `2 × radius + 1` tiles to a side; `line` uses radius
+as length (1 tile wide unless `<thickness:VAL>` says otherwise); `wall` is a bar directly ahead,
+`2 × radius + 1` tiles across and 1 tile deep unless `<thickness:VAL>` says otherwise; `cross`
+combines both axes. A skill with no `<hitbox>` tag collides, draws and pulses as a circle. All
+projectiles from one skill share the same hitbox shape.
 
 ```
 <hitbox:arc>
@@ -2482,9 +2563,10 @@ Skills, Items
 always (shape-modifier tags)
 
 **Effect:**
-`degrees` (1-359) sets the angular width of an `arc` hitbox only (ignored elsewhere) — 180+
-becomes a full forward hemisphere. `thickness` adds perpendicular width to `line` (sideways) or
-`wall` (up/down) hitboxes only. `innerRadius` carves a universal dead zone out of the middle of
+`degrees` (1-359) sets the angular width of an `arc` hitbox only (ignored elsewhere), defaulting
+to 180, a full forward hemisphere. `thickness` sets the full width of a `line` or of a `cross`'s
+arms, or the depth of a `wall`, in tiles (1 when omitted), and affects only those three.
+`innerRadius` carves a universal dead zone out of the middle of
 any hitbox shape (a donut), measured from the target's center point; keep `radius - innerRadius`
 at least 0.5 tiles since targeting precision bottoms out around there.
 
@@ -5057,21 +5139,22 @@ This skill deals bonus shield damage equal to half the target's current shield v
 ### `<shieldBreak:[SKILL_IDS...]>`
 
 **Applies to:**
-Actors, Classes, Weapons, Armors, Enemies, States
+Actors, Classes, Weapons, Armors, Enemies, States (passive states included)
 
 **Formula context (for the payload skill's own damage formula):**
-`s` = the broken shield's original cap value (0 for any non-shield-break action; never persists
-across frames).
+`s` = the broken shield's original cap value, carried on the payload skill's own action until its
+hit lands, however many frames after the break that is (0 for any action a shield break did not
+fire).
 
 **When:**
 a shield on this battler breaks (reduced to 0)
 
 **Effect:**
-fires every listed skill id when any shield breaks. Contributions from all applicable sources
-(the battler itself, plus the specific state that broke) are combined and de-duplicated — a skill
-id appearing on both the battler and the breaking state's tag fires only once. The payload
-skill's own damage formula can reference `s` directly (e.g. `s * 0.30`) to deal damage scaled off
-the broken shield's cap.
+fires every listed skill id when any shield breaks. Every applicable source the battler carries
+contributes its own list (its actor or enemy row, an actor's class and equipment, and every state,
+passives included), and nothing is de-duplicated: a skill id named by two sources fires twice, so
+two rings carrying the same tag mean two blasts. The payload skill's own damage formula can
+reference `s` directly (e.g. `s * 0.30`) to deal damage scaled off the broken shield's cap.
 
 ```
 <shieldBreak:[12]>

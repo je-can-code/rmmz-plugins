@@ -220,6 +220,7 @@ Spriteset_Map.prototype.showTargetingAoePreviewPulse = function(cursor, sentinel
       facing: action.direction(),
       degrees,
       thickness,
+      innerRadius: action.getInnerRadius(),
       sustained: true,
       duration: 999999,
       scaleStart: 1.0,
@@ -237,7 +238,6 @@ Spriteset_Map.prototype.showTargetingAoePreviewPulse = function(cursor, sentinel
   pulse.reset();
   pulse.setup(options.toPlain());
   pulse.setWorldPosition(origin.x, origin.y);
-  pulse.setRotation(JABS_HitboxPulseManager.directionToRadians(action.direction()));
 };
 
 /**

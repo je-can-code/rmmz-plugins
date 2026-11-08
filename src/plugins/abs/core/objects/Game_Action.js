@@ -10,7 +10,6 @@ import JABS_AiManager from './../managers/JABS_AiManager.js';
  * NOTE: The subject represents the battler who is performing this action.
  * @returns {Game_Actor|Game_Enemy}
  */
-// TODO: should this be updated to use the battler's UUIDs instead?
 Game_Action.prototype.subject = function()
 {
   // initialize the subject.
@@ -25,12 +24,34 @@ Game_Action.prototype.subject = function()
   // it must've been an enemy.
   else
   {
-    // assign the subject to be the given enemy.
-    subject = $gameEnemies.enemy(this.subjectEnemyIndex());
+    // assign the subject to be the enemy performing this action.
+    subject = this.enemySubject();
   }
 
   // return the determined subject.
   return subject;
+};
+
+/**
+ * Finds the enemy performing this action.<br/>
+ * A database id names a row, and any number of enemies on the map can share a row, so the live battler is
+ * found by its uuid. Its level, states and skill history belong to that one enemy, and all of them feed
+ * into what this action does.
+ *
+ * The {@link Game_Enemies} dictionary answers only when no live battler does: for an enemy that was never on
+ * the map, such as the stand-in behind terrain damage, or one removed from the map before its action landed.
+ * @returns {Game_Enemy}
+ */
+Game_Action.prototype.enemySubject = function()
+{
+  // find the live battler this action was built from.
+  const liveBattler = JABS_AiManager.getBattlerByUuid(this.subjectEnemyUuid());
+
+  // nobody on the map answers to that uuid, so the dictionary's copy of the row stands in.
+  if (!liveBattler) return $gameEnemies.enemy(this.subjectEnemyIndex());
+
+  // the live battler is the one acting.
+  return liveBattler.getBattler();
 };
 
 /**
@@ -41,7 +62,6 @@ Game_Action.prototype.subject = function()
  *
  * @param {Game_Actor|Game_Enemy} subject The subject to assign to this action.
  */
-// TODO: should this be updated to use the battler's UUIDs instead?
 Game_Action.prototype.setSubject = function(subject)
 {
   // fancy if-else block.
@@ -51,13 +71,37 @@ Game_Action.prototype.setSubject = function(subject)
       // update the battler ids to show the caster is an actor.
       this.setSubjectActorId(subject.battlerId());
       this.setSubjectEnemyIndex(-1);
+      this.setSubjectEnemyUuid(String.empty);
       break;
     case (subject.isEnemy()):
       // update the battler ids to show the caster is an enemy.
       this.setSubjectEnemyIndex(subject.battlerId());
       this.setSubjectActorId(0);
+
+      // the id only names the row, so keep the uuid that names this enemy.
+      this.setSubjectEnemyUuid(subject.getUuid());
       break;
   }
+};
+
+/**
+ * Gets the uuid of the enemy performing this action, or an empty string when an actor.
+ * @returns {string} The subjectEnemyUuid.
+ */
+Game_Action.prototype.subjectEnemyUuid = function()
+{
+  // hand back the uuid of the enemy performing this action.
+  return this._subjectEnemyUuid;
+};
+
+/**
+ * Sets the uuid of the enemy performing this action, or an empty string when an actor.
+ * @param {string} newSubjectEnemyUuid The new subjectEnemyUuid.
+ */
+Game_Action.prototype.setSubjectEnemyUuid = function(newSubjectEnemyUuid)
+{
+  // assign the uuid of the enemy performing this action.
+  this._subjectEnemyUuid = newSubjectEnemyUuid;
 };
 
 //region action application

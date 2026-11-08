@@ -204,7 +204,6 @@ class JABS_HitboxPulseManager
     pulse.reset();
     pulse.setup(plain);
     pulse.setWorldPosition(plain.x, plain.y);
-    pulse.setRotation(JABS_HitboxPulseManager.directionToRadians(plain.facing));
   }
 
   /**
@@ -277,9 +276,8 @@ class JABS_HitboxPulseManager
     pulse.reset();
     pulse.setup(options.toPlain());
 
-    // set world-space placement and rotation.
+    // set world-space placement.
     pulse.setWorldPosition(options.x, options.y);
-    pulse.setRotation(JABS_HitboxPulseManager.directionToRadians(options.facing));
 
     // attach to layer.
     layer.addChild(pulse);
@@ -362,50 +360,6 @@ class JABS_HitboxPulseManager
   }
 
   //endregion lifecycle
-
-  //region helpers
-  /**
-   * Converts numeric direction (1,2,3,4,6,7,8,9) to radians for pulse rotation.
-   * Baseline is Right (6) → 0 rad, because geometry is authored along +X.
-   * @param {number} dir The numeric direction.
-   * @returns {number} Radians.
-   */
-  static directionToRadians(dir)
-  {
-    // precomputed constants for clarity.
-    // right.
-    const RAD_0 = 0;
-    const RAD_45 = Math.PI / 4;
-    const RAD_90 = Math.PI / 2;
-    const RAD_180 = Math.PI;
-    const RAD_N90 = -Math.PI / 2;
-    const RAD_N45 = -Math.PI / 4;
-
-    switch (dir)
-    {
-      // right.
-      case 6: return RAD_0;
-      // down-right.
-      case 3: return RAD_45;
-      // down.
-      case 2: return RAD_90;
-      // down-left (135°).
-      case 1: return RAD_180 - RAD_45;
-      // left.
-      case 4: return RAD_180;
-      // up-left (-135°).
-      case 7: return -RAD_180 + RAD_45;
-      // up.
-      case 8: return RAD_N90;
-      // up-right (-45°).
-      case 9: return RAD_N45;
-    }
-
-    // default: point right.
-    return 0;
-  }
-
-  //endregion helpers
 }
 
 export default JABS_HitboxPulseManager;

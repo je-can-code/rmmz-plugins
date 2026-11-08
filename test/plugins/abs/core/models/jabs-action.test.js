@@ -1889,6 +1889,42 @@ describe('JABS_Action (direct src import)', () =>
       expect(action.getRange()).toBe(3);
     });
 
+    it('collides at its own radius when it has one, direct or not', () =>
+    {
+      // Arrange
+      const action = buildAction({ skill: buildSkill({ jabsRadius: 3, jabsDirect: true }) });
+
+      // Act
+      const result = action.getCollisionRange();
+
+      // Assert
+      expect(result).toBe(3);
+    });
+
+    it('collides on a 1-tile footprint when direct with no radius', () =>
+    {
+      // Arrange
+      const action = buildAction({ skill: buildSkill({ jabsRadius: null, jabsDirect: true }) });
+
+      // Act
+      const result = action.getCollisionRange();
+
+      // Assert
+      expect(result).toBe(1);
+    });
+
+    it('has no collision range when neither direct nor given a radius', () =>
+    {
+      // Arrange
+      const action = buildAction({ skill: buildSkill({ jabsRadius: null, jabsDirect: false }) });
+
+      // Act
+      const result = action.getCollisionRange();
+
+      // Assert
+      expect(result).toBeNull();
+    });
+
     it('returns the tagged cast time', () =>
     {
       expect(buildAction({ skill: buildSkill({ jabsCastTime: 45 }) }).getCastTime()).toBe(45);

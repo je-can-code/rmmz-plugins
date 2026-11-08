@@ -9,6 +9,9 @@
 # notetag
 
 * [Enemy ID](notetags/enemy-events/enemy-id.md) - The tag associating an event with an enemy from the database.
+* [Enemy Pool](notetags/enemy-events/enemy-pool.md) - The tag letting an enemy event roll which enemy it turns out to be, each time it is built.
+* [Enemy Weight](notetags/enemy-events/enemy-weight.md) - The tag setting how likely an enemy is to be chosen when a pooled spot rolls it.
+* [Enemy Weight Override](notetags/enemy-events/enemy-weight-override.md) - The tag replacing an enemy's pool weight while on one map.
 * [Sight Radius](notetags/enemy-events/sight-radius.md) - The tag defining how far around itself an enemy can perceive the player.
 * [Pursuit Radius](notetags/enemy-events/pursuit-radius.md) - The tag defining the radius an enemy will maintain while actively engaged in combat.
 * [Prepare Time](notetags/enemy-events/prepare-time.md) - The tag defining how many frames an enemy waits before taking its first action.
@@ -34,7 +37,7 @@
 * [Formation](notetags/skills/formation.md) - The tag defining the direction pattern in which a skill's projectiles fire.
 * [Hitbox](notetags/skills/hitbox.md) - The tag defining the shape of collision for a skill.
 * [Degrees](notetags/skills/degrees.md) - The tag defining the angular width of an ARC hitbox.
-* [Thickness](notetags/skills/thickness.md) - The tag defining how many extra tiles of width a LINE or WALL hitbox occupies.
+* [Thickness](notetags/skills/thickness.md) - The tag defining how wide a LINE or the arms of a CROSS are, or how deep a WALL is.
 * [Inner Radius](notetags/skills/inner-radius.md) - The tag carving a dead zone out of the middle of a skill's hitbox, around the action's origin.
 * [Cast Time](notetags/skills/cast-time.md) - The tag defining how many frames a battler must wait before a skill fires.
 * [Cast Animation](notetags/skills/cast-animation.md) - The tag defining an animation that loops on the caster while a skill is being cast.
@@ -166,6 +169,7 @@
 * [Default Respawn Method Plugin Parameter](parameters/default-respawn-method.md) - The world-default respawn method for defeated enemies. Leave blank for no respawn tracking at all.
 * [Default Respawn Param Plugin Parameter](parameters/default-respawn-param.md) - The parameter fed to the world-default respawn method, such as the number of seconds.
 * [Default Respawn Animation Plugin Parameter](parameters/default-respawn-animation-id.md) - The default animation to play on an event when its battler respawns. Set to 0 for no animation.
+* [Default Enemy Pool Home Weight Plugin Parameter](parameters/default-enemy-pool-home-weight.md) - The weight a pooled spot gives the enemy actually placed there, whatever that enemy's own weight says.
 * [Parameter Group: WHEN UNASSIGNED](parameters/default-configs.md) - The heading the WHEN UNASSIGNED parameters sit under in the plugin manager.
 * [Default Tool Cooldown Time Plugin Parameter](parameters/default-tool-cooldown-time.md) - The default number of frames for an item's cooldown if one isn't specified.
 * [Default Loot Duration Plugin Parameter](parameters/default-loot-expiration.md) - The default number of frames before an item expires from the map. Set to -1 for no expiration.

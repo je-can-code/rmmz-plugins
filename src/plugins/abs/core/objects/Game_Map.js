@@ -367,6 +367,28 @@ Game_Map.prototype.addEvent = function(event)
 };
 
 /**
+ * Puts the data of everything spawned at runtime back into `$dataMap.events`.
+ *
+ * Vanilla reloads `$dataMap` from its file every time a scene returns to the map, and the file only
+ * knows what was authored, while the live events carry on untouched. That leaves the two lists
+ * describing different worlds, which is the one thing the invariant on {@link Game_Map#addEvent}
+ * forbids: a spawned enemy can no longer find its pages and loses its body, and the slot it sits in
+ * reads as free, so the next thing dropped lands on top of whatever is still standing there.
+ */
+Game_Map.prototype.restoreDynamicEventData = function()
+{
+  // only events put here at runtime carry data the file has never heard of.
+  const dynamicEvents = this.events()
+    .filter(event => event.isDynamicSpawn());
+
+  // each one goes back into the slot its own id names.
+  dynamicEvents.forEach(event =>
+  {
+    $dataMap.events[event.eventId()] = event.getDynamicEventData();
+  });
+};
+
+/**
  * Removes a provided event from the current map's event list.
  * @param {Game_Event} eventToRemove The `Game_Event` to remove from this map.
  */
@@ -503,8 +525,6 @@ Game_Map.prototype.hasInteractableEventInFront = function(jabsBattler)
   const player = jabsBattler.getCharacter();
   const direction = player.direction();
 
-  const triggers = [ 0, 1, 2 ];
-
   // resolve the tile this character's body actually occupies.
   const x1 = player.occupiedTileX();
   const y1 = player.occupiedTileY();
@@ -518,7 +538,7 @@ Game_Map.prototype.hasInteractableEventInFront = function(jabsBattler)
     // if the player is standing on/overlapping an enemy, let them continue attacking.
     if (event.isJabsBattler()) return false;
 
-    if (event.isTriggerIn(triggers) && event.isNormalPriority() === true)
+    if (this.isInteractableEvent(event))
     {
       return true;
     }
@@ -530,7 +550,7 @@ Game_Map.prototype.hasInteractableEventInFront = function(jabsBattler)
     // if the player is mashing the button at an enemy, let them continue.
     if (event.isJabsBattler()) return false;
 
-    if (event.isTriggerIn(triggers) && event.isNormalPriority() === true)
+    if (this.isInteractableEvent(event))
     {
       return true;
     }
@@ -546,7 +566,7 @@ Game_Map.prototype.hasInteractableEventInFront = function(jabsBattler)
       // if the player is mashing the button at an enemy, let them continue.
       if (event.isJabsBattler()) return false;
 
-      if (event.isTriggerIn(triggers) && event.isNormalPriority() === true)
+      if (this.isInteractableEvent(event))
       {
         return true;
       }
@@ -554,5 +574,28 @@ Game_Map.prototype.hasInteractableEventInFront = function(jabsBattler)
   }
 
   return false;
+};
+
+/**
+ * Determines whether an event near the player is something a button press could mean to reach.<br/>
+ * What a battle leaves on the map are events too, and they read exactly like an NPC: actions and loot
+ * alike are built from a normal-priority, action-button template. An action is born on its caster's tile
+ * and loot lands wherever its enemy fell, so counting either one would have a player's own swing, or the
+ * gold it just knocked loose, refuse the next swing. Scenery does the same thing from the other direction:
+ * a torch is an event with default settings and a comment for its light, and fighting beside one would
+ * otherwise eat every swing aimed its way, with nothing on the page for the button to reach instead.
+ * @param {Game_Event} event The event to check.
+ * @returns {boolean} True if the button means this event, false otherwise.
+ */
+Game_Map.prototype.isInteractableEvent = function(event)
+{
+  // nothing a battle leaves behind has anything to say.
+  if (event.isJabsAction() || event.isJabsLoot()) return false;
+
+  // it has to answer to a button or a touch, and stand at the player's level to be reached.
+  if (event.isTriggerIn([ 0, 1, 2 ]) === false || event.isNormalPriority() === false) return false;
+
+  // and there has to be something there for the button to reach.
+  return event.hasRunnableCommands();
 };
 //endregion Game_Map

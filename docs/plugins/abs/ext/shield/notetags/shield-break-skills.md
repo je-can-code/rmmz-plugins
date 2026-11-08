@@ -20,7 +20,7 @@ retaliation.
 - Weapons
 - Armor
 - Enemies
-- States
+- States (passive states included)
 
 ## TAG FORMAT
 
@@ -35,5 +35,17 @@ This actor will execute skill 1, 2, and 3 when their shield breaks.
 
 `<shieldBreak:[1,2,3]>` (on the battler)
 `<shieldBreak:[1,4]>` (on the shield state applied to the battler)
-This battler will execute skills 1 (once), 2, 3, and 4 when their shield breaks- the 1 only triggers once even though
-it shows up twice.
+This battler will execute skills 1, 2, 3, 1 again, and 4 when their shield breaks. Every source fires its own list, so
+a skill named by two sources fires twice.
+
+`<shieldBreak:[5]>` (on a ring, with the actor wearing two of them)
+This actor will execute skill 5 twice when their shield breaks- one blast per ring.
+
+## FORMULA CONTEXT
+
+A shield break skill's damage formula can read `s`, the original cap of the shield whose break fired it. The cap is
+carried on the skill's own action, so it is still there when the hit lands, however many frames after the break that
+is. Any action a shield break did not fire reads `s` as 0.
+
+`s * 0.5` (in the shield break skill's damage formula)
+The break skill deals damage equal to half the cap of the shield that broke.

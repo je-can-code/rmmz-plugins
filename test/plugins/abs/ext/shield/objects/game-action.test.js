@@ -4,6 +4,7 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 describe('J-ABS-Shield Game_Action (unit, all downstream dependencies mocked)', () =>
 {
   let originalExecuteDamage;
+  let originalClear;
 
   beforeAll(async () =>
   {
@@ -21,6 +22,8 @@ describe('J-ABS-Shield Game_Action (unit, all downstream dependencies mocked)', 
 
     originalExecuteDamage = vi.fn();
     Game_Action.prototype.executeDamage = originalExecuteDamage;
+    originalClear = vi.fn();
+    Game_Action.prototype.clear = originalClear;
     globalThis.Game_Action = Game_Action;
 
     vi.doMock('../../../../../../src/plugins/abs/ext/shield/_models/JABS_Shield.js', () => ({ default: class {} }));
@@ -31,6 +34,7 @@ describe('J-ABS-Shield Game_Action (unit, all downstream dependencies mocked)', 
   beforeEach(() =>
   {
     originalExecuteDamage.mockReset();
+    originalClear.mockReset();
     globalThis.ArrayHelper.hasAnyIntersection.mockReset().mockReturnValue(false);
   });
 
@@ -643,5 +647,39 @@ describe('J-ABS-Shield Game_Action (unit, all downstream dependencies mocked)', 
     });
   });
   //endregion lifecycle no-ops
+
+  //region shield break value
+  describe('clear', () =>
+  {
+    it('performs the original logic then seeds the shield break value at zero', () =>
+    {
+      // Arrange- start from a stamped value, so a clear that seeded nothing would leave 240 behind.
+      const action = buildAction();
+      action.setShieldBreakValue(240);
+
+      // Act
+      action.clear();
+
+      // Assert
+      expect(originalClear).toHaveBeenCalledTimes(1);
+      expect(action.shieldBreakValue()).toBe(0);
+    });
+  });
+
+  describe('shieldBreakValue / setShieldBreakValue', () =>
+  {
+    it('hands back the broken shield cap that was written onto the action', () =>
+    {
+      // Arrange
+      const action = buildAction();
+
+      // Act
+      action.setShieldBreakValue(240);
+
+      // Assert
+      expect(action.shieldBreakValue()).toBe(240);
+    });
+  });
+  //endregion shield break value
 });
 //endregion plugins/abs/ext/shield/objects/game-action.test.js

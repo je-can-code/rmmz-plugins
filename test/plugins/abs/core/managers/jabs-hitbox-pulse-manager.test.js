@@ -19,7 +19,6 @@ function buildFakePulse()
     reset: vi.fn(),
     setup: vi.fn(),
     setWorldPosition: vi.fn(),
-    setRotation: vi.fn(),
     update: vi.fn(),
     isExpired: vi.fn(() => false),
   };
@@ -606,28 +605,6 @@ describe('J-ABS JABS_HitboxPulseManager (direct src import)', () =>
       // Assert- no removeChild call since it was never attached, but it's still pooled.
       expect(layer.removeChild).not.toHaveBeenCalled();
       expect(JABS_HitboxPulseManager.getPool()).toContain(pulse);
-    });
-  });
-
-  describe('directionToRadians', () =>
-  {
-    it.each([
-      [ 6, 0 ],
-      [ 3, Math.PI / 4 ],
-      [ 2, Math.PI / 2 ],
-      [ 1, Math.PI - Math.PI / 4 ],
-      [ 4, Math.PI ],
-      [ 7, -Math.PI + Math.PI / 4 ],
-      [ 8, -Math.PI / 2 ],
-      [ 9, -Math.PI / 4 ],
-    ])('maps direction %i to the expected radian value', (dir, expected) =>
-    {
-      expect(JABS_HitboxPulseManager.directionToRadians(dir)).toBeCloseTo(expected);
-    });
-
-    it('defaults to 0 (pointing right) for an unrecognized direction code', () =>
-    {
-      expect(JABS_HitboxPulseManager.directionToRadians(5)).toBe(0);
     });
   });
 });

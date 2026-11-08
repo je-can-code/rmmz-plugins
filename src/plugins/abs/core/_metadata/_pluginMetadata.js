@@ -81,6 +81,10 @@ class J_AbsPluginMetadata
     this.AiComboHumanizeWindowMinPercent = 0.1;
     this.AiComboHumanizeWindowMaxPercent = 0.3;
 
+    // the widest link window pacing will read. reflexes don't slow down with a skill's cooldown, and a battler
+    // stands still for its pacing, so an opener on a very long cooldown must not freeze it for seconds on end.
+    this.AiComboHumanizeWindowMaxFrames = 300;
+
     // AI defensive dodge interrupt (MVP): threat radius in tile-ish units (see distanceToPoint), roll vs chance, cooldown frames.
     this.AiDefensiveDodgeChancePercent = 75;
     this.AiDefensiveDodgeCooldownFrames = 45;
@@ -127,6 +131,10 @@ class J_AbsPluginMetadata
     this.DefaultRespawnParam = this.parsedPluginParameters['defaultRespawnParam'] || String.empty;
     // older parameter sets predate this parameter entirely, so the parse falls back to "no animation".
     this.DefaultRespawnAnimationId = Number(this.parsedPluginParameters['defaultRespawnAnimationId'] || 0);
+
+    // older parameter sets predate this one too, and a home weight of zero would mean no pooled spot
+    // ever rolled the enemy actually placed there, so the fallback is the shipped default.
+    this.DefaultEnemyPoolHomeWeight = Number(this.parsedPluginParameters['defaultEnemyPoolHomeWeight'] || 85);
   }
 
   /**

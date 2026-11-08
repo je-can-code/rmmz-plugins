@@ -34,7 +34,7 @@ if (J.ABS)
    */
   JABS_Engine.prototype.determineSdpGained = function(defeatedEnemy, actor)
   {
-    // check the reward policy gate; inanimates and any future exclusions bail here.
+    // check the reward policy gate; anything a game excludes bails here.
     if (this.canGainReward(defeatedEnemy, actor.getBattler()) === false) return 0;
 
     // grab the base sdp points value from the enemy.

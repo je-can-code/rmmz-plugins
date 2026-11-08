@@ -5882,21 +5882,14 @@ class JABS_Battler
 
   //region map
   /**
-   * Performs a preliminary check to see if the target is actually able to be hit.
+   * Performs a preliminary check to see if the target is actually able to be hit.<br/>
+   * A summon stands on an action event and is as hittable as any other battler.
    * @returns {boolean} True if actions can potentially connect, false otherwise.
    */
   canActionConnect()
   {
     // this battler is untargetable.
     if (this.isInvincible()) return false;
-
-    // precise timing allows for battlers to hit other battlers the instant they
-    // meet event conditions, and that is not grounds to hit enemies.
-    if (this.getCharacter()
-      .isJabsAction())
-    {
-      return false;
-    }
 
     // invisible followers are not combat-eligible; actions pass through them.
     if (this.isFollower() && this.getCharacter()

@@ -100,6 +100,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
           HitboxMeleeOriginLiftReductionPxFacingDown: 6,
           AiComboHumanizeWindowMinPercent: 0.2,
           AiComboHumanizeWindowMaxPercent: 0.8,
+          AiComboHumanizeWindowMaxFrames: 100,
           ImplicitParryBaselineFloor: 10,
           ImplicitParryBaselinePerLevel: 0,
           ImplicitParryDominanceMultiplier: 2,
@@ -568,6 +569,21 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       // pct = max (0.8); offset = 10 + round(0.8*50) = 10+40=50.
       const resultAtMax = JABS_Engine.computeAiComboHumanizedReadyFrameForSkill(skill);
       expect(resultAtMax).toBe(1000 + 50);
+
+      Math.random.mockRestore();
+    });
+
+    it('stops reading the window at the configured widest, however long the cooldown runs', () =>
+    {
+      // Arrange
+      const skill = { jabsComboDelay: 10, jabsCooldown: 900 };
+      vi.spyOn(Math, 'random').mockReturnValue(1);
+
+      // Act: pct = max (0.8); the 890 frame window caps at 100; offset = 10 + round(0.8*100) = 90.
+      const result = JABS_Engine.computeAiComboHumanizedReadyFrameForSkill(skill);
+
+      // Assert
+      expect(result).toBe(1000 + 90);
 
       Math.random.mockRestore();
     });
@@ -3040,6 +3056,78 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
     });
   });
 
+  describe('determineActionSpawnCoordinates', () =>
+  {
+    const caster = { getX: () => 5, getY: () => 6 };
+
+    it('lands on the caster when no coordinates are provided', () =>
+    {
+      // Arrange
+      const engine = new JABS_Engine();
+      const action = { getActionOptions: () => null };
+
+      // Act
+      const result = engine.determineActionSpawnCoordinates(caster, action, null, null);
+
+      // Assert
+      expect(result).toEqual([ 5, 6 ]);
+    });
+
+    it('lands on the provided coordinates when given', () =>
+    {
+      // Arrange
+      const engine = new JABS_Engine();
+      const action = { getActionOptions: () => null };
+
+      // Act
+      const result = engine.determineActionSpawnCoordinates(caster, action, 10, 20);
+
+      // Assert
+      expect(result).toEqual([ 10, 20 ]);
+    });
+
+    it('falls back to the caster on just the axis left unprovided', () =>
+    {
+      // Arrange
+      const engine = new JABS_Engine();
+      const action = { getActionOptions: () => null };
+
+      // Act
+      const onlyX = engine.determineActionSpawnCoordinates(caster, action, 10, null);
+      const onlyY = engine.determineActionSpawnCoordinates(caster, action, null, 20);
+
+      // Assert
+      expect(onlyX).toEqual([ 10, 6 ]);
+      expect(onlyY).toEqual([ 5, 20 ]);
+    });
+
+    it('treats a coordinate of zero as provided rather than absent', () =>
+    {
+      // Arrange: the top-left tile is a real place, and must not read as "use the caster".
+      const engine = new JABS_Engine();
+      const action = { getActionOptions: () => null };
+
+      // Act
+      const result = engine.determineActionSpawnCoordinates(caster, action, 0, 0);
+
+      // Assert
+      expect(result).toEqual([ 0, 0 ]);
+    });
+
+    it('shifts the spawn by the offset its place in a volley gave it', () =>
+    {
+      // Arrange
+      const engine = new JABS_Engine();
+      const action = { getActionOptions: () => ({ getSpawnOffsetX: () => 2, getSpawnOffsetY: () => -1 }) };
+
+      // Act
+      const result = engine.determineActionSpawnCoordinates(caster, action, 10, 20);
+
+      // Assert
+      expect(result).toEqual([ 12, 19 ]);
+    });
+  });
+
   describe('determineActionDirections', () =>
   {
     it('repeats each spoke direction "count" times for a per-spoke formation', () =>
@@ -3674,6 +3762,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
         this.eventId = eventId;
         this.setJabsLoot = vi.fn();
         this.setLootNeedsAdding = vi.fn();
+        this.flagAsDynamicSpawn = vi.fn();
       });
       globalThis.J.ABS.Metadata.DefaultLootExpiration = 300;
     });
@@ -3709,6 +3798,19 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       const result = engine.addLootDropToMap(1, 2, { id: 1 });
       expect(globalThis.$gameMap.addEvent).toHaveBeenCalledWith(result);
       expect(engine.requestLootRendering).toBe(true);
+    });
+
+    it('hands the loot event its own data to carry through a map reload', () =>
+    {
+      // Arrange
+      const engine = new JABS_Engine();
+
+      // Act
+      const result = engine.addLootDropToMap(1, 2, { id: 1 });
+
+      // Assert
+      // the same object the data map holds, so the uuid written onto it afterwards comes along too.
+      expect(result.flagAsDynamicSpawn.mock.calls[0][0]).toBe(globalThis.$dataMap.events[0]);
     });
 
     it('uses the item\'s tagged expiration when present, otherwise the metadata default', () =>
@@ -3791,6 +3893,18 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       expect(globalThis.$gameMap.addEvent).toHaveBeenCalledWith(result);
       expect(result.flagBattlerForAdding).toHaveBeenCalledTimes(1);
       expect(engine.requestBattlerRendering).toBe(true);
+    });
+
+    it('hands the clone its own data to carry through a map reload', () =>
+    {
+      // Arrange
+      const engine = new JABS_Engine();
+
+      // Act
+      const result = engine.addEnemyToMap(10, 20, 0);
+
+      // Assert
+      expect(result.flagAsDynamicSpawn.mock.calls[0][0]).toBe(globalThis.$dataMap.events.at(-1));
     });
   });
   //endregion map spawning
@@ -7750,7 +7864,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
         getCaster: () => ({ getAllyTarget: () => null, isEnemy: () => false }),
         getActionOptions: () => null,
         getActionSprite: () => null,
-        getRange: () => 1,
+        getCollisionRange: () => 1,
         isDirectAction: () => false,
         getShape: () => 'circle',
         getInnerRadius: () => 0,
@@ -7897,31 +8011,6 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       const jabsAction = buildJabsAction({ getActionSprite: () => actionSprite });
 
       expect(engine.getCollisionTargets(jabsAction)).toEqual([ first ]);
-    });
-
-    it('falls back to a 1-tile point-contact range for a direct action with no explicit range tag', async () =>
-    {
-      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
-      JABS_AiManager.queryBattlersInAabb = vi.fn(() => []);
-      const engine = new JABS_Engine();
-      const jabsAction = buildJabsAction({
-        getRange: () => null,
-        isDirectAction: () => true,
-        getProximity: () => 0,
-        getCaster: () => ({ getAllyTarget: () => null, isEnemy: () => false, getX: () => 0, getY: () => 0 }),
-      });
-
-      expect(() => engine.getCollisionTargets(jabsAction)).not.toThrow();
-    });
-
-    it('falls back to a null range for a non-direct action with no explicit range tag', async () =>
-    {
-      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
-      JABS_AiManager.getAllBattlers = vi.fn(() => []);
-      const engine = new JABS_Engine();
-      const jabsAction = buildJabsAction({ getRange: () => null, isDirectAction: () => false });
-
-      expect(() => engine.getCollisionTargets(jabsAction)).not.toThrow();
     });
 
     it('excludes candidates that fail a non-direct action\'s spatial collision check', async () =>
