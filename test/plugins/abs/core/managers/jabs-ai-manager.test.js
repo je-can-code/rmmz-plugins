@@ -1414,6 +1414,33 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
   //region spatial indexing
   describe('rebuildSpatialIndex()/queryBattlersInAabb()', () =>
   {
+    beforeEach(() =>
+    {
+      // a ten-by-ten map, so tiles 0 through 9 exist on each axis.
+      globalThis.$gameMap = { width: () => 10, height: () => 10 };
+    });
+
+    it('walks only the cells of the box that lie on the map', () =>
+    {
+      // Arrange- one battler in each far corner, so a clamp that cut off any edge would lose one.
+      const nearCorner = buildBattler({ uuid: 'near', getX: () => 0, getY: () => 0 });
+      const farCorner = buildBattler({ uuid: 'far', getX: () => 9, getY: () => 9 });
+      JABS_AiManager.addOrUpdateBattlers([ nearCorner, farCorner ]);
+      JABS_AiManager.rebuildSpatialIndex();
+      const spatialKey = vi.spyOn(JABS_AiManager, '_spatialKey');
+
+      // Act- a box reaching fifty tiles past the map on every side.
+      const results = JABS_AiManager.queryBattlersInAabb(-50, -50, 59, 59);
+
+      // Assert
+      expect(spatialKey).toHaveBeenCalledTimes(100);
+      expect(results).toEqual(expect.arrayContaining([ nearCorner, farCorner ]));
+      expect(results).toHaveLength(2);
+
+      // restore manually, since the spy sits on a bare static.
+      spatialKey.mockRestore();
+    });
+
     it('indexes tracked battlers by their floored tile coordinates', () =>
     {
       const battler = buildBattler({ getX: () => 2.9, getY: () => 3.1 });
@@ -4155,6 +4182,7 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
       return buildBattler({
         getBattlerRole: () => ({ leader: false, follower: false, solo: true, guardian: false }),
         getAiMode: () => ({
+          shouldHoldForCombo: () => false,
           decideActionsForFollowers: vi.fn(),
           decideFollowerAi: vi.fn(() => []),
           decideAction: vi.fn(() => [ 5 ]),
@@ -4208,13 +4236,53 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
         JABS_AiManager.setupActionForNextPhase = originalSetupActionForNextPhase;
       });
 
+      it('decides nothing at all while the battler holds for a combo follow-up', () =>
+      {
+        // Arrange: a leader, so the coordination that would otherwise run first is in play too.
+        JABS_AiManager.cancelActionSetup = vi.fn();
+        JABS_AiManager.setupActionForNextPhase = vi.fn();
+        const decideActionsForFollowers = vi.fn();
+        const decideAction = vi.fn(() => [ 5 ]);
+        const battler = buildActionBattler({
+          getBattlerRole: () => ({ leader: true, follower: false, solo: false, guardian: false }),
+          getAiMode: () => ({ shouldHoldForCombo: () => true, decideActionsForFollowers, decideAction }),
+        });
+
+        // Act
+        JABS_AiManager.decideEnemyAiPhase2Action(battler);
+
+        // Assert: nothing was picked, nothing was set up, and it was not cancelled into a wait either.
+        expect(decideActionsForFollowers).not.toHaveBeenCalled();
+        expect(decideAction).not.toHaveBeenCalled();
+        expect(JABS_AiManager.setupActionForNextPhase).not.toHaveBeenCalled();
+        expect(JABS_AiManager.cancelActionSetup).not.toHaveBeenCalled();
+      });
+
+      it('passes the battler itself to the hold check', () =>
+      {
+        // Arrange
+        JABS_AiManager.setupActionForNextPhase = vi.fn();
+        const shouldHoldForCombo = vi.fn(() => false);
+        const battler = buildActionBattler({
+          getAiMode: () => ({ shouldHoldForCombo, decideAction: vi.fn(() => [ 5 ]) }),
+          getSkill: () => ({ id: 5, name: 'Bolt' }),
+        });
+
+        // Act
+        JABS_AiManager.decideEnemyAiPhase2Action(battler);
+
+        // Assert
+        expect(shouldHoldForCombo).toHaveBeenCalledWith(battler);
+        expect(JABS_AiManager.setupActionForNextPhase).toHaveBeenCalledWith(battler, 5, '5-Bolt');
+      });
+
       it('has a leader coordinate its followers before deciding its own action', () =>
       {
         JABS_AiManager.setupActionForNextPhase = vi.fn();
         const decideActionsForFollowers = vi.fn();
         const battler = buildActionBattler({
           getBattlerRole: () => ({ leader: true, follower: false, solo: false, guardian: false }),
-          getAiMode: () => ({ decideActionsForFollowers, decideAction: vi.fn(() => [ 5 ]) }),
+          getAiMode: () => ({ shouldHoldForCombo: () => false, decideActionsForFollowers, decideAction: vi.fn(() => [ 5 ]) }),
         });
 
         JABS_AiManager.decideEnemyAiPhase2Action(battler);
@@ -4228,7 +4296,7 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
         const decideActionsForFollowers = vi.fn();
         const battler = buildActionBattler({
           getBattlerRole: () => ({ leader: true, follower: false, solo: true, guardian: false }),
-          getAiMode: () => ({ decideActionsForFollowers, decideAction: vi.fn(() => [ 5 ]) }),
+          getAiMode: () => ({ shouldHoldForCombo: () => false, decideActionsForFollowers, decideAction: vi.fn(() => [ 5 ]) }),
         });
 
         JABS_AiManager.decideEnemyAiPhase2Action(battler);
@@ -4241,7 +4309,7 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
         JABS_AiManager.cancelActionSetup = vi.fn();
         const battler = buildActionBattler({
           getBattlerRole: () => ({ leader: false, follower: true, solo: false, guardian: false }),
-          getAiMode: () => ({ decideFollowerAi: () => [] }),
+          getAiMode: () => ({ shouldHoldForCombo: () => false, decideFollowerAi: () => [] }),
         });
 
         JABS_AiManager.decideEnemyAiPhase2Action(battler);
@@ -4254,7 +4322,7 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
         JABS_AiManager.cancelActionSetup = vi.fn();
         const battler = buildActionBattler({
           getBattlerRole: () => ({ leader: false, follower: true, solo: false, guardian: false }),
-          getAiMode: () => ({ decideFollowerAi: () => [ 5 ] }),
+          getAiMode: () => ({ shouldHoldForCombo: () => false, decideFollowerAi: () => [ 5 ] }),
           getSkill: () => null,
         });
 
@@ -4268,7 +4336,7 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
         JABS_AiManager.setupActionForNextPhase = vi.fn();
         const battler = buildActionBattler({
           getBattlerRole: () => ({ leader: false, follower: true, solo: false, guardian: false }),
-          getAiMode: () => ({ decideFollowerAi: () => [ 5 ] }),
+          getAiMode: () => ({ shouldHoldForCombo: () => false, decideFollowerAi: () => [ 5 ] }),
           getSkill: () => ({ id: 5, name: 'Slash' }),
         });
 
@@ -4280,7 +4348,7 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
       it('cancels setup when the ai mode decides nothing usable for a solo battler', () =>
       {
         JABS_AiManager.cancelActionSetup = vi.fn();
-        const battler = buildActionBattler({ getAiMode: () => ({ decideAction: () => [] }) });
+        const battler = buildActionBattler({ getAiMode: () => ({ shouldHoldForCombo: () => false, decideAction: () => [] }) });
 
         JABS_AiManager.decideEnemyAiPhase2Action(battler);
 

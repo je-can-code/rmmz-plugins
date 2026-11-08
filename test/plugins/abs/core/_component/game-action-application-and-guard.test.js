@@ -76,12 +76,16 @@ describe('J-ABS Game_Action application and guard-related damage modification (d
       expect(globalThis.$gameActors.actor).toHaveBeenCalledWith(5);
     });
 
-    it('subject resolves an enemy when no actor id was stored', () =>
+    it('subject resolves the row from the dictionary when no live battler answers to the uuid', () =>
     {
       // Arrange
       const action = buildAction();
       action._subjectActorId = 0;
       action._subjectEnemyIndex = 3;
+      action._subjectEnemyUuid = 'ghosty_gone';
+
+      // a live enemy of the same row stands on the map, and must not be mistaken for the missing one.
+      JABS_AiManager.battlers.set('ghosty_alive', { getBattler: () => ({ kind: 'live' }) });
 
       // Act
       const result = action.subject();
@@ -89,12 +93,38 @@ describe('J-ABS Game_Action application and guard-related damage modification (d
       // Assert
       expect(result).toEqual({ index: 3, kind: 'enemy' });
       expect(globalThis.$gameEnemies.enemy).toHaveBeenCalledWith(3);
+
+      // Cleanup
+      JABS_AiManager.battlers.clear();
     });
 
-    it('setSubject records actor ids and clears the enemy index for an actor subject', () =>
+    it('subject resolves the live battler the action was built from, not a sibling of the same row', () =>
     {
       // Arrange
       const action = buildAction();
+      const liveEnemy = { kind: 'live', level: 4 };
+      action._subjectActorId = 0;
+      action._subjectEnemyIndex = 3;
+      action._subjectEnemyUuid = 'ghosty_two';
+      JABS_AiManager.battlers.set('ghosty_one', { getBattler: () => ({ kind: 'live', level: 9 }) });
+      JABS_AiManager.battlers.set('ghosty_two', { getBattler: () => liveEnemy });
+
+      // Act
+      const result = action.subject();
+
+      // Assert
+      expect(result).toBe(liveEnemy);
+      expect(globalThis.$gameEnemies.enemy).not.toHaveBeenCalled();
+
+      // Cleanup
+      JABS_AiManager.battlers.clear();
+    });
+
+    it('setSubject records actor ids and clears both enemy identities for an actor subject', () =>
+    {
+      // Arrange
+      const action = buildAction();
+      action._subjectEnemyUuid = 'ghosty_stale';
       const subject = { isActor: () => true, isEnemy: () => false, battlerId: () => 7 };
 
       // Act
@@ -103,13 +133,15 @@ describe('J-ABS Game_Action application and guard-related damage modification (d
       // Assert
       expect(action._subjectActorId).toBe(7);
       expect(action._subjectEnemyIndex).toBe(-1);
+      expect(action._subjectEnemyUuid).toBe('');
     });
 
-    it('setSubject records the enemy index and clears the actor id for an enemy subject', () =>
+    it('setSubject records the enemy index and uuid and clears the actor id for an enemy subject', () =>
     {
       // Arrange
       const action = buildAction();
-      const subject = { isActor: () => false, isEnemy: () => true, battlerId: () => 9 };
+      action._subjectActorId = 7;
+      const subject = { isActor: () => false, isEnemy: () => true, battlerId: () => 9, getUuid: () => 'ghosty_one' };
 
       // Act
       action.setSubject(subject);
@@ -117,6 +149,19 @@ describe('J-ABS Game_Action application and guard-related damage modification (d
       // Assert
       expect(action._subjectEnemyIndex).toBe(9);
       expect(action._subjectActorId).toBe(0);
+      expect(action._subjectEnemyUuid).toBe('ghosty_one');
+    });
+
+    it('subjectEnemyUuid reads back what setSubjectEnemyUuid stored', () =>
+    {
+      // Arrange
+      const action = buildAction();
+
+      // Act
+      action.setSubjectEnemyUuid('ghosty_one');
+
+      // Assert
+      expect(action.subjectEnemyUuid()).toBe('ghosty_one');
     });
   });
 

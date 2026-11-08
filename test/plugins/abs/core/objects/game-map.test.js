@@ -665,8 +665,19 @@ describe('J-ABS Game_Map (unit, all downstream dependencies mocked)', () =>
         isJabsLoot: () => false,
         isTriggerIn: () => true,
         isNormalPriority: () => true,
+        hasRunnableCommands: () => true,
         ...overrides,
       };
+    }
+
+    /**
+     * Builds a fake event that answers the way a torch does: an NPC in every respect but one, which
+     * is that its page holds a comment for its light and nothing a button could reach.
+     * @returns {object} A fake scenery event.
+     */
+    function buildSceneryEvent()
+    {
+      return buildEvent({ hasRunnableCommands: () => false });
     }
 
     /**
@@ -713,6 +724,35 @@ describe('J-ABS Game_Map (unit, all downstream dependencies mocked)', () =>
       });
 
       expect(map.hasInteractableEventInFront(buildJabsBattler(0, 0, 2))).toEqual(false);
+    });
+
+    it('swings past scenery with nothing on its page to run', () =>
+    {
+      // Arrange: the torch answers to a button and stands at the player's level, so what its page
+      // holds is the only thing left that can tell it apart from an NPC.
+      const map = buildMap({
+        eventsXy: () => [ buildSceneryEvent() ],
+      });
+
+      // Act
+      const result = map.hasInteractableEventInFront(buildJabsBattler(0, 0, 2));
+
+      // Assert
+      expect(result).toEqual(false);
+    });
+
+    it('still stops for an NPC standing on the same tile as scenery', () =>
+    {
+      // Arrange: scenery comes first, and it has to be passed over rather than end the search.
+      const map = buildMap({
+        eventsXy: () => [ buildSceneryEvent(), buildEvent() ],
+      });
+
+      // Act
+      const result = map.hasInteractableEventInFront(buildJabsBattler(0, 0, 2));
+
+      // Assert
+      expect(result).toEqual(true);
     });
 
     it('checks one tile further when standing on a counter', () =>

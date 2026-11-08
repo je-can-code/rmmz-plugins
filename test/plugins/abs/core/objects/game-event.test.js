@@ -152,6 +152,7 @@ describe('J-ABS Game_Event (unit, all downstream dependencies mocked)', () =>
     // J-Base accessors the production code now reads through.
     globalThis.Game_Event.prototype.pageIndex = function() { return this._pageIndex; };
     globalThis.Game_Event.prototype.setPageIndex = function(v) { this._pageIndex = v; };
+    globalThis.Game_Event.matchesControlCode = code => [ 108, 408 ].includes(code);
   });
 
   beforeEach(() =>
@@ -1245,6 +1246,45 @@ describe('J-ABS Game_Event (unit, all downstream dependencies mocked)', () =>
       expect(event._y).toEqual(2);
       expect(event.straighten).toHaveBeenCalled();
       expect(event.refreshBushDepth).toHaveBeenCalled();
+    });
+  });
+
+  describe('hasRunnableCommands()', () =>
+  {
+    it('returns false for a page holding nothing but comments', () =>
+    {
+      // Arrange: both comment codes and the terminator, which is all a torch's page ever has.
+      const event = buildEvent({ list: () => [ { code: 108 }, { code: 408 }, { code: 0 } ] });
+
+      // Act
+      const result = event.hasRunnableCommands();
+
+      // Assert
+      expect(result).toEqual(false);
+    });
+
+    it('returns false for a page holding only its terminator', () =>
+    {
+      // Arrange
+      const event = buildEvent({ list: () => [ { code: 0 } ] });
+
+      // Act
+      const result = event.hasRunnableCommands();
+
+      // Assert
+      expect(result).toEqual(false);
+    });
+
+    it('returns true when one real command sits among the comments', () =>
+    {
+      // Arrange: the comments and terminator have to be stepped over to find it.
+      const event = buildEvent({ list: () => [ { code: 108 }, { code: 0 }, { code: 101 } ] });
+
+      // Act
+      const result = event.hasRunnableCommands();
+
+      // Assert
+      expect(result).toEqual(true);
     });
   });
   //endregion misc

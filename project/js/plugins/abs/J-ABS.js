@@ -1001,6 +1001,7 @@ var J_AbsPluginMetadata = class J_AbsPluginMetadata extends PluginMetadata {
 	initializeAiTuningMetadata() {
 		this.AiComboHumanizeWindowMinPercent = .1;
 		this.AiComboHumanizeWindowMaxPercent = .3;
+		this.AiComboHumanizeWindowMaxFrames = 300;
 		this.AiDefensiveDodgeChancePercent = 75;
 		this.AiDefensiveDodgeCooldownFrames = 45;
 		this.AiDefensiveThreatRadiusTiles = 3;
@@ -5122,17 +5123,39 @@ var JABS_AI = class {
 		return [];
 	}
 	/**
+	* Determines whether or not the attacker has a combo follow-up it is able to perform, whether or
+	* not the moment to perform it has arrived yet.
+	* @param {JABS_Battler} user The user potentially pursuing a combo skill.
+	* @returns {boolean} True if the user has a performable follow-up queued, false otherwise.
+	*/
+	canFollowWithCombo(user) {
+		if (!user.hasComboReady()) return false;
+		const comboSkillId = user.getComboNextActionId(user.getLastUsedSlot());
+		if (!comboSkillId) return false;
+		if (!user.canExecuteSkill(comboSkillId)) return false;
+		return true;
+	}
+	/**
 	* Determines whether or not the attacker should continue with their combo.
 	* @param {JABS_Battler} user The user potentially pursuing a combo skill.
 	* @returns {boolean} True if the user should follow with combo, false otherwise.
 	*/
 	shouldFollowWithCombo(user) {
-		if (!user.hasComboReady()) return false;
-		const comboSkillId = user.getComboNextActionId(user.getLastUsedSlot());
-		if (!comboSkillId) return false;
-		if (!user.canExecuteSkill(comboSkillId)) return false;
+		if (!this.canFollowWithCombo(user)) return false;
 		if (!user.isAiComboHumanizationTimingReady()) return false;
 		return true;
+	}
+	/**
+	* Determines whether or not the attacker should spend this moment waiting on its combo.<br/>
+	* A queued follow-up lives on the slot that opened it, so deciding on anything else while the
+	* humanized pacing runs moves the last used slot and strands the follow-up there for good. Holding
+	* is what keeps the chain alive, and because pacing is a frame in the near future, the hold ends.
+	* @param {JABS_Battler} user The user potentially holding for a combo skill.
+	* @returns {boolean} True if the user should hold for its combo, false otherwise.
+	*/
+	shouldHoldForCombo(user) {
+		if (!this.canFollowWithCombo(user)) return false;
+		return !user.isAiComboHumanizationTimingReady();
 	}
 	/**
 	* Gets the combo skill id of the next
@@ -7318,8 +7341,10 @@ var JABS_AiManager = class JABS_AiManager {
 		});
 	}
 	/**
-	* Queries the spatial grid for battlers overlapping the inclusive AABB in tile-space.
-	* Returns candidates de-duplicated across all covered cells.
+	* Queries the spatial grid for battlers overlapping the inclusive AABB in tile-space.<br/>
+	* Returns candidates de-duplicated across all covered cells. Only the part of the box that overlaps
+	* the map is walked, because no battler can stand anywhere else: an action with unlimited reach asks
+	* about a box thousands of tiles across, and visiting every one of those cells would stall the game.
 	* @param {number} minX The minimum tile x.
 	* @param {number} minY The minimum tile y.
 	* @param {number} maxX The maximum tile x.
@@ -7327,10 +7352,12 @@ var JABS_AiManager = class JABS_AiManager {
 	* @returns {JABS_Battler[]} The candidate battlers.
 	*/
 	static queryBattlersInAabb(minX, minY, maxX, maxY) {
-		const x0 = Math.floor(Math.min(minX, maxX));
-		const y0 = Math.floor(Math.min(minY, maxY));
-		const x1 = Math.floor(Math.max(minX, maxX));
-		const y1 = Math.floor(Math.max(minY, maxY));
+		const lastX = $gameMap.width() - 1;
+		const lastY = $gameMap.height() - 1;
+		const x0 = Math.max(0, Math.floor(Math.min(minX, maxX)));
+		const y0 = Math.max(0, Math.floor(Math.min(minY, maxY)));
+		const x1 = Math.min(lastX, Math.floor(Math.max(minX, maxX)));
+		const y1 = Math.min(lastY, Math.floor(Math.max(minY, maxY)));
 		const result = new Set();
 		for (let y = y0; y <= y1; y++) {
 			for (let x = x0; x <= x1; x++) {
@@ -7796,6 +7823,7 @@ var JABS_AiManager = class JABS_AiManager {
 	* @param {JABS_Battler} battler The enemy battler deciding the action.
 	*/
 	static decideEnemyAiPhase2Action(battler) {
+		if (battler.getAiMode().shouldHoldForCombo(battler)) return;
 		const role = battler.getBattlerRole();
 		if (role.leader && !role.solo) {
 			battler.getAiMode().decideActionsForFollowers(battler);
@@ -13211,14 +13239,12 @@ var JABS_Battler = class JABS_Battler {
 		}
 	}
 	/**
-	* Performs a preliminary check to see if the target is actually able to be hit.
+	* Performs a preliminary check to see if the target is actually able to be hit.<br/>
+	* A summon stands on an action event and is as hittable as any other battler.
 	* @returns {boolean} True if actions can potentially connect, false otherwise.
 	*/
 	canActionConnect() {
 		if (this.isInvincible()) return false;
-		if (this.getCharacter().isJabsAction()) {
-			return false;
-		}
 		if (this.isFollower() && this.getCharacter().isVisible() === false) {
 			return false;
 		}
@@ -16277,7 +16303,8 @@ var JABS_Engine = class JABS_Engine {
 	/**
 	* Picks when AI may attempt this combo link: random point between
 	* {@link J.ABS.Metadata.AiComboHumanizeWindowMinPercent} and
-	* {@link J.ABS.Metadata.AiComboHumanizeWindowMaxPercent} through the window from combo delay through cooldown tag.
+	* {@link J.ABS.Metadata.AiComboHumanizeWindowMaxPercent} through the window from combo delay through cooldown tag,
+	* with the window capped at {@link J.ABS.Metadata.AiComboHumanizeWindowMaxFrames}.
 	* @param {RPG_Skill} skill The skill that just unlocked the next link.
 	* @returns {number} Global frame ({@link Graphics#frameCount}) when AI follow-up attempts become fair game.
 	*/
@@ -16285,7 +16312,7 @@ var JABS_Engine = class JABS_Engine {
 		const delayFrames = skill.jabsComboDelay | 0;
 		const cooldownFrames = skill.jabsCooldown | 0;
 		const maxFrames = Math.max(cooldownFrames, delayFrames + 1);
-		const windowWidth = maxFrames - delayFrames;
+		const windowWidth = Math.min(maxFrames - delayFrames, J.ABS.Metadata.AiComboHumanizeWindowMaxFrames);
 		const minPct = J.ABS.Metadata.AiComboHumanizeWindowMinPercent;
 		const maxPct = J.ABS.Metadata.AiComboHumanizeWindowMaxPercent;
 		const pct = minPct + Math.random() * (maxPct - minPct);
@@ -29933,6 +29960,16 @@ Game_Event.prototype.isJabsBattler = function() {
 	return !!this.getBattlerCoreData();
 };
 /**
+* Gets whether or not this event's active page has anything on it to run.<br/>
+* A page of nothing but comments is how a torch carries its light: it reads as an NPC in every way the
+* engine can tell, but a button pressed at it reaches nothing.
+* @returns {boolean} True if at least one command on the page does something, false otherwise.
+*/
+Game_Event.prototype.hasRunnableCommands = function() {
+	const isRunnable = (command) => command.code !== 0 && Game_Event.matchesControlCode(command.code) === false;
+	return this.list().some(isRunnable);
+};
+/**
 * Gets the battler's id from their core data.
 * @returns {number}
 */
@@ -30517,17 +30554,20 @@ Game_Map.prototype.hasInteractableEventInFront = function(jabsBattler) {
 * What a battle leaves on the map are events too, and they read exactly like an NPC: actions and loot
 * alike are built from a normal-priority, action-button template. An action is born on its caster's tile
 * and loot lands wherever its enemy fell, so counting either one would have a player's own swing, or the
-* gold it just knocked loose, refuse the next swing.
+* gold it just knocked loose, refuse the next swing. Scenery does the same thing from the other direction:
+* a torch is an event with default settings and a comment for its light, and fighting beside one would
+* otherwise eat every swing aimed its way, with nothing on the page for the button to reach instead.
 * @param {Game_Event} event The event to check.
 * @returns {boolean} True if the button means this event, false otherwise.
 */
 Game_Map.prototype.isInteractableEvent = function(event) {
 	if (event.isJabsAction() || event.isJabsLoot()) return false;
-	return event.isTriggerIn([
+	if (event.isTriggerIn([
 		0,
 		1,
 		2
-	]) && event.isNormalPriority() === true;
+	]) === false || event.isNormalPriority() === false) return false;
+	return event.hasRunnableCommands();
 };
 
 //#endregion

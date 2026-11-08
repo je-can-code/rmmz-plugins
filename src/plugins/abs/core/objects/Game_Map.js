@@ -581,7 +581,9 @@ Game_Map.prototype.hasInteractableEventInFront = function(jabsBattler)
  * What a battle leaves on the map are events too, and they read exactly like an NPC: actions and loot
  * alike are built from a normal-priority, action-button template. An action is born on its caster's tile
  * and loot lands wherever its enemy fell, so counting either one would have a player's own swing, or the
- * gold it just knocked loose, refuse the next swing.
+ * gold it just knocked loose, refuse the next swing. Scenery does the same thing from the other direction:
+ * a torch is an event with default settings and a comment for its light, and fighting beside one would
+ * otherwise eat every swing aimed its way, with nothing on the page for the button to reach instead.
  * @param {Game_Event} event The event to check.
  * @returns {boolean} True if the button means this event, false otherwise.
  */
@@ -591,6 +593,9 @@ Game_Map.prototype.isInteractableEvent = function(event)
   if (event.isJabsAction() || event.isJabsLoot()) return false;
 
   // it has to answer to a button or a touch, and stand at the player's level to be reached.
-  return event.isTriggerIn([ 0, 1, 2 ]) && event.isNormalPriority() === true;
+  if (event.isTriggerIn([ 0, 1, 2 ]) === false || event.isNormalPriority() === false) return false;
+
+  // and there has to be something there for the button to reach.
+  return event.hasRunnableCommands();
 };
 //endregion Game_Map

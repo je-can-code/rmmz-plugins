@@ -467,7 +467,8 @@ class JABS_Engine
   /**
    * Picks when AI may attempt this combo link: random point between
    * {@link J.ABS.Metadata.AiComboHumanizeWindowMinPercent} and
-   * {@link J.ABS.Metadata.AiComboHumanizeWindowMaxPercent} through the window from combo delay through cooldown tag.
+   * {@link J.ABS.Metadata.AiComboHumanizeWindowMaxPercent} through the window from combo delay through cooldown tag,
+   * with the window capped at {@link J.ABS.Metadata.AiComboHumanizeWindowMaxFrames}.
    * @param {RPG_Skill} skill The skill that just unlocked the next link.
    * @returns {number} Global frame ({@link Graphics#frameCount}) when AI follow-up attempts become fair game.
    */
@@ -479,7 +480,7 @@ class JABS_Engine
     // maxFrames is always at least delayFrames + 1 (one of the two Math.max candidates), so
     // windowWidth can never be <= 0- there is no untagged/misconfigured case to guard against here.
     const maxFrames = Math.max(cooldownFrames, delayFrames + 1);
-    const windowWidth = maxFrames - delayFrames;
+    const windowWidth = Math.min(maxFrames - delayFrames, J.ABS.Metadata.AiComboHumanizeWindowMaxFrames);
     const minPct = J.ABS.Metadata.AiComboHumanizeWindowMinPercent;
     const maxPct = J.ABS.Metadata.AiComboHumanizeWindowMaxPercent;
 

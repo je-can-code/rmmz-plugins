@@ -1371,6 +1371,21 @@ Game_Event.prototype.isJabsBattler = function()
 };
 
 /**
+ * Gets whether or not this event's active page has anything on it to run.<br/>
+ * A page of nothing but comments is how a torch carries its light: it reads as an NPC in every way the
+ * engine can tell, but a button pressed at it reaches nothing.
+ * @returns {boolean} True if at least one command on the page does something, false otherwise.
+ */
+Game_Event.prototype.hasRunnableCommands = function()
+{
+  // every list ends on a terminator, and comments are there to be read rather than run.
+  const isRunnable = command => command.code !== 0 && Game_Event.matchesControlCode(command.code) === false;
+
+  return this.list()
+    .some(isRunnable);
+};
+
+/**
  * Gets the battler's id from their core data.
  * @returns {number}
  */

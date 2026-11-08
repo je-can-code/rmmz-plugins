@@ -100,6 +100,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
           HitboxMeleeOriginLiftReductionPxFacingDown: 6,
           AiComboHumanizeWindowMinPercent: 0.2,
           AiComboHumanizeWindowMaxPercent: 0.8,
+          AiComboHumanizeWindowMaxFrames: 100,
           ImplicitParryBaselineFloor: 10,
           ImplicitParryBaselinePerLevel: 0,
           ImplicitParryDominanceMultiplier: 2,
@@ -568,6 +569,21 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       // pct = max (0.8); offset = 10 + round(0.8*50) = 10+40=50.
       const resultAtMax = JABS_Engine.computeAiComboHumanizedReadyFrameForSkill(skill);
       expect(resultAtMax).toBe(1000 + 50);
+
+      Math.random.mockRestore();
+    });
+
+    it('stops reading the window at the configured widest, however long the cooldown runs', () =>
+    {
+      // Arrange
+      const skill = { jabsComboDelay: 10, jabsCooldown: 900 };
+      vi.spyOn(Math, 'random').mockReturnValue(1);
+
+      // Act: pct = max (0.8); the 890 frame window caps at 100; offset = 10 + round(0.8*100) = 90.
+      const result = JABS_Engine.computeAiComboHumanizedReadyFrameForSkill(skill);
+
+      // Assert
+      expect(result).toBe(1000 + 90);
 
       Math.random.mockRestore();
     });

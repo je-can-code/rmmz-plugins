@@ -2488,13 +2488,21 @@ execution (non-direct skills)
 **Effect:**
 `projectile` sets how many projectiles fire in parallel toward the caster's facing. `formation`
 sets the direction pattern: line (straight), spray (W-shaped), cross (4 cardinal), xburst (4
-diagonal), nova (all 8). No hard cap on projectile count, but keep it reasonable for performance.
+diagonal), nova (all 8). `projectile` counts per spoke of the formation, so spray fires three for
+each and nova fires eight for each. No hard cap on projectile count, but keep it reasonable for
+performance. Each projectile is its own action, so on-cast payloads such as `<onCastExecuteSkill>`
+fire once per projectile.
 
 ```
-<projectile:8>
 <formation:nova>
 ```
-Fires 8 projectiles outward in all 8 directions simultaneously.
+Fires 1 projectile outward in each of the 8 directions, 8 in all.
+
+```
+<projectile:2>
+<formation:nova>
+```
+Fires 2 projectiles in each of the 8 directions, 16 in all.
 
 ---
 
@@ -5131,21 +5139,22 @@ This skill deals bonus shield damage equal to half the target's current shield v
 ### `<shieldBreak:[SKILL_IDS...]>`
 
 **Applies to:**
-Actors, Classes, Weapons, Armors, Enemies, States
+Actors, Classes, Weapons, Armors, Enemies, States (passive states included)
 
 **Formula context (for the payload skill's own damage formula):**
-`s` = the broken shield's original cap value (0 for any non-shield-break action; never persists
-across frames).
+`s` = the broken shield's original cap value, carried on the payload skill's own action until its
+hit lands, however many frames after the break that is (0 for any action a shield break did not
+fire).
 
 **When:**
 a shield on this battler breaks (reduced to 0)
 
 **Effect:**
-fires every listed skill id when any shield breaks. Contributions from all applicable sources
-(the battler itself, plus the specific state that broke) are combined and de-duplicated — a skill
-id appearing on both the battler and the breaking state's tag fires only once. The payload
-skill's own damage formula can reference `s` directly (e.g. `s * 0.30`) to deal damage scaled off
-the broken shield's cap.
+fires every listed skill id when any shield breaks. Every applicable source the battler carries
+contributes its own list (its actor or enemy row, an actor's class and equipment, and every state,
+passives included), and nothing is de-duplicated: a skill id named by two sources fires twice, so
+two rings carrying the same tag mean two blasts. The payload skill's own damage formula can
+reference `s` directly (e.g. `s * 0.30`) to deal damage scaled off the broken shield's cap.
 
 ```
 <shieldBreak:[12]>

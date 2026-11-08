@@ -91,24 +91,15 @@ describe('J-ABS-Shield metadata (direct src import)', () =>
       expect(registeredFormulaContexts.has('s')).toBe(true);
     });
 
-    it('resolves s to the attacker last shield break value', () =>
+    it('resolves s to the broken shield cap carried by the action itself, not by the attacker', () =>
     {
-      // Arrange
+      // Arrange- the attacker offers a different number, so reading the wrong object shows up.
       const resolver = registeredFormulaContexts.get('s');
-      const attacker = { lastShieldBreakValue: 240 };
+      const action = { shieldBreakValue: () => 240 };
+      const attacker = { shieldBreakValue: () => 999, lastShieldBreakValue: 999 };
 
       // Act & Assert
-      expect(resolver(null, attacker)).toBe(240);
-    });
-
-    it('resolves s to zero for an attacker that has broken no shield', () =>
-    {
-      // Arrange- the value is reset after a break skill fires, so every non-break action reads 0.
-      const resolver = registeredFormulaContexts.get('s');
-      const attacker = { lastShieldBreakValue: 0 };
-
-      // Act & Assert
-      expect(resolver(null, attacker)).toBe(0);
+      expect(resolver(action, attacker)).toBe(240);
     });
   });
 

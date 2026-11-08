@@ -6804,12 +6804,17 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       expect(buildConnectableBattler({ isInvincible: () => true }).canActionConnect()).toBe(false);
     });
 
-    it('is false for a jabs action event itself', () =>
+    it('is true for a summon standing on a jabs action event', () =>
     {
+      // Arrange
       const jabsBattler = buildConnectableBattler();
       jabsBattler.getCharacter = () => ({ isJabsAction: () => true });
 
-      expect(jabsBattler.canActionConnect()).toBe(false);
+      // Act
+      const result = jabsBattler.canActionConnect();
+
+      // Assert
+      expect(result).toBe(true);
     });
 
     it('is false for an invisible follower', () =>

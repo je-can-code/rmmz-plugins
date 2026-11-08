@@ -81,6 +81,10 @@ class J_AbsPluginMetadata
     this.AiComboHumanizeWindowMinPercent = 0.1;
     this.AiComboHumanizeWindowMaxPercent = 0.3;
 
+    // the widest link window pacing will read. reflexes don't slow down with a skill's cooldown, and a battler
+    // stands still for its pacing, so an opener on a very long cooldown must not freeze it for seconds on end.
+    this.AiComboHumanizeWindowMaxFrames = 300;
+
     // AI defensive dodge interrupt (MVP): threat radius in tile-ish units (see distanceToPoint), roll vs chance, cooldown frames.
     this.AiDefensiveDodgeChancePercent = 75;
     this.AiDefensiveDodgeCooldownFrames = 45;

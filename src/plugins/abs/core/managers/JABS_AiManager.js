@@ -859,8 +859,10 @@ class JABS_AiManager
   }
 
   /**
-   * Queries the spatial grid for battlers overlapping the inclusive AABB in tile-space.
-   * Returns candidates de-duplicated across all covered cells.
+   * Queries the spatial grid for battlers overlapping the inclusive AABB in tile-space.<br/>
+   * Returns candidates de-duplicated across all covered cells. Only the part of the box that overlaps
+   * the map is walked, because no battler can stand anywhere else: an action with unlimited reach asks
+   * about a box thousands of tiles across, and visiting every one of those cells would stall the game.
    * @param {number} minX The minimum tile x.
    * @param {number} minY The minimum tile y.
    * @param {number} maxX The maximum tile x.
@@ -869,11 +871,15 @@ class JABS_AiManager
    */
   static queryBattlersInAabb(minX, minY, maxX, maxY)
   {
-    // normalize the bounds to integers and proper ordering.
-    const x0 = Math.floor(Math.min(minX, maxX));
-    const y0 = Math.floor(Math.min(minY, maxY));
-    const x1 = Math.floor(Math.max(minX, maxX));
-    const y1 = Math.floor(Math.max(minY, maxY));
+    // the last tile on each axis of the current map, which is as far as any battler can be.
+    const lastX = $gameMap.width() - 1;
+    const lastY = $gameMap.height() - 1;
+
+    // normalize the bounds to integers and proper ordering, kept within the map's own tiles.
+    const x0 = Math.max(0, Math.floor(Math.min(minX, maxX)));
+    const y0 = Math.max(0, Math.floor(Math.min(minY, maxY)));
+    const x1 = Math.min(lastX, Math.floor(Math.max(minX, maxX)));
+    const y1 = Math.min(lastY, Math.floor(Math.max(minY, maxY)));
 
     // collect candidates from each cell within the bounds.
     const result = new Set();
@@ -1717,6 +1723,10 @@ class JABS_AiManager
    */
   static decideEnemyAiPhase2Action(battler)
   {
+    // a battler pacing toward a combo follow-up makes no decision at all: phase 2 asks again next
+    // frame, and the follow-up is what it decides on the moment the pacing elapses.
+    if (battler.getAiMode().shouldHoldForCombo(battler)) return;
+
     const role = battler.getBattlerRole();
 
     // solo battlers skip all coordination and go straight to skill selection.

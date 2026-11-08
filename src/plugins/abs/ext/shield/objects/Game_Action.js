@@ -375,6 +375,43 @@ Game_Action.prototype.onShieldDamageAbsorbed = function(target, value)
  * @param {Game_Actor|Game_Enemy} target The battler with the shield breaking.
  */
 // eslint-disable-next-line no-unused-vars
-Game_Action.prototype.onShieldBroken = function(target) 
+Game_Action.prototype.onShieldBroken = function(target)
 {};
+
+/**
+ * Extends {@link #clear}.<br/>
+ * Also seeds the shield break value, so `s` reads a number on every action rather than undefined.
+ */
+J.ABS.EXT.SHIELD.Aliased.Game_Action.set('clear', Game_Action.prototype.clear);
+Game_Action.prototype.clear = function()
+{
+  // perform original logic.
+  J.ABS.EXT.SHIELD.Aliased.Game_Action.get('clear')
+    .call(this);
+
+  // an action that no shield break fired carries no broken shield's cap.
+  this.setShieldBreakValue(0);
+};
+
+/**
+ * Gets the cap of the broken shield whose break fired this action, or 0 when no break fired it.<br/>
+ * Damage formulas read this as `s`. It lives on the action rather than on the battler because the
+ * action is what survives until its hit lands, however many frames after the break that is.
+ * @returns {number}
+ */
+Game_Action.prototype.shieldBreakValue = function()
+{
+  // hand back the cap of the broken shield that fired this action.
+  return this._shieldBreakValue;
+};
+
+/**
+ * Sets the cap of the broken shield whose break fired this action.
+ * @param {number} newShieldBreakValue The cap of the shield whose break fired this action.
+ */
+Game_Action.prototype.setShieldBreakValue = function(newShieldBreakValue)
+{
+  // assign the cap of the broken shield that fired this action.
+  this._shieldBreakValue = newShieldBreakValue;
+};
 //endregion Game_Action
