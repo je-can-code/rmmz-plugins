@@ -9,6 +9,9 @@
 # notetag
 
 * [Enemy ID](notetags/enemy-events/enemy-id.md) - The tag associating an event with an enemy from the database.
+* [Enemy Pool](notetags/enemy-events/enemy-pool.md) - The tag letting an enemy event roll which enemy it turns out to be, each time it is built.
+* [Enemy Weight](notetags/enemy-events/enemy-weight.md) - The tag setting how likely an enemy is to be chosen when a pooled spot rolls it.
+* [Enemy Weight Override](notetags/enemy-events/enemy-weight-override.md) - The tag replacing an enemy's pool weight while on one map.
 * [Sight Radius](notetags/enemy-events/sight-radius.md) - The tag defining how far around itself an enemy can perceive the player.
 * [Pursuit Radius](notetags/enemy-events/pursuit-radius.md) - The tag defining the radius an enemy will maintain while actively engaged in combat.
 * [Prepare Time](notetags/enemy-events/prepare-time.md) - The tag defining how many frames an enemy waits before taking its first action.

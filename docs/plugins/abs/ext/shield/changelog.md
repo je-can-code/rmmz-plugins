@@ -11,6 +11,11 @@ All the versioning and history of changes live here.
 
 ## The Actual Changelog
 
+### 1.2.1
+  - Shield break skills read every state the bearer carries, passives included, so a passive's `<shieldBreak>` fires.
+  - The bearer builds and fires each break skill itself, writing the broken shield's cap onto every action it builds,
+    so `s` holds until that action's hit lands, however many frames after the break. `lastShieldBreakValue` is gone
+    from the battler.
 ### 1.2.0
   - Added natural growth tags for shield amplification (sar) and shield effectiveness (ser).
 ### 1.1.3
