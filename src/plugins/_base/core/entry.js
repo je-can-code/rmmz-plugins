@@ -15,6 +15,7 @@ import './core/ParameterKeys.js';
 import './core/JsonEx.js';
 import './core/Bitmap.js';
 import './core/TextRasterMetrics.js';
+import './core/CharacterFrame.js';
 import './core/CaptionPlaneRoster.js';
 import './core/TilePathSearch.js';
 import './core/PathSearchMemory.js';

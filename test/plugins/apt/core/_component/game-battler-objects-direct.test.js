@@ -19,6 +19,7 @@ describe('Game_BattlerBase / Game_Battler / Game_Troop aptitude additions (direc
     await import('../../../../../src/plugins/apt/core/objects/Game_BattlerBase.js');
     await import('../../../../../src/plugins/apt/core/objects/Game_Battler.js');
     await import('../../../../../src/plugins/apt/core/objects/Game_Troop.js');
+    await import('../../../../../src/plugins/apt/core/objects/Game_Enemy.js');
   });
 
   afterAll(() =>
@@ -168,6 +169,26 @@ describe('Game_BattlerBase / Game_Battler / Game_Troop aptitude additions (direc
       troop.deadMembers = () => [];
 
       expect(troop.aptitudeApTotal()).toBe(0);
+    });
+  });
+
+  describe('Game_Enemy#hasNoAp', () =>
+  {
+    it('reads the AP refusal flag off the enemy database entry, whichever way it is set', () =>
+    {
+      // Arrange
+      const refusing = Object.create(globalThis.Game_Enemy.prototype);
+      refusing.enemy = () => ({ noAp: true });
+      const paying = Object.create(globalThis.Game_Enemy.prototype);
+      paying.enemy = () => ({ noAp: false });
+
+      // Act
+      const refusingResult = refusing.hasNoAp();
+      const payingResult = paying.hasNoAp();
+
+      // Assert
+      expect(refusingResult).toBe(true);
+      expect(payingResult).toBe(false);
     });
   });
 });

@@ -11,6 +11,9 @@ All the versioning and history of changes live here.
 
 ## The Actual Changelog
 
+### 1.2.2
+  - Party cards draw their walking sprites through J-Base's drawCharacterStanding.
+  - Requires J-Base 4.3.0.
 ### 1.2.1
   - Resource amounts in the status list are rounded before being drawn. The gauge still fills from the exact value, so
     only the label changed.

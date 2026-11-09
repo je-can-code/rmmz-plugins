@@ -5,7 +5,7 @@ description: The list of dependencies- required and optional- for this plugin.
 tags: [plugins, deps]
 dependencies:
   - key: J-Base
-    version: 3.2.0
+    version: 4.3.0
     base: true
     orderAfter: true
 ---

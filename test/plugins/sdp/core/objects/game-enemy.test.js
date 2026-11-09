@@ -235,6 +235,26 @@ describe('Game_Enemy ext/sdp augments (direct src import)', () =>
     });
   });
 
+  describe('hasNoSdp', () =>
+  {
+    it('reads the sdp refusal flag off the enemy database entry, whichever way it is set', () =>
+    {
+      // Arrange
+      const refusing = makeEnemy();
+      refusing.enemy.mockReturnValue({ noSdp: true });
+      const paying = makeEnemy();
+      paying.enemy.mockReturnValue({ noSdp: false });
+
+      // Act
+      const refusingResult = refusing.hasNoSdp();
+      const payingResult = paying.hasNoSdp();
+
+      // Assert
+      expect(refusingResult).toEqual(true);
+      expect(payingResult).toEqual(false);
+    });
+  });
+
   describe('findLoot', () =>
   {
     it('calls through to the original implementation for a non-sdp drop', () =>

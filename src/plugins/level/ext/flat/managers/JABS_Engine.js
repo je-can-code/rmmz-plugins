@@ -14,6 +14,10 @@ if (J.ABS)
     // check the reward policy gate; anything a game excludes bails here.
     if (this.canGainReward(defeatedEnemy, victoriousActor) === false) return 0;
 
+    // an enemy that refuses experience grants none. flat experience never reads the row's own
+    // experience, so this tag is the only thing that can keep a high-level enemy from paying out.
+    if (defeatedEnemy.hasNoExp() === true) return 0;
+
     // determine the flat experience gained based on the rewardee and defeated target.
     const baseExperience = ExperienceManager.calculateRewardFromLevelDifference(
       victoriousActor.level,

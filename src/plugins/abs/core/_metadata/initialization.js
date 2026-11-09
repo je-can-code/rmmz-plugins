@@ -1022,6 +1022,63 @@ J.ABS.RegExp = {
    */
   RespawnAnimation: /<respawnAnimation:[ ]?(\d+)>/i,
 
+  // reward-related.
+  /**
+   * The declaration that a defeated enemy grants no reward points of any kind.
+   * Every reward that passes through the shared reward gate is refused: experience and gold here, and
+   * whatever an extension pays through that same gate, such as SDP points or AP. Drops are loot rather
+   * than points, so they still fall.
+   *
+   * <pre>
+   * Structure:
+   *  <noRewardPoints>
+   *
+   * Example:
+   *  <noRewardPoints>
+   *
+   * Translation:
+   *  Defeating this enemy grants no experience, gold, SDP points or AP. Its drops still fall.
+   * </pre>
+   * @type {RegExp}
+   */
+  NoRewardPoints: /<noRewardPoints>/i,
+
+  /**
+   * The declaration that a defeated enemy grants no experience.
+   * Only experience is refused; every other reward the enemy carries is paid as usual.
+   *
+   * <pre>
+   * Structure:
+   *  <no:exp>
+   *
+   * Example:
+   *  <no:exp>
+   *
+   * Translation:
+   *  Defeating this enemy grants no experience. Its gold, SDP points, AP and drops are untouched.
+   * </pre>
+   * @type {RegExp}
+   */
+  NoExp: /<no:[ ]?exp>/i,
+
+  /**
+   * The declaration that a defeated enemy grants no gold.
+   * Only gold is refused; every other reward the enemy carries is paid as usual.
+   *
+   * <pre>
+   * Structure:
+   *  <no:gold>
+   *
+   * Example:
+   *  <no:gold>
+   *
+   * Translation:
+   *  Defeating this enemy grants no gold. Its experience, SDP points, AP and drops are untouched.
+   * </pre>
+   * @type {RegExp}
+   */
+  NoGold: /<no:[ ]?gold>/i,
+
   // bonus concepts.
   VisionMultiplier: /<visionMultiplier:[ ]?(-?\d+)>/i,
   ProjectileDurationMultiplier: /<projectileDuration:[ ]?(-?\d+)>/i,

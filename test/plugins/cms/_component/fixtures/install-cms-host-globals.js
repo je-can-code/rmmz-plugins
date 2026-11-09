@@ -32,7 +32,7 @@ export const DEFAULT_CMS_PLUGIN_PARAMS = {
 export function setPluginContextToJBase(sandbox = globalThis)
 {
   sandbox.__PLUGIN_NAME__ = 'J-Base';
-  sandbox.__PLUGIN_VERSION__ = '3.2.0';
+  sandbox.__PLUGIN_VERSION__ = '4.3.0';
 }
 
 /**

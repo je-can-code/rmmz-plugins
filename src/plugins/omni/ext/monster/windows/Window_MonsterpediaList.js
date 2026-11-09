@@ -1,6 +1,8 @@
 //region Window_MonsterpediaList
+import MonsterpediaTypes from '../managers/MonsterpediaTypes.js';
+
 /**
- * A window containing the list of all enemies perceived for the monsterpedia.
+ * A window listing every entry on whichever page of the monsterpedia is open, one row per enemy.
  */
 class Window_MonsterpediaList
   extends Window_Command
@@ -11,12 +13,48 @@ class Window_MonsterpediaList
    */
   constructor(rect)
   {
+    // perform original logic, which seeds this window's members before building the list.
     super(rect);
   }
 
   /**
+   * Implements {@link Window_Command.initMembers}.<br/>
+   * Initializes the members of this window.
+   *
+   * This cannot be a class field declaration: JavaScript applies those only after `super()` returns,
+   * by which point the command list has already been built from it and found it undefined.
+   */
+  initMembers()
+  {
+    /**
+     * The kind of entry this list shows, which is the page of the monsterpedia that is open. Empty until
+     * the scene points the list at a page, which lists nothing.
+     * @type {string}
+     */
+    this._currentTypeKey = String.empty;
+  }
+
+  /**
+   * Gets the kind of entry this list is showing.
+   * @returns {string}
+   */
+  getCurrentTypeKey()
+  {
+    return this._currentTypeKey;
+  }
+
+  /**
+   * Sets the kind of entry this list shows.
+   * @param {string} typeKey The key of the page to show.
+   */
+  setCurrentTypeKey(typeKey)
+  {
+    this._currentTypeKey = typeKey;
+  }
+
+  /**
    * Implements {@link #makeCommandList}.<br/>
-   * Creates the command list of all observable monsters in this window.
+   * Creates the command list of every entry on the open page.
    */
   makeCommandList()
   {
@@ -28,56 +66,17 @@ class Window_MonsterpediaList
   }
 
   /**
-   * Builds all commands for this command window.
-   * Adds all monsters to the list that can possibly be observed.
+   * Builds all commands for this command window, one per entry on the open page.
+   * Which rows those are is {@link MonsterpediaTypes}' call, not this window's.
    * @returns {BuiltWindowCommand[]}
    */
   buildCommands()
   {
-    // grab all valid enemies.
-    const enemies = [];
+    // the rows listed on the open page.
+    const enemies = MonsterpediaTypes.entriesFor(this.getCurrentTypeKey());
 
-    // an iterator function for filtering out enemies.
-    const forEacher = enemy =>
-    {
-      // if the enemy is invalid, we don't process it.
-      if (!this.isValidEnemy(enemy)) return;
-
-      // push the enemy by its index.
-      enemies.push(enemy);
-    };
-
-    // build the list of enemies.
-    $dataEnemies.forEach(forEacher, this);
-
-    // compile the list of commands.
-    const commands = enemies.map(this.buildCommand, this);
-
-    // return the compiled list of commands.
-    return commands;
-  }
-
-  /**
-   * Determines whether or not the enemy is a valid enemy.
-   * @param {RPG_Enemy} enemy The enemy database data.
-   * @returns {boolean} True if the enemy should be listed in the monsterpedia, false otherwise.
-   */
-  isValidEnemy(enemy)
-  {
-    // if the enemy is null/undefined, then the enemy is invalid.
-    if (!enemy) return false;
-
-    // if the enemy has no name, then the enemy is invalid.
-    if (!enemy.name) return false;
-
-    // if an enemy is explicitly hidden, then the enemy is invalid.
-    if (enemy.hideFromMonsterpedia) return false;
-
-    // enemies that have names starting with '===' are placeholders.
-    if (enemy.name.startsWith('===')) return false;
-
-    // the enemy is valid!
-    return true;
+    // one command per row.
+    return enemies.map(this.buildCommand, this);
   }
 
   /**

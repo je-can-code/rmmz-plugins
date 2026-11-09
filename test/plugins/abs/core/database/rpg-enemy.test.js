@@ -29,7 +29,7 @@ describe('J-ABS RPG_BaseBattler jabs* properties (unit, all downstream dependenc
       'AiRoleSentinel', 'ConfigCanIdle', 'ConfigNoIdle', 'ConfigShowHpBar', 'ConfigShowStates',
       'ConfigHideStates', 'ConfigNoHpBar', 'ConfigShowName', 'ConfigNoName', 'ConfigInvincible',
       'ConfigNotInvincible', 'ConfigInanimate', 'ConfigNotInanimate', 'Respawn', 'NoRespawn',
-      'RespawnAnimation',
+      'RespawnAnimation', 'NoRewardPoints', 'NoExp', 'NoGold',
     ];
     const RegExp_ = {};
     regexKeys.forEach(key => { RegExp_[key] = new globalThis.RegExp(key); });
@@ -39,6 +39,13 @@ describe('J-ABS RPG_BaseBattler jabs* properties (unit, all downstream dependenc
     {
     }
     globalThis.RPG_BaseBattler = RPG_BaseBattler;
+
+    // the reward flags are enemy-only, so they patch RPG_Enemy rather than the shared battler base.
+    function RPG_Enemy()
+    {
+    }
+    RPG_Enemy.prototype = Object.create(RPG_BaseBattler.prototype);
+    globalThis.RPG_Enemy = RPG_Enemy;
 
     globalThis.RPGManager = {
       getNumberFromNoteByRegex: vi.fn(),
@@ -194,6 +201,30 @@ describe('J-ABS RPG_BaseBattler jabs* properties (unit, all downstream dependenc
     });
   });
   //endregion boolean note-flag properties
+
+  //region reward flags
+  describe.each([
+    [ 'noRewardPoints', 'NoRewardPoints' ],
+    [ 'noExp', 'NoExp' ],
+    [ 'noGold', 'NoGold' ],
+  ])('%s', (propName, regexKey) =>
+  {
+    it(`delegates to RPGManager.checkForBooleanFromNoteByRegex with J.ABS.RegExp.${regexKey}, defaulting to false`, () =>
+    {
+      // Arrange
+      const enemy = Object.create(globalThis.RPG_Enemy.prototype);
+      globalThis.RPGManager.checkForBooleanFromNoteByRegex.mockReturnValue(true);
+
+      // Act
+      const result = enemy[propName];
+
+      // Assert
+      expect(result).toBe(true);
+      expect(globalThis.RPGManager.checkForBooleanFromNoteByRegex)
+        .toHaveBeenCalledWith(enemy, globalThis.J.ABS.RegExp[regexKey]);
+    });
+  });
+  //endregion reward flags
 
   //region composite properties
   describe('jabsBattlerAi', () =>

@@ -12,6 +12,7 @@ dependencies:
     base: true
     orderAfter: true
   - key: J-ABS
+    version: 4.28.0
     base: false
     orderAfter: true
 ---
@@ -31,5 +32,5 @@ the level scaling toggle that turn-based battles consult before awarding the fla
 
 ## J-ABS
 
-Supplies the kill reward flow this plugin replaces `determineExperienceGained` in, and the `canGainReward` gate it
-consults, so without it only turn-based battles use the flat experience.
+Supplies the kill reward flow this plugin replaces `determineExperienceGained` in, the `canGainReward` gate it
+consults, and the `<no:exp>` check it honors, so without it only turn-based battles use the flat experience.

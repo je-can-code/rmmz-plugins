@@ -52,6 +52,25 @@ J.SDP.RegExp = {
   SdpDropData: /<sdpDropData: ?(\[[-\w]+,[ ]?\d+])>/i,
   SdpUnlockKey: /<sdpUnlock: ?(.+)>/i,
 
+  /**
+   * The declaration that a defeated enemy grants no SDP points.
+   * Only SDP points are refused; every other reward the enemy carries is paid as usual, and a panel
+   * it drops is loot rather than points, so that still falls too.
+   *
+   * <pre>
+   * Structure:
+   *  <no:sdp>
+   *
+   * Example:
+   *  <no:sdp>
+   *
+   * Translation:
+   *  Defeating this enemy grants no SDP points. Its experience, gold, AP and drops are untouched.
+   * </pre>
+   * @type {RegExp}
+   */
+  NoSdp: /<no: ?sdp>/i,
+
   // natural growth tags for sdr, bound to the parameter at boot.
   SdpRateBuffPlus: /<sdrBuffPlus:\[([+\-*/ ().\w]+)]>/gi,
   SdpRateBuffRate: /<sdrBuffRate:\[([+\-*/ ().\w]+)]>/gi,

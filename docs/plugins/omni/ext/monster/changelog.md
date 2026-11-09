@@ -11,6 +11,15 @@ All the versioning and history of changes live here.
 
 ## The Actual Changelog
 
+### 3.0.0
+  - Requires `data/config.omni.json`, which lists the Monsterpedia's pages. The game won't start without it.
+  - Added `<monsterType:KEY>`, which files an enemy onto a page. L2/R2 flips between the pages.
+  - A page can leave out the stats of the entries it lists.
+  - Entries are pictured the way they look on the map, at three times their size.
+  - Drops list one line per item, with its best chance and how many times it can drop.
+  - Elementalistics moved under the portrait, and drops got a wider column.
+  - Fixed the last digit of some stats being cut off at the window's edge.
+  - Requires J-Base 4.3.0.
 ### 2.1.0
   - Removed the region notetag and the regions-found line it fed. Neither was ever used, and an observation nobody could
     earn only made the entry look incomplete.

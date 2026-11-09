@@ -10,7 +10,7 @@ globalThis.J ||= {};
 (() =>
 {
   // Check to ensure we have the minimum required version of the J-Base plugin.
-  const requiredBaseVersion = '3.2.0';
+  const requiredBaseVersion = '4.3.0';
   const hasBaseRequirement = J.BASE.Helpers.satisfies(J.BASE.Metadata.Version, requiredBaseVersion);
   if (hasBaseRequirement === false)
   {
@@ -60,4 +60,23 @@ J.OMNI.EXT.MONSTER.RegExp = {};
 J.OMNI.EXT.MONSTER.RegExp.HideFromMonsterpedia = /<hideFromMonsterpedia>/i;
 J.OMNI.EXT.MONSTER.RegExp.MonsterpediaFamilyIcon = /<monsterFamilyIcon:[ ]?(\d+)>/i;
 J.OMNI.EXT.MONSTER.RegExp.MonsterpediaDescription = /<descriptionLine:[ ]?([\w\s.?!,\-'"]+)>/i;
+
+/**
+ * The kind of entry an enemy is, which decides the page of the monsterpedia it is listed on.
+ * The kinds themselves, and the name and icon each page shows, are authored in `data/config.omni.json`.
+ * An enemy without the tag is an ordinary enemy.
+ *
+ * <pre>
+ * Structure:
+ *  <monsterType:KEY>
+ *
+ * Example:
+ *  <monsterType:destructible>
+ *
+ * Translation:
+ *  This enemy is listed on the page whose key is "destructible", rather than among the ordinary enemies.
+ * </pre>
+ * @type {RegExp}
+ */
+J.OMNI.EXT.MONSTER.RegExp.MonsterType = /<monsterType:[ ]?([\w-]+)>/i;
 //endregion Metadata

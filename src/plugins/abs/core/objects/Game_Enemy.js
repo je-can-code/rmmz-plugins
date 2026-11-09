@@ -611,6 +611,36 @@ Game_Enemy.prototype.isInanimate = function()
 };
 //endregion JABS battler properties
 
+//region JABS rewards
+/**
+ * Whether this enemy refuses every reward point when defeated.
+ * Read by the shared reward gate, so one tag refuses experience, gold, and any extension's points.
+ * @returns {boolean}
+ */
+Game_Enemy.prototype.hasNoRewardPoints = function()
+{
+  return this.enemy().noRewardPoints;
+};
+
+/**
+ * Whether this enemy refuses experience when defeated, leaving its other rewards alone.
+ * @returns {boolean}
+ */
+Game_Enemy.prototype.hasNoExp = function()
+{
+  return this.enemy().noExp;
+};
+
+/**
+ * Whether this enemy refuses gold when defeated, leaving its other rewards alone.
+ * @returns {boolean}
+ */
+Game_Enemy.prototype.hasNoGold = function()
+{
+  return this.enemy().noGold;
+};
+//endregion JABS rewards
+
 //region JABS bonus hits
 /**
  * Gets all collections of sources that will be scanned for bonus hits.

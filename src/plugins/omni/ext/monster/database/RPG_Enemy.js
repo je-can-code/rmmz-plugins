@@ -1,4 +1,22 @@
 //region RPG_Enemy
+import MonsterpediaTypes from '../managers/MonsterpediaTypes.js';
+
+/**
+ * The kind of entry this enemy is, which decides the page of the monsterpedia it is listed on.
+ * An enemy without a `<monsterType:KEY>` tag is an ordinary enemy.
+ * @type {string}
+ */
+Object.defineProperty(RPG_Enemy.prototype, "monsterType", {
+  get: function()
+  {
+    // the kind the row declares, or null when it declares none.
+    const declaredType = RPGManager.getStringFromNoteByRegex(this, J.OMNI.EXT.MONSTER.RegExp.MonsterType, true);
+
+    // a row that declares nothing is an ordinary enemy.
+    return declaredType ?? MonsterpediaTypes.DEFAULT_KEY;
+  },
+});
+
 /**
  * Whether or not this enemy should be hidden from the monsterpedia.
  * @type {boolean} True if the enemy should be hidden, false otherwise.

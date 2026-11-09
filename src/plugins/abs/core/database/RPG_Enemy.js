@@ -629,3 +629,39 @@ Object.defineProperty(RPG_BaseBattler.prototype, 'jabsConfigNotInanimate', {
 //endregion config:notInanimate
 
 //endregion config
+
+//region rewards
+/**
+ * Whether this enemy refuses every reward point on defeat, as declared by `<noRewardPoints>`.
+ * The shared reward gate reads this, so it stops experience, gold, and any extension's points at once.
+ * @type {boolean}
+ */
+Object.defineProperty(RPG_Enemy.prototype, 'noRewardPoints', {
+  get: function()
+  {
+    return RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.RegExp.NoRewardPoints);
+  },
+});
+
+/**
+ * Whether this enemy refuses experience on defeat, as declared by `<no:exp>`.
+ * @type {boolean}
+ */
+Object.defineProperty(RPG_Enemy.prototype, 'noExp', {
+  get: function()
+  {
+    return RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.RegExp.NoExp);
+  },
+});
+
+/**
+ * Whether this enemy refuses gold on defeat, as declared by `<no:gold>`.
+ * @type {boolean}
+ */
+Object.defineProperty(RPG_Enemy.prototype, 'noGold', {
+  get: function()
+  {
+    return RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.RegExp.NoGold);
+  },
+});
+//endregion rewards

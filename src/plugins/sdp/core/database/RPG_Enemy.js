@@ -12,6 +12,19 @@ Object.defineProperty(RPG_Enemy.prototype, "sdpPoints", {
 });
 //endregion sdpPoints
 
+//region noSdp
+/**
+ * Whether this enemy refuses SDP points on defeat, as declared by `<no:sdp>`.
+ * @type {boolean}
+ */
+Object.defineProperty(RPG_Enemy.prototype, "noSdp", {
+  get: function()
+  {
+    return RPGManager.checkForBooleanFromNoteByRegex(this, J.SDP.RegExp.NoSdp);
+  },
+});
+//endregion noSdp
+
 //region sdpDropData
 /**
  * Gets the SDP drop data for this enemy.

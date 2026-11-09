@@ -43,11 +43,27 @@ describe('JABS_Engine (J-LEVEL-Flat) (direct src import)', () =>
       expect(result).toBe(0);
     });
 
+    it('returns 0 when the enemy carries <no:exp>, however far it outlevels the rewardee', () =>
+    {
+      // Arrange: the gate is open and a level 60 target would pay the full 1000 flat exp to a level 5
+      // rewardee, so only the tag can be what zeroes this.
+      const engine = buildEngine({ canGainReward: vi.fn(() => true) });
+      const defeatedEnemy = { level: 60, exp: () => 5, hasNoExp: () => true, hasNoGold: () => false };
+      const victoriousActor = { level: 5 };
+
+      // Act
+      const result = engine.determineExperienceGained(defeatedEnemy, victoriousActor);
+
+      // Assert
+      expect(result).toBe(0);
+    });
+
     it('adds the flat level-difference experience to the enemy\'s bonus experience', () =>
     {
-      // Arrange: equal levels means parity experience (25) from ExperienceManager.
+      // Arrange: equal levels means parity experience (25) from ExperienceManager. the enemy refuses
+      // gold, the near-miss sibling, which must leave its experience alone.
       const engine = buildEngine({ canGainReward: vi.fn(() => true) });
-      const defeatedEnemy = { level: 10, exp: () => 5 };
+      const defeatedEnemy = { level: 10, exp: () => 5, hasNoExp: () => false, hasNoGold: () => true };
       const victoriousActor = { level: 10 };
 
       // Act
@@ -61,7 +77,7 @@ describe('JABS_Engine (J-LEVEL-Flat) (direct src import)', () =>
     {
       // Arrange: a level 5 rewardee against a level 20 target maxes out at 1000 flat exp.
       const engine = buildEngine({ canGainReward: vi.fn(() => true) });
-      const defeatedEnemy = { level: 20, exp: () => 0 };
+      const defeatedEnemy = { level: 20, exp: () => 0, hasNoExp: () => false };
       const victoriousActor = { level: 5 };
 
       // Act

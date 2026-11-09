@@ -33,6 +33,9 @@ if (J.ABS)
     // check the reward policy gate; no actor is available at this call site so pass null.
     if (this.canGainReward(defeatedEnemy, null) === false) return 0;
 
+    // an enemy that refuses AP grants none, whatever its row's AP says.
+    if (defeatedEnemy.hasNoAp() === true) return 0;
+
     return defeatedEnemy.apPoints();
   };
 

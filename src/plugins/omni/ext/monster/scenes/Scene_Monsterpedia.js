@@ -1,4 +1,5 @@
 //region Scene_Monsterpedia
+import MonsterpediaTypes from '../managers/MonsterpediaTypes.js';
 import Window_MonsterpediaList from '../windows/Window_MonsterpediaList.js';
 import Window_MonsterpediaDetail from '../windows/Window_MonsterpediaDetail.js';
 
@@ -7,8 +8,10 @@ import Window_MonsterpediaDetail from '../windows/Window_MonsterpediaDetail.js';
  *
  * Built on the facet skeleton rather than laid out from scratch, so it shares the control legend and
  * the bounded region every other menu in the ecosystem draws inside. The left column lists every
- * monster that can be observed; the right side details whichever one is highlighted. There is
- * nothing to confirm here, only to read.
+ * entry that can be observed on the open page, beneath a strip naming that page; the right side
+ * details whichever entry is highlighted. Each page lists one kind of entry, ordinary enemies or
+ * destructibles or whatever else the omnipedia's configuration authors, and L2/R2 flips between them.
+ * There is nothing to confirm here, only to read.
  */
 class Scene_Monsterpedia
   extends Scene_MenuFacetBase
@@ -89,6 +92,18 @@ class Scene_Monsterpedia
     this._j._omni._monster = {};
 
     /**
+     * The L2/R2 ring of pages this scene flips between, one per kind of entry.
+     * @type {FilterCycle}
+     */
+    this._j._omni._monster._typeFilter = new FilterCycle(this.buildTypePositions());
+
+    /**
+     * The strip naming whichever page is currently open.
+     * @type {Window_FilterStrip}
+     */
+    this._j._omni._monster._typeStrip = null;
+
+    /**
      * The window that shows the list of perceived monsters.
      * @type {Window_MonsterpediaList}
      */
@@ -99,6 +114,15 @@ class Scene_Monsterpedia
      * @type {Window_MonsterpediaDetail}
      */
     this._j._omni._monster._pediaDetail = null;
+  }
+
+  /**
+   * The positions of the page ring, in the order the kinds of entry were authored.
+   * @returns {{key: string, name: string, iconIndex: number, showsStats: boolean}[]}
+   */
+  buildTypePositions()
+  {
+    return MonsterpediaTypes.positions();
   }
 
   //endregion init
@@ -113,12 +137,13 @@ class Scene_Monsterpedia
     // perform original logic, which builds the chrome shared by every facet scene.
     super.create();
 
-    // build the column of monsters and the pane detailing the highlighted one.
+    // build the strip naming the page, the column of entries, and the pane detailing the highlighted one.
+    this.createTypeStripWindow();
     this.createMonsterpediaListWindow();
     this.createMonsterpediaDetailWindow();
 
-    // point the detail at whatever the cursor starts on.
-    this.onMonsterpediaIndexChange();
+    // point everything at whichever page the ring starts on.
+    this.applyActiveType();
 
     // the monster list is the only thing here that takes input.
     this.getMonsterpediaListWindow()
@@ -152,14 +177,29 @@ class Scene_Monsterpedia
   }
 
   /**
-   * The rectangle for the monster list, filling the left column of the region.
+   * The rectangle for the page strip, crowning the left column.
+   * @returns {Rectangle}
+   */
+  typeStripRectangle()
+  {
+    const facetArea = this.facetAreaRect();
+    const height = this.calcWindowHeight(1, false);
+
+    return new Rectangle(facetArea.x, facetArea.y, this.commandColumnWidth(), height);
+  }
+
+  /**
+   * The rectangle for the monster list, filling the left column beneath the strip.
    * @returns {Rectangle}
    */
   monsterpediaListRectangle()
   {
     const facetArea = this.facetAreaRect();
+    const stripRectangle = this.typeStripRectangle();
+    const y = stripRectangle.y + stripRectangle.height;
+    const height = facetArea.y + facetArea.height - y;
 
-    return new Rectangle(facetArea.x, facetArea.y, this.commandColumnWidth(), facetArea.height);
+    return new Rectangle(facetArea.x, y, this.commandColumnWidth(), height);
   }
 
   /**
@@ -177,16 +217,64 @@ class Scene_Monsterpedia
 
   /**
    * Implements {@link #controlLegendEntries}.<br/>
-   * There is nothing here that leaves no mark on screen: moving the cursor is self-evident and
-   * cancel is named by what it lands on, so the legend has nothing to teach.
+   * Teaches the one control that leaves no mark on screen until pressed: the shoulder triggers that
+   * flip between pages. Moving the cursor is self-evident and cancel is named by what it lands on.
    * @returns {{semantic: (string|string[]), label: string}[]}
    */
   controlLegendEntries()
   {
-    return [];
+    return [
+      {
+        semantic: [ 'content-prev', 'content-next' ],
+        label: 'pedia',
+      },
+    ];
   }
 
   //endregion layout
+
+  //region type strip
+  /**
+   * Creates the strip naming the open page.
+   */
+  createTypeStripWindow()
+  {
+    const window = this.buildTypeStripWindow();
+
+    this.setTypeStripWindow(window);
+    this.addWindow(window);
+  }
+
+  /**
+   * Sets up and defines the page strip window.
+   * @returns {Window_FilterStrip}
+   */
+  buildTypeStripWindow()
+  {
+    const rectangle = this.typeStripRectangle();
+
+    return new Window_FilterStrip(rectangle);
+  }
+
+  /**
+   * Gets the currently tracked page strip window.
+   * @returns {Window_FilterStrip}
+   */
+  getTypeStripWindow()
+  {
+    return this._j._omni._monster._typeStrip;
+  }
+
+  /**
+   * Sets the currently tracked page strip window.
+   * @param {Window_FilterStrip} stripWindow The page strip window to track.
+   */
+  setTypeStripWindow(stripWindow)
+  {
+    this._j._omni._monster._typeStrip = stripWindow;
+  }
+
+  //endregion type strip
 
   //region list window
   /**
@@ -211,6 +299,10 @@ class Scene_Monsterpedia
 
     // cancel is the only way out; there is nothing to confirm.
     window.setHandler('cancel', this.onCancelMonsterpedia.bind(this));
+
+    // the shoulder triggers walk the page ring in either direction.
+    window.setHandler('content-next', this.cycleMonsterTypes.bind(this, true));
+    window.setHandler('content-prev', this.cycleMonsterTypes.bind(this, false));
 
     // the detail pane follows whatever the cursor lands on.
     window.onIndexChange = this.onMonsterpediaIndexChange.bind(this);
@@ -286,6 +378,70 @@ class Scene_Monsterpedia
   //endregion detail window
 
   //region actions
+  /**
+   * The page ring this scene flips through.
+   * @returns {FilterCycle}
+   */
+  getTypeFilter()
+  {
+    return this._j._omni._monster._typeFilter;
+  }
+
+  /**
+   * Points the strip and the list at whichever page is now open, then the detail at whatever the list
+   * lands on.
+   */
+  applyActiveType()
+  {
+    const typeFilter = this.getTypeFilter();
+    const activePosition = typeFilter.activePosition();
+
+    this.getTypeStripWindow()
+      .setPosition(activePosition);
+
+    const listWindow = this.getMonsterpediaListWindow();
+    listWindow.setCurrentTypeKey(activePosition.key);
+    listWindow.refresh();
+
+    // a page with fewer entries than the one before it would otherwise leave the cursor past the end.
+    listWindow.select(0);
+
+    this.onMonsterpediaIndexChange();
+  }
+
+  /**
+   * Walks the page ring, wrapping at either end.
+   * @param {boolean} isForward Whether to walk forwards.
+   */
+  cycleMonsterTypes(isForward)
+  {
+    const typeFilter = this.getTypeFilter();
+    const listWindow = this.getMonsterpediaListWindow();
+
+    // a single page is not a ring; pressing the trigger would land exactly where the player already is.
+    if (!typeFilter.canCycle())
+    {
+      SoundManager.playBuzzer();
+      listWindow.activate();
+      return;
+    }
+
+    if (isForward)
+    {
+      typeFilter.next();
+    }
+    else
+    {
+      typeFilter.previous();
+    }
+
+    SoundManager.playCursor();
+    this.applyActiveType();
+
+    // a handled input deactivates the window, so it has to be handed back its own input.
+    listWindow.activate();
+  }
+
   /**
    * Synchronizes the detail pane with the highlighted monster.
    */

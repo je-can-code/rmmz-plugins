@@ -259,8 +259,10 @@ class JABS_Engine
   static RESPAWN_SWEEP_INTERVAL = 60;
 
   /**
-   * Gets the collection of enemy clone events currently tracked.
-   * @returns {RPG_MapEvent[]}
+   * Gets the collection of enemy clone events currently tracked, indexed by event id.<br/>
+   * The enemy map is fetched asynchronously when the engine is first built, so this is null until
+   * that fetch lands, for the first moments of a session.
+   * @returns {RPG_MapEvent[]|null}
    */
   static getEnemyCloneList()
   {
@@ -5933,8 +5935,9 @@ class JABS_Engine
   /**
    * Determines whether the victorious actor is eligible to gain rewards from the defeated enemy.
    * This is the central policy gate for all four reward types (EXP, gold, SDP, AP).
-   * Returns true by default — all defeated enemies grant rewards. Alias this method to introduce
-   * game-specific exclusion conditions (e.g. zero-yield flags, kill-type filters).
+   * Every defeated enemy grants rewards unless its row says `<noRewardPoints>`, which refuses all four
+   * at once. Loot never consults this gate, so drops still fall either way. Alias this method to
+   * introduce game-specific exclusion conditions (e.g. kill-type filters).
    * @param {Game_Enemy} defeatedEnemy The enemy that was defeated.
    * @param {Game_Actor} victoriousActor The actor that defeated the enemy.
    * @returns {boolean} True if rewards should be granted, false to skip all reward calculation.
@@ -5942,7 +5945,8 @@ class JABS_Engine
   // eslint-disable-next-line no-unused-vars
   canGainReward(defeatedEnemy, victoriousActor)
   {
-    return true;
+    // an enemy that refuses every reward point grants none, whoever defeated it.
+    return defeatedEnemy.hasNoRewardPoints() === false;
   }
 
   /**
@@ -5954,6 +5958,9 @@ class JABS_Engine
   {
     // check the reward policy gate before doing any calculation.
     if (this.canGainReward(defeatedEnemy, victoriousActor) === false) return 0;
+
+    // an enemy that refuses experience grants none, whatever its row's experience says.
+    if (defeatedEnemy.hasNoExp() === true) return 0;
 
     // identify the amount the enemy yielded.
     const experience = defeatedEnemy.exp();
@@ -5980,6 +5987,9 @@ class JABS_Engine
   {
     // check the reward policy gate before doing any calculation.
     if (this.canGainReward(defeatedEnemy, victoriousActor) === false) return 0;
+
+    // an enemy that refuses gold grants none, whatever its row's gold says.
+    if (defeatedEnemy.hasNoGold() === true) return 0;
 
     // identify the amount the enemy yielded.
     const gold = defeatedEnemy.gold();

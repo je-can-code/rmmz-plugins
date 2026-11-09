@@ -11,6 +11,8 @@ All the versioning and history of changes live here.
 
 ## The Actual Changelog
 
+### 4.9.0
+  - Added `<no:sdp>`, which stops an enemy granting SDP points.
 ### 4.8.1
   - Mastery formulas call MAT "Sorcery" and AGI "Finesse".
 ### 4.8.0

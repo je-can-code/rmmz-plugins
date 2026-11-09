@@ -3,7 +3,7 @@ type: overview
 title: The Plugin Overview
 description: The general overview for what this plugin is about along with the when and how you might use it.
 tags: [cms, overview]
-version: "1.2.1"
+version: "1.2.2"
 ---
 
 # Overview

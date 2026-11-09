@@ -1524,7 +1524,28 @@ loaded with level scaling enabled for the gate to apply at all.
 ```
 This enemy yields 6 AP upon defeat.
 
-**See also:** `<aptitude>`, `<aptMultiplier>`
+**See also:** `<aptitude>`, `<aptMultiplier>`, `<no:ap>`
+
+---
+
+### `<no:ap>`
+
+**Applies to:**
+Enemies only
+
+**When:**
+enemy is defeated
+
+**Effect:**
+refuses the AP the enemy would pay, whatever its `<ap:AMOUNT>` says, while every other reward it carries
+is paid as usual. To refuse every reward at once, use J-ABS's `<noRewardPoints>`.
+
+```
+<no:ap>
+```
+Defeating this enemy pays its experience, gold and SDP points as usual, but no AP.
+
+**See also:** `<ap>`, `<noRewardPoints>`
 
 ---
 
@@ -2265,6 +2286,56 @@ and goes.
 Animation 12 plays on this event as its battler returns.
 
 **See also:** `<respawn>`, `<noRespawn>`
+
+---
+
+### `<noRewardPoints>`
+
+**Applies to:**
+Enemies only
+
+**When:**
+the enemy is defeated
+
+**Effect:**
+refuses every reward point the enemy would pay: experience, gold, and whatever an extension pays through
+J-ABS's shared reward gate, which is SDP points from J-SDP and AP from J-Aptitude. Drops are loot rather
+than points, so they still fall, which makes this the tag for harvest nodes, crates and anything else
+that should yield only what it drops. To refuse a single reward instead, use one of the `<no:X>` tags.
+
+```
+<noRewardPoints>
+```
+Breaking this crate pays no experience, gold, SDP points or AP, but it still drops its loot.
+
+**See also:** `<no:exp>` / `<no:gold>`, `<no:sdp>`, `<no:ap>`
+
+---
+
+### `<no:exp>` / `<no:gold>`
+
+**Applies to:**
+Enemies only
+
+**When:**
+the enemy is defeated
+
+**Effect:**
+refuses one reward while every other reward the enemy carries is paid as usual. With J-Level-Flat,
+`<no:exp>` also stops the flat experience it pays by level difference, which never reads the enemy's own
+experience. SDP points and AP have their own tags in their own plugins.
+
+| Variant | Refuses |
+|---|---|
+| `<no:exp>` | experience |
+| `<no:gold>` | gold |
+
+```
+<no:exp>
+```
+Defeating this enemy pays its gold, SDP points and AP as usual, but no experience.
+
+**See also:** `<noRewardPoints>`, `<no:sdp>`, `<no:ap>`
 
 ---
 
@@ -6931,6 +7002,30 @@ This enemy's Monsterpedia entry shows both description lines.
 
 ---
 
+### `<monsterType:KEY>`
+
+**Applies to:**
+Enemies
+
+**When:**
+always
+
+**Effect:**
+names the kind of entry this enemy is, which decides the page of the Monsterpedia it is listed on. The
+kinds are authored in `data/config.omni.json` (use the data editor's Omnipedia board), each with a key,
+a name, an icon, and whether its entries show their stats, and L2/R2 flips between their pages in the
+order they are authored. An enemy without
+the tag is an `enemy`, an ordinary monster. `<hideFromMonsterpedia>` still keeps a row off every page.
+
+```
+<monsterType:destructible>
+```
+This enemy is listed on the destructibles' page rather than among the ordinary monsters.
+
+**See also:** `<hideFromMonsterpedia>`
+
+---
+
 ## J-Omnipedia-Quest (`src/plugins/omni/ext/quest/`)
 
 Extends the Omnipedia with a Questopedia entry. Quest data itself is authored entirely in an
@@ -7444,7 +7539,29 @@ This enemy yields 250 SDP points on defeat.
 ```
 Using this item on an actor consumes 50 of their SDP points.
 
-**See also:** `<sdpMultiplier>`, `<sdpBonusFormula>`
+**See also:** `<sdpMultiplier>`, `<sdpBonusFormula>`, `<no:sdp>`
+
+---
+
+### `<no:sdp>`
+
+**Applies to:**
+Enemies only
+
+**When:**
+enemy defeat (reward)
+
+**Effect:**
+refuses the SDP points the enemy would pay, whatever its `<sdpPoints:VALUE>` says, while every other
+reward it carries is paid as usual. A panel dropped through `<sdpDropData>` is loot rather than points,
+so that still falls. To refuse every reward at once, use J-ABS's `<noRewardPoints>`.
+
+```
+<no:sdp>
+```
+Defeating this enemy pays its experience, gold and AP as usual, but no SDP points.
+
+**See also:** `<sdpPoints>`, `<noRewardPoints>`
 
 ---
 

@@ -112,5 +112,29 @@ describe('RPG_Base / RPG_Enemy aptitude additions (direct src import)', () =>
       expect(enemy.apPoints).toBe(0);
     });
   });
+
+  describe('RPG_Enemy#noAp', () =>
+  {
+    it('reads true off a note carrying <no:ap>, with or without the optional space', () =>
+    {
+      // Arrange
+      const tight = Object.assign(Object.create(RPG_Enemy.prototype), { id: 21, note: '<no:ap>' });
+      const spaced = Object.assign(Object.create(RPG_Enemy.prototype), { id: 22, note: '<no: ap>' });
+
+      // Act & Assert
+      expect(tight.noAp).toBe(true);
+      expect(spaced.noAp).toBe(true);
+    });
+
+    it('reads false off a note refusing only its sibling rewards', () =>
+    {
+      // Arrange: every other opt-out is present, and none of them is this one.
+      const note = '<no:exp>\n<no:gold>\n<no:sdp>\n<noRewardPoints>\n<ap:12>';
+      const enemy = Object.assign(Object.create(RPG_Enemy.prototype), { id: 23, note });
+
+      // Act & Assert
+      expect(enemy.noAp).toBe(false);
+    });
+  });
 });
 //endregion plugins/apt/core/_component/rpg-base-enemy-direct.test.js

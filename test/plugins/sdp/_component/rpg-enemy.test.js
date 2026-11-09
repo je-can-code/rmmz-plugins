@@ -88,5 +88,29 @@ describe('J-SDP RPG_Enemy notes (direct src import)', () =>
       expect(enemy.sdpDropChance).toBe(0);
     });
   });
+
+  describe('noSdp', () =>
+  {
+    it('reads true off a note carrying <no:sdp>, with or without the optional space', () =>
+    {
+      // Arrange
+      const tight = Object.assign(Object.create(RPG_Enemy.prototype), { id: 6, note: '<no:sdp>' });
+      const spaced = Object.assign(Object.create(RPG_Enemy.prototype), { id: 7, note: '<no: sdp>' });
+
+      // Act & Assert
+      expect(tight.noSdp).toBe(true);
+      expect(spaced.noSdp).toBe(true);
+    });
+
+    it('reads false off a note refusing only its sibling rewards', () =>
+    {
+      // Arrange: every other opt-out is present, and none of them is this one.
+      const note = '<no:exp>\n<no:gold>\n<no:ap>\n<noRewardPoints>';
+      const enemy = Object.assign(Object.create(RPG_Enemy.prototype), { id: 8, note });
+
+      // Act & Assert
+      expect(enemy.noSdp).toBe(false);
+    });
+  });
 });
 //endregion plugins/sdp/_component/rpg-enemy.test.js

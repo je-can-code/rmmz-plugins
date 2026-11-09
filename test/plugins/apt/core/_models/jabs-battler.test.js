@@ -90,12 +90,27 @@ describe('JABS_Engine ext/apt-core augments (direct src import)', () =>
       expect(enemy.apPoints).not.toHaveBeenCalled();
     });
 
+    it('returns 0 when the enemy carries <no:ap>, though the gate allows it and AP is owed', () =>
+    {
+      // Arrange
+      const engine = new JABS_Engine();
+      engine.canGainReward = vi.fn().mockReturnValue(true);
+      const enemy = { apPoints: vi.fn().mockReturnValue(10), hasNoAp: () => true };
+
+      // Act
+      const result = engine.determineApGained(enemy);
+
+      // Assert
+      expect(result).toEqual(0);
+      expect(enemy.apPoints).not.toHaveBeenCalled();
+    });
+
     it('returns the enemy apPoints when the reward policy gate allows it', () =>
     {
       // Arrange
       const engine = new JABS_Engine();
       engine.canGainReward = vi.fn().mockReturnValue(true);
-      const enemy = { apPoints: vi.fn().mockReturnValue(10) };
+      const enemy = { apPoints: vi.fn().mockReturnValue(10), hasNoAp: () => false };
 
       // Act
       const result = engine.determineApGained(enemy);

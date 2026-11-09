@@ -9,6 +9,7 @@
 # notetag
 
 * [Monsterpedia Entry Tags](notetags/monsterpedia-entry-tags.md) - The tags customizing how an enemy appears, or whether it appears at all, in the Monsterpedia.
+* [Monster Type](notetags/monster-type.md) - The tag naming the kind of entry an enemy is, which decides the page of the Monsterpedia it is listed on.
 
 # scene
 

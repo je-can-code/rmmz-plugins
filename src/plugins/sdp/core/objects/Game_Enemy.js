@@ -166,4 +166,13 @@ Game_Enemy.prototype.sdpPoints = function()
 {
   return this.enemy().sdpPoints;
 };
+
+/**
+ * Whether this enemy refuses SDP points when defeated, leaving its other rewards alone.
+ * @returns {boolean}
+ */
+Game_Enemy.prototype.hasNoSdp = function()
+{
+  return this.enemy().noSdp;
+};
 //endregion Game_Enemy
