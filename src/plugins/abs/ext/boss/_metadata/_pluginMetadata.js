@@ -2,6 +2,7 @@
 import JabsBossEncounter from '../models/JabsBossEncounter.js';
 import JabsBossManager from '../managers/JabsBossManager.js';
 import JabsBossParticipant from '../models/JabsBossParticipant.js';
+import JabsBossReaction from '../models/JabsBossReaction.js';
 import JabsBossRoutine from '../models/JabsBossRoutine.js';
 import JabsBossStep from '../models/JabsBossStep.js';
 
@@ -79,19 +80,55 @@ class J_BossPluginMetadata
     const rawRoutines = rawEncounter.routines ?? [];
     const routines = rawRoutines.map(raw => this.parseRoutine(raw));
 
-    return new JabsBossEncounter(rawEncounter.key, rawEncounter.map, participants, aiControl, routines);
+    // a fight whose ending the story learns some other way names no switch, and zero is that "none".
+    const defeatSwitchId = rawEncounter.defeatSwitch ?? 0;
+
+    // reactions are optional too; a boss that does the same thing from start to finish has none.
+    const rawReactions = rawEncounter.reactions ?? [];
+    const reactions = rawReactions.map(raw => this.parseReaction(raw));
+
+    const { key, map } = rawEncounter;
+    return new JabsBossEncounter(key, map, participants, aiControl, routines, defeatSwitchId, reactions);
   }
 
   /**
    * Builds one participant out of its raw configuration.
+   *
+   * A participant names an enemy and the tile it appears on rather than an event, because the
+   * encounter spawns its own bodies when it starts. The same configuration then serves every map the
+   * fight is staged on.
    * @param {any} rawParticipant The unparsed participant from configuration.
    * @returns {JabsBossParticipant}
    */
   parseParticipant(rawParticipant)
   {
-    const { key, eventId, enemyId, expect } = rawParticipant;
+    const { key, enemyId, expect, x, y } = rawParticipant;
 
-    return new JabsBossParticipant(key, eventId, enemyId, expect);
+    // a participant naming no template of its own spawns from the slot matching its enemy id, and zero
+    // is that "none".
+    const template = rawParticipant.template ?? 0;
+    const templateId = template === 0 ? enemyId : template;
+
+    return new JabsBossParticipant(key, enemyId, expect, x, y, templateId);
+  }
+
+  /**
+   * Builds one reaction out of its raw configuration.
+   * @param {any} rawReaction The unparsed reaction from configuration.
+   * @returns {JabsBossReaction}
+   */
+  parseReaction(rawReaction)
+  {
+    const { key, on } = rawReaction;
+
+    // only a fallen or health trigger waits on anybody, so a reaction to anything else names nobody.
+    const participantKeys = rawReaction.participants ?? [];
+    const steps = rawReaction.steps.map(raw => this.parseStep(raw));
+
+    // only a health trigger waits on a percent, and zero is that "none" for every other trigger.
+    const belowPercent = rawReaction.below ?? 0;
+
+    return new JabsBossReaction(key, on, participantKeys, steps, belowPercent);
   }
 
   /**
@@ -101,7 +138,7 @@ class J_BossPluginMetadata
    */
   parseRoutine(rawRoutine)
   {
-    const cadenceFrames = Math.round(rawRoutine.cadence * FRAMES_PER_SECOND);
+    const cadenceFrames = this.secondsToFrames(rawRoutine.cadence);
     const steps = rawRoutine.steps.map(raw => this.parseStep(raw));
 
     return new JabsBossRoutine(rawRoutine.key, cadenceFrames, steps);
@@ -114,13 +151,53 @@ class J_BossPluginMetadata
    */
   parseStep(rawStep)
   {
-    const { verb, skill, expect } = rawStep;
+    // a spawn naming no template of its own copies the slot matching its enemy id, exactly the way a
+    // participant does, and zero is that "none".
+    const enemyId = rawStep.enemyId ?? 0;
+    const template = rawStep.template ?? 0;
+    const templateId = template === 0 ? enemyId : template;
 
-    // a skill defaults to observing its own cast time, because the common case is an attack the
-    // player is meant to see coming. Removing the wind-up is the exception and must be asked for.
-    const cast = rawStep.cast !== false;
+    // every field any verb reads is read for every step, and each one this step's verb has no use for
+    // simply sits at its "none". That keeps one shape for every step, whatever its verb.
+    const details = {
+      // a step naming nobody acts on the boss itself.
+      participantKey: rawStep.participant ?? String.empty,
+      skillId: rawStep.skill ?? 0,
+      stateId: rawStep.state ?? 0,
 
-    return new JabsBossStep(verb, skill, expect, cast);
+      // an author who records no name gets no drift tripwire, which is their choice to make.
+      expect: rawStep.expect ?? String.empty,
+
+      // a skill defaults to observing its own cast time, because the common case is an attack the
+      // player is meant to see coming. Removing the wind-up is the exception and must be asked for.
+      cast: rawStep.cast !== false,
+      characterName: rawStep.image ?? String.empty,
+      characterIndex: rawStep.index ?? 0,
+      routineKey: rawStep.routine ?? String.empty,
+
+      // authors speed a routine up, or let a tint settle, in seconds- the same unit they wrote cadences in.
+      frames: this.secondsToFrames(rawStep.seconds ?? 0),
+      enemyId,
+      templateId,
+      x: rawStep.x ?? 0,
+      y: rawStep.y ?? 0,
+      tone: rawStep.tone ?? [],
+      animationId: rawStep.animation ?? 0,
+      speaker: rawStep.speaker ?? String.empty,
+      lines: rawStep.lines ?? [],
+    };
+
+    return new JabsBossStep(rawStep.verb, details);
+  }
+
+  /**
+   * Translates an author-facing count of seconds into engine frames, rounded to a whole frame.
+   * @param {number} seconds The seconds to translate.
+   * @returns {number}
+   */
+  secondsToFrames(seconds)
+  {
+    return Math.round(seconds * FRAMES_PER_SECOND);
   }
 }
 

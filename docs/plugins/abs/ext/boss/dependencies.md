@@ -24,5 +24,5 @@ All plugins in this ecosystem require the base plugin.
 
 ## J-ABS
 
-Carries the `bosses` block in its `data/config.jabs.json`, and supplies the battlers on the encounter's events that this
-plugin forces skills through.
+Carries the `bosses` block in its `data/config.jabs.json`, spawns each encounter's bodies from its enemy clone map, and
+supplies the battlers this plugin forces skills through.

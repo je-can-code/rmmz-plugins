@@ -23,13 +23,27 @@ describe('J-ABS-Boss metadata (constructed through the real PluginMetadata)', ()
   const rawEncounter = {
     key: 'gluttonwolf',
     map: 75,
-    participants: [ { key: 'mayor', eventId: 4, enemyId: 581, expect: 'Gluttonwolf Mayor' } ],
+    defeatSwitch: 24,
+    participants: [
+      { key: 'mayor', enemyId: 581, expect: 'Gluttonwolf Mayor', x: 8, y: 14 },
+      { key: 'golem', enemyId: 501, expect: 'Golem', x: 4, y: 3, template: 601 },
+    ],
     aiControl: 'shared',
     routines: [ {
       key: 'devour',
       cadence: 20,
       steps: [ { verb: 'forceSkill', skill: 2584, expect: 'Devour', cast: true } ],
     } ],
+    reactions: [
+      { key: 'seal', on: 'start', steps: [ { verb: 'addState', participant: 'mayor', state: 2072, expect: 'Sealed' } ] },
+      {
+        key: 'enrage',
+        on: 'fallen',
+        participants: [ 'golem' ],
+        steps: [ { verb: 'quickenRoutine', routine: 'devour', seconds: 1 } ],
+      },
+      { key: 'flare', on: 'health', below: 66, steps: [ { verb: 'tint', tone: [ 17, -68, -68, 0 ], seconds: 2 } ] },
+    ],
   };
 
   const previousGlobals = {};
@@ -41,6 +55,10 @@ describe('J-ABS-Boss metadata (constructed through the real PluginMetadata)', ()
     previousGlobals.PluginManager = globalThis.PluginManager;
     previousGlobals.PluginMetadata = globalThis.PluginMetadata;
     previousGlobals.J = globalThis.J;
+    previousGlobals.empty = String.empty;
+
+    // J-Base hangs the empty string off String for the whole game; a step's unused text fields default to it.
+    String.empty = '';
 
     globalThis.PluginManager = {
       parameters: () => ({}),
@@ -73,6 +91,7 @@ describe('J-ABS-Boss metadata (constructed through the real PluginMetadata)', ()
     globalThis.PluginManager = previousGlobals.PluginManager;
     globalThis.PluginMetadata = previousGlobals.PluginMetadata;
     globalThis.J = previousGlobals.J;
+    String.empty = previousGlobals.empty;
   });
 
   describe('construction', () =>
@@ -105,6 +124,19 @@ describe('J-ABS-Boss metadata (constructed through the real PluginMetadata)', ()
     beforeAll(() =>
     {
       metadata = new J_BossPluginMetadata(`${PLUGIN_NAME}-Parsing`, '1.0.0');
+    });
+
+    it('reads each participant as an enemy and the tile it appears on', () =>
+    {
+      // Arrange & Act
+      const [ participant ] = metadata.parseEncounter(rawEncounter).participants();
+
+      // Assert
+      expect(participant.key()).toBe('mayor');
+      expect(participant.enemyId()).toBe(581);
+      expect(participant.expect()).toBe('Gluttonwolf Mayor');
+      expect(participant.x()).toBe(8);
+      expect(participant.y()).toBe(14);
     });
 
     it('translates the author-facing cadence from seconds into frames', () =>
@@ -146,6 +178,27 @@ describe('J-ABS-Boss metadata (constructed through the real PluginMetadata)', ()
       expect(step.isCast()).toBe(false);
     });
 
+    it('reads the switch an encounter turns on once it is won', () =>
+    {
+      // Arrange & Act
+      const encounter = metadata.parseEncounter(rawEncounter);
+
+      // Assert
+      expect(encounter.defeatSwitchId()).toBe(24);
+    });
+
+    it('reads an encounter that names no defeat switch as turning none on', () =>
+    {
+      // Arrange
+      const { defeatSwitch, ...withoutDefeatSwitch } = rawEncounter;
+
+      // Act
+      const encounter = metadata.parseEncounter(withoutDefeatSwitch);
+
+      // Assert
+      expect(encounter.defeatSwitchId()).toBe(0);
+    });
+
     it('treats a missing routines list as an encounter with no scripted behavior', () =>
     {
       // Arrange
@@ -156,6 +209,189 @@ describe('J-ABS-Boss metadata (constructed through the real PluginMetadata)', ()
 
       // Assert
       expect(encounter.routines()).toEqual([]);
+    });
+
+    it('spawns a participant that names no template from the slot matching its enemy id', () =>
+    {
+      // Arrange & Act
+      const [ mayor ] = metadata.parseEncounter(rawEncounter).participants();
+
+      // Assert
+      expect(mayor.templateId()).toBe(581);
+    });
+
+    it('spawns a participant from the template it names, while it stays the enemy it names', () =>
+    {
+      // Arrange & Act
+      const [ , golem ] = metadata.parseEncounter(rawEncounter).participants();
+
+      // Assert
+      expect(golem.templateId()).toBe(601);
+      expect(golem.enemyId()).toBe(501);
+    });
+
+    it('reads a template of zero as naming none', () =>
+    {
+      // Arrange & Act
+      const participant = metadata.parseParticipant({ key: 'golem', enemyId: 501, expect: 'Golem', x: 4, y: 3, template: 0 });
+
+      // Assert
+      expect(participant.templateId()).toBe(501);
+    });
+
+    it('reads each reaction as the moment it answers, the bodies it waits on, and its steps', () =>
+    {
+      // Arrange & Act
+      const [ , enrage ] = metadata.parseEncounter(rawEncounter).reactions();
+
+      // Assert
+      expect(enrage.key()).toBe('enrage');
+      expect(enrage.trigger()).toBe('fallen');
+      expect(enrage.participantKeys()).toEqual([ 'golem' ]);
+      expect(enrage.steps()[0].routineKey()).toBe('devour');
+    });
+
+    it('reads a reaction that names no bodies as waiting on nobody', () =>
+    {
+      // Arrange & Act
+      const [ seal ] = metadata.parseEncounter(rawEncounter).reactions();
+
+      // Assert- the trigger proves this is the parsed reaction, not an empty stand-in.
+      expect(seal.trigger()).toBe('start');
+      expect(seal.participantKeys()).toEqual([]);
+    });
+
+    it('reads the percent of health a health reaction waits for', () =>
+    {
+      // Arrange & Act
+      const [ , , flare ] = metadata.parseEncounter(rawEncounter).reactions();
+
+      // Assert
+      expect(flare.trigger()).toBe('health');
+      expect(flare.belowPercent()).toBe(66);
+    });
+
+    it('reads a reaction that names no percent as waiting on none', () =>
+    {
+      // Arrange & Act
+      const [ seal ] = metadata.parseEncounter(rawEncounter).reactions();
+
+      // Assert- the key proves this is the parsed reaction, not an empty stand-in.
+      expect(seal.key()).toBe('seal');
+      expect(seal.belowPercent()).toBe(0);
+    });
+
+    it('spawns a step\'s enemy from the slot matching its id when it names no template', () =>
+    {
+      // Arrange & Act
+      const step = metadata.parseStep({ verb: 'spawn', enemyId: 511, expect: 'Ignihazard', x: 44, y: 16 });
+
+      // Assert
+      expect(step.templateId()).toBe(511);
+    });
+
+    it('spawns a step\'s enemy from the template it names, while it stays the enemy it names', () =>
+    {
+      // Arrange & Act
+      const step = metadata.parseStep({ verb: 'spawn', enemyId: 511, expect: 'Ignihazard', template: 605 });
+
+      // Assert
+      expect(step.templateId()).toBe(605);
+      expect(step.enemyId()).toBe(511);
+    });
+
+    it('treats a missing reactions list as an encounter that reacts to nothing', () =>
+    {
+      // Arrange
+      const { reactions, ...withoutReactions } = rawEncounter;
+
+      // Act
+      const encounter = metadata.parseEncounter(withoutReactions);
+
+      // Assert
+      expect(encounter.reactions()).toEqual([]);
+    });
+
+    it('reads every field a step can carry', () =>
+    {
+      // Arrange
+      const rawStep = {
+        verb: 'changeImage',
+        participant: 'golem',
+        skill: 2584,
+        state: 2072,
+        expect: 'Sealed',
+        cast: false,
+        image: '$m_elemental-earthie',
+        index: 3,
+        routine: 'devour',
+        seconds: 2,
+        enemyId: 511,
+        template: 605,
+        x: 44,
+        y: 16,
+        tone: [ 17, -68, -68, 0 ],
+        animation: 56,
+        speaker: '\\C[10]Cynder\\C[0]',
+        lines: [ '\\pop[self]BRING IT' ],
+      };
+
+      // Act
+      const step = metadata.parseStep(rawStep);
+
+      // Assert
+      expect(step.verb()).toBe('changeImage');
+      expect(step.participantKey()).toBe('golem');
+      expect(step.skillId()).toBe(2584);
+      expect(step.stateId()).toBe(2072);
+      expect(step.expect()).toBe('Sealed');
+      expect(step.isCast()).toBe(false);
+      expect(step.characterName()).toBe('$m_elemental-earthie');
+      expect(step.characterIndex()).toBe(3);
+      expect(step.routineKey()).toBe('devour');
+      expect(step.frames()).toBe(120);
+      expect(step.enemyId()).toBe(511);
+      expect(step.templateId()).toBe(605);
+      expect(step.x()).toBe(44);
+      expect(step.y()).toBe(16);
+      expect(step.tone()).toEqual([ 17, -68, -68, 0 ]);
+      expect(step.animationId()).toBe(56);
+      expect(step.speaker()).toBe('\\C[10]Cynder\\C[0]');
+      expect(step.lines()).toEqual([ '\\pop[self]BRING IT' ]);
+    });
+
+    it('fills every field a step leaves out with its none', () =>
+    {
+      // Arrange & Act
+      const step = metadata.parseStep({ verb: 'removeState' });
+
+      // Assert- the verb proves the step was parsed; every other field fell back.
+      expect(step.verb()).toBe('removeState');
+      expect(step.participantKey()).toBe('');
+      expect(step.skillId()).toBe(0);
+      expect(step.stateId()).toBe(0);
+      expect(step.expect()).toBe('');
+      expect(step.characterName()).toBe('');
+      expect(step.characterIndex()).toBe(0);
+      expect(step.routineKey()).toBe('');
+      expect(step.frames()).toBe(0);
+      expect(step.enemyId()).toBe(0);
+      expect(step.templateId()).toBe(0);
+      expect(step.x()).toBe(0);
+      expect(step.y()).toBe(0);
+      expect(step.tone()).toEqual([]);
+      expect(step.animationId()).toBe(0);
+      expect(step.speaker()).toBe('');
+      expect(step.lines()).toEqual([]);
+    });
+
+    it('translates a quickening from seconds into frames, rounded to a whole frame', () =>
+    {
+      // Arrange & Act
+      const step = metadata.parseStep({ verb: 'quickenRoutine', routine: 'devour', seconds: 1.505 });
+
+      // Assert: 90.3 frames rounds to 90.
+      expect(step.frames()).toBe(90);
     });
   });
 });

@@ -6,6 +6,17 @@
  * destructible parts, a pair of twins, and a swarm sharing one health pool are all the same
  * structure wearing different win conditions. Keeping participants a list from day one means none
  * of those require a new shape later.
+ *
+ * A participant is not an event on any particular map. It names an enemy and the tile that enemy
+ * appears on, and the encounter spawns it from the enemy clone map onto whichever map the fight
+ * starts on. That is what lets one encounter run unchanged in its real arena and in a test hall built
+ * in the same shape: neither map holds the boss, so neither map's event numbering has to agree with
+ * anything, and no editor ever has to be talked into assigning an event a particular id.
+ *
+ * Usually the template it spawns from is the one in the slot matching its enemy id. A participant can
+ * name a different template instead, for a body that is that same enemy but dressed for this one fight:
+ * a prefix it always wears, a role it plays, a level it fights at. The enemy's own template stays exactly
+ * as it is for every other place that enemy turns up.
  */
 class JabsBossParticipant
 {
@@ -16,16 +27,22 @@ class JabsBossParticipant
   #key = String.empty;
 
   /**
-   * The id of the event on the encounter's map that hosts this participant's battler.
-   * @type {number}
-   */
-  #eventId = 0;
-
-  /**
-   * The id of the enemy in the database that this participant is expected to be.
+   * The id of the enemy in the database that this participant is.
+   *
+   * The body spawned for it has to turn out to be this enemy, whichever template it came from.
    * @type {number}
    */
   #enemyId = 0;
+
+  /**
+   * The id of the event on the enemy clone map this participant spawns from.
+   *
+   * The clone map keeps each enemy's own template in the slot matching its enemy id, so that slot is
+   * what a participant spawns from unless it names another. A template of its own sits past the last
+   * enemy id, where no enemy added later can ever claim the slot.
+   * @type {number}
+   */
+  #templateId = 0;
 
   /**
    * The name this participant's enemy had when the encounter was authored.
@@ -38,18 +55,34 @@ class JabsBossParticipant
   #expect = String.empty;
 
   /**
+   * The x coordinate of the tile this participant appears on when the encounter starts.
+   * @type {number}
+   */
+  #x = 0;
+
+  /**
+   * The y coordinate of the tile this participant appears on when the encounter starts.
+   * @type {number}
+   */
+  #y = 0;
+
+  /**
    * Constructor.
    * @param {string} key The author-facing name for this participant.
-   * @param {number} eventId The id of the event hosting this participant's battler.
-   * @param {number} enemyId The id of the enemy this participant should be.
+   * @param {number} enemyId The id of the enemy this participant is.
    * @param {string} expect The enemy name recorded when this encounter was authored.
+   * @param {number} x The x coordinate of the tile this participant appears on.
+   * @param {number} y The y coordinate of the tile this participant appears on.
+   * @param {number} templateId The id of the clone map event this participant spawns from.
    */
-  constructor(key, eventId, enemyId, expect)
+  constructor(key, enemyId, expect, x, y, templateId)
   {
     this.#key = key;
-    this.#eventId = eventId;
     this.#enemyId = enemyId;
     this.#expect = expect;
+    this.#x = x;
+    this.#y = y;
+    this.#templateId = templateId;
   }
 
   /**
@@ -62,21 +95,21 @@ class JabsBossParticipant
   }
 
   /**
-   * Gets the id of the event hosting this participant's battler.
-   * @returns {number}
-   */
-  eventId()
-  {
-    return this.#eventId;
-  }
-
-  /**
-   * Gets the id of the enemy this participant should be.
+   * Gets the id of the enemy this participant is.
    * @returns {number}
    */
   enemyId()
   {
     return this.#enemyId;
+  }
+
+  /**
+   * Gets the id of the clone map event this participant spawns from.
+   * @returns {number}
+   */
+  templateId()
+  {
+    return this.#templateId;
   }
 
   /**
@@ -86,6 +119,24 @@ class JabsBossParticipant
   expect()
   {
     return this.#expect;
+  }
+
+  /**
+   * Gets the x coordinate of the tile this participant appears on when the encounter starts.
+   * @returns {number}
+   */
+  x()
+  {
+    return this.#x;
+  }
+
+  /**
+   * Gets the y coordinate of the tile this participant appears on when the encounter starts.
+   * @returns {number}
+   */
+  y()
+  {
+    return this.#y;
   }
 }
 

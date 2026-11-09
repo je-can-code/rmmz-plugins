@@ -42,6 +42,7 @@ J.ABS.EXT.BOSS.Metadata = new J_BossPluginMetadata(__PLUGIN_NAME__, __PLUGIN_VER
  */
 J.ABS.EXT.BOSS.Aliased = {
   Game_Map: new Map(),
+  JABS_Engine: new Map(),
 };
 
 /**

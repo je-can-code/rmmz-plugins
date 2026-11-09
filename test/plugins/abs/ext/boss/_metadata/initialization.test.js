@@ -40,11 +40,13 @@ describe('J-ABS-Boss initialization', () =>
         {
           key: 'gluttonwolf',
           map: 75,
+          defeatSwitch: 24,
           participants: [ {
             key: 'mayor',
-            eventId: 4,
             enemyId: 581,
             expect: 'Gluttonwolf Mayor',
+            x: 8,
+            y: 14,
           } ],
           aiControl: 'shared',
           routines: [ {
@@ -77,9 +79,11 @@ describe('J-ABS-Boss initialization', () =>
       // Assert: a missing map surfaces later as "cannot read set of undefined" at patch time.
       expect(Aliased.Game_Map)
         .toBeInstanceOf(Map);
+      expect(Aliased.JABS_Engine)
+        .toBeInstanceOf(Map);
     });
 
-    it('starts the alias map empty, so the patching code owns each entry', () =>
+    it('starts the alias maps empty, so the patching code owns each entry', () =>
     {
       // Arrange
       // Act
@@ -87,6 +91,8 @@ describe('J-ABS-Boss initialization', () =>
 
       // Assert
       expect(Aliased.Game_Map.size)
+        .toBe(0);
+      expect(Aliased.JABS_Engine.size)
         .toBe(0);
     });
 

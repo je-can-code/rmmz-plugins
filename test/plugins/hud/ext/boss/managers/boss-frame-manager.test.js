@@ -146,6 +146,51 @@ describe('BossFrameManager (direct src import)', () =>
     });
   });
 
+  describe('setBossFromEncounter', () =>
+  {
+    it('throws when the boss plugin is not installed to ask', () =>
+    {
+      // Arrange
+      // no JabsBossManager exists, which is how the frame finds itself without J-ABS-Boss.
+
+      // Act/Assert- pinned to the deliberate refusal, not the TypeError it stands in front of.
+      expect(() => BossFrameManager.setBossFromEncounter()).toThrow('Failed to create boss for boss frame.');
+    });
+
+    it('throws when the encounter has no boss on the map to frame', () =>
+    {
+      // Arrange
+      globalThis.JabsBossManager = { getBossJabsBattler: () => null };
+
+      // Act/Assert
+      expect(() => BossFrameManager.setBossFromEncounter()).toThrow('Failed to create boss for boss frame.');
+
+      delete globalThis.JabsBossManager;
+    });
+
+    it('builds and sets a boss FramedTarget from the body the encounter spawned', () =>
+    {
+      // Arrange- the spawned body has no event id anyone knew ahead of time, so the frame must never
+      // go looking for one on the map.
+      const battler = { name: () => 'Gluttonwolf Mayor', currentHpPercent100: vi.fn() };
+      const jabsBattler = { getBattler: () => battler, decorateFramedTarget: vi.fn() };
+      globalThis.JabsBossManager = { getBossJabsBattler: () => jabsBattler };
+
+      // Act
+      BossFrameManager.setBossFromEncounter();
+
+      // Assert
+      const boss = BossFrameManager.getBossFrame();
+      expect(boss.name).toEqual('Gluttonwolf Mayor');
+      expect(boss.battler).toBe(battler);
+      expect(jabsBattler.decorateFramedTarget).toHaveBeenCalledWith(boss, jabsBattler);
+      expect(BossFrameManager.needsBossFrameRefresh()).toEqual(true);
+      expect(globalThis.$gameMap.event).not.toHaveBeenCalled();
+
+      delete globalThis.JabsBossManager;
+    });
+  });
+
   describe('getBossGameBattler', () =>
   {
     it('returns null when there is no boss', () =>
