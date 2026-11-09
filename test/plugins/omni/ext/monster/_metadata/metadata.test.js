@@ -2,7 +2,9 @@
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 
 import {
+  installOmniConfig,
   installOmniHostGlobals,
+  SAMPLE_OMNI_CONFIG,
   setPluginContextToJBase,
   setPluginContextToJOmnipedia,
   setPluginContextToJOmniMonster,
@@ -15,6 +17,9 @@ describe('J-OMNI-Monsters metadata (direct src import)', () =>
     vi.resetModules();
 
     installOmniHostGlobals();
+
+    // the metadata reads the monsterpedia's pages from the omnipedia's configuration as it boots.
+    installOmniConfig();
 
     setPluginContextToJBase();
     await import('../../../../../../src/plugins/_base/core/_metadata/initialization.js');
@@ -84,6 +89,33 @@ describe('J-OMNI-Monsters metadata (direct src import)', () =>
 
       // Assert
       expect(match).toBeNull();
+    });
+
+    it('captures a monster type key, with or without the optional space', () =>
+    {
+      // Arrange
+      const { MonsterType } = globalThis.J.OMNI.EXT.MONSTER.RegExp;
+
+      // Act
+      const tight = '<monsterType:destructible>'.match(MonsterType);
+      const spaced = '<monsterType: boss-add>'.match(MonsterType);
+
+      // Assert: a hyphenated key survives whole.
+      expect(tight[1]).toBe('destructible');
+      expect(spaced[1]).toBe('boss-add');
+    });
+  });
+
+  describe('monsterpedia pages', () =>
+  {
+    it('reads its pages from the omnipedia configuration, in the order they were authored', () =>
+    {
+      // Arrange & Act
+      const { monsterTypes } = globalThis.J.OMNI.EXT.MONSTER.Metadata;
+
+      // Assert
+      expect(monsterTypes).toEqual(SAMPLE_OMNI_CONFIG.monsterTypes);
+      expect(monsterTypes.map(monsterType => monsterType.key)).toEqual([ 'enemy', 'destructible' ]);
     });
   });
 

@@ -94,13 +94,30 @@ describe('JABS_Engine ext/sdp augments (direct src import)', () =>
       expect(result).toEqual(0);
     });
 
+    it('returns 0 when the enemy carries <no:sdp>, though the gate allows it and points are owed', () =>
+    {
+      // Arrange
+      const engine = new JABS_Engine();
+      engine.canGainReward = vi.fn().mockReturnValue(true);
+      engine.getRewardScalingMultiplier = vi.fn().mockReturnValue(1.2);
+      const actor = { getBattler: () => ({}) };
+      const enemy = { sdpPoints: vi.fn().mockReturnValue(10), hasNoSdp: () => true };
+
+      // Act
+      const result = engine.determineSdpGained(enemy, actor);
+
+      // Assert
+      expect(result).toEqual(0);
+      expect(enemy.sdpPoints).not.toHaveBeenCalled();
+    });
+
     it('returns 0 when the enemy grants no base sdp points', () =>
     {
       // Arrange
       const engine = new JABS_Engine();
       engine.canGainReward = vi.fn().mockReturnValue(true);
       const actor = { getBattler: () => ({}) };
-      const enemy = { sdpPoints: vi.fn().mockReturnValue(0) };
+      const enemy = { sdpPoints: vi.fn().mockReturnValue(0), hasNoSdp: () => false };
 
       // Act
       const result = engine.determineSdpGained(enemy, actor);
@@ -116,7 +133,7 @@ describe('JABS_Engine ext/sdp augments (direct src import)', () =>
       engine.canGainReward = vi.fn().mockReturnValue(true);
       engine.getRewardScalingMultiplier = vi.fn().mockReturnValue(1.2);
       const actor = { getBattler: () => ({}) };
-      const enemy = { sdpPoints: vi.fn().mockReturnValue(10) };
+      const enemy = { sdpPoints: vi.fn().mockReturnValue(10), hasNoSdp: () => false };
 
       // Act
       const result = engine.determineSdpGained(enemy, actor);

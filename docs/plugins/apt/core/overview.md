@@ -3,7 +3,7 @@ type: overview
 title: The Plugin Overview
 description: The general overview for what this plugin is about along with the when and how you might use it.
 tags: [ap, overview]
-version: "2.0.1"
+version: "2.1.0"
 ---
 
 # Overview
@@ -19,6 +19,7 @@ Points are obtained by default by defeating enemies, and optionally can be gaine
 When points are gained, based on the currently-active sources (such as classes, equipped weapons and armor, applied
 states, or even the actor itself), every source will gain the full amount. If there are no currently-active sources,
 then the AP gain does nothing. When enough points are obtained based on the teachable, the skill will be learned.
+An enemy whose notes carry `<no:ap>`, or J-ABS's `<noRewardPoints>`, grants none (see [No AP](notetags/no-ap.md)).
 
 ### Applying teachables
 

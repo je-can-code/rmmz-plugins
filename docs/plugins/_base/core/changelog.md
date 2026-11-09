@@ -11,6 +11,8 @@ All the versioning and history of changes live here.
 
 ## The Actual Changelog
 
+### 4.3.0
+  - Added CharacterFrame and Window_Base.drawCharacterStanding, which draw a character's front-facing standing frame.
 ### 4.2.1
   - AGI's description now reads as precision damage rather than movement and agility.
 ### 4.2.0

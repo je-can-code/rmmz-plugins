@@ -3,6 +3,12 @@ class J_OmniMonster_PluginMetadata
   extends PluginMetadata
 {
   /**
+   * The path where the omnipedia's configuration is located.
+   * @type {string}
+   */
+  static CONFIG_PATH = 'data/config.omni.json';
+
+  /**
    * Constructor.
    * @param {string} name The plugin name.
    * @param {string} version The plugin version.
@@ -21,6 +27,35 @@ class J_OmniMonster_PluginMetadata
     super.postInitialize();
 
     this.initializeMetadata();
+
+    // the pages the monsterpedia flips between are authored in the omnipedia's configuration.
+    this.initializeMonsterTypes();
+  }
+
+  /**
+   * Loads the kinds of entry the monsterpedia lists, each a page of its own, from the omnipedia's
+   * configuration file.<br/>
+   * A kind carries the key enemy rows name with `<monsterType:KEY>`, plus the name and icon its page
+   * shows in the strip above the list. The order they are authored in is the order L2/R2 walks them,
+   * and the first of them is the page the monsterpedia opens on.
+   */
+  initializeMonsterTypes()
+  {
+    // name this plugin and its file in anything the loader has to report.
+    const options = ExternalJsonConfigLoaderOptions.Builder()
+      .pluginName(__PLUGIN_NAME__)
+      .configName('omnipedia configuration')
+      .build();
+
+    // read the configuration; a missing or malformed file stops the boot with the path named.
+    const parsedConfiguration = ExternalJsonConfigLoader.load(J_OmniMonster_PluginMetadata.CONFIG_PATH, options);
+
+    /**
+     * Every kind of entry the monsterpedia lists, in the order its pages are walked, and whether the
+     * entries on each page show their stats.
+     * @type {{key: string, name: string, iconIndex: number, showsStats: boolean}[]}
+     */
+    this.monsterTypes = parsedConfiguration.monsterTypes;
   }
 
   /**

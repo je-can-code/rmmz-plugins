@@ -11,6 +11,9 @@ All the versioning and history of changes live here.
 
 ## The Actual Changelog
 
+### 1.1.0
+  - Flat experience respects `<no:exp>`.
+  - Requires J-ABS 4.28.0.
 ### 1.0.2
   - Corrected PLUGIN_NAME from J-LEVEL-Flat to J-Level-Flat, matching the name the ship has always been built and
     shipped under.

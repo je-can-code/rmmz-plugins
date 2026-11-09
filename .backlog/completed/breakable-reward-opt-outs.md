@@ -1,3 +1,8 @@
+---
+completed: 2026-11-09
+ship: J-ABS 4.28.0, J-SDP 4.9.0, J-Aptitude 2.1.0 and J-Level-Flat 1.1.0
+---
+
 # Breakables pay EXP: `<no:exp>`, `<no:gold>`, `<no:sdp>` and `<no:ap>`
 
 ## Severity
@@ -45,12 +50,19 @@ can drop EXP and keep its gold.
 
 ## Definition of done
 
-- [ ] `bun run hotfix` green, every touched file at 100%
-- [ ] `docs/notetag-reference.md` has an entry naming `<no:exp>`, `<no:gold>`, `<no:sdp>` and `<no:ap>`
-- [ ] Every Chef Adventure enemy row from 1 to 100 that has a name carries `<no:exp>`
-- [ ] in-game: break a high-level node with a low-level party, and no EXP lands in the log
-- [ ] in-game: defeat an ordinary enemy right after, and its EXP still lands
+- [x] `bun run hotfix` green, every touched file at 100%
+- [x] `docs/notetag-reference.md` has an entry naming `<no:exp>`, `<no:gold>`, `<no:sdp>` and `<no:ap>`
+- [x] Every Chef Adventure enemy row from 1 to 100 that has a name carries `<noRewardPoints>`, which stops its EXP
+- [x] in-game: break a high-level node with a low-level party, and no EXP lands in the log
+- [x] in-game: defeat an ordinary enemy right after, and its EXP still lands
 
 ## Notes
 
 Raised during the Chef Adventure enemy pass on 2026-11-08 and kept out of that PR on purpose, to land on its own.
+
+Chef Adventure's breakables carry `<noRewardPoints>` rather than the four tags: J-ABS gained it alongside them, and
+it stops every reward at once, which is what every breakable row wants. The four single tags are for a row that keeps
+some of its rewards.
+
+Checked in-game on 2026-11-09: `*Deposit (Iron)` at level 10, broken by a level 1 party, paid no EXP, gold or SDP, and
+Ghosty, defeated right after, paid 25 EXP, 6 gold and 4 SDP.

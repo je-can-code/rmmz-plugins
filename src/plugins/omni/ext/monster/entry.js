@@ -1,6 +1,9 @@
 import './_metadata/initialization.js';
 
 import './__models/MonsterpediaObservations.js';
+import './managers/MonsterpediaTypes.js';
+import './managers/MonsterpediaRoster.js';
+import './managers/MonsterpediaDropSummary.js';
 import './database/RPG_Enemy.js';
 import './objects/Game_Enemy.js';
 import './objects/Game_Party.js';

@@ -5,7 +5,7 @@ description: The list of dependencies- required and optional- for this plugin.
 tags: [plugins, deps]
 dependencies:
   - key: J-Base
-    version: 3.3.0
+    version: 4.3.0
     base: true
     orderAfter: false
   - key: J-ABS
@@ -46,8 +46,9 @@ All plugins in this ecosystem require the base plugin.
 
 ## J-ABS
 
-Supplies the on-hit hook the Monsterpedia learns which elements were used against an enemy from, and the `$gameEnemies`
-registry the detail window reads each enemy's stats and rewards from.
+Supplies the on-hit hook the Monsterpedia learns which elements were used against an enemy from, the `$gameEnemies`
+registry the detail window reads each enemy's stats and rewards from, and the enemy map
+(`JABS_Engine.getEnemyCloneList()`) whose events the detail window pictures each enemy from.
 
 ## J-DropsControl
 

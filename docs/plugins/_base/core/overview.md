@@ -3,7 +3,7 @@ type: overview
 title: The Plugin Overview
 description: The general overview for what this plugin is about along with the when and how you might use it.
 tags: [base, overview]
-version: "4.2.1"
+version: "4.3.0"
 ---
 
 # Overview
@@ -34,4 +34,5 @@ existed were added, and coding patterns that were used erratically are... less e
 - adds an API for retrieving specific regex-based comments from an event.
 - adds an API for getting all notes associated with given battlers.
 - adds a few reusable sprites for convenience, like faces, icons, and text.
+- adds `CharacterFrame` and `Window_Base.drawCharacterStanding`, for drawing a character's front-facing standing frame.
 - adds a parent class for subclassing to strongly type plugin metadata.

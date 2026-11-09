@@ -6,6 +6,20 @@ import vm from 'node:vm';
 
 import { repoRoot } from '../../../../../setup/repo-root.js';
 import { installMinimalDatabase, installRmmzViewLayer } from '../../../../../setup/rmmz-view-harness.js';
+import { installOmniConfig } from '../../../_component/fixtures/install-omni-host-globals.js';
+
+/**
+ * Three pages rather than the game's two, so walking the ring forwards and walking it backwards from
+ * the first page land in different places, and a ring walked the wrong way cannot pass.
+ * @type {{monsterTypes: {key: string, name: string, iconIndex: number, showsStats: boolean}[]}}
+ */
+const SCENE_OMNI_CONFIG = {
+  monsterTypes: [
+    { key: 'enemy', name: 'Monsterpedia', iconIndex: 14, showsStats: true },
+    { key: 'destructible', name: 'Destructapedia', iconIndex: 210, showsStats: false },
+    { key: 'summon', name: 'Summonpedia', iconIndex: 77, showsStats: true },
+  ],
+};
 
 /**
  * The facet layout is a seam between the scene, J-Base's chrome and the monster windows, and it does
@@ -34,7 +48,7 @@ describe('Scene_Monsterpedia (real view layer)', () =>
     };
 
     // the monster bundle aliases J-ABS globals that ship in another bundle entirely. Only their
-    // existence matters here; nothing in this test executes a combat hook.
+    // existence matters here; nothing in this test executes a combat hook or pictures an enemy.
     globalThis.JABS_Engine = function JABS_Engine() {};
     globalThis.JABS_Battler = function JABS_Battler() {};
     globalThis.JABS_MetricsManager = { isItemSlot: () => false };
@@ -44,13 +58,18 @@ describe('Scene_Monsterpedia (real view layer)', () =>
       'out/base/J-Base.js',
       'out/base/ext/J-Base-Save.js',
       'out/omni/J-Omnipedia.js',
-      'out/omni/ext/J-OMNI-Monsters.js',
     ].forEach(relative =>
     {
       const bundle = path.join(repoRoot, relative);
 
       vm.runInThisContext(fs.readFileSync(bundle, 'utf-8'), { filename: bundle });
     });
+
+    // the monster bundle reads its pages from the omnipedia's configuration the moment it loads.
+    installOmniConfig(globalThis, SCENE_OMNI_CONFIG);
+
+    const monsterBundle = path.join(repoRoot, 'out/omni/ext/J-OMNI-Monsters.js');
+    vm.runInThisContext(fs.readFileSync(monsterBundle, 'utf-8'), { filename: monsterBundle });
   });
 
   beforeEach(() =>
@@ -83,13 +102,17 @@ describe('Scene_Monsterpedia (real view layer)', () =>
       expect(scene.facetAreaRect().y).toBe(0);
     });
 
-    it('lays both windows inside the facet region and above the legend', () =>
+    it('lays every window inside the facet region and above the legend', () =>
     {
       // Arrange
       const scene = createScene();
       const facetArea = scene.facetAreaRect();
       const legend = scene.getControlLegendWindow();
-      const windows = [ scene.getMonsterpediaListWindow(), scene.getMonsterpediaDetailWindow() ];
+      const windows = [
+        scene.getTypeStripWindow(),
+        scene.getMonsterpediaListWindow(),
+        scene.getMonsterpediaDetailWindow(),
+      ];
 
       // Act & Assert: each window's far edges stay inside the region, and above where the legend begins.
       windows.forEach(window =>
@@ -102,18 +125,22 @@ describe('Scene_Monsterpedia (real view layer)', () =>
       });
     });
 
-    it('gives the list the whole column and the detail everything beside it', () =>
+    it('crowns the column with the strip, stacks the list beneath it, and gives the detail the rest', () =>
     {
       // Arrange
       const scene = createScene();
       const facetArea = scene.facetAreaRect();
+      const strip = scene.getTypeStripWindow();
       const list = scene.getMonsterpediaListWindow();
       const detail = scene.getMonsterpediaDetailWindow();
 
-      // Act & Assert: the list is exactly one command column tall as the region; the detail starts
-      // where it ends and runs to the region's far edge.
+      // Act & Assert: the strip and the list share the column and meet edge to edge, the list runs to
+      // the bottom of the region, and the detail starts where the column ends and fills the far side.
+      expect(strip.y).toBe(facetArea.y);
+      expect(list.x).toBe(strip.x);
+      expect(list.y).toBe(strip.y + strip.height);
       expect(list.width).toBe(scene.commandColumnWidth());
-      expect(list.height).toBe(facetArea.height);
+      expect(list.y + list.height).toBe(facetArea.y + facetArea.height);
       expect(detail.x).toBe(list.x + list.width);
       expect(detail.x + detail.width).toBe(facetArea.x + facetArea.width);
       expect(detail.height).toBe(facetArea.height);
@@ -122,14 +149,78 @@ describe('Scene_Monsterpedia (real view layer)', () =>
 
   describe('control legend', () =>
   {
-    it('has nothing to teach', () =>
+    it('teaches the shoulder triggers that flip between pages', () =>
+    {
+      // Arrange & Act
+      const scene = createScene();
+      const entries = scene.getControlLegendWindow()
+        .entries();
+
+      // Assert: cancel stays self-evident; the page triggers are the one thing worth teaching.
+      expect(entries.map(entry => entry.label)).toEqual([ 'pedia' ]);
+      expect(entries.at(0).semantic).toEqual([ 'content-prev', 'content-next' ]);
+    });
+  });
+
+  describe('page ring', () =>
+  {
+    it('opens on the first authored page, with the strip and the list agreeing on it', () =>
     {
       // Arrange & Act
       const scene = createScene();
 
-      // Assert: cancel is self-evident, and the legend window is still there to keep the chrome uniform.
-      expect(scene.controlLegendEntries()).toEqual([]);
-      expect(scene.getControlLegendWindow()).not.toBeNull();
+      // Assert
+      expect(scene.getTypeStripWindow()
+        .activePosition().key).toBe('enemy');
+      expect(scene.getMonsterpediaListWindow()
+        .getCurrentTypeKey()).toBe('enemy');
+    });
+
+    it('walking the ring forwards repoints the strip and the list, and hands the list its input back', () =>
+    {
+      // Arrange
+      const scene = createScene();
+
+      // Act
+      scene.cycleMonsterTypes(true);
+
+      // Assert
+      expect(scene.getTypeStripWindow()
+        .activePosition().key).toBe('destructible');
+      expect(scene.getMonsterpediaListWindow()
+        .getCurrentTypeKey()).toBe('destructible');
+      expect(scene.getMonsterpediaListWindow().active).toBe(true);
+    });
+
+    it('walking backwards from the first page wraps to the last', () =>
+    {
+      // Arrange
+      const scene = createScene();
+
+      // Act
+      scene.cycleMonsterTypes(false);
+
+      // Assert
+      expect(scene.getMonsterpediaListWindow()
+        .getCurrentTypeKey()).toBe('summon');
+    });
+
+    it('binds the shoulder triggers on the list to walking the ring', () =>
+    {
+      // Arrange
+      const scene = createScene();
+      const list = scene.getMonsterpediaListWindow();
+
+      // Act
+      list.callHandler('content-next');
+      list.callHandler('content-next');
+      const afterTwoForward = list.getCurrentTypeKey();
+      list.callHandler('content-prev');
+      const afterOneBack = list.getCurrentTypeKey();
+
+      // Assert
+      expect(afterTwoForward).toBe('summon');
+      expect(afterOneBack).toBe('destructible');
     });
   });
 

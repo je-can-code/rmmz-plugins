@@ -181,11 +181,11 @@ Window_MenuStatus.prototype.headerHeight = function()
 };
 
 /**
- * Draws an actor's map sprite in its neutral standing pose, facing the player.
+ * Draws an actor's map sprite in its neutral standing pose, facing the player, enlarged to sit beside
+ * the portrait.
  *
- * The engine's own {@link Window_Base.drawCharacter} selects exactly this frame, but blits it at
- * native size, which leaves it dwarfed by the portrait beside it. This exists solely to draw that
- * same frame enlarged.
+ * Which frame that is, and how it is blown up without blurring, is J-Base's
+ * {@link Window_Base.drawCharacterStanding}; this window only decides how much larger to draw it.
  *
  * Nothing here requests the sheet in advance. The party's own map sprites are necessarily cached by
  * the time a menu can be opened at all, and the scene refreshes this window again on start, which is
@@ -196,55 +196,12 @@ Window_MenuStatus.prototype.headerHeight = function()
  */
 Window_MenuStatus.prototype.drawActorWalkSprite = function(actor, x, y)
 {
-  // the sheet holding this actor's map graphic.
+  // the sheet and the character on it that this actor wears on the map.
   const characterName = actor.characterName();
-  const bitmap = ImageManager.loadCharacter(characterName);
+  const characterIndex = actor.characterIndex();
 
-  // a "$" sheet holds a single character in a 3x4 grid; an ordinary sheet holds eight in a 12x8 one.
-  const isBig = ImageManager.isBigCharacter(characterName);
-  const frameWidth = bitmap.width / (isBig ? 3 : 12);
-  const frameHeight = bitmap.height / (isBig ? 4 : 8);
-
-  // a big sheet's lone occupant always sits at position zero, whatever index the actor claims.
-  const position = isBig ? 0 : actor.characterIndex();
-
-  // the middle of the three walk frames, which is the neutral standing pose rather than a stride.
-  const sourceX = ((position % 4) * 3 + 1) * frameWidth;
-
-  // the first of the four direction rows, which is the one facing the player.
-  const sourceY = Math.floor(position / 4) * 4 * frameHeight;
-
-  // enlarge both axes off the frame's own measurements rather than off the width the layout
-  // reserved. The two agree for any sheet built to the tile grid, but a sheet whose frames are not
-  // square would be stretched by trusting the reservation.
-  const scale = this.walkSpriteScale();
-  const drawWidth = frameWidth * scale;
-  const drawHeight = frameHeight * scale;
-
-  // anchor bottom-center, matching the convention of the engine's own character drawing.
-  const destinationX = x - Math.floor(drawWidth / 2);
-  const destinationY = y - drawHeight;
-
-  // the enlargement happens through the 2d canvas, which interpolates by default- and bilinear
-  // smoothing is exactly wrong for pixel art, so the destination is switched to nearest-neighbor for
-  // the duration of the blit and handed back afterward for everything else drawn into this window.
-  const { context } = this.contents;
-  context.imageSmoothingEnabled = false;
-
-  // blit the single frame at its enlarged size.
-  this.contents.blt(
-    bitmap,
-    sourceX,
-    sourceY,
-    frameWidth,
-    frameHeight,
-    destinationX,
-    destinationY,
-    drawWidth,
-    drawHeight);
-
-  // restore interpolation for whatever is drawn next.
-  context.imageSmoothingEnabled = true;
+  // draw it at this menu's enlargement.
+  this.drawCharacterStanding(characterName, characterIndex, x, y, this.walkSpriteScale());
 };
 
 /**

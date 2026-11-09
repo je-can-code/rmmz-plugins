@@ -8794,10 +8794,30 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
 
   describe('canGainReward', () =>
   {
-    it('is true by default', () =>
+    it('grants rewards when the enemy does not refuse reward points', () =>
     {
+      // Arrange
       const engine = new JABS_Engine();
-      expect(engine.canGainReward('enemy', 'actor')).toBe(true);
+      const enemy = { hasNoRewardPoints: () => false };
+
+      // Act
+      const canGain = engine.canGainReward(enemy, 'actor');
+
+      // Assert
+      expect(canGain).toBe(true);
+    });
+
+    it('refuses rewards when the enemy carries <noRewardPoints>', () =>
+    {
+      // Arrange
+      const engine = new JABS_Engine();
+      const enemy = { hasNoRewardPoints: () => true };
+
+      // Act
+      const canGain = engine.canGainReward(enemy, 'actor');
+
+      // Assert
+      expect(canGain).toBe(false);
     });
   });
 
@@ -8805,31 +8825,64 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
   {
     it('returns 0 when the reward policy gate rejects rewards', () =>
     {
+      // Arrange
       const engine = new JABS_Engine();
       engine.canGainReward = vi.fn(() => false);
-      const enemy = { exp: () => 100 };
+      engine.getRewardScalingMultiplier = vi.fn(() => 2);
+      const enemy = { exp: () => 100, hasNoExp: () => false };
 
-      expect(engine.determineExperienceGained(enemy, 'actor')).toBe(0);
+      // Act
+      const experience = engine.determineExperienceGained(enemy, 'actor');
+
+      // Assert
+      expect(experience).toBe(0);
+    });
+
+    it('returns 0 when the enemy carries <no:exp>, though the gate allows rewards', () =>
+    {
+      // Arrange
+      const engine = new JABS_Engine();
+      engine.canGainReward = vi.fn(() => true);
+      engine.getRewardScalingMultiplier = vi.fn(() => 2);
+      const enemy = { exp: () => 100, hasNoExp: () => true, hasNoGold: () => false };
+
+      // Act
+      const experience = engine.determineExperienceGained(enemy, 'actor');
+
+      // Assert
+      expect(experience).toBe(0);
     });
 
     it('scales the yielded experience by the reward multiplier', () =>
     {
+      // Arrange
       const engine = new JABS_Engine();
       engine.canGainReward = vi.fn(() => true);
       engine.getRewardScalingMultiplier = vi.fn(() => 2);
-      const enemy = { exp: () => 100 };
 
-      expect(engine.determineExperienceGained(enemy, 'actor')).toBe(200);
+      // the near-miss sibling: refusing gold must leave experience alone.
+      const enemy = { exp: () => 100, hasNoExp: () => false, hasNoGold: () => true };
+
+      // Act
+      const experience = engine.determineExperienceGained(enemy, 'actor');
+
+      // Assert
+      expect(experience).toBe(200);
     });
 
     it('normalizes negative scaled experience to 0', () =>
     {
+      // Arrange
       const engine = new JABS_Engine();
       engine.canGainReward = vi.fn(() => true);
       engine.getRewardScalingMultiplier = vi.fn(() => -1);
-      const enemy = { exp: () => 100 };
+      const enemy = { exp: () => 100, hasNoExp: () => false };
 
-      expect(engine.determineExperienceGained(enemy, 'actor')).toBe(0);
+      // Act
+      const experience = engine.determineExperienceGained(enemy, 'actor');
+
+      // Assert
+      expect(experience).toBe(0);
     });
   });
 
@@ -8837,31 +8890,64 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
   {
     it('returns 0 when the reward policy gate rejects rewards', () =>
     {
+      // Arrange
       const engine = new JABS_Engine();
       engine.canGainReward = vi.fn(() => false);
-      const enemy = { gold: () => 100 };
+      engine.getRewardScalingMultiplier = vi.fn(() => 2);
+      const enemy = { gold: () => 100, hasNoGold: () => false };
 
-      expect(engine.determineGoldGained(enemy, 'actor')).toBe(0);
+      // Act
+      const gold = engine.determineGoldGained(enemy, 'actor');
+
+      // Assert
+      expect(gold).toBe(0);
+    });
+
+    it('returns 0 when the enemy carries <no:gold>, though the gate allows rewards', () =>
+    {
+      // Arrange
+      const engine = new JABS_Engine();
+      engine.canGainReward = vi.fn(() => true);
+      engine.getRewardScalingMultiplier = vi.fn(() => 2);
+      const enemy = { gold: () => 100, hasNoGold: () => true, hasNoExp: () => false };
+
+      // Act
+      const gold = engine.determineGoldGained(enemy, 'actor');
+
+      // Assert
+      expect(gold).toBe(0);
     });
 
     it('scales the yielded gold by the reward multiplier', () =>
     {
+      // Arrange
       const engine = new JABS_Engine();
       engine.canGainReward = vi.fn(() => true);
       engine.getRewardScalingMultiplier = vi.fn(() => 2);
-      const enemy = { gold: () => 100 };
 
-      expect(engine.determineGoldGained(enemy, 'actor')).toBe(200);
+      // the near-miss sibling: refusing experience must leave gold alone.
+      const enemy = { gold: () => 100, hasNoGold: () => false, hasNoExp: () => true };
+
+      // Act
+      const gold = engine.determineGoldGained(enemy, 'actor');
+
+      // Assert
+      expect(gold).toBe(200);
     });
 
     it('normalizes negative scaled gold to 0', () =>
     {
+      // Arrange
       const engine = new JABS_Engine();
       engine.canGainReward = vi.fn(() => true);
       engine.getRewardScalingMultiplier = vi.fn(() => -1);
-      const enemy = { gold: () => 100 };
+      const enemy = { gold: () => 100, hasNoGold: () => false };
 
-      expect(engine.determineGoldGained(enemy, 'actor')).toBe(0);
+      // Act
+      const gold = engine.determineGoldGained(enemy, 'actor');
+
+      // Assert
+      expect(gold).toBe(0);
     });
   });
 

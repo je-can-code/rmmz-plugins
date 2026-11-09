@@ -14,7 +14,7 @@ import ExternalJsonConfigLoaderOptions from '../../../../../src/plugins/_base/co
 export function setPluginContextToJBase(sandbox = globalThis)
 {
   sandbox.__PLUGIN_NAME__ = 'J-Base';
-  sandbox.__PLUGIN_VERSION__ = '3.2.0';
+  sandbox.__PLUGIN_VERSION__ = '4.3.0';
 }
 
 /**
@@ -134,14 +134,69 @@ export const SAMPLE_QUEST_CONFIG = {
 };
 
 /**
- * Points `StorageManager.fsReadFile` at an in-memory quest configuration so
- * {@link ExternalJsonConfigLoader} can read it without touching the real project data directory.
+ * A minimal omnipedia configuration, shaped the way `data/config.omni.json` is shaped on disk: the
+ * monsterpedia's two pages, ordinary enemies first, which is the page the scene opens on.
+ * @type {{monsterTypes: {key: string, name: string, iconIndex: number, showsStats: boolean}[]}}
+ */
+export const SAMPLE_OMNI_CONFIG = {
+  monsterTypes: [
+    {
+      key: 'enemy',
+      name: 'Monsterpedia',
+      iconIndex: 14,
+      showsStats: true,
+    },
+    {
+      key: 'destructible',
+      name: 'Destructapedia',
+      iconIndex: 210,
+      showsStats: false,
+    },
+  ],
+};
+
+/**
+ * Serves a configuration blob from `StorageManager.fsReadFile` at one project-relative path, alongside
+ * whatever other files are already being served, so {@link ExternalJsonConfigLoader} can read each
+ * plugin's own file without touching the real project data directory. A path nothing has been served
+ * at reads as missing, exactly the way an absent file does on disk, which is what lets a plugin reading
+ * the wrong path fail rather than quietly receive another plugin's configuration.
+ * @param {object} sandbox The global object to serve the files from.
+ * @param {string} configPath The project-relative path the blob answers to.
+ * @param {object} config The configuration blob to serve there.
+ */
+function serveConfigFile(sandbox, configPath, config)
+{
+  sandbox.__servedConfigFiles ??= new Map();
+  sandbox.__servedConfigFiles.set(configPath, config);
+
+  sandbox.StorageManager.fsReadFile = filePath =>
+  {
+    // an unserved path is a missing file.
+    if (sandbox.__servedConfigFiles.has(filePath) === false) return null;
+
+    return JSON.stringify(sandbox.__servedConfigFiles.get(filePath));
+  };
+}
+
+/**
+ * Serves an in-memory quest configuration at `data/config.quest.json`.
  * @param {object} [sandbox] Defaults to `globalThis`.
  * @param {object} [config] The configuration blob to serve. Defaults to {@link SAMPLE_QUEST_CONFIG}.
  */
 export function installQuestConfig(sandbox = globalThis, config = SAMPLE_QUEST_CONFIG)
 {
-  sandbox.StorageManager.fsReadFile = () => JSON.stringify(config);
+  serveConfigFile(sandbox, 'data/config.quest.json', config);
+}
+
+/**
+ * Serves an in-memory omnipedia configuration at `data/config.omni.json`.
+ * @param {object} [sandbox] Defaults to `globalThis`.
+ * @param {object} [config] The configuration blob to serve. Defaults to {@link SAMPLE_OMNI_CONFIG}.
+ */
+export function installOmniConfig(sandbox = globalThis, config = SAMPLE_OMNI_CONFIG)
+{
+  serveConfigFile(sandbox, 'data/config.omni.json', config);
 }
 
 /**

@@ -97,6 +97,24 @@ J.APT.RegExp.AptitudeTeachable = /<aptitude:[ ]?(\[\d+,[ ]?\d+])>/gi;
  */
 J.APT.RegExp.ApReward = /<ap: ?(\d+)>/i;
 
+/**
+ * The declaration that a defeated enemy grants no AP.
+ * Only AP is refused; every other reward the enemy carries is paid as usual.
+ *
+ * <pre>
+ * Structure:
+ *  <no:ap>
+ *
+ * Example:
+ *  <no:ap>
+ *
+ * Translation:
+ *  Defeating this enemy grants no AP. Its experience, gold, SDP points and drops are untouched.
+ * </pre>
+ * @type {RegExp}
+ */
+J.APT.RegExp.NoAp = /<no: ?ap>/i;
+
 J.APT.RegExp.AptMultiplier = /<aptMultiplier:(-?\d+)>/i;
 
 // natural growth tags for apr, bound to the parameter at boot.

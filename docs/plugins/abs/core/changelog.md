@@ -11,6 +11,9 @@ All the versioning and history of changes live here.
 
 ## The Actual Changelog
 
+### 4.28.0
+  - Added `<noRewardPoints>`, which stops an enemy granting experience, gold, SDP points or AP. Loot still drops.
+  - Added `<no:exp>` and `<no:gold>`, which stop one of them at a time.
 ### 4.27.0
   - Enemy spots can roll from a pool: `<enemyIds:[...]>` lists every enemy an event may turn out to be, weighted by
     each enemy's `<enemy-weight>`, a map's `<enemy-weight-override>`, and the Default Enemy Pool Home Weight parameter

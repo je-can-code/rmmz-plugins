@@ -646,5 +646,26 @@ describe('J-ABS Game_Enemy (unit, all downstream dependencies mocked)', () =>
       expect(enemy.getBonusHitsSources()).toEqual([ allStates, [ referenceData ] ]);
     });
   });
+
+  describe.each([
+    [ 'hasNoRewardPoints', 'noRewardPoints' ],
+    [ 'hasNoExp', 'noExp' ],
+    [ 'hasNoGold', 'noGold' ],
+  ])('%s()', (method, field) =>
+  {
+    it(`reads ${field} off the enemy's database row, not a sibling flag`, () =>
+    {
+      // Arrange
+      // only the flag under test is raised, so reading any sibling flag would come back false.
+      const row = { noRewardPoints: false, noExp: false, noGold: false, [field]: true };
+      const enemy = buildEnemy({ enemy: () => row });
+
+      // Act
+      const result = enemy[method]();
+
+      // Assert
+      expect(result).toBe(true);
+    });
+  });
 });
 //endregion plugins/abs/core/objects/game-enemy.test.js

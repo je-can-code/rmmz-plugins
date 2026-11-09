@@ -3,7 +3,7 @@ type: overview
 title: The Plugin Overview
 description: The general overview for what this plugin is about along with the when and how you might use it.
 tags: [sdp, overview]
-version: "4.8.1"
+version: "4.9.0"
 ---
 
 # Overview
@@ -42,6 +42,8 @@ In order to rank up these SDPs, you'll need to use SDP points. These can be acqu
 ### Notes
 
 - SDP points gained from enemies are earned for all members of the party.
+- An enemy whose notes carry `<no:sdp>`, or J-ABS's `<noRewardPoints>`, grants no SDP points (see
+  [No SDP](notetags/no-sdp.md)).
 - SDP points are stored and spent on a per-actor basis.
 - SDP points for an actor cannot be reduced below 0.
 - Stat Distribution Panels are unlocked for all members of the party.

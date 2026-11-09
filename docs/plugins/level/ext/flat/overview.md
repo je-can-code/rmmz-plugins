@@ -3,7 +3,7 @@ type: overview
 title: The Plugin Overview
 description: The general overview for what this plugin is about along with the when and how you might use it.
 tags: [level-flat, overview]
-version: "1.0.2"
+version: "1.1.0"
 ---
 
 # Overview
@@ -76,6 +76,10 @@ to level up.
 This plugin has no notetags of its own. Everything here is tuned entirely through the plugin parameters below
 ([Exp Required Per Level](parameters/exp-per-level.md), [Exp Policy Multiplier](parameters/policy-multiplier.md)) and
 the level-difference table above- there's nothing to tag on individual database objects.
+
+It does honor J-ABS's [Reward Opt-Outs](../../../abs/core/notetags/enemy-events/reward-opt-outs.md). Flat experience
+never reads an enemy's own experience, so an enemy carrying `<no:exp>` or `<noRewardPoints>` is the only way to keep a
+high-level enemy from paying out by level difference alone.
 
 ## Note about EXR
 

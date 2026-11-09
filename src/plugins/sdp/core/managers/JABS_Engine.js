@@ -37,6 +37,9 @@ if (J.ABS)
     // check the reward policy gate; anything a game excludes bails here.
     if (this.canGainReward(defeatedEnemy, actor.getBattler()) === false) return 0;
 
+    // an enemy that refuses SDP points grants none, whatever its row's points say.
+    if (defeatedEnemy.hasNoSdp() === true) return 0;
+
     // grab the base sdp points value from the enemy.
     const sdpPoints = defeatedEnemy.sdpPoints();
 

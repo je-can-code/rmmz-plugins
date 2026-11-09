@@ -21,6 +21,7 @@
 * [AI Traits](notetags/enemy-events/ai-traits.md) - The tags modifying how an enemy chooses and uses its skills.
 * [AI Roles](notetags/enemy-events/ai-roles.md) - The tags defining how a battler coordinates with other battlers on its team.
 * [Guard Range](notetags/enemy-events/guard-range.md) - The tag defining the distance at which a guardian can respond to attacks on its wards.
+* [Reward Opt-Outs](notetags/enemy-events/reward-opt-outs.md) - The tags letting an enemy refuse every reward point it would pay on defeat, or just its experience or gold.
 * [Teams](notetags/enemy-events/teams.md) - The tag assigning a battler to a team, and the required config file defining the teams.
 * [Circumstantial Config Options](notetags/enemy-events/circumstantial-config-options.md) - The tags modifying the base look or behavior of enemies.
 * [Action Id](notetags/skills/action-id.md) - The tag associating a skill with an event on the action map.

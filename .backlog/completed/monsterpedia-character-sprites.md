@@ -1,3 +1,8 @@
+---
+completed: 2026-11-09
+ship: J-OMNI-Monsters 3.0.0, J-Base 4.3.0 and J-CMS 1.2.2
+---
+
 # Monsterpedia: draw each enemy's character sprite, and place the breakables
 
 ## Gain
@@ -40,12 +45,17 @@ false. Refreshing them belongs to this work, since this is where the roster gets
 
 ## Definition of done
 
-- [ ] `bun run hotfix` green, `Window_MonsterpediaDetail.js` no longer carries the sprite TODO
-- [ ] in-game: open the Monsterpedia on Rapture, then on Morningstar; each shows its own map sprite
-- [ ] in-game: the breakables appear where it was decided they should, or nowhere
-- [ ] `ca/docs/enemies/main.md` names the five-tier enemies, so a search for Morningstar finds it
-- [ ] `ca/docs/enemies/drop-sources.md` and `harvest-nodes.md` no longer say the back half of the ladder has no maps
+- [x] `bun run hotfix` green, `Window_MonsterpediaDetail.js` no longer carries the sprite TODO
+- [x] in-game: open the Monsterpedia on Rapture, then on Morningstar; each shows its own map sprite
+- [x] in-game: the breakables appear where it was decided they should, or nowhere
+- [x] `ca/docs/enemies/main.md` names the five-tier enemies, so a search for Morningstar finds it
+- [x] `ca/docs/enemies/drop-sources.md` and `harvest-nodes.md` no longer say the back half of the ladder has no maps
 
 ## Notes
 
 Parked during the Chef Adventure enemy pass and filed 2026-11-08.
+
+The sprite is read off J-ABS's roster map, the event whose id matches the enemy's, so who wears what is recorded in
+one place. The breakables got a page of their own: `data/config.omni.json` authors the Monsterpedia's pages, Chef
+Adventure's second page is the Destructapedia, and rows 1-100 carry `<monsterType:destructible>` to land on it. That
+page leaves out its entries' stats.

@@ -11,6 +11,8 @@ All the versioning and history of changes live here.
 
 ## The Actual Changelog
 
+### 2.1.0
+  - Added `<no:ap>`, which stops an enemy granting AP.
 ### 2.0.1
   - Fixed requiring J-ABS; its version check now only runs when J-ABS is installed.
 ### 2.0.0

@@ -1,3 +1,7 @@
+import MonsterpediaDropSummary from '../managers/MonsterpediaDropSummary.js';
+import MonsterpediaRoster from '../managers/MonsterpediaRoster.js';
+import MonsterpediaTypes from '../managers/MonsterpediaTypes.js';
+
 class Window_MonsterpediaDetail
   extends Window_Base
 {
@@ -7,12 +11,6 @@ class Window_MonsterpediaDetail
    * @type {MonsterpediaObservations|null}
    */
   _currentObservations = null;
-
-  /**
-   * A cache of all sprites associated with enemies in the monsterpedia.
-   * @type {Map<number, Sprite_Enemy>}
-   */
-  _battlerImageCache = new Map();
 
   /**
    * A cache of all sprites associated with base parameters.
@@ -63,15 +61,6 @@ class Window_MonsterpediaDetail
 
   //region image caching
   /**
-   * Gets the battler image cache.
-   * @returns {Map<number, Sprite_Enemy>}
-   */
-  getEnemyImageCache()
-  {
-    return this._battlerImageCache;
-  }
-
-  /**
    * Gets the b-parameter icon image cache.
    * @returns {Map<number, Sprite_Icon>}
    */
@@ -103,26 +92,8 @@ class Window_MonsterpediaDetail
    */
   populateImageCache()
   {
-    // populate enemy battler sprites into the cache.
-    this.populateEnemySpriteImageCache();
-
     // populate all icon sprites into the cache.
     this.populateParameterIconSpriteCache();
-  }
-
-  /**
-   * Caches all enemy battler sprites that have been at least perceived once.
-   */
-  populateEnemySpriteImageCache()
-  {
-    // grab the current list of observations.
-    const monsterpediaCache = $gameParty.getMonsterpediaObservationsCache();
-
-    // an iterator function for caching enemy sprites.
-    const forEacherEnemySprites = (_, enemyId) => this.getOrCreateEnemySprite(enemyId);
-
-    // iterate over each of them and cache the sprites.
-    monsterpediaCache.forEach(forEacherEnemySprites, this);
   }
 
   /**
@@ -184,44 +155,6 @@ class Window_MonsterpediaDetail
 
     // cache all sprites.
     xparamIds.forEach(forEacher, this);
-  }
-
-  /**
-   * Gets the enemy's sprite. If it is already cached, the cached one will be
-   * returned, otherwise it'll be created and then cached.
-   * @param {number} enemyId The id of the battler to retrieve the sprite for.
-   * @returns {Sprite_Enemy}
-   */
-  getOrCreateEnemySprite(enemyId)
-  {
-    // grab the cache.
-    const cache = this.getEnemyImageCache();
-
-    // check if the key already maps to a cached sprite.
-    if (cache.has(enemyId))
-    {
-      // if it does, just return that.
-      return cache.get(enemyId);
-    }
-
-    // determine the battler associated with the enemy sprite.
-    const battler = new Game_Enemy(enemyId, 0, 0);
-
-    // TODO: replace this with a non-battle version of the sprite.
-    // create a new sprite.
-    const sprite = new Sprite_Enemy(battler);
-
-    // cache the sprite.
-    cache.set(enemyId, sprite);
-
-    // hide the sprite for now.
-    sprite.hide();
-
-    // add the sprite to tracking.
-    this.addChild(sprite);
-
-    // return the created sprite.
-    return sprite;
   }
 
   /**
@@ -341,22 +274,6 @@ class Window_MonsterpediaDetail
   //endregion image caching
 
   /**
-   * Extends {@link #clearContent}.<br/>
-   * Also hides all cached images.
-   */
-  clearContent()
-  {
-    // perform original logic.
-    super.clearContent();
-
-    // grab the cache of enemy images.
-    const cache = this.getEnemyImageCache();
-
-    // hide all of them.
-    cache.forEach(sprite => sprite.hide());
-  }
-
-  /**
    * Implements {@link Window_Base.drawContent}.<br/>
    * Draws a header and some detail for the omnipedia list header.
    */
@@ -382,23 +299,24 @@ class Window_MonsterpediaDetail
     const enemyNameX = x + 100;
     this.drawEnemyName(enemyNameX, y);
 
-    // draw the battler image for the enemy.
+    // draw the enemy as it looks on the map.
     const enemySpriteY = y + (lh * 3);
     this.drawEnemySprite(x, enemySpriteY);
 
-    // draw the parameters for the enemy.
-    const parametersX = this.width - 300;
-    this.drawEnemyParameters(parametersX, y);
+    // draw the parameters for the enemy, unless the page listing it leaves them out.
+    const databaseEnemy = $dataEnemies.at(observations.id);
+    if (MonsterpediaTypes.showsStatsFor(databaseEnemy) === true)
+    {
+      this.drawEnemyParameters(this.parametersColumnX(), y);
+    }
 
     // draw the drops for the enemy.
-    const dropsX = this.width - 600;
-    this.drawEnemyDrops(dropsX, y);
+    this.drawEnemyDrops(this.dropsColumnX(), y);
 
     // draw the description of the enemy.
-    const descriptionY = this.height - (lh * 6);
-    this.drawDescription(x, descriptionY);
+    this.drawDescription(x, this.descriptionY());
 
-    // draw the enemy's elementalistics: damage types in a left column, family/traits in the right column.
+    // draw the enemy's elementalistics beneath its portrait: damage types on the left, family/traits/tools beside them.
     this.drawElementalistics();
   }
 
@@ -511,9 +429,13 @@ class Window_MonsterpediaDetail
   }
 
   /**
-   * Draws the enemy's battler sprite at the given point.
-   * @param {number} x The x coordinate of the point.
-   * @param {number} y The y coordinate of the point.
+   * Draws the enemy the way it looks on the map, standing in the space between the header and the
+   * elementalistics beneath it.<br/>
+   * An enemy is only pictured once it has been defeated at least once, and one the roster cannot
+   * picture leaves the space empty. Its sheet may still be loading the first time its page opens, in
+   * which case the page draws itself again the moment the sheet arrives.
+   * @param {number} x The x coordinate of the space's top-left corner.
+   * @param {number} y The y coordinate of the space's top-left corner.
    */
   drawEnemySprite(x, y)
   {
@@ -526,26 +448,111 @@ class Window_MonsterpediaDetail
     // don't render the sprite if we have never defeated it.
     if (numberDefeated < 1) return;
 
-    // get the sprite from the cache.
-    const sprite = this.getOrCreateEnemySprite(id);
+    // the sheet and character the enemy wears on the map.
+    const {
+      characterName,
+      characterIndex
+    } = MonsterpediaRoster.characterOf(id);
 
-    // determine the home coordinates for this enemy sprite.
-    let homeX = x + sprite.width;
-    const homeY = y + sprite.height;
+    // an enemy the roster cannot picture leaves the space empty.
+    if (characterName === String.empty) return;
 
-    // check if this is a "larger" sprite.
-    if (sprite.width > 300)
+    // a sheet still loading would draw nothing, so draw this page again once it arrives.
+    const bitmap = ImageManager.loadCharacter(characterName);
+    if (bitmap.isReady() === false)
     {
-      // create a proportionate modifier against the X to move the image to the left.
-      const xModifier = (sprite.width * 0.4);
-
-      // move the sprite to the left.
-      homeX -= xModifier;
+      bitmap.addLoadListener(this.refresh.bind(this));
+      return;
     }
 
-    // show it where it needs to be shown.
-    sprite.setHome(homeX, homeY);
-    sprite.show();
+    // the space the enemy stands in, and how large it can be drawn there.
+    const box = this.enemySpriteBox(x, y);
+    const frame = CharacterFrame.standing(characterName, characterIndex, bitmap.width, bitmap.height);
+    const scale = CharacterFrame.fitScale(frame.width, frame.height, box.width, box.height, this.enemySpriteScale());
+
+    // stand it in the middle of the space, both ways.
+    const centerX = box.x + Math.floor(box.width / 2);
+    const baselineY = box.y + Math.floor((box.height + (frame.height * scale)) / 2);
+
+    // draw it.
+    this.drawCharacterStanding(characterName, characterIndex, centerX, baselineY, scale);
+  }
+
+  /**
+   * The space an enemy's portrait stands in: from the given corner across to the drops column, and
+   * down to where the elementalistics begin.
+   * @param {number} x The x coordinate of the space's top-left corner.
+   * @param {number} y The y coordinate of the space's top-left corner.
+   * @returns {Rectangle}
+   */
+  enemySpriteBox(x, y)
+  {
+    // the edges the portrait keeps clear of: the drops column beside it, the elementalistics beneath it.
+    const right = this.dropsColumnX() - this.enemySpriteGutter();
+    const bottom = this.elementalisticsTop() - this.enemySpriteGutter();
+
+    return new Rectangle(x, y, right - x, bottom - y);
+  }
+
+  /**
+   * The breathing room kept between an enemy's portrait and the columns around it.
+   * @returns {number}
+   */
+  enemySpriteGutter()
+  {
+    return 24;
+  }
+
+  /**
+   * How many times larger than native an enemy's portrait is drawn whenever its space allows.<br/>
+   * Every enemy is drawn at the same scale, so a slime still reads as small beside a dragon; only a
+   * portrait too large for its space is shrunk to fit.
+   * @returns {number}
+   */
+  enemySpriteScale()
+  {
+    return 3;
+  }
+
+  /**
+   * Where the drops column begins, measured from the left of this window's contents.<br/>
+   * The column is wide because item names are long, and every line of it is an item's name beside its
+   * chance.
+   * @returns {number}
+   */
+  dropsColumnX()
+  {
+    return this.innerWidth - 700;
+  }
+
+  /**
+   * The extra room every row of the drops column puts between its name and its value, carrying each
+   * value to the column's right edge so the values line up and the names get the column's width.
+   * @returns {number}
+   */
+  dropsColumnSpacePlus()
+  {
+    return 100;
+  }
+
+  /**
+   * Where the parameters column begins, measured from the left of this window's contents.<br/>
+   * Measured from the contents rather than the whole window, since the contents end a padding short of
+   * the window's edge and a value drawn past them is cut off.
+   * @returns {number}
+   */
+  parametersColumnX()
+  {
+    return this.innerWidth - 300;
+  }
+
+  /**
+   * Where the description begins, measured from this window's top edge.
+   * @returns {number}
+   */
+  descriptionY()
+  {
+    return this.height - (this.lineHeight() * 6);
   }
 
   /**
@@ -916,17 +923,34 @@ class Window_MonsterpediaDetail
     // calculate the x coordinate for the parameter name.
     const parameterNameX = x + iconWidthPadding;
 
-    // calculate the parameter width.
-    const parameterNameWidth = (parameterName !== String.empty)
-      ? 300
-      : 0;
+    // whether this parameter has a name to draw at all.
+    const hasName = parameterName !== String.empty;
 
-    // start the parameter value x coordinate where the name is, in case we are skipping the name.
-    let parameterValueX = parameterNameX + 48;
+    // the value starts where the name would, or past the name when there is one.
+    const parameterValueX = hasName
+      ? parameterNameX + 48 + nameValueSpace
+      : parameterNameX + 48;
+
+    // mask the value when the player hasn't yet learned this enemy's stats; otherwise pad to alignment width.
+    const displayValue = maskValue
+      ? J.BASE.Helpers.maskString(parameterValue.padZero(padZeroCount))
+      : parameterValue.padZero(padZeroCount);
+
+    // determine the width of the value.
+    const parameterValueWidth = hasName
+      ? 128
+      : this.textWidth(displayValue);
 
     // check if we're adding the name.
-    if (parameterName !== String.empty)
+    if (hasName)
     {
+      // the name may use the room up to its value; a longer one is narrowed rather than running under it.
+      const parameterNameWidth = this.parameterNameRoom(
+        parameterNameX,
+        parameterValueX,
+        parameterValueWidth,
+        displayValue);
+
       // names are bold!
       this.toggleBold(true);
 
@@ -935,24 +959,30 @@ class Window_MonsterpediaDetail
 
       // disable bold when done writing.
       this.toggleBold(false);
-
-      // the name was drawn, add the name plus x.
-      parameterValueX += nameValueSpace;
     }
-
-    // mask the value when the player hasn't yet learned this enemy's stats; otherwise pad to alignment width.
-    const displayValue = maskValue
-      ? J.BASE.Helpers.maskString(parameterValue.padZero(padZeroCount))
-      : parameterValue.padZero(padZeroCount);
-
-    // determine the width of the value.
-    //const parameterValueWidth = this.textWidth(possiblyMaskedValue);
-    const parameterValueWidth = (parameterName !== String.empty)
-      ? 128
-      : this.textWidth(displayValue);
 
     // draw the parameter value.
     this.drawEnemyParameterValue(parameterValueX, y, displayValue, parameterValueWidth, valueColorIndex);
+  }
+
+  /**
+   * How wide a parameter's name may be drawn: from where it starts up to a small gap before its value.<br/>
+   * The value is right-aligned in its box at one digit's width per character, so it begins as far left as
+   * its characters reach, and a name wider than the room that leaves is narrowed to fit rather than
+   * running under it.
+   * @param {number} nameX The x coordinate the name starts at.
+   * @param {number} valueX The x coordinate of the value's box.
+   * @param {number} valueWidth The width of the value's box.
+   * @param {string} displayValue The value exactly as it will be drawn.
+   * @returns {number}
+   */
+  parameterNameRoom(nameX, valueX, valueWidth, displayValue)
+  {
+    // where the value's first character lands, given it is drawn one digit's width per character.
+    const valueStartX = valueX + valueWidth - (displayValue.length * this.textWidth('0'));
+
+    // the name keeps a small gap before it.
+    return valueStartX - nameX - 8;
   }
 
   /**
@@ -1019,25 +1049,28 @@ class Window_MonsterpediaDetail
     // grab a reference to the enemy for database analysis.
     const gameEnemy = $gameEnemies.enemy(id);
 
+    // every value in the drops column lines up at its right edge.
+    const spacePlus = this.dropsColumnSpacePlus();
+
     // draw the experience data.
     const expIcon = IconManager.rewardParam(0);
     const expName = TextManager.rewardParam(0);
     const expValue = gameEnemy.exp();
-    this.drawEnemyParameter(x, y, expIcon, expName, expValue, !knowsParameters, 0);
+    this.drawEnemyParameter(x, y, expIcon, expName, expValue, !knowsParameters, 0, spacePlus);
 
     // draw the gold data.
     const goldIcon = IconManager.rewardParam(1);
     const goldName = TextManager.rewardParam(1);
     const goldValue = gameEnemy.gold();
     const goldYPlus = lh * 1;
-    this.drawEnemyParameter(x, y + goldYPlus, goldIcon, goldName, goldValue, !knowsParameters, 0);
+    this.drawEnemyParameter(x, y + goldYPlus, goldIcon, goldName, goldValue, !knowsParameters, 0, spacePlus);
 
     // draw the SDP data.
     const sdpIcon = IconManager.rewardParam(4);
     const sdpName = TextManager.sdpPoints();
     const sdpValue = gameEnemy.sdpPoints();
     const sdpYPlus = lh * 2;
-    this.drawEnemyParameter(x, y + sdpYPlus, sdpIcon, sdpName, sdpValue, !knowsParameters, 0);
+    this.drawEnemyParameter(x, y + sdpYPlus, sdpIcon, sdpName, sdpValue, !knowsParameters, 0, spacePlus);
   }
 
   /**
@@ -1103,12 +1136,15 @@ class Window_MonsterpediaDetail
       ? panel.name
       : J.BASE.Helpers.maskString(panel.name);
 
-    // render the parameter.
-    this.drawEnemyParameter(x, y, panel.iconIndex, panelName, dropText, false, 0, 20);
+    // render the parameter, its value lined up with the rest of the drops column.
+    const spacePlus = this.dropsColumnSpacePlus();
+    this.drawEnemyParameter(x, y, panel.iconIndex, panelName, dropText, false, 0, spacePlus);
   }
 
   /**
-   * Draws the standard list of all loot that this enemy can drop.
+   * Draws the standard list of all loot that this enemy can drop, one line per item.<br/>
+   * An item rolled several times shows once, with the best chance among its rolls and how many times it
+   * can drop; {@link MonsterpediaDropSummary} does the folding.
    * @param {number} x The x coordinate of the point.
    * @param {number} y The y coordinate of the point.
    */
@@ -1150,20 +1186,22 @@ class Window_MonsterpediaDetail
       return;
     }
 
-    // we skip healing drops like berries, so lets track how many were skipped.
-    let numberSkipped = 0;
+    // healing drops like berries are skipped, and every item rolled more than once folds into one line.
+    const shownDrops = drops.filter(drop => this.isSkippableDrop(drop) === false);
+    const dropLines = MonsterpediaDropSummary.summarize(shownDrops);
 
-    // an iterator function for drawing drops if applicable.
-    const forEacher = (drop, index) =>
+    // every value in the drops column lines up at its right edge, giving the names the column's width.
+    const spacePlus = this.dropsColumnSpacePlus();
+
+    // an iterator function for drawing each item's line.
+    const forEacher = (dropLine, index) =>
     {
-      if (this.isSkippableDrop(drop))
-      {
-        // add to the number of items we skipped.
-        numberSkipped++;
-
-        // exit early without a payload.
-        return;
-      }
+      // the item this line is for, its best chance, and how many times it can drop.
+      const {
+        drop,
+        bestChance,
+        rolls
+      } = dropLine;
 
       // grab the implementation.
       const implementation = drop.toImplementation();
@@ -1171,7 +1209,6 @@ class Window_MonsterpediaDetail
       // extract the data out of the drop with more accurate naming.
       const {
         dataId: dropId,
-        denominator: dropChance,
         kind: dropType
       } = drop;
 
@@ -1188,13 +1225,14 @@ class Window_MonsterpediaDetail
         ? implementation.name
         : J.BASE.Helpers.maskString(implementation.name);
 
-      // draw the loot drop.
-      const dropYPlus = (index - numberSkipped) * lh;
-      this.drawEnemyParameter(x, y + dropYPlus, dropIcon, dropName, `${dropChance}%`, false, 4);
+      // draw the item's line.
+      const dropYPlus = index * lh;
+      const dropText = MonsterpediaDropSummary.lineText(bestChance, rolls);
+      this.drawEnemyParameter(x, y + dropYPlus, dropIcon, dropName, dropText, false, 4, spacePlus);
     };
 
-    // draw all the drops.
-    drops.forEach(forEacher, this);
+    // draw every item's line.
+    dropLines.forEach(forEacher, this);
   }
 
   /**
@@ -1311,10 +1349,9 @@ class Window_MonsterpediaDetail
   }
 
   /**
-   * Draws damage-type elementalistics plus prefixed taxonomy rows (`vs ` / `x ` / `tool-`).
-   * Damage types render in a column shifted left; family/traits/tools use the original right-hand x so the block
-   * does not grow upward into the parameter stack when multiple taxonomy lines exist.
-   * Both columns share the same top row so taxonomy reads downward beside Cut through Typeless.
+   * Draws damage-type elementalistics plus prefixed taxonomy rows (`vs ` / `x ` / `tool-`), as a block of
+   * two columns beneath the portrait: the damage types on the left, and family/traits/tools reading
+   * downward beside them from the same top row.<br/>
    * Taxonomy rows only appear when the effective rate differs from 100% (same signal as the Aptitude typed extension).
    */
   drawElementalistics()
@@ -1325,62 +1362,97 @@ class Window_MonsterpediaDetail
     // shorthand the lineHeight (kept consistent with drawDescription spacing).
     const lh = this.lineHeight() - 10;
 
-    // horizontal gap between the damage column and the taxonomy column (matches prior single-column width budget).
-    const damageColumnOffset = 280;
-
-    // we'll need the entire observations object for drops.
+    // we'll need the entire observations object for every row.
     const observations = this.getObservations();
 
+    // reduce the font size for the block.
+    this.modFontSize(-4);
+
+    // the block's top-left corner, beneath the portrait.
+    const blockX = this.elementalisticsX();
+    const blockY = this.elementalisticsTop();
+
+    // the damage types fill the left column, and the taxonomy reads downward beside them.
+    const damageColumnX = blockX;
+    const taxonomyColumnX = blockX + this.elementalisticsColumnPitch();
+
+    // draw the family, traits and tools that differ from neutral.
+    const taxonomy = this.elementalisticsTaxonomy();
+    this.drawMonsterpediaTaxonomySections(taxonomyColumnX, blockY, lh, 0, observations, taxonomy);
+
+    // draw every damage type, one to a row.
+    const damageElementIds = [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ];
+    damageElementIds.forEach((elementId, row) =>
+    {
+      this.drawMonsterpediaDamageElementRow(damageColumnX, blockY, lh, row, observations, elementId);
+    });
+  }
+
+  /**
+   * The highlighted enemy's family, traits and tools, keeping only the rows that differ from neutral.
+   * @returns {{ vs: object[], x: object[], tool: object[] }}
+   */
+  elementalisticsTaxonomy()
+  {
     // grab the id out of the current observations.
-    const { id } = observations;
+    const { id } = this.getObservations();
 
     // grab a reference to the enemy for database analysis.
     const gameEnemy = $gameEnemies.enemy(id);
 
-    // reduce the font size for the description text.
-    this.modFontSize(-4);
+    // sort its elements into family, traits and tools.
+    return this.collectMonsterpediaTaxonomyRows(gameEnemy);
+  }
 
-    // build prefixed rows (family / traits / tools) so we know how tall the block is.
-    const taxonomy = this.collectMonsterpediaTaxonomyRows(gameEnemy);
-    const taxonomyLineCount = this.countMonsterpediaTaxonomyDrawLines(taxonomy);
+  /**
+   * Where the elementalistics block begins, measured from the top of this window's contents.<br/>
+   * The block ends a line above the description and climbs from there, so its top moves with how many
+   * rows it holds: the ten damage types, or more when the taxonomy beside them runs longer. The
+   * portrait's space ends where the block begins, so the two never overlap.
+   * @returns {number}
+   */
+  elementalisticsTop()
+  {
+    // shorthand the lineHeight (kept consistent with drawDescription spacing).
+    const lh = this.lineHeight() - 10;
+
+    // the block is as tall as its taller column: the ten damage types, or the taxonomy beside them.
     const damageTypeCount = 10;
+    const taxonomy = this.elementalisticsTaxonomy();
+    const rowCount = Math.max(damageTypeCount, this.countMonsterpediaTaxonomyDrawLines(taxonomy));
 
-    // share one vertical budget so taxonomy width does not stack under damage and shove the grid into parameters.
-    const blockRowCount = Math.max(damageTypeCount, taxonomyLineCount);
+    // the block ends a line above the description, and climbs a line for every row it holds.
+    const top = this.descriptionY() - lh - (lh * rowCount);
 
-    // keep the block tucked just above the description blurb (match drawContent's descriptionY math).
-    const descriptionTop = this.height - (this.lineHeight() * 6);
-    const elemBlockBottom = descriptionTop - lh;
-    let yTop = elemBlockBottom - lh * blockRowCount;
+    // a block too tall for the window stops short of the header rather than running into it.
+    return Math.max(top, 48);
+  }
 
-    // if the scene is short, clamp upward so we do not collide with the header region.
-    if (yTop < 48)
-    {
-      yTop = 48;
-    }
+  /**
+   * Where the elementalistics block begins, measured from the left of this window's contents: centered
+   * beneath the portrait, in the same space the portrait stands in.
+   * @returns {number}
+   */
+  elementalisticsX()
+  {
+    // the space beneath the portrait spans the same width the portrait's does.
+    const spaceWidth = this.dropsColumnX() - this.enemySpriteGutter();
 
-    // right column stays where parameters already live; damage column shifts left to free this lane for taxonomy.
-    const taxonomyColumnX = this.width - 300;
-    const damageColumnX = taxonomyColumnX - damageColumnOffset;
+    // the block is two columns wide.
+    const blockWidth = this.elementalisticsColumnPitch() * 2;
 
-    // top-align both columns so family/traits read downward beside Cut..Typeless instead of hugging the bottom edge.
-    const damageStartRow = 0;
-    const taxonomyStartRow = 0;
+    // center the block in that space.
+    return Math.floor((spaceWidth - blockWidth) / 2);
+  }
 
-    this.drawMonsterpediaTaxonomySections(
-      taxonomyColumnX,
-      yTop,
-      lh,
-      taxonomyStartRow,
-      observations,
-      taxonomy);
-
-    const damageElementIds = [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ];
-    damageElementIds.forEach((elementId, index) =>
-    {
-      const row = damageStartRow + index;
-      this.drawMonsterpediaDamageElementRow(damageColumnX, yTop, lh, row, observations, elementId);
-    });
+  /**
+   * How far apart the elementalistics block's two columns begin: enough for a row's icon, name and
+   * value, plus a little room before the next column.
+   * @returns {number}
+   */
+  elementalisticsColumnPitch()
+  {
+    return 280;
   }
 
   /**

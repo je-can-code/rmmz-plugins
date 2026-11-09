@@ -10,6 +10,7 @@
 
 * [Teachable](notetags/teachable.md) - The tag describing how much AP a skill costs to learn from a given source.
 * [AP](notetags/ap.md) - The tag defining how many points a source yields upon defeat.
+* [No AP](notetags/no-ap.md) - The tag letting an enemy refuse the AP it would pay on defeat.
 * [AP Rate](notetags/ap-rate.md) - The tag for modifying the rate at which AP is gained.
 * [Natural Growth](notetags/natural-growth.md) - The integration details with the J-NaturalGrowth plugin.
 

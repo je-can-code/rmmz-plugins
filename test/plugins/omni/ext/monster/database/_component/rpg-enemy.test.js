@@ -32,6 +32,7 @@ describe('RPG_Enemy (omni ext/monster database, direct src import)', () =>
               HideFromMonsterpedia: {},
               MonsterpediaFamilyIcon: {},
               MonsterpediaDescription: {},
+              MonsterType: {},
             },
           },
         },
@@ -41,6 +42,7 @@ describe('RPG_Enemy (omni ext/monster database, direct src import)', () =>
     globalThis.RPGManager = {
       checkForBooleanFromNoteByRegex: vi.fn(),
       getNumberFromNoteByRegex: vi.fn(),
+      getStringFromNoteByRegex: vi.fn(),
       getStringsFromNoteByRegex: vi.fn(),
     };
 
@@ -89,6 +91,36 @@ describe('RPG_Enemy (omni ext/monster database, direct src import)', () =>
     expect(globalThis.RPGManager.getStringsFromNoteByRegex).toHaveBeenCalledWith(
       enemy,
       globalThis.J.OMNI.EXT.MONSTER.RegExp.MonsterpediaDescription);
+  });
+
+  it('monsterType reads the kind a row declares, asking RPGManager for null rather than an empty string', () =>
+  {
+    // Arrange
+    globalThis.RPGManager.getStringFromNoteByRegex.mockReturnValue('destructible');
+    const enemy = new globalThis.RPG_Enemy();
+
+    // Act
+    const { monsterType } = enemy;
+
+    // Assert
+    expect(monsterType).toBe('destructible');
+    expect(globalThis.RPGManager.getStringFromNoteByRegex).toHaveBeenCalledWith(
+      enemy,
+      globalThis.J.OMNI.EXT.MONSTER.RegExp.MonsterType,
+      true);
+  });
+
+  it('monsterType reads as an ordinary enemy when the row declares no kind', () =>
+  {
+    // Arrange
+    globalThis.RPGManager.getStringFromNoteByRegex.mockReturnValue(null);
+    const enemy = new globalThis.RPG_Enemy();
+
+    // Act
+    const { monsterType } = enemy;
+
+    // Assert
+    expect(monsterType).toBe('enemy');
   });
 });
 //endregion plugins/omni/ext/monster/database/_component/rpg-enemy.test.js

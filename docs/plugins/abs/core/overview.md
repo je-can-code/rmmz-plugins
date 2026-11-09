@@ -3,7 +3,7 @@ type: overview
 title: The Plugin Overview
 description: The general overview for what this plugin is about along with the when and how you might use it.
 tags: [abs, overview]
-version: "4.27.0"
+version: "4.28.0"
 ---
 
 # Overview
@@ -158,6 +158,12 @@ Aggro calculation order:
 Steps 1-10 above produce a single delta that gets written to the caster's own aggro entry on the target. aggroPercent
 and notMyAggro/notMyAggroPercent (see the aggro tags) are separate post-processing steps that run AFTER that write,
 operating on already-stored aggro entries rather than this hit's delta.
+
+### Withholding rewards
+
+A defeated enemy grants experience and gold, plus SDP points and AP when those plugins are installed. An enemy whose
+notes carry `<noRewardPoints>` grants none of the four, and `<no:exp>` or `<no:gold>` withholds just one. Its loot still
+drops either way. See [Reward Opt-Outs](notetags/enemy-events/reward-opt-outs.md).
 
 ### Configuring loot
 

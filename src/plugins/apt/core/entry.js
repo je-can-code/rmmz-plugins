@@ -4,8 +4,6 @@ import './_models/AptitudeProgress.js';
 import './_models/AptitudeSkill.js';
 import './_models/AptitudeSkillSourceProgress.js';
 import './_models/AptitudeSkillAggregate.js';
-import './_models/Map_TextPop.js';
-import './_models/TextPopBuilder.js';
 
 import './_metadata/initialization.js';
 
@@ -13,6 +11,7 @@ import './database/RPG_Base.js';
 import './database/RPG_Enemy.js';
 import './objects/Game_BattlerBase.js';
 import './objects/Game_Battler.js';
+import './objects/Game_Enemy.js';
 import './objects/Game_Actor.js';
 import './objects/Game_Troop.js';
 import './managers/ApManager.js';

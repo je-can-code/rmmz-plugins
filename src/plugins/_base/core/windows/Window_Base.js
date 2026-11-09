@@ -1,4 +1,5 @@
 //region Window_Base
+import CharacterFrame from './../core/CharacterFrame.js';
 import WindowGaugeOptions from './../models/WindowGaugeOptions.js';
 /**
  * All alignments available for {@link Window_Base.prototype.drawText}.<br>
@@ -595,6 +596,59 @@ Window_Base.prototype.drawBackgroundRect = function(rect)
   this.contentsBack.gradientFillRect(x, y, width, height, color1, color2, true);
   this.contentsBack.strokeRect(x, y, width, height, color1);
 };
+
+//region draw character
+/**
+ * Draws a character's neutral standing frame, facing the player, at any scale, anchored by the middle
+ * of its feet.<br/>
+ * The engine's own {@link Window_Base.drawCharacter} picks this same frame but always blits it at
+ * native size, which leaves a map sprite dwarfed beside a portrait or lost on a pedia page. The
+ * enlargement goes through the 2d canvas, which smooths by default, and bilinear smoothing is exactly
+ * wrong for pixel art: the blit switches this window to nearest-neighbor for its own duration, then
+ * hands interpolation back for everything else drawn here.<br/>
+ * The sheet has to be loaded already. A blit from a bitmap still loading draws nothing, so a caller
+ * showing a sheet that may not be cached yet waits for it first.
+ * @param {string} characterName The sheet's filename, prefix symbols included.
+ * @param {number} characterIndex Which of an ordinary sheet's eight characters to draw.
+ * @param {number} x The horizontal center of the drawn character.
+ * @param {number} y The baseline the character stands on.
+ * @param {number} scale How many times larger than native to draw it.
+ */
+Window_Base.prototype.drawCharacterStanding = function(characterName, characterIndex, x, y, scale)
+{
+  // the sheet, and the frame on it that faces the player at rest.
+  const bitmap = ImageManager.loadCharacter(characterName);
+  const frame = CharacterFrame.standing(characterName, characterIndex, bitmap.width, bitmap.height);
+
+  // enlarge both axes off the frame's own measurements, so a sheet whose frames are not square keeps
+  // its proportions.
+  const drawWidth = frame.width * scale;
+  const drawHeight = frame.height * scale;
+
+  // anchor bottom-center, matching the convention of the engine's own character drawing.
+  const destinationX = x - Math.floor(drawWidth / 2);
+  const destinationY = y - drawHeight;
+
+  // switch to nearest-neighbor for the blit, so the pixel art stays crisp at any scale.
+  const { context } = this.contents;
+  context.imageSmoothingEnabled = false;
+
+  // blit the single frame at its new size.
+  this.contents.blt(
+    bitmap,
+    frame.x,
+    frame.y,
+    frame.width,
+    frame.height,
+    destinationX,
+    destinationY,
+    drawWidth,
+    drawHeight);
+
+  // restore interpolation for whatever is drawn next.
+  context.imageSmoothingEnabled = true;
+};
+//endregion draw character
 
 // region draw gauge
 

@@ -6,6 +6,7 @@ import vm from 'node:vm';
 
 import { repoRoot } from '../../../../setup/repo-root.js';
 import { installMinimalDatabase, installRmmzViewLayer } from '../../../../setup/rmmz-view-harness.js';
+import { installOmniConfig } from '../../_component/fixtures/install-omni-host-globals.js';
 
 /**
  * The Omnipedia's main-menu entry is a seam between two plugins that disagree about how to patch the
@@ -61,6 +62,9 @@ describe('Omnipedia main menu command under J-CMS (real view layer)', () =>
     globalThis.JABS_Battler = function JABS_Battler() {};
     globalThis.JABS_MetricsManager = { isItemSlot: () => false };
     globalThis.Game_Enemy = globalThis.Game_Enemy ?? function Game_Enemy() {};
+
+    // the monster bundle reads its pages from the omnipedia's configuration the moment it loads.
+    installOmniConfig();
 
     // the order here is the whole point of the test: it mirrors chef-adventure's plugins.js, where
     // J-CMS sits at line 7 and J-Omnipedia at 108.
