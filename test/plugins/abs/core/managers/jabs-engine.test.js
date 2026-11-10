@@ -7871,36 +7871,32 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       }, overrides);
     }
 
-    it('hits an in-range candidate for a self-targeting, direct, non-spatial action', async () =>
+    it('returns only the caster for a self-targeting action, ahead of every other way to find a target', async () =>
     {
+      // Arrange: every lower priority has a battler it would happily return- an ally target, a retaliation target,
+      // and a candidate the spatial search would meet first- so only the self-targeting rule can produce the caster.
       const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
-      const caster = { canActionConnect: () => true, isWithinScope: () => true, isInanimate: () => false, id: 'caster' };
-      JABS_AiManager.queryBattlersInAabb = vi.fn(() => [ caster ]);
-      const engine = new JABS_Engine();
-      const jabsAction = buildJabsAction({
-        getAction: () => ({ isForUser: () => true, isForOne: () => true }),
-        isDirectAction: () => true,
-        getProximity: () => 0,
-        getCaster: () => ({ getAllyTarget: () => null, isEnemy: () => false, getX: () => 0, getY: () => 0 }),
-      });
-
-      expect(engine.getCollisionTargets(jabsAction)).toEqual([ caster ]);
-    });
-
-    it('does not hit a candidate that fails the scope check for a self-targeting, direct, non-spatial action', async () =>
-    {
-      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
-      const bystander = { canActionConnect: () => true, isWithinScope: () => false, isInanimate: () => false };
+      const bystander = { canActionConnect: () => true, isWithinScope: () => true, isInanimate: () => false };
       JABS_AiManager.queryBattlersInAabb = vi.fn(() => [ bystander ]);
+      JABS_AiManager.getAllBattlers = vi.fn(() => [ bystander ]);
+      const allyTarget = { canActionConnect: () => true, isWithinScope: () => true };
+      const retaliationTarget = { canActionConnect: () => true, isWithinScope: () => true };
+      const caster = { getAllyTarget: () => allyTarget, isEnemy: () => true, getX: () => 0, getY: () => 0 };
       const engine = new JABS_Engine();
       const jabsAction = buildJabsAction({
         getAction: () => ({ isForUser: () => true, isForOne: () => true }),
+        getCaster: () => caster,
+        getActionOptions: () => ({ getRetaliationTarget: () => retaliationTarget }),
         isDirectAction: () => true,
-        getProximity: () => 0,
-        getCaster: () => ({ getAllyTarget: () => null, isEnemy: () => false, getX: () => 0, getY: () => 0 }),
+        getProximity: () => 99,
       });
 
-      expect(engine.getCollisionTargets(jabsAction)).toEqual([]);
+      // Act
+      const targets = engine.getCollisionTargets(jabsAction);
+
+      // Assert
+      expect(targets).toHaveLength(1);
+      expect(targets[0]).toBe(caster);
     });
 
     it('returns only the ally target for a single-target ally-targeted action that can connect', () =>
@@ -7975,6 +7971,35 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       const jabsAction = buildJabsAction({ getCaster: () => ({ getAllyTarget: () => null, isEnemy: () => true }) });
 
       expect(engine.getCollisionTargets(jabsAction)).toEqual([]);
+    });
+
+    it('filters out a candidate outside the action\'s scope, and still collects one inside it', async () =>
+    {
+      // Arrange: both can connect and both sit in range, so scope is the only thing setting them apart.
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      const outOfScope = {
+        canActionConnect: () => true,
+        isWithinScope: () => false,
+        isInanimate: () => false,
+        getCharacter: () => ({}),
+      };
+      const inScope = {
+        canActionConnect: () => true,
+        isWithinScope: () => true,
+        isInanimate: () => false,
+        getCharacter: () => ({}),
+      };
+      JABS_AiManager.queryBattlersInAabb = vi.fn(() => [ outOfScope, inScope ]);
+      const engine = new JABS_Engine();
+      engine.isTargetWithinRange = vi.fn(() => true);
+      const actionSprite = { _realX: 0, _realY: 0, getJabsAction: () => ({ direction: () => 2 }) };
+      const jabsAction = buildJabsAction({ getActionSprite: () => actionSprite });
+
+      // Act
+      const targets = engine.getCollisionTargets(jabsAction);
+
+      // Assert
+      expect(targets).toEqual([ inScope ]);
     });
 
     it('collects candidates that pass a non-direct action\'s spatial collision check', async () =>

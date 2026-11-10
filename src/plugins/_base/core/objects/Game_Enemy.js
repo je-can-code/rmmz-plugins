@@ -36,6 +36,66 @@ Game_Enemy.prototype.getEnemyNotes = function()
 };
 
 /**
+ * Extends {@link #initMembers}.<br/>
+ * Also gives this enemy somewhere of its own to keep the skills it learns.
+ */
+J.BASE.Aliased.Game_Enemy.set('initMembers', Game_Enemy.prototype.initMembers);
+Game_Enemy.prototype.initMembers = function()
+{
+  // perform original logic.
+  J.BASE.Aliased.Game_Enemy.get('initMembers')
+    .call(this);
+
+  /**
+   * The J object where all my additional properties live.
+   */
+  this._j ||= {};
+
+  /**
+   * A grouping of all properties associated with the base plugin.
+   */
+  this._j._base ||= {};
+
+  /**
+   * The actions this enemy has learned since it was created, on top of the ones its database entry lists.<br/>
+   * They live on the enemy rather than in that entry because the entry is shared: every enemy of the same id reads
+   * the same row, so a skill written there would be known by all of them, including every one spawned afterward.
+   * @type {RPG_EnemyAction[]}
+   */
+  this._j._base._learnedActions = [];
+};
+
+/**
+ * Gets the actions this enemy has learned since it was created.
+ * @returns {RPG_EnemyAction[]}
+ */
+Game_Enemy.prototype.learnedActions = function()
+{
+  return this._j._base._learnedActions;
+};
+
+/**
+ * Sets the actions this enemy has learned since it was created.
+ * @param {RPG_EnemyAction[]} newLearnedActions The new collection of learned actions.
+ */
+Game_Enemy.prototype.setLearnedActions = function(newLearnedActions)
+{
+  this._j._base._learnedActions = newLearnedActions;
+};
+
+/**
+ * Gets every action this enemy can take: the ones its database entry lists, followed by any it has learned since.<br/>
+ * Anything asking what an enemy knows reads this rather than the database entry, which is what keeps a learned skill
+ * with the one enemy that learned it. The entry itself is the catalog, so it stays exactly as authored.
+ * @returns {RPG_EnemyAction[]}
+ */
+Game_Enemy.prototype.enemyActions = function()
+{
+  // the authored actions, then the learned ones.
+  return [ ...this.enemy().actions, ...this.learnedActions() ];
+};
+
+/**
  * Extends {@link #setup}.<br/>
  * Adds a hook for performing actions when an enemy is setup.
  */
@@ -99,9 +159,8 @@ Game_Enemy.prototype.buildTraitObjects = function()
  */
 Game_Enemy.prototype.skills = function()
 {
-  // grab the actions for the enemy.
-  const actions = this.enemy()
-    .actions
+  // grab the actions for the enemy, learned ones included.
+  const actions = this.enemyActions()
     .filter(this.canMapActionToSkill, this)
     .map(action => this.skill(action.skillId), this);
 
@@ -126,9 +185,8 @@ Game_Enemy.prototype.skills = function()
  */
 Game_Enemy.prototype.skillIds = function()
 {
-  // collect skill ids from all actions that can be mapped to skills.
-  const actionIds = this.enemy()
-    .actions
+  // collect skill ids from all actions that can be mapped to skills, learned ones included.
+  const actionIds = this.enemyActions()
     .filter(this.canMapActionToSkill, this)
     .map(action => action.skillId);
 
@@ -164,8 +222,9 @@ Game_Enemy.prototype.hasSkill = function(skillId)
 };
 
 /**
- * Forces this enemy to learn the skill of the given id.<br/>
- * Will not learn the skill again if it is already learned.
+ * Forces this enemy, and only this enemy, to learn the skill of the given id.<br/>
+ * Will not learn the skill again if it is already learned. Others of the same id are untouched, both those already
+ * on the map and those spawned afterward- see {@link #enemyActions} for why that has to be stated.
  * @param {number} skillId The skill id to learn.
  * @returns {boolean} True if the enemy learned the new skill, false if it already knew it.
  */
@@ -174,22 +233,31 @@ Game_Enemy.prototype.learnSkill = function(skillId)
   // don't try to learn the skill if its already known.
   if (this.hasSkill(skillId)) return false;
 
-  // build the new underlying action to be detected by the enemy.
-  const rpgEnemyAction = {
-    "conditionParam1": 0,
-    "conditionParam2": 0,
-    "conditionType": 0,
-    "rating": 5,
-    "skillId": skillId
-  };
+  // build the new underlying action to be detected by the enemy, shaped like the ones its database entry lists.
+  const rpgEnemyAction = this.buildLearnedAction(skillId);
 
-  // add the action to the enemy's list of known skills.
-  this.enemy()
-    .actions
-    .push(rpgEnemyAction);
+  // add it to what this enemy has learned, never to its database entry, which every enemy of this id shares.
+  this.setLearnedActions([ ...this.learnedActions(), rpgEnemyAction ]);
 
   // indicate that a new skill was learned to any callers that might be interested.
   return true;
+};
+
+/**
+ * Builds the action that a learned skill adds to this enemy.<br/>
+ * Unconditional, at the default rating of 5, so the skill is on offer whenever the enemy is choosing at all.
+ * @param {number} skillId The skill being learned.
+ * @returns {RPG_EnemyAction}
+ */
+Game_Enemy.prototype.buildLearnedAction = function(skillId)
+{
+  return new RPG_EnemyAction({
+    conditionParam1: 0,
+    conditionParam2: 0,
+    conditionType: 0,
+    rating: 5,
+    skillId,
+  });
 };
 
 /**

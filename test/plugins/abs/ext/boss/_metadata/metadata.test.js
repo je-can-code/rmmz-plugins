@@ -330,8 +330,11 @@ describe('J-ABS-Boss metadata (constructed through the real PluginMetadata)', ()
         template: 605,
         x: 44,
         y: 16,
+        direction: 6,
         tone: [ 17, -68, -68, 0 ],
         animation: 56,
+        face: 'KH06-2_faces_MV_07',
+        faceIndex: 3,
         speaker: '\\C[10]Cynder\\C[0]',
         lines: [ '\\pop[self]BRING IT' ],
       };
@@ -354,8 +357,11 @@ describe('J-ABS-Boss metadata (constructed through the real PluginMetadata)', ()
       expect(step.templateId()).toBe(605);
       expect(step.x()).toBe(44);
       expect(step.y()).toBe(16);
+      expect(step.direction()).toBe(6);
       expect(step.tone()).toEqual([ 17, -68, -68, 0 ]);
       expect(step.animationId()).toBe(56);
+      expect(step.face()).toBe('KH06-2_faces_MV_07');
+      expect(step.faceIndex()).toBe(3);
       expect(step.speaker()).toBe('\\C[10]Cynder\\C[0]');
       expect(step.lines()).toEqual([ '\\pop[self]BRING IT' ]);
     });
@@ -379,10 +385,32 @@ describe('J-ABS-Boss metadata (constructed through the real PluginMetadata)', ()
       expect(step.templateId()).toBe(0);
       expect(step.x()).toBe(0);
       expect(step.y()).toBe(0);
+      expect(step.direction()).toBe(0);
       expect(step.tone()).toEqual([]);
       expect(step.animationId()).toBe(0);
+      expect(step.face()).toBe('');
+      expect(step.faceIndex()).toBe(0);
       expect(step.speaker()).toBe('');
       expect(step.lines()).toEqual([]);
+    });
+
+    it('reads a routine that says it waits to be started as dormant', () =>
+    {
+      // Arrange & Act
+      const routine = metadata.parseRoutine({ key: 'tour', cadence: 15, dormant: true, steps: [] });
+
+      // Assert
+      expect(routine.isDormant()).toBe(true);
+    });
+
+    it('reads a routine that says nothing about waiting as running from the start', () =>
+    {
+      // Arrange & Act
+      const [ routine ] = metadata.parseEncounter(rawEncounter).routines();
+
+      // Assert- the key proves this is the parsed routine, not an empty stand-in.
+      expect(routine.key()).toBe('devour');
+      expect(routine.isDormant()).toBe(false);
     });
 
     it('translates a quickening from seconds into frames, rounded to a whole frame', () =>

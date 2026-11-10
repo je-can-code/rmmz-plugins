@@ -28,16 +28,27 @@ class JabsBossRoutine
   #steps = [];
 
   /**
+   * Whether this routine waits, not running at all, until a step starts it.
+   *
+   * Most of what a fight keeps doing, it does from the first frame. Some of it only begins once the fight turns a
+   * corner- a summoner from two thirds of the boss's health on- and a reaction to that moment is what starts it.
+   * @type {boolean}
+   */
+  #dormant = false;
+
+  /**
    * Constructor.
    * @param {string} key The author-facing name for this routine.
    * @param {number} cadenceFrames How many frames elapse between executions.
    * @param {JabsBossStep[]} steps The steps performed each time this routine comes due.
+   * @param {boolean} dormant Whether this routine waits for a step to start it.
    */
-  constructor(key, cadenceFrames, steps)
+  constructor(key, cadenceFrames, steps, dormant = false)
   {
     this.#key = key;
     this.#cadenceFrames = cadenceFrames;
     this.#steps = steps;
+    this.#dormant = dormant;
   }
 
   /**
@@ -65,6 +76,15 @@ class JabsBossRoutine
   steps()
   {
     return this.#steps;
+  }
+
+  /**
+   * Gets whether this routine waits, not running at all, until a step starts it.
+   * @returns {boolean}
+   */
+  isDormant()
+  {
+    return this.#dormant;
   }
 }
 

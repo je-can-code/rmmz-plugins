@@ -161,6 +161,14 @@ A `quickenRoutine` step makes a routine faster for the rest of the fight, and th
 with it, so the fight speeds up at that moment rather than one execution later. A routine quickened past zero runs as
 often as its boss is able to act. The next attempt at the fight starts back at the authored cadence.
 
+A routine marked `"dormant": true` does not run at all until a `startRoutine` step wakes it, usually from a reaction to
+the moment the fight turns a corner: a summoner from two thirds of the boss's health on, a tour of the room from two
+fifths. A woken routine plays at once, then keeps its cadence from there. Waking a routine that is already running
+leaves it on the wait it was on, and quickening a dormant one shortens the cadence it will start on.
+
+A routine whose last run is still playing - pausing, or blinking around the room - waits for it to finish before it
+starts again, rather than starting a second run over the top of the first.
+
 ### Reactions
 
 Routines are what a fight keeps doing. Reactions are what it does once, in answer to a moment in the fight.
@@ -214,28 +222,44 @@ Routines and reactions are both made of steps, and each step names a `verb`:
 | `removeState` | Takes a state off a participant | `state`, `expect`, `participant` |
 | `changeImage` | Changes what a participant looks like | `image`, `index`, `participant` |
 | `quickenRoutine` | Takes seconds off how long a routine waits between executions | `routine`, `seconds` |
-| `spawn` | Puts an enemy on a tile as part of the fight, without being a body the fight needs felled | `enemyId`, `expect`, `x`, `y`, `template` |
+| `spawn` | Puts an enemy on a tile as part of the fight, without being a body the fight needs felled | `enemyId`, `expect`, `x`, `y`, `template`, `animation` |
 | `tint` | Shifts the color of the whole screen over a number of seconds | `tone`, `seconds` |
 | `animation` | Plays an animation over a participant | `animation`, `expect`, `participant` |
-| `dialogue` | Has a participant say a line, holding the fight until it has been read | `speaker`, `lines`, `participant` |
+| `dialogue` | Has a participant say a line, holding the fight until it has been read | `speaker`, `lines`, `face`, `faceIndex`, `participant` |
+| `blink` | Has a participant vanish and reappear on a tile, facing a given way | `x`, `y`, `direction`, `animation`, `participant` |
+| `wait` | Holds the steps behind it for a number of seconds | `seconds` |
+| `learnSkill` | Teaches a participant a skill its own AI uses from then on | `skill`, `expect`, `participant` |
+| `startRoutine` | Wakes a dormant routine | `routine` |
 
 `participant` names who a step acts on. Leave it out to act on the first participant, the boss. A step acting on a
 participant with no body left on the map, such as one that has already fallen, is skipped.
 
-Steps run in order, all in the same frame, except that a `dialogue` step holds every step behind it until the player
-has read the line. A boss that says something and then lashes out does it in that order.
+Steps run in order. Each firing of a reaction and each run of a routine plays in a lane of its own, and lanes play side
+by side the way separate events would: a boss blinking around the room on one routine does not hold up the spawner on
+another, or the turning point its health just passed. Within a lane, steps with nothing to wait on all play in the same
+frame, and a `dialogue`, `blink` or `wait` step holds every step behind it until it is over. A boss that says something
+and then lashes out does it in that order. Once a fight is won, nothing still playing in it plays on.
 
 `spawn` copies its body from the enemy clone map exactly the way a participant does: from the slot matching `enemyId`,
-or from `template` when it names one. What a fight spawns is part of the fight without being part of winning it - a
-hazard waking as the boss is worn down, say. Whatever is still standing when the fight is won or ended is taken off the
-map with it.
+or from `template` when it names one, and plays `animation` over it as it arrives when it names one. What a fight
+spawns is part of the fight without being part of winning it - a hazard waking as the boss is worn down, say. Whatever
+is still standing when the fight is won or ended is taken off the map with it.
+
+`blink` fades its participant out where it stands and back in on the tile at `x` and `y` a moment later, with the
+`animation` it names flaring at both ends, and leaves it facing `direction`: `2`, `4`, `6` or `8` for down, left,
+right or up, or `0` to keep the way it faced. It plays as the participant's own event, so the fight carries on around
+it. A facing that is none of those stops the fight from starting.
+
+`learnSkill` teaches its participant a skill for the rest of the fight, and its own AI picks it up from there - a
+summon learned partway through, say. The next attempt at the fight starts without it.
 
 `tint` takes a screen tone of red, green and blue from -255 to 255 and gray from 0 to 255, and `seconds` for how long
 it takes to settle. The first tint of a fight remembers the screen it found, and ending the fight puts that back.
 
-`dialogue` takes the name shown with the line in `speaker` and the text in `lines`, shown together as one message. The
-line is said the way an event says one, by the speaker's own event, so a text code that floats a message over whoever
-is speaking - `\pop[self]` in J-Message-Bubbles - floats it over the speaker here too.
+`dialogue` takes the name shown with the line in `speaker`, the face image and the face on it in `face` and
+`faceIndex`, and the text in `lines`, shown together as one message. The line is said the way an event says one, by
+the speaker's own event, so a text code that floats a message over whoever is speaking - `\pop[self]` in
+J-Message-Bubbles - floats it over the speaker here too.
 
 `addState` has the participant put the state on itself, which makes it a JABS state that keeps to its own timing. A
 seal meant to last until a reaction lifts it wants `<indefiniteState>` on the state.

@@ -268,6 +268,13 @@ export function installNaturalHostGlobals(sandbox = globalThis, naturalPluginPar
   Object.setPrototypeOf(Game_Enemy.prototype, Game_Battler.prototype);
   Game_Enemy.prototype.constructor = Game_Enemy;
 
+  // mirrors rmmz_objects.js: the enemy's initMembers is its own, calling the battler's at call time, so an
+  // alias of it never freezes out a Game_Battler alias installed afterward.
+  Game_Enemy.prototype.initMembers = function()
+  {
+    Game_Battler.prototype.initMembers.call(this);
+  };
+
   Game_Enemy.prototype.setup = noop;
   Game_Enemy.prototype.onBattlerDataChange = noop;
   Game_Enemy.prototype.paramBase = () => 0;

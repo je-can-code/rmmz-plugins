@@ -82,6 +82,12 @@ Game_Enemy.prototype.onLearnNewSkill = function(skillId)
   this.onBattlerDataChange();
 };
 
+/**
+ * Extends {@link #learnSkill}.<br/>
+ * Also rebuilds this enemy's skill slots when the skill is new to it, so its AI can reach for the skill straight away.
+ * @param {number} skillId The skill id to learn.
+ * @returns {boolean}
+ */
 J.ABS.Aliased.Game_Enemy.set('learnSkill', Game_Enemy.prototype.learnSkill);
 Game_Enemy.prototype.learnSkill = function(skillId)
 {
@@ -98,6 +104,9 @@ Game_Enemy.prototype.learnSkill = function(skillId)
     // re-initialize the skill slots with the new skill.
     this.initAbsSkills();
   }
+
+  // pass along whether anything was learned, as the original promises.
+  return learnedSkill;
 };
 
 //region JABS basic attack skills

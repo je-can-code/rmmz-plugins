@@ -2620,12 +2620,30 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       const skill1 = { id: 1 };
       const skill2 = { id: 2 };
       jabsBattler.getBattler = () => ({
-        enemy: () => ({ actions: [ { skillId: 1 }, { skillId: 2 } ] }),
+        enemyActions: () => [ { skillId: 1 }, { skillId: 2 } ],
         skill: (id) => (id === 1 ? skill1 : skill2),
       });
       jabsBattler.aiSkillFilter = (skill) => skill === skill1;
 
       expect(jabsBattler.getSkillIdsFromEnemy()).toEqual([ 1 ]);
+    });
+
+    it('getSkillIdsFromEnemy includes a skill the enemy learned in the field, though its database entry never lists it', () =>
+    {
+      // Arrange: the database entry knows only skill 1; this enemy has since learned skill 3.
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({
+        enemy: () => ({ actions: [ { skillId: 1 } ] }),
+        enemyActions: () => [ { skillId: 1 }, { skillId: 3 } ],
+        skill: (id) => ({ id }),
+      });
+      jabsBattler.aiSkillFilter = () => true;
+
+      // Act
+      const skillIds = jabsBattler.getSkillIdsFromEnemy();
+
+      // Assert
+      expect(skillIds).toEqual([ 1, 3 ]);
     });
 
     it('aiSkillFilter excludes explicitly-excluded skills', () =>
@@ -6882,6 +6900,33 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       expect(jabsBattler.isWithinScope(action, user)).toBe(true);
     });
 
+    it('refuses anyone but the caster for a self-scope action, even an ally every friendly check would admit', async () =>
+    {
+      // Arrange: the flags the engine really reports for "the user"- it counts as a friendly, single-target scope
+      // too- aimed at a same-team, animate ally on an indirect action. Every path to yes below the self rule is
+      // open, so only that rule can refuse it.
+      const { default: JABS_TeamRules } = await import('../../../../../src/plugins/abs/core/managers/JABS_TeamRules.js');
+      JABS_TeamRules.isFriendly = vi.fn(() => true);
+      JABS_TeamRules.isOpposed = vi.fn(() => false);
+      const jabsBattler = buildBattler();
+      const { action } = buildActionAndUser({
+        isForUser: () => true,
+        isForFriend: () => true,
+        isForOne: () => true,
+      });
+      const ally = { getUuid: () => 'ally-uuid', isInanimate: () => false };
+
+      // Act
+      const withinScope = jabsBattler.isWithinScope(action, ally);
+
+      // Assert
+      expect(withinScope).toBe(false);
+
+      // restore the team rules this file's later cases expect, rather than leaking them onward.
+      JABS_TeamRules.isFriendly = vi.fn(() => false);
+      JABS_TeamRules.isOpposed = vi.fn(() => true);
+    });
+
     it('refuses a single-scope action that already hit, even when the target would otherwise qualify', async () =>
     {
       // Arrange: the existing already-hit case arranges no scope that could have said yes, so the
@@ -6910,10 +6955,9 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
 
     it('recognises the caster as the target by uuid, not only by an explicit self scope', async () =>
     {
-      // Arrange: the self-scope case above sets isForUser, which makes the target read as the
-      // caster on its own - so the uuid comparison beside it never has to work. An ally-scoped
-      // heal aimed at the caster is the case that needs the comparison, and refusing it would
-      // leave a healer unable to heal themselves.
+      // Arrange: no self scope here, so the uuid comparison is the only thing that can tell the
+      // target is the caster. An ally-scoped heal aimed at the caster is the case that needs it,
+      // and refusing it would leave a healer unable to heal themselves.
       const { default: JABS_TeamRules } = await import('../../../../../src/plugins/abs/core/managers/JABS_TeamRules.js');
       JABS_TeamRules.isFriendly = vi.fn(() => false);
       JABS_TeamRules.isOpposed = vi.fn(() => false);

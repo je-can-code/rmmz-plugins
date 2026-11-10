@@ -51,6 +51,12 @@ describe('J-ABS-Boss JabsBossManager (unit, all downstream dependencies mocked)'
   const ANIMATION_NAME = 'Flare Up';
   const SPEAKER = '\\C[10]Cynder\\C[0]';
   const LINES = [ '\\pop[self]BRING IT', 'second line' ];
+  const FACE = 'KH06-2_faces_MV_07';
+  const FACE_INDEX = 3;
+  const PLATFORM_X = 8;
+  const PLATFORM_Y = 19;
+  const BLINK_FLARE = 40;
+  const PAUSE_FRAMES = 45;
 
   /**
    * Every interpreter a fight created to say a line, oldest first. Each one reports itself still saying its
@@ -93,6 +99,7 @@ describe('J-ABS-Boss JabsBossManager (unit, all downstream dependencies mocked)'
       enemyId: () => enemyId,
       addState: vi.fn(),
       removeState: vi.fn(),
+      learnSkill: vi.fn(),
     };
     const character = { setImage: vi.fn(), eventId: () => characterEventId };
 
@@ -152,8 +159,11 @@ describe('J-ABS-Boss JabsBossManager (unit, all downstream dependencies mocked)'
     templateId: 0,
     x: 0,
     y: 0,
+    direction: 0,
     tone: [],
     animationId: 0,
+    face: '',
+    faceIndex: 0,
     speaker: '',
     lines: [],
     ...overrides,
@@ -164,12 +174,13 @@ describe('J-ABS-Boss JabsBossManager (unit, all downstream dependencies mocked)'
    * @param {string} enemyExpect The enemy name the step was authored against.
    * @returns {JabsBossStep}
    */
-  const spawnStep = (enemyExpect = HAZARD_NAME) => new JabsBossStep('spawn', stepDetails({
+  const spawnStep = (enemyExpect = HAZARD_NAME, animationId = 0) => new JabsBossStep('spawn', stepDetails({
     enemyId: HAZARD_ENEMY_ID,
     expect: enemyExpect,
     templateId: HAZARD_TEMPLATE_ID,
     x: HAZARD_X,
     y: HAZARD_Y,
+    animationId,
   }));
 
   /**
@@ -196,6 +207,38 @@ describe('J-ABS-Boss JabsBossManager (unit, all downstream dependencies mocked)'
    */
   const dialogueStep = (participantKey = '', lines = LINES) =>
     new JabsBossStep('dialogue', stepDetails({ participantKey, speaker: SPEAKER, lines }));
+
+  /**
+   * Builds a step that blinks a participant to the test platform, facing right, with the given flare.
+   * @param {string} participantKey The participant to blink, or empty for the boss.
+   * @param {number} animationId The flare it vanishes and arrives in, or zero for none.
+   * @param {number} direction The way it is left facing.
+   * @returns {JabsBossStep}
+   */
+  const blinkStep = (participantKey = '', animationId = BLINK_FLARE, direction = 6) =>
+    new JabsBossStep('blink', stepDetails({ participantKey, x: PLATFORM_X, y: PLATFORM_Y, direction, animationId }));
+
+  /**
+   * Builds a step that holds its lane for the test pause.
+   * @returns {JabsBossStep}
+   */
+  const waitStep = () => new JabsBossStep('wait', stepDetails({ frames: PAUSE_FRAMES }));
+
+  /**
+   * Builds a step that teaches a participant the test skill.
+   * @param {string} participantKey The participant to teach, or empty for the boss.
+   * @param {string} skillExpect The skill name the step was authored against.
+   * @returns {JabsBossStep}
+   */
+  const learnSkillStep = (participantKey = '', skillExpect = SKILL_NAME) =>
+    new JabsBossStep('learnSkill', stepDetails({ participantKey, skillId: SKILL_ID, expect: skillExpect }));
+
+  /**
+   * Builds a step that wakes the named routine.
+   * @param {string} routineKey The routine to wake.
+   * @returns {JabsBossStep}
+   */
+  const startRoutineStep = routineKey => new JabsBossStep('startRoutine', stepDetails({ routineKey }));
 
   /**
    * Builds a step that puts the test state on a participant.
@@ -2224,6 +2267,373 @@ describe('J-ABS-Boss JabsBossManager (unit, all downstream dependencies mocked)'
 
       // Assert
       expect(act).toThrow(/reaction \[ opening ] names participant \[ ghost ]/);
+    });
+  });
+
+  describe('lanes', () =>
+  {
+    it('plays two reactions side by side, so a scene in one never holds up the other', () =>
+    {
+      // Arrange
+      const jabsBattler = buildJabsBattler(false, false, 100);
+
+      // Act
+      startFlaring(jabsBattler, [ onStart([ dialogueStep(''), addStateStep('') ]), onStart([ tintStep() ]) ]);
+
+      // Assert- the second reaction's tint lands while the first is still mid-line.
+      expect($gameScreen.startTint).toHaveBeenCalledTimes(1);
+      expect(jabsBattler.getBattler().addState).not.toHaveBeenCalled();
+    });
+
+    it('starts a routine again only once its last run has played out', () =>
+    {
+      // Arrange- due on every frame, and its first run pauses before it does anything.
+      const routine = new JabsBossRoutine('tour', 0, [ waitStep(), forceSkillStep('') ]);
+      startFlaring(buildJabsBattler(false, false, 100), [], [], [ routine ]);
+      JabsBossManager.update();
+      JabsBossManager.update();
+      JabsBossManager.update();
+      const runsWhilePausing = interpreters.length;
+
+      // Act
+      interpreters[0].isRunning.mockReturnValue(false);
+      JabsBossManager.update();
+
+      // Assert
+      expect(runsWhilePausing).toBe(1);
+      expect($jabsEngine.forceMapAction).toHaveBeenCalledTimes(1);
+    });
+
+    it('leaves nothing playing once the fight is won', () =>
+    {
+      // Arrange- the opening is still pausing when the boss finishes falling.
+      const body = startFlaring(buildJabsBattler(true, false, 0), [ onStart([ waitStep(), tintStep() ]) ]);
+      body.isErased.mockReturnValue(true);
+      JabsBossManager.update();
+
+      // Act
+      interpreters[0].isRunning.mockReturnValue(false);
+      JabsBossManager.update();
+
+      // Assert
+      expect(JabsBossManager.isBossDefeated()).toBe(true);
+      expect($gameScreen.startTint).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('dormant routines', () =>
+  {
+    /**
+     * Builds a routine that forces the test skill, dormant unless told otherwise.
+     * @param {number} cadenceFrames How many frames it waits between executions.
+     * @param {boolean} dormant Whether it waits to be started.
+     * @returns {JabsBossRoutine}
+     */
+    const tourRoutine = (cadenceFrames, dormant = true) =>
+      new JabsBossRoutine('tour', cadenceFrames, [ forceSkillStep('') ], dormant);
+
+    it('leaves a dormant routine still until something starts it', () =>
+    {
+      // Arrange
+      startFlaring(buildJabsBattler(false, false, 100), [], [], [ tourRoutine(0) ]);
+
+      // Act
+      JabsBossManager.update();
+      JabsBossManager.update();
+      JabsBossManager.update();
+
+      // Assert
+      expect($jabsEngine.forceMapAction).not.toHaveBeenCalled();
+    });
+
+    it('plays a woken routine at once, then again once its cadence has passed', () =>
+    {
+      // Arrange
+      startFlaring(buildJabsBattler(false, false, 100), [ onStart([ startRoutineStep('tour') ]) ], [], [ tourRoutine(3) ]);
+      JabsBossManager.update();
+      const runsAtOnce = $jabsEngine.forceMapAction.mock.calls.length;
+      JabsBossManager.update();
+      JabsBossManager.update();
+      JabsBossManager.update();
+      const runsWhileWaiting = $jabsEngine.forceMapAction.mock.calls.length;
+
+      // Act
+      JabsBossManager.update();
+
+      // Assert
+      expect(runsAtOnce).toBe(1);
+      expect(runsWhileWaiting).toBe(1);
+      expect($jabsEngine.forceMapAction).toHaveBeenCalledTimes(2);
+    });
+
+    it('carries on with a running routine\'s wait when something starts it again', () =>
+    {
+      // Arrange- already running, and a full five frames from its first execution.
+      startFlaring(buildJabsBattler(false, false, 100), [ onStart([ startRoutineStep('tour') ]) ], [], [ tourRoutine(5, false) ]);
+
+      // Act
+      JabsBossManager.update();
+
+      // Assert
+      expect($jabsEngine.forceMapAction).not.toHaveBeenCalled();
+    });
+
+    it('shortens a dormant routine\'s cadence without starting it', () =>
+    {
+      // Arrange- a ten-minute routine quickened to ten frames, while still dormant.
+      const quicken = new JabsBossStep('quickenRoutine', stepDetails({ routineKey: 'tour', frames: 35990 }));
+      startFlaring(buildJabsBattler(false, false, 100), [ onStart([ quicken ]) ], [], [ tourRoutine(36000) ]);
+      JabsBossManager.update();
+      const runsBeforeWaking = $jabsEngine.forceMapAction.mock.calls.length;
+
+      // Act- woken by a later moment, it plays at once and then on the shortened cadence.
+      JabsBossManager.registerEncounters([]);
+      startFlaring(buildJabsBattler(false, false, 100), [ onStart([ quicken, startRoutineStep('tour') ]) ], [], [ tourRoutine(36000) ]);
+      for (let frame = 0; frame < 12; frame++) JabsBossManager.update();
+
+      // Assert
+      expect(runsBeforeWaking).toBe(0);
+      expect($jabsEngine.forceMapAction).toHaveBeenCalledTimes(2);
+    });
+
+    it('throws before spawning anything when a step starts a routine the encounter does not have', () =>
+    {
+      // Arrange
+      registerFlaring([ onStart([ startRoutineStep('ghost') ]) ]);
+
+      // Act
+      const act = () => JabsBossManager.startEncounter('flaring');
+
+      // Assert
+      expect(act).toThrow(/reaction \[ opening ] names routine \[ ghost ]/);
+      expect($jabsEngine.addEnemyToMap).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('blink', () =>
+  {
+    /**
+     * The fade a blink plays as a body leaves, or arrives when `wait` is set, exactly as the scene builds it.
+     * @param {number[]} opacities The opacities it passes through.
+     * @param {boolean} wait Whether the scene waits it out.
+     * @returns {object}
+     */
+    const fadeRoute = (opacities, wait) => ({
+      list: [
+        ...opacities.flatMap(opacity => [ { code: 42, parameters: [ opacity ] }, { code: 15, parameters: [ 3 ] } ]),
+        { code: 0, parameters: [] },
+      ],
+      repeat: false,
+      skippable: true,
+      wait,
+    });
+
+    it('takes the participant it names to its tile through a scene belonging to its own event', () =>
+    {
+      // Arrange
+
+      // Act
+      startTwins([ onStart([ blinkStep('twin') ]) ]);
+
+      // Assert
+      expect(interpreters).toHaveLength(1);
+      expect(interpreters[0].setup).toHaveBeenCalledWith([
+        { code: 212, indent: 0, parameters: [ 0, BLINK_FLARE, false ] },
+        { code: 205, indent: 0, parameters: [ 0, fadeRoute([ 200, 150, 100, 50, 0 ], false) ] },
+        { code: 230, indent: 0, parameters: [ 60 ] },
+        { code: 203, indent: 0, parameters: [ 0, 0, PLATFORM_X, PLATFORM_Y, 6 ] },
+        { code: 212, indent: 0, parameters: [ 0, BLINK_FLARE, false ] },
+        { code: 205, indent: 0, parameters: [ 0, fadeRoute([ 50, 100, 150, 200, 255 ], true) ] },
+        { code: 230, indent: 0, parameters: [ 30 ] },
+        { code: 0, indent: 0, parameters: [] },
+      ], TWIN_BODY_EVENT_ID);
+    });
+
+    it('blinks without a flare when the step names none', () =>
+    {
+      // Arrange
+
+      // Act
+      startFlaring(buildJabsBattler(false, false, 100), [ onStart([ blinkStep('', 0) ]) ]);
+
+      // Assert- the fades and the move still play, only the flares are gone.
+      const [ scene ] = interpreters;
+      const [ [ commands ] ] = scene.setup.mock.calls;
+      expect(commands.map(command => command.code)).toEqual([ 205, 230, 203, 205, 230, 0 ]);
+    });
+
+    it('holds the steps behind a blink until it has played out', () =>
+    {
+      // Arrange
+      const jabsBattler = buildJabsBattler(false, false, 100);
+      startFlaring(jabsBattler, [ onStart([ blinkStep(''), addStateStep('') ]) ]);
+      JabsBossManager.update();
+      const sealedMidBlink = jabsBattler.getBattler().addState.mock.calls.length;
+
+      // Act
+      interpreters[0].isRunning.mockReturnValue(false);
+      JabsBossManager.update();
+
+      // Assert
+      expect(sealedMidBlink).toBe(0);
+      expect(jabsBattler.getBattler().addState).toHaveBeenCalledTimes(1);
+    });
+
+    it('skips the blink of a body no longer on the map, and carries on with the rest', () =>
+    {
+      // Arrange
+      const { twinBody, mayorBattler } = startTwins([ onFallen([ 'twin' ], [ blinkStep('twin'), addStateStep('mayor') ]) ]);
+      twinBody.isErased.mockReturnValue(true);
+
+      // Act
+      JabsBossManager.update();
+
+      // Assert
+      expect(interpreters).toHaveLength(0);
+      expect(mayorBattler.getBattler().addState).toHaveBeenCalledTimes(1);
+    });
+
+    it('throws before spawning anything when a blink faces a way no character can face', () =>
+    {
+      // Arrange
+      registerFlaring([ onStart([ blinkStep('', BLINK_FLARE, 5) ]) ]);
+
+      // Act
+      const act = () => JabsBossManager.startEncounter('flaring');
+
+      // Assert
+      expect(act).toThrow(/reaction \[ opening ] blinks to face \[ 5 ], which is not down \(2\), left \(4\), right \(6\) or up \(8\)/);
+      expect($jabsEngine.addEnemyToMap).not.toHaveBeenCalled();
+    });
+
+    it('throws when a blink names a participant the encounter does not have', () =>
+    {
+      // Arrange
+      registerFlaring([ onStart([ blinkStep('ghost') ]) ]);
+
+      // Act
+      const act = () => JabsBossManager.startEncounter('flaring');
+
+      // Assert
+      expect(act).toThrow(/reaction \[ opening ] names participant \[ ghost ]/);
+    });
+  });
+
+  describe('wait', () =>
+  {
+    it('holds the steps behind it for the time it names, on a scene belonging to no event', () =>
+    {
+      // Arrange
+      startFlaring(buildJabsBattler(false, false, 100), [ onStart([ waitStep(), tintStep() ]) ]);
+      const tintedMidPause = $gameScreen.startTint.mock.calls.length;
+
+      // Act
+      interpreters[0].isRunning.mockReturnValue(false);
+      JabsBossManager.update();
+
+      // Assert
+      expect(interpreters[0].setup).toHaveBeenCalledWith([
+        { code: 230, indent: 0, parameters: [ PAUSE_FRAMES ] },
+        { code: 0, indent: 0, parameters: [] },
+      ], 0);
+      expect(tintedMidPause).toBe(0);
+      expect($gameScreen.startTint).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('learnSkill', () =>
+  {
+    it('teaches the participant it names the skill it names', () =>
+    {
+      // Arrange
+
+      // Act
+      const { mayorBattler, twinBattler } = startTwins([ onStart([ learnSkillStep('twin') ]) ]);
+
+      // Assert
+      expect(twinBattler.getBattler().learnSkill).toHaveBeenCalledWith(SKILL_ID);
+      expect(mayorBattler.getBattler().learnSkill).not.toHaveBeenCalled();
+    });
+
+    it('skips teaching a body no longer on the map, and carries on with the rest', () =>
+    {
+      // Arrange
+      const { twinBody, twinBattler } = startTwins([ onFallen([ 'twin' ], [ learnSkillStep('twin'), tintStep() ]) ]);
+      twinBody.isErased.mockReturnValue(true);
+
+      // Act
+      JabsBossManager.update();
+
+      // Assert
+      expect(twinBattler.getBattler().learnSkill).not.toHaveBeenCalled();
+      expect($gameScreen.startTint).toHaveBeenCalledTimes(1);
+    });
+
+    it('throws before spawning anything when a learned skill no longer carries its authored name', () =>
+    {
+      // Arrange
+      registerFlaring([ onStart([ learnSkillStep('', 'Bite') ]) ]);
+
+      // Act
+      const act = () => JabsBossManager.startEncounter('flaring');
+
+      // Assert
+      expect(act).toThrow(/skill id \[ 2584 ] was authored as \[ Bite ] but is now \[ Devour ]/);
+      expect($jabsEngine.addEnemyToMap).not.toHaveBeenCalled();
+    });
+
+    it('throws when a learned skill names a participant the encounter does not have', () =>
+    {
+      // Arrange
+      registerFlaring([ onStart([ learnSkillStep('ghost') ]) ]);
+
+      // Act
+      const act = () => JabsBossManager.startEncounter('flaring');
+
+      // Assert
+      expect(act).toThrow(/reaction \[ opening ] names participant \[ ghost ]/);
+    });
+  });
+
+  describe('arrivals and faces', () =>
+  {
+    it('brings a spawned body in with the flash the step names', () =>
+    {
+      // Arrange
+      const hazard = buildHazard();
+
+      // Act
+      startFlaring(buildJabsBattler(false, false, 100), [ onStart([ spawnStep(HAZARD_NAME, 120) ]) ], [ hazard ]);
+
+      // Assert
+      expect($gameTemp.requestAnimation).toHaveBeenCalledWith([ hazard ], 120);
+    });
+
+    it('brings a spawned body in without a flash when the step names none', () =>
+    {
+      // Arrange
+      const hazard = buildHazard();
+
+      // Act
+      startFlaring(buildJabsBattler(false, false, 100), [ onStart([ spawnStep() ]) ], [ hazard ]);
+
+      // Assert- the body still arrived, it just came quietly.
+      expect($jabsEngine.addEnemyToMap).toHaveBeenLastCalledWith(HAZARD_X, HAZARD_Y, HAZARD_TEMPLATE_ID);
+      expect($gameTemp.requestAnimation).not.toHaveBeenCalled();
+    });
+
+    it('shows the speaker\'s face with the line', () =>
+    {
+      // Arrange
+      const step = new JabsBossStep('dialogue', stepDetails({ speaker: SPEAKER, lines: LINES, face: FACE, faceIndex: FACE_INDEX }));
+
+      // Act
+      startFlaring(buildJabsBattler(false, false, 100), [ onStart([ step ]) ]);
+
+      // Assert
+      const [ scene ] = interpreters;
+      const [ [ [ showText ] ] ] = scene.setup.mock.calls;
+      expect(showText).toEqual({ code: 101, indent: 0, parameters: [ FACE, FACE_INDEX, 0, 2, SPEAKER ] });
     });
   });
 });

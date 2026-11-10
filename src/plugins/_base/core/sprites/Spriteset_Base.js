@@ -15,4 +15,18 @@ Spriteset_Base.prototype.baseSprite = function()
   // hand back the sprite the world is drawn into.
   return this._baseSprite;
 };
+
+/**
+ * Gets the animations currently playing.
+ *
+ * Each one remembers the characters it was requested on, as `targetObjects`, and reads the position of their sprites
+ * every frame until it finishes. So anything taking a character's sprite away before then has to end the
+ * animations playing on it first.
+ * @returns {(Sprite_Animation|Sprite_AnimationMV)[]} The animationSprites.
+ */
+Spriteset_Base.prototype.animationSprites = function()
+{
+  // hand back the animations currently playing.
+  return this._animationSprites;
+};
 //endregion Spriteset_Base

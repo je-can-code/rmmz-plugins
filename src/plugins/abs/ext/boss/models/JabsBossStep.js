@@ -26,10 +26,13 @@ class JabsBossStep
    * @property {number} frames How many frames a quickening takes off that routine's cadence, or a tint takes to settle.
    * @property {number} enemyId The enemy a spawn puts on the map.
    * @property {number} templateId The slot on the enemy clone map a spawn copies its body from.
-   * @property {number} x The tile column a spawn puts its body on.
-   * @property {number} y The tile row a spawn puts its body on.
+   * @property {number} x The tile column a spawn puts its body on, or a blink takes its participant to.
+   * @property {number} y The tile row a spawn puts its body on, or a blink takes its participant to.
+   * @property {number} direction The way a blink leaves its participant facing, or zero to keep its facing.
    * @property {number[]} tone The screen tone a tint settles on: red, green, blue and gray.
-   * @property {number} animationId The animation played over a participant.
+   * @property {number} animationId The animation played over a participant, a blink's flare, or a spawn's arrival.
+   * @property {string} face The face image shown with a participant's line, or empty for none.
+   * @property {number} faceIndex The face on that image.
    * @property {string} speaker The name shown with a participant's line.
    * @property {string[]} lines The text a participant says, shown together as one message.
    */
@@ -118,16 +121,22 @@ class JabsBossStep
   #templateId = 0;
 
   /**
-   * The tile column this step puts its body on, for a spawn.
+   * The tile column this step puts its body on, for a spawn, or takes its participant to, for a blink.
    * @type {number}
    */
   #x = 0;
 
   /**
-   * The tile row this step puts its body on, for a spawn.
+   * The tile row this step puts its body on, for a spawn, or takes its participant to, for a blink.
    * @type {number}
    */
   #y = 0;
+
+  /**
+   * The way this step leaves its participant facing, for a blink: 2, 4, 6 or 8, or zero to keep its facing.
+   * @type {number}
+   */
+  #direction = 0;
 
   /**
    * The screen tone this step settles on, for a tint: red, green, blue and gray.
@@ -136,10 +145,23 @@ class JabsBossStep
   #tone = [];
 
   /**
-   * The id of the animation this step plays over its participant.
+   * The id of the animation this step plays: over its participant, as a blink's flare, or as a spawn's arrival.
+   * Zero plays none.
    * @type {number}
    */
   #animationId = 0;
+
+  /**
+   * The face image shown with this step's line, for dialogue, or empty for none.
+   * @type {string}
+   */
+  #face = String.empty;
+
+  /**
+   * The face on that image shown with this step's line.
+   * @type {number}
+   */
+  #faceIndex = 0;
 
   /**
    * The name shown with this step's line, for dialogue.
@@ -174,8 +196,11 @@ class JabsBossStep
     this.#templateId = details.templateId;
     this.#x = details.x;
     this.#y = details.y;
+    this.#direction = details.direction;
     this.#tone = details.tone;
     this.#animationId = details.animationId;
+    this.#face = details.face;
+    this.#faceIndex = details.faceIndex;
     this.#speaker = details.speaker;
     this.#lines = details.lines;
   }
@@ -290,7 +315,7 @@ class JabsBossStep
   }
 
   /**
-   * Gets the tile column this step puts its body on.
+   * Gets the tile column this step puts its body on, or takes its participant to.
    * @returns {number}
    */
   x()
@@ -299,12 +324,21 @@ class JabsBossStep
   }
 
   /**
-   * Gets the tile row this step puts its body on.
+   * Gets the tile row this step puts its body on, or takes its participant to.
    * @returns {number}
    */
   y()
   {
     return this.#y;
+  }
+
+  /**
+   * Gets the way this step leaves its participant facing, which is zero to keep its facing.
+   * @returns {number}
+   */
+  direction()
+  {
+    return this.#direction;
   }
 
   /**
@@ -317,12 +351,30 @@ class JabsBossStep
   }
 
   /**
-   * Gets the id of the animation this step plays over its participant.
+   * Gets the id of the animation this step plays, which is zero when it plays none.
    * @returns {number}
    */
   animationId()
   {
     return this.#animationId;
+  }
+
+  /**
+   * Gets the face image shown with this step's line, which is empty for none.
+   * @returns {string}
+   */
+  face()
+  {
+    return this.#face;
+  }
+
+  /**
+   * Gets the face on that image shown with this step's line.
+   * @returns {number}
+   */
+  faceIndex()
+  {
+    return this.#faceIndex;
   }
 
   /**

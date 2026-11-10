@@ -2966,9 +2966,9 @@ class JABS_Battler
    */
   getSkillIdsFromEnemy()
   {
-    // grab the database data for this enemy.
+    // grab every action this enemy knows, the ones it learned in the field included.
     const battlerActions = this.getBattler()
-      .enemy().actions;
+      .enemyActions();
 
     // a filter function for building the skill to check if it should be filtered.
     const filtering = action =>
@@ -5923,8 +5923,7 @@ class JABS_Battler
     const scopeAllAllies = scopeAlly && scopeMany;
     const scopeAllOpponents = scopeOpponent && scopeMany;
 
-    const targetIsSelf = (user.getUuid() === target.getUuid() || (action.getAction()
-      .isForUser()));
+    const targetIsSelf = user.getUuid() === target.getUuid();
     const actionIsSameTeam = JABS_TeamRules.isFriendly(user.getTeam(), this.getTeam());
     const targetIsOpponent = JABS_TeamRules.isOpposed(user.getTeam(), this.getTeam());
 
@@ -5934,8 +5933,16 @@ class JABS_Battler
       return false;
     }
 
-    // the caster and target are the same.
-    if (targetIsSelf && (scopeSelf || scopeAlly || scopeAllAllies || scopeEverything))
+    // a user-scope action reaches its own caster and nobody else. The engine files "the user" among its friendly
+    // scopes as well, so without answering here an ally of the caster would pass the same-team check below as
+    // though the skill had been meant for them too.
+    if (scopeSelf)
+    {
+      return targetIsSelf;
+    }
+
+    // the caster and target are the same, and the action reaches allies or everyone.
+    if (targetIsSelf && (scopeAlly || scopeAllAllies || scopeEverything))
     {
       return true;
     }

@@ -141,7 +141,10 @@ class J_BossPluginMetadata
     const cadenceFrames = this.secondsToFrames(rawRoutine.cadence);
     const steps = rawRoutine.steps.map(raw => this.parseStep(raw));
 
-    return new JabsBossRoutine(rawRoutine.key, cadenceFrames, steps);
+    // a routine runs from the first frame of its fight unless it says it waits to be started.
+    const dormant = rawRoutine.dormant === true;
+
+    return new JabsBossRoutine(rawRoutine.key, cadenceFrames, steps, dormant);
   }
 
   /**
@@ -151,15 +154,26 @@ class J_BossPluginMetadata
    */
   parseStep(rawStep)
   {
-    // a spawn naming no template of its own copies the slot matching its enemy id, exactly the way a
-    // participant does, and zero is that "none".
-    const enemyId = rawStep.enemyId ?? 0;
-    const template = rawStep.template ?? 0;
-    const templateId = template === 0 ? enemyId : template;
-
     // every field any verb reads is read for every step, and each one this step's verb has no use for
     // simply sits at its "none". That keeps one shape for every step, whatever its verb.
     const details = {
+      ...this.parseStepReferences(rawStep),
+      ...this.parseStepPlacement(rawStep),
+      ...this.parseStepPresentation(rawStep),
+    };
+
+    return new JabsBossStep(rawStep.verb, details);
+  }
+
+  /**
+   * Reads what a step acts on and refers to: its participant, the skill, state or routine it names, and the
+   * time it works across.
+   * @param {any} rawStep The unparsed step from configuration.
+   * @returns {Object} Those fields of the step's details.
+   */
+  parseStepReferences(rawStep)
+  {
+    return {
       // a step naming nobody acts on the boss itself.
       participantKey: rawStep.participant ?? String.empty,
       skillId: rawStep.skill ?? 0,
@@ -171,23 +185,55 @@ class J_BossPluginMetadata
       // a skill defaults to observing its own cast time, because the common case is an attack the
       // player is meant to see coming. Removing the wind-up is the exception and must be asked for.
       cast: rawStep.cast !== false,
-      characterName: rawStep.image ?? String.empty,
-      characterIndex: rawStep.index ?? 0,
       routineKey: rawStep.routine ?? String.empty,
 
-      // authors speed a routine up, or let a tint settle, in seconds- the same unit they wrote cadences in.
+      // authors speed a routine up, let a tint settle, or pause, in seconds- the same unit they wrote cadences in.
       frames: this.secondsToFrames(rawStep.seconds ?? 0),
+    };
+  }
+
+  /**
+   * Reads where a step puts things: the enemy a spawn puts on the map, the clone map slot it copies, and the
+   * tile and facing a spawn or a blink lands on.
+   * @param {any} rawStep The unparsed step from configuration.
+   * @returns {Object} Those fields of the step's details.
+   */
+  parseStepPlacement(rawStep)
+  {
+    // a spawn naming no template of its own copies the slot matching its enemy id, exactly the way a
+    // participant does, and zero is that "none".
+    const enemyId = rawStep.enemyId ?? 0;
+    const template = rawStep.template ?? 0;
+    const templateId = template === 0 ? enemyId : template;
+
+    return {
       enemyId,
       templateId,
       x: rawStep.x ?? 0,
       y: rawStep.y ?? 0,
+
+      // a blink that names no facing leaves its participant facing the way it already was.
+      direction: rawStep.direction ?? 0,
+    };
+  }
+
+  /**
+   * Reads how a step looks and sounds: a changed look, a tint, an animation, and a line with its face and speaker.
+   * @param {any} rawStep The unparsed step from configuration.
+   * @returns {Object} Those fields of the step's details.
+   */
+  parseStepPresentation(rawStep)
+  {
+    return {
+      characterName: rawStep.image ?? String.empty,
+      characterIndex: rawStep.index ?? 0,
       tone: rawStep.tone ?? [],
       animationId: rawStep.animation ?? 0,
+      face: rawStep.face ?? String.empty,
+      faceIndex: rawStep.faceIndex ?? 0,
       speaker: rawStep.speaker ?? String.empty,
       lines: rawStep.lines ?? [],
     };
-
-    return new JabsBossStep(rawStep.verb, details);
   }
 
   /**
