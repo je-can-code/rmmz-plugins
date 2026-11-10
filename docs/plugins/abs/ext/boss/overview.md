@@ -20,6 +20,7 @@ Integrates with others of mine plugins:
 
 - `J-Base`; to be honest this is just required for all my plugins.
 - `J-ABS`; the battle system the encounters take place in.
+- `J-Log`; optional, the dialogue log a `log` step writes to.
 
 ## Details
 
@@ -108,6 +109,22 @@ Put a fight's own templates past the last enemy id on the clone map, where no en
 slot. A `template` of `0`, or none at all, means the enemy's own slot. Whichever template it comes from, the body still
 has to turn out to be the enemy the participant names, or the fight does not start.
 
+### Bystanders
+
+A participant marked `"bystander": true` stands in the fight from its first frame without being part of winning it,
+the way an elemental might watch from the edge of the room and cheer its champion on.
+
+```json
+{ "key": "skye", "enemyId": 554, "expect": "Skye", "x": 25, "y": 19, "template": 607, "bystander": true }
+```
+
+It spawns with the rest, and any step can name it, so it can say its lines from where it stands. The fight is won once
+every other participant has fallen, and a bystander still standing then leaves the map with the fight, the same way
+whatever the fight spawned for itself does. Ending the fight takes it away too.
+
+The first participant is the boss, so it can never be a bystander, and an encounter with no participants at all is no
+fight. Either one stops the fight from starting.
+
 ### Standing ground
 
 Every participant is immune to knockback for as long as its fight runs, whatever it otherwise resists. A boss that can
@@ -122,9 +139,9 @@ fight spawns for itself with `spawn` is no participant, and moves like anything 
 That switch is how the story learns the boss is dead, so the boss's template never has to know anything about the
 story. Its death scene says its last words, and whatever the world does next waits on the switch.
 
-A fight is won once every participant has fallen and finished dying. J-ABS only erases a fallen body after its death
-scene has played out, so the switch turns on after the last line of the last body's death scene, never in the middle
-of it.
+A fight is won once every participant other than a bystander has fallen and finished dying. J-ABS only erases a fallen
+body after its death scene has played out, so the switch turns on after the last line of the last body's death scene,
+never in the middle of it.
 
 The switch only turns on in the encounter's own arena, the map named by `map`. The same fight staged anywhere else, like
 a test hall, can be won as often as you like without the story ever hearing about it. A script can still tell when a
@@ -230,6 +247,8 @@ Routines and reactions are both made of steps, and each step names a `verb`:
 | `wait` | Holds the steps behind it for a number of seconds | `seconds` |
 | `learnSkill` | Teaches a participant a skill its own AI uses from then on | `skill`, `expect`, `participant` |
 | `startRoutine` | Wakes a dormant routine | `routine` |
+| `face` | Turns a participant to face a given way | `direction`, `participant` |
+| `log` | Writes a line to the dialogue log on the map, without holding the fight | `lines`, `face`, `faceIndex` |
 
 `participant` names who a step acts on. Leave it out to act on the first participant, the boss. A step acting on a
 participant with no body left on the map, such as one that has already fallen, is skipped.
@@ -253,8 +272,21 @@ it. A facing that is none of those stops the fight from starting.
 `learnSkill` teaches its participant a skill for the rest of the fight, and its own AI picks it up from there - a
 summon learned partway through, say. The next attempt at the fight starts without it.
 
+`face` turns its participant to face `direction`: `2`, `4`, `6` or `8` for down, left, right or up. Unlike a blink's,
+there is no `0`, since a turn that keeps the facing it had is no turn at all. A skill forced straight after fires the
+way the participant now faces, so a boss spinning in place to fire every way in turn is a `face` and a `forceSkill`,
+over and over.
+
+`log` writes `lines` to the dialogue log on the map as one entry, wearing the face image named by `face` and the face
+on it at `faceIndex`. A line in the log is chatter - a shriek mid-barrage, a word called from the sidelines - and the
+fight plays on while it is read, which is the whole difference between it and `dialogue`. The log belongs to J-Log;
+without it, a `log` step writes nowhere.
+
 `tint` takes a screen tone of red, green and blue from -255 to 255 and gray from 0 to 255, and `seconds` for how long
-it takes to settle. The first tint of a fight remembers the screen it found, and ending the fight puts that back.
+it takes to settle. The first tint of a fight remembers the tint the screen was headed for, and ending the fight puts
+that back. It is the destination it remembers, not the colour on screen: partway through a fade that colour is one
+nobody asked for, and a fight started in the same frame another one ends would otherwise mistake the old fight's tint
+for the room's own.
 
 `dialogue` takes the name shown with the line in `speaker`, the face image and the face on it in `face` and
 `faceIndex`, and the text in `lines`, shown together as one message. The line is said the way an event says one, by
@@ -268,8 +300,8 @@ seal meant to last until a reaction lifts it wants `<indefiniteState>` on the st
 single page, so nothing that refreshes the map puts its old look back.
 
 A step naming a participant, routine, skill or state the encounter cannot find stops the fight from starting, and so
-does a `tint` that is not four numbers or a `dialogue` with no lines. A verb nothing implements fails the moment it is
-performed.
+does a `tint` that is not four numbers, a `dialogue` or `log` with no lines, or a `face` that is not one of the four
+facings. A verb nothing implements fails the moment it is performed.
 
 ### Cast time
 

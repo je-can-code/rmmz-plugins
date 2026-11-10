@@ -239,6 +239,27 @@ describe('J-ABS-Boss metadata (constructed through the real PluginMetadata)', ()
       expect(participant.templateId()).toBe(501);
     });
 
+    it('reads a participant that says it is only standing by as a bystander', () =>
+    {
+      // Arrange
+      const raw = { key: 'skye', enemyId: 554, expect: 'Skye', x: 25, y: 19, template: 607, bystander: true };
+
+      // Act
+      const participant = metadata.parseParticipant(raw);
+
+      // Assert
+      expect(participant.isBystander()).toBe(true);
+    });
+
+    it('reads a participant that says nothing about standing by as a body the fight is won by felling', () =>
+    {
+      // Arrange & Act
+      const [ mayor ] = metadata.parseEncounter(rawEncounter).participants();
+
+      // Assert
+      expect(mayor.isBystander()).toBe(false);
+    });
+
     it('reads each reaction as the moment it answers, the bodies it waits on, and its steps', () =>
     {
       // Arrange & Act

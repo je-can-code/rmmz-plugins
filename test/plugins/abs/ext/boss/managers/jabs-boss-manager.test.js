@@ -1,5 +1,5 @@
 //region plugins/abs/ext/boss/managers/jabs-boss-manager.test.js
-import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 describe('J-ABS-Boss JabsBossManager (unit, all downstream dependencies mocked)', () =>
 {
@@ -101,7 +101,7 @@ describe('J-ABS-Boss JabsBossManager (unit, all downstream dependencies mocked)'
       removeState: vi.fn(),
       learnSkill: vi.fn(),
     };
-    const character = { setImage: vi.fn(), eventId: () => characterEventId };
+    const character = { setImage: vi.fn(), setDirection: vi.fn(), eventId: () => characterEventId };
 
     return {
       getBattler: () => gameBattler,
@@ -241,6 +241,22 @@ describe('J-ABS-Boss JabsBossManager (unit, all downstream dependencies mocked)'
   const startRoutineStep = routineKey => new JabsBossStep('startRoutine', stepDetails({ routineKey }));
 
   /**
+   * Builds a step that turns a participant to face the given way.
+   * @param {string} participantKey The participant to turn, or empty for the boss.
+   * @param {number} direction The way it turns to face.
+   * @returns {JabsBossStep}
+   */
+  const faceStep = (participantKey = '', direction = 4) =>
+    new JabsBossStep('face', stepDetails({ participantKey, direction }));
+
+  /**
+   * Builds a step that writes the test line to the dialogue log, wearing the test face.
+   * @param {string[]} lines The text it writes.
+   * @returns {JabsBossStep}
+   */
+  const logStep = (lines = LINES) => new JabsBossStep('log', stepDetails({ lines, face: FACE, faceIndex: FACE_INDEX }));
+
+  /**
    * Builds a step that puts the test state on a participant.
    * @param {string} participantKey The participant to seal, or empty for the boss.
    * @param {string} stateExpect The state name the step was authored against.
@@ -349,6 +365,42 @@ describe('J-ABS-Boss JabsBossManager (unit, all downstream dependencies mocked)'
   };
 
   /**
+   * Builds an encounter whose boss fights while a second body stands by, part of the fight without being part
+   * of winning it.
+   * @param {JabsBossReaction[]} reactions What the encounter does in answer to the moments of the fight.
+   * @returns {JabsBossEncounter}
+   */
+  const buildWatchedEncounter = (reactions = []) =>
+  {
+    const mayor = new JabsBossParticipant('mayor', ENEMY_ID, ENEMY_NAME, SPAWN_X, SPAWN_Y, ENEMY_ID);
+    const watcher = new JabsBossParticipant(
+      'watcher', TWIN_ENEMY_ID, TWIN_ENEMY_NAME, TWIN_X, TWIN_Y, TWIN_ENEMY_ID, true);
+
+    return new JabsBossEncounter('watched', ARENA_MAP_ID, [ mayor, watcher ], 'shared', [], DEFEAT_SWITCH_ID, reactions);
+  };
+
+  /**
+   * Starts the watched encounter with the boss and its bystander both standing on the map.
+   * @param {JabsBossReaction[]} reactions What the encounter does in answer to the moments of the fight.
+   * @returns {{mayorBody: object, watcherBody: object, watcherBattler: object}}
+   */
+  const startWatched = (reactions = []) =>
+  {
+    JabsBossManager.registerEncounters([ buildWatchedEncounter(reactions) ]);
+    const watcherBattler = buildJabsBattler(false, false, 100, TWIN_ENEMY_ID, TWIN_BODY_EVENT_ID);
+    const mayorBody = buildBody(BODY_EVENT_ID, buildJabsBattler(false, false, 100));
+    const watcherBody = buildBody(TWIN_BODY_EVENT_ID, watcherBattler);
+    $jabsEngine.addEnemyToMap
+      .mockReturnValueOnce(mayorBody)
+      .mockReturnValueOnce(watcherBody);
+    holdOnMap([ mayorBody, watcherBody ]);
+
+    JabsBossManager.startEncounter('watched');
+
+    return { mayorBody, watcherBody, watcherBattler };
+  };
+
+  /**
    * Builds a reaction to the given bodies falling.
    * @param {string[]} participantKeys The participants it waits on.
    * @param {JabsBossStep[]} steps What it does once they have all fallen.
@@ -431,7 +483,7 @@ describe('J-ABS-Boss JabsBossManager (unit, all downstream dependencies mocked)'
     globalThis.$dataStates[STATE_ID] = { name: STATE_NAME };
     globalThis.$dataAnimations = [];
     globalThis.$dataAnimations[ANIMATION_ID] = { name: ANIMATION_NAME };
-    globalThis.$gameScreen = { tone: vi.fn(), startTint: vi.fn() };
+    globalThis.$gameScreen = { tone: vi.fn(), toneTarget: vi.fn(), startTint: vi.fn() };
     globalThis.$gameTemp = { requestAnimation: vi.fn() };
     globalThis.Game_Interpreter = FakeInterpreter;
 
@@ -471,9 +523,11 @@ describe('J-ABS-Boss JabsBossManager (unit, all downstream dependencies mocked)'
     // every fight is staged in its own arena unless a test moves it to a hall.
     $gameMap.mapId.mockReturnValue(ARENA_MAP_ID);
 
-    // no line has been said, and the screen starts untinted.
+    // no line has been said, and the screen starts untinted, headed nowhere else.
     interpreters.length = 0;
+    $gameScreen.startTint.mockReset();
     $gameScreen.tone.mockReturnValue([ 0, 0, 0, 0 ]);
+    $gameScreen.toneTarget.mockReturnValue([ 0, 0, 0, 0 ]);
   });
 
   describe('startEncounter', () =>
@@ -2148,7 +2202,7 @@ describe('J-ABS-Boss JabsBossManager (unit, all downstream dependencies mocked)'
     it('hands the screen back the way the fight found it once the fight ends', () =>
     {
       // Arrange
-      $gameScreen.tone.mockReturnValue([ 0, -51, -51, 0 ]);
+      $gameScreen.toneTarget.mockReturnValue([ 0, -51, -51, 0 ]);
       startFlaring(buildJabsBattler(false, false, 100), [ onStart([ tintStep() ]) ]);
       $gameScreen.startTint.mockClear();
 
@@ -2162,8 +2216,8 @@ describe('J-ABS-Boss JabsBossManager (unit, all downstream dependencies mocked)'
 
     it('remembers the screen only from the first tint of the fight', () =>
     {
-      // Arrange- by the second tint the screen has already started reddening.
-      $gameScreen.tone
+      // Arrange- by the second tint the screen is already headed for red.
+      $gameScreen.toneTarget
         .mockReturnValueOnce([ 0, -51, -51, 0 ])
         .mockReturnValue(TONE);
       startFlaring(buildJabsBattler(false, false, 100), [ onStart([ tintStep(), tintStep([ 34, -85, -85, 0 ]) ]) ]);
@@ -2174,6 +2228,43 @@ describe('J-ABS-Boss JabsBossManager (unit, all downstream dependencies mocked)'
 
       // Assert
       expect($gameScreen.startTint).toHaveBeenCalledWith([ 0, -51, -51, 0 ], 0);
+    });
+
+    it('remembers where the screen was headed rather than a fade still underway', () =>
+    {
+      // Arrange- the screen is partway through fading to a tint somebody asked for.
+      $gameScreen.toneTarget.mockReturnValue([ 0, -51, -51, 0 ]);
+      $gameScreen.tone.mockReturnValue([ 0, -20, -20, 0 ]);
+      startFlaring(buildJabsBattler(false, false, 100), [ onStart([ tintStep() ]) ]);
+      $gameScreen.startTint.mockClear();
+
+      // Act
+      JabsBossManager.endEncounter();
+
+      // Assert
+      expect($gameScreen.startTint).toHaveBeenCalledWith([ 0, -51, -51, 0 ], 0);
+    });
+
+    it('starts a fight the same frame another ends remembering the room, not the old fight\'s tint', () =>
+    {
+      // Arrange- a screen that paints a frame behind what it is asked for, the way a lighting composer does.
+      let headedFor = [ 0, 0, 0, 0 ];
+      $gameScreen.startTint.mockImplementation(tone =>
+      {
+        headedFor = [ ...tone ];
+      });
+      $gameScreen.toneTarget.mockImplementation(() => headedFor);
+      $gameScreen.tone.mockReturnValue(TONE);
+      startFlaring(buildJabsBattler(false, false, 100), [ onStart([ tintStep() ]) ]);
+      JabsBossManager.endEncounter();
+      startFlaring(buildJabsBattler(false, false, 100), [ onStart([ tintStep([ 34, -85, -85, 0 ]) ]) ]);
+      $gameScreen.startTint.mockClear();
+
+      // Act
+      JabsBossManager.endEncounter();
+
+      // Assert- the room was untinted before either fight, and that is what it gets back.
+      expect($gameScreen.startTint).toHaveBeenCalledWith([ 0, 0, 0, 0 ], 0);
     });
 
     it('hands the screen back only once, however many times the fight is ended', () =>
@@ -2634,6 +2725,327 @@ describe('J-ABS-Boss JabsBossManager (unit, all downstream dependencies mocked)'
       const [ scene ] = interpreters;
       const [ [ [ showText ] ] ] = scene.setup.mock.calls;
       expect(showText).toEqual({ code: 101, indent: 0, parameters: [ FACE, FACE_INDEX, 0, 2, SPEAKER ] });
+    });
+  });
+
+  describe('bystanders', () =>
+  {
+    it('wins the fight once the boss falls, with its bystander still standing', () =>
+    {
+      // Arrange
+      const { mayorBody } = startWatched();
+      mayorBody.isErased.mockReturnValue(true);
+
+      // Act
+      JabsBossManager.update();
+
+      // Assert
+      expect(JabsBossManager.isBossDefeated()).toBe(true);
+      expect($gameSwitches.setValue).toHaveBeenCalledWith(DEFEAT_SWITCH_ID, true);
+    });
+
+    it('takes a bystander still standing off the map once the fight is won', () =>
+    {
+      // Arrange
+      const { mayorBody, watcherBody } = startWatched();
+      mayorBody.isErased.mockReturnValue(true);
+
+      // Act
+      JabsBossManager.update();
+
+      // Assert
+      expect(watcherBody.erase).toHaveBeenCalledTimes(1);
+    });
+
+    it('leaves a bystander standing while the fight goes on', () =>
+    {
+      // Arrange
+      const { watcherBody } = startWatched();
+
+      // Act
+      JabsBossManager.update();
+
+      // Assert- nothing has fallen, so nothing is won and nobody leaves.
+      expect(JabsBossManager.isBossDefeated()).toBe(false);
+      expect(watcherBody.erase).not.toHaveBeenCalled();
+    });
+
+    it('takes a bystander off the map when the fight is ended, and leaves the boss standing', () =>
+    {
+      // Arrange
+      const { mayorBody, watcherBody } = startWatched();
+
+      // Act
+      JabsBossManager.endEncounter();
+
+      // Assert
+      expect(watcherBody.erase).toHaveBeenCalledTimes(1);
+      expect(mayorBody.erase).not.toHaveBeenCalled();
+    });
+
+    it('leaves a bystander alone that has already been taken off the map', () =>
+    {
+      // Arrange
+      const { watcherBody } = startWatched();
+      watcherBody.isErased.mockReturnValue(true);
+
+      // Act
+      JabsBossManager.endEncounter();
+
+      // Assert
+      expect(watcherBody.erase).not.toHaveBeenCalled();
+    });
+
+    it('takes an old fight\'s bystander with it when another fight starts over the top', () =>
+    {
+      // Arrange
+      const { watcherBody } = startWatched();
+      JabsBossManager.registerEncounters([ buildEncounter(ENEMY_NAME, SKILL_NAME, true) ]);
+      const nextBody = buildBody(BODY_EVENT_ID, buildJabsBattler(false, false, 100));
+      $jabsEngine.addEnemyToMap.mockReturnValueOnce(nextBody);
+      holdOnMap([ nextBody, watcherBody ]);
+
+      // Act
+      JabsBossManager.startEncounter('gluttonwolf');
+
+      // Assert
+      expect(watcherBody.erase).toHaveBeenCalledTimes(1);
+    });
+
+    it('lets a step name a bystander, so it says its line from where it stands', () =>
+    {
+      // Arrange
+
+      // Act
+      startWatched([ onStart([ dialogueStep('watcher') ]) ]);
+
+      // Assert
+      const [ scene ] = interpreters;
+      const [ [ , eventId ] ] = scene.setup.mock.calls;
+      expect(eventId).toBe(TWIN_BODY_EVENT_ID);
+    });
+
+    it('throws before spawning anything when a bystander is listed first, where the boss belongs', () =>
+    {
+      // Arrange
+      const watcher = new JabsBossParticipant(
+        'watcher', TWIN_ENEMY_ID, TWIN_ENEMY_NAME, TWIN_X, TWIN_Y, TWIN_ENEMY_ID, true);
+      const mayor = new JabsBossParticipant('mayor', ENEMY_ID, ENEMY_NAME, SPAWN_X, SPAWN_Y, ENEMY_ID);
+      const encounter = new JabsBossEncounter('backwards', ARENA_MAP_ID, [ watcher, mayor ], 'shared', [], 0, []);
+      JabsBossManager.registerEncounters([ encounter ]);
+
+      // Act
+      const act = () => JabsBossManager.startEncounter('backwards');
+
+      // Assert
+      expect(act).toThrow(/encounter \[ backwards ] lists bystander \[ watcher ] first, where its boss belongs/);
+      expect($jabsEngine.addEnemyToMap).not.toHaveBeenCalled();
+    });
+
+    it('throws before spawning anything when the encounter has nobody in it', () =>
+    {
+      // Arrange
+      const encounter = new JabsBossEncounter('empty', ARENA_MAP_ID, [], 'shared', [], 0, []);
+      JabsBossManager.registerEncounters([ encounter ]);
+
+      // Act
+      const act = () => JabsBossManager.startEncounter('empty');
+
+      // Assert
+      expect(act).toThrow(/encounter \[ empty ] has no participants, so it would be won the moment it began/);
+      expect($jabsEngine.addEnemyToMap).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('face', () =>
+  {
+    it('turns the participant it names to face the way it names', () =>
+    {
+      // Arrange
+
+      // Act
+      const { mayorBattler, twinBattler } = startTwins([ onStart([ faceStep('twin', 8) ]) ]);
+
+      // Assert
+      expect(twinBattler.getCharacter().setDirection).toHaveBeenCalledWith(8);
+      expect(mayorBattler.getCharacter().setDirection).not.toHaveBeenCalled();
+    });
+
+    it('holds nothing up: the step behind a turn plays in the same frame', () =>
+    {
+      // Arrange
+      const jabsBattler = buildJabsBattler(false, false, 100);
+
+      // Act
+      startFlaring(jabsBattler, [ onStart([ faceStep('', 2), forceSkillStep('') ]) ]);
+
+      // Assert
+      expect(jabsBattler.getCharacter().setDirection).toHaveBeenCalledWith(2);
+      expect($jabsEngine.forceMapAction).toHaveBeenCalledWith(jabsBattler, SKILL_ID, false);
+    });
+
+    it('skips turning a body no longer on the map, and carries on with the rest', () =>
+    {
+      // Arrange
+      const { twinBody, twinBattler } = startTwins([ onFallen([ 'twin' ], [ faceStep('twin'), tintStep() ]) ]);
+      twinBody.isErased.mockReturnValue(true);
+
+      // Act
+      JabsBossManager.update();
+
+      // Assert
+      expect(twinBattler.getCharacter().setDirection).not.toHaveBeenCalled();
+      expect($gameScreen.startTint).toHaveBeenCalledTimes(1);
+    });
+
+    it('throws before spawning anything when a turn names no way to face', () =>
+    {
+      // Arrange- zero keeps a blink's facing, but there is no such thing as turning to keep one.
+      registerFlaring([ onStart([ faceStep('', 0) ]) ]);
+
+      // Act
+      const act = () => JabsBossManager.startEncounter('flaring');
+
+      // Assert
+      expect(act).toThrow(/reaction \[ opening ] turns to face \[ 0 ], which is not down \(2\), left \(4\), right \(6\) or up \(8\)/);
+      expect($jabsEngine.addEnemyToMap).not.toHaveBeenCalled();
+    });
+
+    it('throws when a turn names a participant the encounter does not have', () =>
+    {
+      // Arrange
+      registerFlaring([ onStart([ faceStep('ghost') ]) ]);
+
+      // Act
+      const act = () => JabsBossManager.startEncounter('flaring');
+
+      // Assert
+      expect(act).toThrow(/reaction \[ opening ] names participant \[ ghost ]/);
+    });
+  });
+
+  describe('log', () =>
+  {
+    /**
+     * Stands in for J-Log's builder, handing back exactly what it was told.
+     */
+    class FakeDiaLogBuilder
+    {
+      /**
+       * Constructor.
+       */
+      constructor()
+      {
+        this.built = { lines: [], faceName: '', faceIndex: -1 };
+      }
+
+      /**
+       * Remembers the lines of the log.
+       * @param {string[]} lines The lines.
+       * @returns {FakeDiaLogBuilder}
+       */
+      setLines(lines)
+      {
+        this.built.lines = lines;
+        return this;
+      }
+
+      /**
+       * Remembers the face image of the log.
+       * @param {string} faceName The face image.
+       * @returns {FakeDiaLogBuilder}
+       */
+      setFaceName(faceName)
+      {
+        this.built.faceName = faceName;
+        return this;
+      }
+
+      /**
+       * Remembers the face on that image.
+       * @param {number} faceIndex The face.
+       * @returns {FakeDiaLogBuilder}
+       */
+      setFaceIndex(faceIndex)
+      {
+        this.built.faceIndex = faceIndex;
+        return this;
+      }
+
+      /**
+       * Hands back what it was told.
+       * @returns {object}
+       */
+      build()
+      {
+        return this.built;
+      }
+    }
+
+    beforeEach(() =>
+    {
+      // J-Log is installed unless a test takes it away.
+      J.LOG = {};
+      globalThis.DiaLogBuilder = FakeDiaLogBuilder;
+      globalThis.$mapLogs = { dialog: { addLog: vi.fn() } };
+    });
+
+    afterEach(() =>
+    {
+      // J-Log is no part of any other test's game.
+      delete J.LOG;
+      delete globalThis.DiaLogBuilder;
+      delete globalThis.$mapLogs;
+    });
+
+    it('writes the line to the dialogue log, wearing the face it names', () =>
+    {
+      // Arrange
+
+      // Act
+      startFlaring(buildJabsBattler(false, false, 100), [ onStart([ logStep() ]) ]);
+
+      // Assert
+      expect($mapLogs.dialog.addLog).toHaveBeenCalledWith({ lines: LINES, faceName: FACE, faceIndex: FACE_INDEX });
+    });
+
+    it('holds nothing up: the step behind a line in the log plays in the same frame', () =>
+    {
+      // Arrange
+      const jabsBattler = buildJabsBattler(false, false, 100);
+
+      // Act
+      startFlaring(jabsBattler, [ onStart([ logStep(), addStateStep('') ]) ]);
+
+      // Assert
+      expect(interpreters).toHaveLength(0);
+      expect(jabsBattler.getBattler().addState).toHaveBeenCalledTimes(1);
+    });
+
+    it('writes nowhere in a game without J-Log, and carries on with the rest', () =>
+    {
+      // Arrange
+      delete J.LOG;
+
+      // Act
+      startFlaring(buildJabsBattler(false, false, 100), [ onStart([ logStep(), tintStep() ]) ]);
+
+      // Assert
+      expect($mapLogs.dialog.addLog).not.toHaveBeenCalled();
+      expect($gameScreen.startTint).toHaveBeenCalledTimes(1);
+    });
+
+    it('throws before spawning anything when a line in the log says nothing', () =>
+    {
+      // Arrange
+      registerFlaring([ onStart([ logStep([]) ]) ]);
+
+      // Act
+      const act = () => JabsBossManager.startEncounter('flaring');
+
+      // Assert
+      expect(act).toThrow(/reaction \[ opening ] writes nothing at all to the dialogue log/);
+      expect($jabsEngine.addEnemyToMap).not.toHaveBeenCalled();
     });
   });
 });

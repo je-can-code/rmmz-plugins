@@ -17,6 +17,10 @@
  * name a different template instead, for a body that is that same enemy but dressed for this one fight:
  * a prefix it always wears, a role it plays, a level it fights at. The enemy's own template stays exactly
  * as it is for every other place that enemy turns up.
+ *
+ * Most participants are bodies the fight is won by felling. A bystander is the exception: it stands in the
+ * fight from its first frame without being part of winning it, the way an elemental might watch from the
+ * edge of the room and cheer its champion on.
  */
 class JabsBossParticipant
 {
@@ -67,6 +71,16 @@ class JabsBossParticipant
   #y = 0;
 
   /**
+   * Whether this participant is part of the fight without being part of winning it.
+   *
+   * A bystander is spawned with the rest and can be named by any step, so it can say its lines from where it
+   * stands. The fight is won once every other participant has fallen, and a bystander still standing then
+   * leaves the map with the fight, the way anything the fight spawned for itself does.
+   * @type {boolean}
+   */
+  #bystander = false;
+
+  /**
    * Constructor.
    * @param {string} key The author-facing name for this participant.
    * @param {number} enemyId The id of the enemy this participant is.
@@ -74,8 +88,9 @@ class JabsBossParticipant
    * @param {number} x The x coordinate of the tile this participant appears on.
    * @param {number} y The y coordinate of the tile this participant appears on.
    * @param {number} templateId The id of the clone map event this participant spawns from.
+   * @param {boolean} bystander Whether this participant is part of the fight without being part of winning it.
    */
-  constructor(key, enemyId, expect, x, y, templateId)
+  constructor(key, enemyId, expect, x, y, templateId, bystander = false)
   {
     this.#key = key;
     this.#enemyId = enemyId;
@@ -83,6 +98,7 @@ class JabsBossParticipant
     this.#x = x;
     this.#y = y;
     this.#templateId = templateId;
+    this.#bystander = bystander;
   }
 
   /**
@@ -137,6 +153,15 @@ class JabsBossParticipant
   y()
   {
     return this.#y;
+  }
+
+  /**
+   * Gets whether this participant is part of the fight without being part of winning it.
+   * @returns {boolean}
+   */
+  isBystander()
+  {
+    return this.#bystander;
   }
 }
 

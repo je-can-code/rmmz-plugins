@@ -28,13 +28,14 @@ class JabsBossStep
    * @property {number} templateId The slot on the enemy clone map a spawn copies its body from.
    * @property {number} x The tile column a spawn puts its body on, or a blink takes its participant to.
    * @property {number} y The tile row a spawn puts its body on, or a blink takes its participant to.
-   * @property {number} direction The way a blink leaves its participant facing, or zero to keep its facing.
+   * @property {number} direction The way a blink leaves its participant facing (zero keeps its facing), or the way a
+   * facing step turns it.
    * @property {number[]} tone The screen tone a tint settles on: red, green, blue and gray.
    * @property {number} animationId The animation played over a participant, a blink's flare, or a spawn's arrival.
-   * @property {string} face The face image shown with a participant's line, or empty for none.
+   * @property {string} face The face image shown with a line, said aloud or written to the log, or empty for none.
    * @property {number} faceIndex The face on that image.
    * @property {string} speaker The name shown with a participant's line.
-   * @property {string[]} lines The text a participant says, shown together as one message.
+   * @property {string[]} lines The text of a line, said aloud as one message or written to the log as one entry.
    */
 
   /**
@@ -133,7 +134,8 @@ class JabsBossStep
   #y = 0;
 
   /**
-   * The way this step leaves its participant facing, for a blink: 2, 4, 6 or 8, or zero to keep its facing.
+   * The way this step leaves its participant facing: 2, 4, 6 or 8. A blink may also name zero to keep the facing
+   * its participant had, which a facing step may not.
    * @type {number}
    */
   #direction = 0;
@@ -152,7 +154,7 @@ class JabsBossStep
   #animationId = 0;
 
   /**
-   * The face image shown with this step's line, for dialogue, or empty for none.
+   * The face image shown with this step's line, for dialogue or the log, or empty for none.
    * @type {string}
    */
   #face = String.empty;
@@ -170,7 +172,8 @@ class JabsBossStep
   #speaker = String.empty;
 
   /**
-   * The text this step's participant says, for dialogue, shown together as one message.
+   * The text of this step's line: what its participant says, for dialogue, shown together as one message, or
+   * what it writes to the dialogue log, as one entry.
    * @type {string[]}
    */
   #lines = [];

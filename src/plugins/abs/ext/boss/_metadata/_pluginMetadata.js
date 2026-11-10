@@ -109,7 +109,10 @@ class J_BossPluginMetadata
     const template = rawParticipant.template ?? 0;
     const templateId = template === 0 ? enemyId : template;
 
-    return new JabsBossParticipant(key, enemyId, expect, x, y, templateId);
+    // a participant is a body the fight is won by felling unless it says it is only standing by.
+    const bystander = rawParticipant.bystander === true;
+
+    return new JabsBossParticipant(key, enemyId, expect, x, y, templateId, bystander);
   }
 
   /**
@@ -193,8 +196,8 @@ class J_BossPluginMetadata
   }
 
   /**
-   * Reads where a step puts things: the enemy a spawn puts on the map, the clone map slot it copies, and the
-   * tile and facing a spawn or a blink lands on.
+   * Reads where a step puts things: the enemy a spawn puts on the map, the clone map slot it copies, the tile
+   * and facing a spawn or a blink lands on, and the way a facing step turns its participant.
    * @param {any} rawStep The unparsed step from configuration.
    * @returns {Object} Those fields of the step's details.
    */
@@ -212,13 +215,15 @@ class J_BossPluginMetadata
       x: rawStep.x ?? 0,
       y: rawStep.y ?? 0,
 
-      // a blink that names no facing leaves its participant facing the way it already was.
+      // a blink that names no facing leaves its participant facing the way it already was. A facing step has
+      // no such fallback, and starting a fight refuses one that names no way to face.
       direction: rawStep.direction ?? 0,
     };
   }
 
   /**
-   * Reads how a step looks and sounds: a changed look, a tint, an animation, and a line with its face and speaker.
+   * Reads how a step looks and sounds: a changed look, a tint, an animation, and a line with its face and speaker,
+   * whether said aloud or written to the dialogue log.
    * @param {any} rawStep The unparsed step from configuration.
    * @returns {Object} Those fields of the step's details.
    */
