@@ -224,8 +224,9 @@ JABS_Battler.prototype.tryStartPose = function(skill)
   // determine the new action pose sprite name.
   const newCharacterSprite = `${baseSpriteName}${skill.jabsPoseSuffix}`;
 
-  // stitch the file path together with the sprite url.
-  const spritePath = `img/characters/${Utils.encodeURI(newCharacterSprite)}.png`;
+  // the disk check needs the sheet's literal file name. URI-encoding belongs to URLs, and it would turn the '$' a
+  // one-character sheet's name starts with into '%24', a name no file on disk has, so such a pose would never play.
+  const spritePath = `img/characters/${newCharacterSprite}.png`;
 
   // check if the pose sheet exists on disk before swapping the character graphic.
   const spriteExists = J.ABS.EXT.POSES.Helpers.gameAssetExists(spritePath);
