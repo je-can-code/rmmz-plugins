@@ -112,7 +112,10 @@ class J_BossPluginMetadata
     // a participant is a body the fight is won by felling unless it says it is only standing by.
     const bystander = rawParticipant.bystander === true;
 
-    return new JabsBossParticipant(key, enemyId, expect, x, y, templateId, bystander);
+    // a participant is on the map from the fight's first frame unless it says it waits to be summoned.
+    const summoned = rawParticipant.summoned === true;
+
+    return new JabsBossParticipant(key, enemyId, expect, x, y, templateId, bystander, summoned);
   }
 
   /**
@@ -197,7 +200,8 @@ class J_BossPluginMetadata
 
   /**
    * Reads where a step puts things: the enemy a spawn puts on the map, the clone map slot it copies, the tile
-   * and facing a spawn or a blink lands on, and the way a facing step turns its participant.
+   * a spawn, a blink or a jump lands on, the way a blink leaves its participant facing, and the way a facing
+   * step turns it.
    * @param {any} rawStep The unparsed step from configuration.
    * @returns {Object} Those fields of the step's details.
    */

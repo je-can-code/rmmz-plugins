@@ -125,12 +125,36 @@ whatever the fight spawned for itself does. Ending the fight takes it away too.
 The first participant is the boss, so it can never be a bystander, and an encounter with no participants at all is no
 fight. Either one stops the fight from starting.
 
+### Summoned participants
+
+A participant marked `"summoned": true` is held back as the fight starts, and arrives only when a `summon` step brings
+it in: on its own `x` and `y`, from its own template, exactly the way the participants there from the start arrived.
+That is how a maker calls her masterworks down one at a time, each the moment the last one falls.
+
+```json
+{ "key": "brine", "enemyId": 531, "expect": "Puppet", "x": 23, "y": 13, "template": 608, "summoned": true }
+```
+
+It is a participant all the while. A `fallen` reaction can wait on it, and the fight is not won until it has arrived and
+fallen too, so one still waiting to be summoned keeps the fight going however much else has fallen. Once it arrives,
+nothing about it differs from a participant that was there from the first frame: any step can name it, and it stands
+its ground like any other.
+
+Exactly one step summons it, and that step sits in a reaction. A reaction fires once per fight, which makes it one
+arrival. A routine runs over and over, so a `summon` in one stops the fight from starting, and so does a summoned
+participant nothing summons, or one summoned twice. The boss is there from the start, so a summoned participant listed
+first stops the fight from starting too.
+
+A fight started again forgets everything the last attempt summoned, so every summoned participant starts the new
+attempt held back, and nothing waiting on one fires before it has arrived and fallen in this attempt.
+
 ### Standing ground
 
-Every participant is immune to knockback for as long as its fight runs, whatever it otherwise resists. A boss that can
-be shoved around its own arena can be wedged into a doorway or pinned in a corner, and the fight turns into one against
-the walls of the room. Only being moved is refused: every state a hit carries, a stun among them, still lands. What a
-fight spawns for itself with `spawn` is no participant, and moves like anything else.
+Every participant is immune to knockback for as long as its fight runs, whatever it otherwise resists, and a summoned
+one from the moment it arrives. A boss that can be shoved around its own arena can be wedged into a doorway or pinned
+in a corner, and the fight turns into one against the walls of the room. Only being moved is refused: every state a hit
+carries, a stun among them, still lands. What a fight spawns for itself with `spawn` is no participant, and moves like
+anything else.
 
 ### Defeat
 
@@ -139,9 +163,9 @@ fight spawns for itself with `spawn` is no participant, and moves like anything 
 That switch is how the story learns the boss is dead, so the boss's template never has to know anything about the
 story. Its death scene says its last words, and whatever the world does next waits on the switch.
 
-A fight is won once every participant other than a bystander has fallen and finished dying. J-ABS only erases a fallen
-body after its death scene has played out, so the switch turns on after the last line of the last body's death scene,
-never in the middle of it.
+A fight is won once every participant other than a bystander has fallen and finished dying, a summoned one included,
+which has to have arrived first. J-ABS only erases a fallen body after its death scene has played out, so the switch
+turns on after the last line of the last body's death scene, never in the middle of it.
 
 The switch only turns on in the encounter's own arena, the map named by `map`. The same fight staged anywhere else, like
 a test hall, can be won as often as you like without the story ever hearing about it. A script can still tell when a
@@ -216,7 +240,8 @@ Routines are what a fight keeps doing. Reactions are what it does once, in answe
 
 - `start` answers the fight beginning: the moment its bodies arrive, before a single frame of it has been drawn.
 - `fallen` answers every participant listed in `participants` having fallen and finished its death scene. List one
-  participant to answer that one falling, or several to answer the whole group falling.
+  participant to answer that one falling, or several to answer the whole group falling. A participant still waiting to
+  be summoned has not fallen.
 - `health` answers every participant listed in `participants` standing at or below `below` percent of its health. List
   nobody to watch the boss. A body that has fallen, or left the map, is past every turning point it had, so a boss
   felled from above the percent in one blow never answers it.
@@ -249,25 +274,36 @@ Routines and reactions are both made of steps, and each step names a `verb`:
 | `startRoutine` | Wakes a dormant routine | `routine` |
 | `face` | Turns a participant to face a given way | `direction`, `participant` |
 | `log` | Writes a line to the dialogue log on the map, without holding the fight | `lines`, `face`, `faceIndex` |
+| `summon` | Brings a participant held back to be summoned onto its own tile | `participant`, `animation` |
+| `jump` | Has a participant leap onto a tile | `x`, `y`, `participant` |
 
 `participant` names who a step acts on. Leave it out to act on the first participant, the boss. A step acting on a
-participant with no body left on the map, such as one that has already fallen, is skipped.
+participant with no body on the map, such as one that has already fallen or has yet to be summoned, is skipped.
 
 Steps run in order. Each firing of a reaction and each run of a routine plays in a lane of its own, and lanes play side
 by side the way separate events would: a boss blinking around the room on one routine does not hold up the spawner on
 another, or the turning point its health just passed. Within a lane, steps with nothing to wait on all play in the same
-frame, and a `dialogue`, `blink` or `wait` step holds every step behind it until it is over. A boss that says something
-and then lashes out does it in that order. Once a fight is won, nothing still playing in it plays on.
+frame, and a `dialogue`, `blink`, `jump` or `wait` step holds every step behind it until it is over. A boss that says
+something and then lashes out does it in that order. Once a fight is won, nothing still playing in it plays on.
 
 `spawn` copies its body from the enemy clone map exactly the way a participant does: from the slot matching `enemyId`,
 or from `template` when it names one, and plays `animation` over it as it arrives when it names one. What a fight
 spawns is part of the fight without being part of winning it - a hazard waking as the boss is worn down, say. Whatever
 is still standing when the fight is won or ended is taken off the map with it.
 
+`summon` brings in the participant it names, which has to be one marked `"summoned"`, and plays `animation` over it as
+it arrives when it names one. Unlike every other step, naming nobody does not mean the boss: the boss is there from the
+start, so a `summon` naming nobody, or naming a participant that was never held back, stops the fight from starting.
+
 `blink` fades its participant out where it stands and back in on the tile at `x` and `y` a moment later, with the
 `animation` it names flaring at both ends, and leaves it facing `direction`: `2`, `4`, `6` or `8` for down, left,
 right or up, or `0` to keep the way it faced. It plays as the participant's own event, so the fight carries on around
 it. A facing that is none of those stops the fight from starting.
+
+`jump` has its participant leap from wherever it stands onto the tile at `x` and `y`, landing facing the way it leapt:
+a boss hopping down from a ledge nobody else can reach, say. It plays as the participant's own event, and a
+participant held in place, such as one sealed by a rooting state, leaps all the same. Take a seal off after the
+`jump` rather than before it, and the boss stays untouchable until it lands.
 
 `learnSkill` teaches its participant a skill for the rest of the fight, and its own AI picks it up from there - a
 summon learned partway through, say. The next attempt at the fight starts without it.
@@ -314,6 +350,11 @@ It defaults to true. Set it to false only for scripted set-pieces that are not m
 A boss that cannot move, such as one sealed in place by a rooting state, casts a forced skill from where it stands.
 Any other battler walks into range before its decided skill fires, and a boss held in place would otherwise wind the
 skill up and then wait for a step it can never take.
+
+A forced skill lands the moment its cast time ends, however far the player stands. J-ABS only runs the AI of battlers
+near the player (the `maxAiUpdateRange` parameter), and in an arena wider than that a boss's AI can stop while its cast
+is winding up. The fight watches every cast it forces and, when the AI is not there to fire a finished one, fires it
+itself, through the same checks and the same firing the AI uses.
 
 ### The `expect` property
 

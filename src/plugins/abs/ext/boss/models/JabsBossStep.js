@@ -26,12 +26,13 @@ class JabsBossStep
    * @property {number} frames How many frames a quickening takes off that routine's cadence, or a tint takes to settle.
    * @property {number} enemyId The enemy a spawn puts on the map.
    * @property {number} templateId The slot on the enemy clone map a spawn copies its body from.
-   * @property {number} x The tile column a spawn puts its body on, or a blink takes its participant to.
-   * @property {number} y The tile row a spawn puts its body on, or a blink takes its participant to.
+   * @property {number} x The tile column a spawn puts its body on, or a blink or a jump takes its participant to.
+   * @property {number} y The tile row a spawn puts its body on, or a blink or a jump takes its participant to.
    * @property {number} direction The way a blink leaves its participant facing (zero keeps its facing), or the way a
    * facing step turns it.
    * @property {number[]} tone The screen tone a tint settles on: red, green, blue and gray.
-   * @property {number} animationId The animation played over a participant, a blink's flare, or a spawn's arrival.
+   * @property {number} animationId The animation played over a participant, a blink's flare, or the arrival of a
+   * spawn or a summoned participant.
    * @property {string} face The face image shown with a line, said aloud or written to the log, or empty for none.
    * @property {number} faceIndex The face on that image.
    * @property {string} speaker The name shown with a participant's line.
@@ -122,13 +123,13 @@ class JabsBossStep
   #templateId = 0;
 
   /**
-   * The tile column this step puts its body on, for a spawn, or takes its participant to, for a blink.
+   * The tile column this step puts its body on, for a spawn, or takes its participant to, for a blink or a jump.
    * @type {number}
    */
   #x = 0;
 
   /**
-   * The tile row this step puts its body on, for a spawn, or takes its participant to, for a blink.
+   * The tile row this step puts its body on, for a spawn, or takes its participant to, for a blink or a jump.
    * @type {number}
    */
   #y = 0;
@@ -147,8 +148,8 @@ class JabsBossStep
   #tone = [];
 
   /**
-   * The id of the animation this step plays: over its participant, as a blink's flare, or as a spawn's arrival.
-   * Zero plays none.
+   * The id of the animation this step plays: over its participant, as a blink's flare, or as the arrival of a spawn
+   * or a summoned participant. Zero plays none.
    * @type {number}
    */
   #animationId = 0;

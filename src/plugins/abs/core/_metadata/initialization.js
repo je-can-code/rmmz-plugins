@@ -815,6 +815,17 @@ J.ABS.RegExp = {
   // casting/channeling interruption immunity, read from all of a battler's own note sources.
   CannotBeInterrupted: /<cannotBeInterrupted>/i,
 
+  // damage immunity, read from all of a battler's own note sources: no harm lowers its HP or MP.
+  NoDamage: /<noDamage>/i,
+
+  // kill floors, read from all of a battler's own note sources: what it casts stops one HP short of
+  // killing itself (self) or an opponent (target). The "this" forms are skill-scoped, read from the
+  // executing skill's own note only.
+  NoSelfKill: /<noSelfKill>/i,
+  ThisNoSelfKill: /<thisNoSelfKill>/i,
+  NoTargetKill: /<noTargetKill>/i,
+  ThisNoTargetKill: /<thisNoTargetKill>/i,
+
   // function-related.
   ReapplyType: /<stackType:[ ]?(refresh|extend|stack)>/gi,
 

@@ -1316,6 +1316,67 @@ Game_Battler.prototype.isStateAddable = function(stateId)
 };
 //endregion state-application immunity
 
+//region damage limits
+/**
+ * Whether or not this battler takes no damage at all, from any of its own note sources via
+ * `<noDamage>`.<br/>
+ * No harm lowers its HP or MP while this holds: hits and drains, formula packets, damage over time,
+ * regeneration run below zero, damage floors and recover effects written below zero all land as
+ * nothing. Healing still lands, and so does what the battler pays or a designer sets on purpose:
+ * skill costs, event commands and the death state are all left alone.
+ * @returns {boolean}
+ */
+Game_Battler.prototype.isImmuneToDamage = function()
+{
+  return RPGManager.checkForBooleanFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.NoDamage) === true;
+};
+
+/**
+ * Whether or not the given skill, cast by this battler, is barred from taking this battler's own HP
+ * to zero. `<noSelfKill>` on any of this battler's own note sources bars every skill it casts, and
+ * `<thisNoSelfKill>` on a skill's own note bars that skill alone.
+ * @param {RPG_UsableItem} skill The skill being executed.
+ * @returns {boolean}
+ */
+Game_Battler.prototype.hasNoSelfKill = function(skill)
+{
+  return this.hasBattlerOrSkillTag(skill, J.ABS.RegExp.NoSelfKill, J.ABS.RegExp.ThisNoSelfKill);
+};
+
+/**
+ * Whether or not the given skill, cast by this battler, is barred from taking an opponent's HP to
+ * zero. `<noTargetKill>` on any of this battler's own note sources bars every skill it casts, and
+ * `<thisNoTargetKill>` on a skill's own note bars that skill alone.
+ * @param {RPG_UsableItem} skill The skill being executed.
+ * @returns {boolean}
+ */
+Game_Battler.prototype.hasNoTargetKill = function(skill)
+{
+  return this.hasBattlerOrSkillTag(skill, J.ABS.RegExp.NoTargetKill, J.ABS.RegExp.ThisNoTargetKill);
+};
+
+/**
+ * Whether or not a tag is present either battler-wide, on any of this battler's own note sources,
+ * or on the executing skill's own note.<br/>
+ * Both kill floors read their tags this way and differ only in which pair they read. A skill this
+ * battler merely knows is one of its note sources, so the battler-wide tag can be granted by a
+ * passive skill, while the skill-scoped tag only ever counts on the skill being cast.
+ * @param {RPG_UsableItem} skill The skill being executed.
+ * @param {RegExp} battlerWideStructure The tag that covers every skill this battler casts.
+ * @param {RegExp} thisSkillStructure The tag that covers only the skill carrying it.
+ * @returns {boolean}
+ */
+Game_Battler.prototype.hasBattlerOrSkillTag = function(skill, battlerWideStructure, thisSkillStructure)
+{
+  // a battler-wide tag covers everything this battler casts.
+  const battlerWide = RPGManager.checkForBooleanFromAllNotesByRegex(this.getAllNotes(), battlerWideStructure);
+  if (battlerWide === true) return true;
+
+  // otherwise only a skill carrying the tag itself is covered.
+  return RPGManager.checkForBooleanFromNoteByRegex(skill, thisSkillStructure) === true;
+};
+//endregion damage limits
+
 /**
  * Handles logic surrounding state application in regards to JABS.
  * @param {number} stateId The state being applied.

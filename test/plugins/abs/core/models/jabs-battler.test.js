@@ -9059,6 +9059,133 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
 
       expect(gainTp).not.toHaveBeenCalled();
     });
+
+    it('processNaturalHpRegen skips a draining tick on a battler that takes no damage', () =>
+    {
+      // Arrange
+      const gainHp = vi.fn();
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ hp: 50, mhp: 100, hrg: -1, rec: 1, gainHp, isImmuneToDamage: () => true });
+      jabsBattler.calculatedRegen = () => -5;
+
+      // Act
+      jabsBattler.processNaturalHpRegen(false);
+
+      // Assert
+      expect(gainHp).not.toHaveBeenCalled();
+    });
+
+    it('processNaturalMpRegen skips a draining tick on a battler that takes no damage', () =>
+    {
+      // Arrange
+      const gainMp = vi.fn();
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ mp: 50, mmp: 100, mrg: -1, rec: 1, gainMp, isImmuneToDamage: () => true });
+      jabsBattler.calculatedRegen = () => -5;
+
+      // Act
+      jabsBattler.processNaturalMpRegen(false);
+
+      // Assert
+      expect(gainMp).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('isIgnoredRegenHarm', () =>
+  {
+    it('is false for regeneration that restores, even on a battler that takes no damage', () =>
+    {
+      // Arrange
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ isImmuneToDamage: () => true });
+
+      // Act
+      const result = jabsBattler.isIgnoredRegenHarm(4);
+
+      // Assert
+      expect(result).toBe(false);
+    });
+
+    it('is true for a draining tick on a battler that takes no damage', () =>
+    {
+      // Arrange
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ isImmuneToDamage: () => true });
+
+      // Act
+      const result = jabsBattler.isIgnoredRegenHarm(-4);
+
+      // Assert
+      expect(result).toBe(true);
+    });
+
+    it('is false for a draining tick on a battler that can be hurt', () =>
+    {
+      // Arrange
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ isImmuneToDamage: () => false });
+
+      // Act
+      const result = jabsBattler.isIgnoredRegenHarm(-4);
+
+      // Assert
+      expect(result).toBe(false);
+    });
+  });
+
+  describe('isIgnoredSlipHarm', () =>
+  {
+    it('is false for a healing tick, even on a battler that takes no damage', () =>
+    {
+      // Arrange
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ isImmuneToDamage: () => true });
+
+      // Act
+      const result = jabsBattler.isIgnoredSlipHarm(8, 0);
+
+      // Assert
+      expect(result).toBe(false);
+    });
+
+    it('is false for a tick draining TP, even on a battler that takes no damage', () =>
+    {
+      // Arrange
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ isImmuneToDamage: () => true });
+
+      // Act
+      const result = jabsBattler.isIgnoredSlipHarm(-8, 2);
+
+      // Assert
+      expect(result).toBe(false);
+    });
+
+    it('is true for a harmful MP tick on a battler that takes no damage', () =>
+    {
+      // Arrange
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ isImmuneToDamage: () => true });
+
+      // Act
+      const result = jabsBattler.isIgnoredSlipHarm(-8, 1);
+
+      // Assert
+      expect(result).toBe(true);
+    });
+
+    it('is false for a harmful HP tick on a battler that can be hurt', () =>
+    {
+      // Arrange
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ isImmuneToDamage: () => false });
+
+      // Act
+      const result = jabsBattler.isIgnoredSlipHarm(-8, 0);
+
+      // Assert
+      expect(result).toBe(false);
+    });
   });
 
   describe('processStateTick', () =>
@@ -9123,7 +9250,7 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
     {
       const jabsBattler = buildBattler();
       jabsBattler.getBattler = () => ({
-        isDead: () => false, rec: 2, getUuid: () => 'uuid', setLastHitSource: vi.fn(),
+        isDead: () => false, rec: 2, getUuid: () => 'uuid', setLastHitSource: vi.fn(), isImmuneToDamage: () => false,
       });
       jabsBattler.stateSlipHp = () => 5;
       jabsBattler.stateSlipMp = () => -5;
@@ -9141,7 +9268,7 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
     {
       const jabsBattler = buildBattler();
       const battler = {
-        isDead: () => false, rec: 1, getUuid: () => 'uuid', setLastHitSource: vi.fn(),
+        isDead: () => false, rec: 1, getUuid: () => 'uuid', setLastHitSource: vi.fn(), isImmuneToDamage: () => false,
       };
       jabsBattler.getBattler = () => battler;
       jabsBattler.stateSlipHp = () => -10;
@@ -9154,6 +9281,29 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       jabsBattler.processStateTick({ id: 9 });
 
       expect(battler.setLastHitSource).toHaveBeenCalledWith('state', 'source-uuid', 9);
+    });
+
+    it('lets nothing land, pop or record when a harmful tick meets a battler that takes no damage', () =>
+    {
+      // Arrange
+      const jabsBattler = buildBattler();
+      const battler = {
+        isDead: () => false, rec: 1, getUuid: () => 'uuid', setLastHitSource: vi.fn(), isImmuneToDamage: () => true,
+      };
+      jabsBattler.getBattler = () => battler;
+      jabsBattler.stateSlipHp = () => -10;
+      jabsBattler.stateSlipMp = () => 0;
+      jabsBattler.stateSlipTp = () => 0;
+      jabsBattler.applySlipEffect = vi.fn();
+      jabsBattler.onSlipRegenTick = vi.fn();
+
+      // Act
+      jabsBattler.processStateTick({ id: 1 });
+
+      // Assert
+      expect(jabsBattler.applySlipEffect).not.toHaveBeenCalled();
+      expect(jabsBattler.onSlipRegenTick).not.toHaveBeenCalled();
+      expect(battler.setLastHitSource).not.toHaveBeenCalled();
     });
 
     it('does not record a last-hit source when the slip amount is healing, not damage', () =>
@@ -9216,7 +9366,7 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
     {
       const jabsBattler = buildBattler();
       jabsBattler.getBattler = () => ({
-        isDead: () => false, rec: 1, getUuid: () => 'uuid', setLastHitSource: vi.fn(),
+        isDead: () => false, rec: 1, getUuid: () => 'uuid', setLastHitSource: vi.fn(), isImmuneToDamage: () => false,
       });
       jabsBattler.stateSlipHp = () => -10;
       jabsBattler.stateSlipMp = () => 0;
@@ -9240,7 +9390,7 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
     {
       const jabsBattler = buildBattler();
       jabsBattler.getBattler = () => ({
-        isDead: () => false, rec: 1, getUuid: () => 'uuid', setLastHitSource: vi.fn(),
+        isDead: () => false, rec: 1, getUuid: () => 'uuid', setLastHitSource: vi.fn(), isImmuneToDamage: () => false,
       });
       jabsBattler.stateSlipHp = () => -10;
       jabsBattler.stateSlipMp = () => 0;

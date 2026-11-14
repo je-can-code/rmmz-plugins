@@ -21,8 +21,9 @@ or dashing — timed guard parry replaces implicit while a guard is held, and co
 parry. Dash and guard are mutually exclusive for the player (pivot guard clears dash; pixel movement does not reapply
 dash while guarding).
 
-Explicit parry is the `<parry:N>` window after raising guard; the parry extension rate extends that window. Skills may
-still use `<unparryable>` and `<ignoreParry:N>`.
+Explicit parry is the `<parry:N>` window after raising guard; the parry extension rate extends that window.
+`<unparryable>` and `<ignoreParry:N>` act on implicit parry only, so neither gets a skill past the explicit window or a
+held guard.
 
 ### Guard
 
@@ -77,7 +78,8 @@ Where CHANCE is the percent chance to execute on parry.
 ## TAG EXAMPLES
 
 `<guard:[-10,-25]>`
-Reduces damage by 10 flat, then by 25%. Flat comes first to favor the player.
+Reduces damage by 25%, then by 10 flat. Percent comes first to favor the player: the whole 10 comes off the end,
+instead of being shrunk by the 25% too.
 
 `<parry:15>`
 Parrying is available for 15 frames.

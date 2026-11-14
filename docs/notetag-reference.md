@@ -2881,7 +2881,7 @@ Skills, Items with the configured "Guard Skill Type"
 while guarding is held (guard) / in the window right after guard is raised (parry)
 
 **Effect:**
-`guard` reduces incoming damage by FLAT (applied first) then PERCENT (both usually negative).
+`guard` reduces incoming damage by PERCENT (applied first), then FLAT (both usually negative).
 `parry` opens a VAL-frame "just guard" window that fully mitigates one incoming hit — window opens
 when guarding starts and counts down; a successful parry stops guarding entirely (re-press to
 parry again). Explicit parry (this tag) is distinct from JABS's implicit/passive parry
@@ -2891,7 +2891,7 @@ parry again). Explicit parry (this tag) is distinct from JABS's implicit/passive
 <guard:[-10, -25]>
 <parry:12>
 ```
-Guarding cuts 10 flat damage then 25% off the remainder; the first 12 frames of guard are a full
+Guarding cuts 25% off, then 10 flat damage off the remainder; the first 12 frames of guard are a full
 parry window.
 
 **See also:** `<unparryable>`, `<per>`, `<ignoreParry>`
@@ -2908,8 +2908,9 @@ a hit is guarded or parried
 
 **Effect:**
 fires SKILL back at CHANCE percent per guarded/parried hit. If both are available on the same
-hit, counter-parry takes precedence over counter-guard. `unparryable` makes a skill impossible to
-parry under any circumstance, regardless of the defender's parry window.
+hit, counter-parry takes precedence over counter-guard. `unparryable` turns off implicit (passive)
+parry for a skill, so the defender's pressure roll never parries it outright or turns it into a
+glancing blow; a timed `<parry>` window still negates it, and a held `<guard>` still reduces it.
 
 ```
 <counterParry:[7, 100]>
@@ -3016,7 +3017,8 @@ This battler's attacks always bypass 25% of the defender's guard pressure.
 ```
 <thisIgnoreParry:100>
 ```
-This particular skill bypasses guard entirely; the battler's other skills are unaffected.
+This particular skill ignores all of the defender's guard pressure, so it is never passively parried;
+a held guard and a timed parry still work against it, and the battler's other skills are unaffected.
 
 **See also:** `<guard>`/`<parry>`, `<unparryable>`, `<per>`
 
@@ -4003,6 +4005,74 @@ type classifier (`1 - 50/100 = 0.5`).
 ```
 Less resistant: increases the application chance of any `<type:negative>`-tagged state by 50%
 (`1 - (-50)/100 = 1.5`) — this battler is easier to afflict with ailments, not harder.
+
+---
+
+### `<noDamage>`
+
+**Applies to:**
+Actors, Classes, Enemies, Weapons, Armors, States, Skills (any of the battler's own note sources; a
+skill counts while the battler knows it)
+
+**When:**
+anything would harm this battler's HP or MP
+
+**Effect:**
+the battler takes no damage, whatever its type and wherever it comes from. That covers hits and drains
+on HP or MP, J-ABS-Formula packets, damage over time, natural regeneration run below zero, damage floors,
+and Recover HP/MP effects written below zero. A hit is held back as its final number, after every
+multiplier, so it reaches shields and drains as 0. A shield loses nothing, a drain takes nothing, and no
+on-damage reaction fires. A held-back damage-over-time tick doesn't land, doesn't pop up, and isn't
+recorded as the last thing that hit the battler. Healing still lands. The tag doesn't stop states from
+applying: a poison still goes on, it just ticks for nothing. Things that aren't damage still go through:
+skill costs, TP loss, event commands that set HP or MP, and the death state, which `<immuneToAll>` blocks.
+
+```
+<noDamage>
+```
+On a state: while it's applied, the battler can be healed but never hurt.
+
+**See also:** `<immuneToAll>`, `<noSelfKill>` / `<noTargetKill>`
+
+---
+
+### `<noSelfKill>` / `<thisNoSelfKill>` / `<noTargetKill>` / `<thisNoTargetKill>`
+
+**Applies to:**
+`noSelfKill`/`noTargetKill`: Actors, Classes, Enemies, Weapons, Armors, States, Skills (the CASTER's own
+note sources; a skill counts while the battler knows it). `thisNoSelfKill`/`thisNoTargetKill`: Skills
+(only while that skill is the one being cast)
+
+**When:**
+a skill cast by the tagged battler would take HP to 0
+
+**Effect:**
+the blow stops one HP short of killing. The self floor covers the caster hitting itself. The target floor
+covers the caster hitting an opponent, decided by team, like a False Swipe. An ally caught by friendly
+fire is covered by neither and can still die. The floor holds a skill's damage and its J-ABS-Formula
+packets. It applies after every multiplier and after shields have absorbed their share. A target already
+at 1 HP takes nothing, and one at a fraction above 1 keeps that fraction. Damage over time, skill costs,
+a Recover HP effect written below zero, and the death state are not held back.
+
+| Variant | Read from | Spares |
+|---|---|---|
+| `<noSelfKill>` | the caster's notes | the caster, from everything it casts |
+| `<thisNoSelfKill>` | the skill's own note | the caster, from this skill |
+| `<noTargetKill>` | the caster's notes | opponents, from everything it casts |
+| `<thisNoTargetKill>` | the skill's own note | opponents, from this skill |
+
+```
+<noSelfKill>
+```
+On an enemy whose pulse hits itself as well as the party: the pulse can bring it down to 1 HP, but the
+last blow has to come from someone else.
+
+```
+<thisNoTargetKill>
+```
+On a skill: it can leave an opponent at 1 HP but never kills it.
+
+**See also:** `<noDamage>`, `<immuneToAll>`
 
 ---
 

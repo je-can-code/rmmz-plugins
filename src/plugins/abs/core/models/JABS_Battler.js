@@ -7353,6 +7353,9 @@ class JABS_Battler
       // calculate the per-tick bonus; total DPS now scales with however fast this battler's natural regen ticks.
       const naturalHp = this.calculatedRegen(hrg, isReduced) * rec;
 
+      // regeneration run below zero is harm, which a battler that takes no damage ignores.
+      if (this.isIgnoredRegenHarm(naturalHp)) return;
+
       // execute the gain.
       battler.gainHp(naturalHp);
     }
@@ -7378,9 +7381,29 @@ class JABS_Battler
       // calculate the per-tick bonus; total DPS now scales with however fast this battler's natural regen ticks.
       const naturalMp = this.calculatedRegen(mrg, isReduced) * rec;
 
+      // regeneration run below zero is harm, which a battler that takes no damage ignores.
+      if (this.isIgnoredRegenHarm(naturalMp)) return;
+
       // execute the gain.
       battler.gainMp(naturalMp);
     }
+  };
+
+  /**
+   * Whether or not a natural regeneration tick is harm that this battler ignores.<br/>
+   * A regeneration rate below zero drains HP or MP instead of restoring it, and a battler that takes no
+   * damage shrugs that drain off. TP regeneration never asks, because TP isn't damage.
+   * @param {number} amount The regeneration about to be applied.
+   * @returns {boolean}
+   */
+  isIgnoredRegenHarm(amount)
+  {
+    // regeneration that restores always lands.
+    if (amount >= 0) return false;
+
+    // a draining tick lands only on a battler that can be hurt.
+    return this.getBattler()
+      .isImmuneToDamage();
   };
 
   /**
@@ -7458,7 +7481,7 @@ class JABS_Battler
   processSlipEffect(slipAmount, index, jabsState)
   {
     // if we cannot process this slip amount, then do not.
-    if (this.canProcessSlipEffect(slipAmount) === false) return;
+    if (this.canProcessSlipEffect(slipAmount, index) === false) return;
 
     // calculate the modified slip amount based on other factors.
     const modifiedSlipAmount = this.calculateModifiedSlipAmount(slipAmount, jabsState);
@@ -7483,17 +7506,44 @@ class JABS_Battler
   }
 
   /**
-   * Determines whether the slip can be processed.
+   * Determines whether the slip can be processed.<br/>
+   * A battler that takes no damage shrugs off a harmful tick to its HP or MP whole: nothing lands,
+   * nothing pops up, and nothing is recorded as the last thing that hit it.
    * @param {number} slipAmount The amount to slip.
+   * @param {0|1|2} index The type of resource this slip represents.
    * @returns {boolean}
    */
-  canProcessSlipEffect(slipAmount)
+  canProcessSlipEffect(slipAmount, index)
   {
     // don't process nothing-slips.
     if (slipAmount === 0) return false;
 
+    // a battler that takes no damage shrugs off harmful ticks.
+    if (this.isIgnoredSlipHarm(slipAmount, index)) return false;
+
     // process the slip!
     return true;
+  }
+
+  /**
+   * Whether or not a slip tick is harm that this battler ignores.<br/>
+   * A negative tick to HP or MP is damage over time, which a battler that takes no damage shrugs off.
+   * A tick that drains TP still lands, because TP isn't damage.
+   * @param {number} slipAmount The amount to slip, negative when it harms.
+   * @param {0|1|2} index The type of resource this slip represents: HP, MP or TP.
+   * @returns {boolean}
+   */
+  isIgnoredSlipHarm(slipAmount, index)
+  {
+    // a healing tick always lands.
+    if (slipAmount > 0) return false;
+
+    // draining TP isn't damage, so it always lands.
+    if (index === 2) return false;
+
+    // a harmful tick to HP or MP lands only on a battler that can be hurt.
+    return this.getBattler()
+      .isImmuneToDamage();
   }
 
   /**

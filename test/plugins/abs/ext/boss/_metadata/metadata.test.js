@@ -260,6 +260,27 @@ describe('J-ABS-Boss metadata (constructed through the real PluginMetadata)', ()
       expect(mayor.isBystander()).toBe(false);
     });
 
+    it('reads a participant that says it waits to be summoned as summoned', () =>
+    {
+      // Arrange
+      const raw = { key: 'brine', enemyId: 531, expect: 'Puppet', x: 23, y: 13, template: 608, summoned: true };
+
+      // Act
+      const participant = metadata.parseParticipant(raw);
+
+      // Assert
+      expect(participant.isSummoned()).toBe(true);
+    });
+
+    it('reads a participant that says nothing about being summoned as there from the start', () =>
+    {
+      // Arrange & Act
+      const [ mayor ] = metadata.parseEncounter(rawEncounter).participants();
+
+      // Assert
+      expect(mayor.isSummoned()).toBe(false);
+    });
+
     it('reads each reaction as the moment it answers, the bodies it waits on, and its steps', () =>
     {
       // Arrange & Act

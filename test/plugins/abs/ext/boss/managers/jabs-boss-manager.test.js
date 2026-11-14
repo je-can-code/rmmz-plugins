@@ -57,6 +57,13 @@ describe('J-ABS-Boss JabsBossManager (unit, all downstream dependencies mocked)'
   const PLATFORM_Y = 19;
   const BLINK_FLARE = 40;
   const PAUSE_FRAMES = 45;
+  const MASTERWORK_ENEMY_ID = 531;
+  const MASTERWORK_NAME = 'Puppet';
+  const MASTERWORK_X = 23;
+  const MASTERWORK_Y = 13;
+  const MASTERWORK_TEMPLATE_ID = 608;
+  const MASTERWORK_EVENT_ID = 80;
+  const SUMMON_FLARE = 52;
 
   /**
    * Every interpreter a fight created to say a line, oldest first. Each one reports itself still saying its
@@ -103,13 +110,17 @@ describe('J-ABS-Boss JabsBossManager (unit, all downstream dependencies mocked)'
     };
     const character = { setImage: vi.fn(), setDirection: vi.fn(), eventId: () => characterEventId };
 
+    // the action it has decided on, as J-ABS keeps it: whatever was last handed over, until something fires it.
+    let decidedAction = null;
+
     return {
       getBattler: () => gameBattler,
       getCharacter: () => character,
       isCastingOrChanneling: () => isCasting,
       canBattlerMove: vi.fn(() => true),
       createJabsActionFromSkill: vi.fn(() => [ { getCastTime: () => CAST_TIME } ]),
-      setDecidedAction: vi.fn(),
+      setDecidedAction: vi.fn(actions => { decidedAction = actions; }),
+      getDecidedAction: () => decidedAction,
       setCastCountdown: vi.fn(),
       setInPosition: vi.fn(),
       setPhase: vi.fn(),
@@ -255,6 +266,23 @@ describe('J-ABS-Boss JabsBossManager (unit, all downstream dependencies mocked)'
    * @returns {JabsBossStep}
    */
   const logStep = (lines = LINES) => new JabsBossStep('log', stepDetails({ lines, face: FACE, faceIndex: FACE_INDEX }));
+
+  /**
+   * Builds a step that summons the participant it names.
+   * @param {string} participantKey The participant to summon.
+   * @param {number} animationId The flash it arrives in, or zero for none.
+   * @returns {JabsBossStep}
+   */
+  const summonStep = (participantKey, animationId = 0) =>
+    new JabsBossStep('summon', stepDetails({ participantKey, animationId }));
+
+  /**
+   * Builds a step that has a participant leap onto the test platform.
+   * @param {string} participantKey The participant to leap, or empty for the boss.
+   * @returns {JabsBossStep}
+   */
+  const jumpStep = (participantKey = '') =>
+    new JabsBossStep('jump', stepDetails({ participantKey, x: PLATFORM_X, y: PLATFORM_Y }));
 
   /**
    * Builds a step that puts the test state on a participant.
@@ -466,6 +494,50 @@ describe('J-ABS-Boss JabsBossManager (unit, all downstream dependencies mocked)'
    */
   const buildHazard = () => buildBody(HAZARD_EVENT_ID, buildJabsBattler(false, false, 100, HAZARD_ENEMY_ID));
 
+  /**
+   * Builds an encounter whose boss is joined by masterworks held back until a step summons each one, the way a
+   * maker calls her work down one piece at a time. Every masterwork shares the same enemy, tile and template.
+   * @param {JabsBossReaction[]} reactions What the encounter does in answer to the moments of the fight.
+   * @param {string[]} heldBack The name of each masterwork, in the order the fight lists them.
+   * @param {JabsBossRoutine[]} routines The recurring sequences for the encounter.
+   * @returns {JabsBossEncounter}
+   */
+  const buildSummoningEncounter = (reactions, heldBack = [ 'brine' ], routines = []) =>
+  {
+    const mayor = new JabsBossParticipant('mayor', ENEMY_ID, ENEMY_NAME, SPAWN_X, SPAWN_Y, ENEMY_ID);
+    const masterworks = heldBack.map(key => new JabsBossParticipant(
+      key, MASTERWORK_ENEMY_ID, MASTERWORK_NAME, MASTERWORK_X, MASTERWORK_Y, MASTERWORK_TEMPLATE_ID, false, true));
+    const participants = [ mayor, ...masterworks ];
+
+    return new JabsBossEncounter('workshop', ARENA_MAP_ID, participants, 'shared', routines, DEFEAT_SWITCH_ID, reactions);
+  };
+
+  /**
+   * Starts the summoning encounter. The spawner hands back the boss first and then each masterwork in the order
+   * they are listed, which is the order these tests summon them in, and the map holds every one of them.
+   * @param {JabsBossReaction[]} reactions What the encounter does in answer to the moments of the fight.
+   * @param {string[]} heldBack The name of each masterwork, in the order the fight lists them.
+   * @returns {{mayorBody: object, mayorBattler: object, masterworkBodies: object[]}}
+   */
+  const startSummoning = (reactions, heldBack = [ 'brine' ]) =>
+  {
+    JabsBossManager.registerEncounters([ buildSummoningEncounter(reactions, heldBack) ]);
+    const mayorBattler = buildJabsBattler(false, false, 100);
+    const mayorBody = buildBody(BODY_EVENT_ID, mayorBattler);
+    const masterworkBodies = heldBack.map((key, index) =>
+    {
+      const eventId = MASTERWORK_EVENT_ID + index;
+      return buildBody(eventId, buildJabsBattler(false, false, 100, MASTERWORK_ENEMY_ID, eventId));
+    });
+    $jabsEngine.addEnemyToMap.mockReturnValueOnce(mayorBody);
+    masterworkBodies.forEach(body => $jabsEngine.addEnemyToMap.mockReturnValueOnce(body));
+    holdOnMap([ mayorBody, ...masterworkBodies ]);
+
+    JabsBossManager.startEncounter('workshop');
+
+    return { mayorBody, mayorBattler, masterworkBodies };
+  };
+
   beforeAll(async () =>
   {
     vi.resetModules();
@@ -477,6 +549,7 @@ describe('J-ABS-Boss JabsBossManager (unit, all downstream dependencies mocked)'
     globalThis.$dataEnemies[ENEMY_ID] = { name: ENEMY_NAME };
     globalThis.$dataEnemies[TWIN_ENEMY_ID] = { name: TWIN_ENEMY_NAME };
     globalThis.$dataEnemies[HAZARD_ENEMY_ID] = { name: HAZARD_NAME };
+    globalThis.$dataEnemies[MASTERWORK_ENEMY_ID] = { name: MASTERWORK_NAME };
     globalThis.$dataSkills = [];
     globalThis.$dataSkills[SKILL_ID] = { name: SKILL_NAME };
     globalThis.$dataStates = [];
@@ -495,6 +568,7 @@ describe('J-ABS-Boss JabsBossManager (unit, all downstream dependencies mocked)'
     globalThis.$gameSwitches = { setValue: vi.fn() };
     globalThis.$jabsEngine = { forceMapAction: vi.fn(), addEnemyToMap: vi.fn() };
     globalThis.JABS_ActionOptions = { Builder: () => ({ build: () => ({}) }) };
+    globalThis.JABS_AiManager = { needsActionExecution: vi.fn(), executeAiPhase2Action: vi.fn() };
 
     ({ default: JabsBossParticipant } = await import('../../../../../../src/plugins/abs/ext/boss/models/JabsBossParticipant.js'));
     ({ default: JabsBossStep } = await import('../../../../../../src/plugins/abs/ext/boss/models/JabsBossStep.js'));
@@ -519,6 +593,9 @@ describe('J-ABS-Boss JabsBossManager (unit, all downstream dependencies mocked)'
     // nothing is playing out unless a test says so, so the fight runs freely by default.
     $gameMap.isEventRunning.mockReturnValue(false);
     $gameMessage.isBusy.mockReturnValue(false);
+
+    // every windup is still playing unless a test says it has ended.
+    JABS_AiManager.needsActionExecution.mockReturnValue(false);
 
     // every fight is staged in its own arena unless a test moves it to a hall.
     $gameMap.mapId.mockReturnValue(ARENA_MAP_ID);
@@ -1622,6 +1699,96 @@ describe('J-ABS-Boss JabsBossManager (unit, all downstream dependencies mocked)'
 
       // Assert
       expect(jabsBattler.setInPosition).toHaveBeenCalledWith(true);
+    });
+
+    /**
+     * Starts a fight whose routine forces its cast, and plays it up to the frame the cast is forced.
+     * @param {object} jabsBattler The boss.
+     */
+    const forceTheCast = jabsBattler =>
+    {
+      startWithBoss(jabsBattler, true);
+      for (let frame = 0; frame <= CADENCE_FRAMES; frame++)
+      {
+        JabsBossManager.update();
+      }
+    };
+
+    it('fires a forced cast once its windup ends, when the boss\'s own AI never did', () =>
+    {
+      // Arrange- the boss stands beyond J-ABS's AI range, so nothing else will ever fire its windup.
+      const jabsBattler = buildJabsBattler(false, false, 100);
+      forceTheCast(jabsBattler);
+      JABS_AiManager.needsActionExecution.mockReturnValue(true);
+
+      // Act- the frame the windup ends, and the next.
+      JabsBossManager.update();
+      JabsBossManager.update();
+
+      // Assert- fired once by the AI's own hand, and never again.
+      expect(JABS_AiManager.executeAiPhase2Action).toHaveBeenCalledTimes(1);
+      expect(JABS_AiManager.executeAiPhase2Action).toHaveBeenCalledWith(jabsBattler);
+    });
+
+    it('leaves a forced cast winding up while its windup still plays', () =>
+    {
+      // Arrange
+      const jabsBattler = buildJabsBattler(false, false, 100);
+      forceTheCast(jabsBattler);
+
+      // Act
+      JabsBossManager.update();
+
+      // Assert- the windup was looked at, and found still playing.
+      expect(JABS_AiManager.needsActionExecution).toHaveBeenCalledWith(jabsBattler);
+      expect(JABS_AiManager.executeAiPhase2Action).not.toHaveBeenCalled();
+    });
+
+    it('lets go of a forced cast the boss\'s own AI has already fired', () =>
+    {
+      // Arrange- the AI fired it and moved on, so the boss has nothing decided any more.
+      const jabsBattler = buildJabsBattler(false, false, 100);
+      forceTheCast(jabsBattler);
+      jabsBattler.setDecidedAction([]);
+      JABS_AiManager.needsActionExecution.mockReturnValue(true);
+
+      // Act
+      JabsBossManager.update();
+
+      // Assert
+      expect(JABS_AiManager.needsActionExecution).not.toHaveBeenCalled();
+      expect(JABS_AiManager.executeAiPhase2Action).not.toHaveBeenCalled();
+    });
+
+    it('lands nothing for a boss that falls before its windup ends', () =>
+    {
+      // Arrange
+      const jabsBattler = buildJabsBattler(false, false, 100);
+      forceTheCast(jabsBattler);
+      jabsBattler.getBattler().isDead = () => true;
+      JABS_AiManager.needsActionExecution.mockReturnValue(true);
+
+      // Act
+      JabsBossManager.update();
+
+      // Assert
+      expect(JABS_AiManager.needsActionExecution).not.toHaveBeenCalled();
+      expect(JABS_AiManager.executeAiPhase2Action).not.toHaveBeenCalled();
+    });
+
+    it('takes no forced cast of an old fight into a fight started over the top of it', () =>
+    {
+      // Arrange- a windup left over from the fight before, which a new start must forget.
+      const jabsBattler = buildJabsBattler(false, false, 100);
+      forceTheCast(jabsBattler);
+      JabsBossManager.startEncounter('gluttonwolf');
+      JABS_AiManager.needsActionExecution.mockReturnValue(true);
+
+      // Act
+      JabsBossManager.update();
+
+      // Assert
+      expect(JABS_AiManager.executeAiPhase2Action).not.toHaveBeenCalled();
     });
 
     it('throws when a step names a verb the manager does not implement', () =>
@@ -3046,6 +3213,355 @@ describe('J-ABS-Boss JabsBossManager (unit, all downstream dependencies mocked)'
       // Assert
       expect(act).toThrow(/reaction \[ opening ] writes nothing at all to the dialogue log/);
       expect($jabsEngine.addEnemyToMap).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('summoned participants', () =>
+  {
+    it('leaves a participant held back to be summoned off the map as the fight starts', () =>
+    {
+      // Arrange
+
+      // Act
+      startSummoning([ onHealth(50, [ summonStep('brine') ]) ]);
+
+      // Assert- the boss arrived, and nobody else did.
+      expect($jabsEngine.addEnemyToMap).toHaveBeenCalledTimes(1);
+      expect($jabsEngine.addEnemyToMap).toHaveBeenCalledWith(SPAWN_X, SPAWN_Y, ENEMY_ID);
+    });
+
+    it('brings a summoned participant onto its own tile, from its own template, when a step summons it', () =>
+    {
+      // Arrange
+      const { mayorBattler, masterworkBodies } = startSummoning([ onHealth(50, [ summonStep('brine') ]) ]);
+      const [ brineBody ] = masterworkBodies;
+      mayorBattler.getBattler().currentHpPercent100.mockReturnValue(50);
+
+      // Act
+      JabsBossManager.update();
+
+      // Assert
+      const [ , brine ] = JabsBossManager.activeEncounter()
+        .participants();
+      expect($jabsEngine.addEnemyToMap).toHaveBeenLastCalledWith(MASTERWORK_X, MASTERWORK_Y, MASTERWORK_TEMPLATE_ID);
+      expect(JabsBossManager.getParticipantJabsBattler(brine)).toBe(brineBody.getJabsBattler());
+    });
+
+    it('brings a summoned participant in with the flash the step names', () =>
+    {
+      // Arrange
+
+      // Act
+      const { masterworkBodies } = startSummoning([ onStart([ summonStep('brine', SUMMON_FLARE) ]) ]);
+
+      // Assert
+      const [ brineBody ] = masterworkBodies;
+      expect($gameTemp.requestAnimation).toHaveBeenCalledWith([ brineBody ], SUMMON_FLARE);
+    });
+
+    it('throws, naming the participant, when a summoned body turns out to be another enemy', () =>
+    {
+      // Arrange- the boss arrives true, then the masterwork's template turns out to hold somebody else.
+      JabsBossManager.registerEncounters([ buildSummoningEncounter([ onStart([ summonStep('brine') ]) ]) ]);
+      const mayorBody = buildBody(BODY_EVENT_ID, buildJabsBattler(false, false, 100));
+      const impostor = buildBody(MASTERWORK_EVENT_ID, buildJabsBattler(false, false, 100, TWIN_ENEMY_ID));
+      $jabsEngine.addEnemyToMap
+        .mockReturnValueOnce(mayorBody)
+        .mockReturnValueOnce(impostor);
+
+      // Act
+      const act = () => JabsBossManager.startEncounter('workshop');
+
+      // Assert
+      expect(act).toThrow(/encounter \[ workshop ] participant \[ brine ] spawned enemy \[ 582 ] from clone event \[ 608 ]/);
+    });
+
+    it('counts a summoned participant as part of the fight once it has arrived', () =>
+    {
+      // Arrange
+      const { masterworkBodies } = startSummoning([ onStart([ summonStep('brine') ]) ]);
+      const [ brineBody ] = masterworkBodies;
+
+      // Act
+      const isParticipant = JabsBossManager.isParticipant({ getCharacter: () => brineBody });
+
+      // Assert- so it stands its ground against knockback, the same as the boss does.
+      expect(isParticipant).toBe(true);
+    });
+
+    it('holds a reaction waiting on a summoned participant until it has arrived', () =>
+    {
+      // Arrange- the masterwork waits for the boss to be worn down, and the boss has not been.
+      startSummoning([ onHealth(50, [ summonStep('brine') ]), onFallen([ 'brine' ], [ tintStep() ]) ]);
+
+      // Act
+      JabsBossManager.update();
+
+      // Assert
+      expect($gameScreen.startTint).not.toHaveBeenCalled();
+    });
+
+    it('fires a reaction waiting on a summoned participant once it has arrived and fallen', () =>
+    {
+      // Arrange
+      const reactions = [ onHealth(50, [ summonStep('brine') ]), onFallen([ 'brine' ], [ tintStep() ]) ];
+      const { mayorBattler, masterworkBodies } = startSummoning(reactions);
+      const [ brineBody ] = masterworkBodies;
+      mayorBattler.getBattler().currentHpPercent100.mockReturnValue(50);
+      JabsBossManager.update();
+      brineBody.isErased.mockReturnValue(true);
+
+      // Act
+      JabsBossManager.update();
+
+      // Assert
+      expect($gameScreen.startTint).toHaveBeenCalledTimes(1);
+    });
+
+    it('keeps the fight going while a summoned participant has yet to arrive, though everyone else has fallen', () =>
+    {
+      // Arrange- the boss falls from full health in one blow, so the moment its masterwork waits for never comes.
+      const { mayorBody } = startSummoning([ onHealth(50, [ summonStep('brine') ]) ]);
+      mayorBody.isErased.mockReturnValue(true);
+
+      // Act
+      JabsBossManager.update();
+
+      // Assert
+      expect(JabsBossManager.isBossDefeated()).toBe(false);
+      expect($gameSwitches.setValue).not.toHaveBeenCalled();
+    });
+
+    it('wins the fight once its summoned participants have arrived and fallen too', () =>
+    {
+      // Arrange
+      const { mayorBody, masterworkBodies } = startSummoning([ onStart([ summonStep('brine') ]) ]);
+      const [ brineBody ] = masterworkBodies;
+      mayorBody.isErased.mockReturnValue(true);
+      brineBody.isErased.mockReturnValue(true);
+
+      // Act
+      JabsBossManager.update();
+
+      // Assert
+      expect(JabsBossManager.isBossDefeated()).toBe(true);
+      expect($gameSwitches.setValue).toHaveBeenCalledWith(DEFEAT_SWITCH_ID, true);
+    });
+
+    it('forgets the summons of an earlier attempt when the fight starts again, so nothing waiting on them fires', () =>
+    {
+      // Arrange- the first attempt wears the boss down, summons its masterwork, and fells it.
+      const reactions = [ onHealth(50, [ summonStep('brine') ]), onFallen([ 'brine' ], [ tintStep() ]) ];
+      const first = startSummoning(reactions);
+      const [ firstBrineBody ] = first.masterworkBodies;
+      first.mayorBattler.getBattler().currentHpPercent100.mockReturnValue(50);
+      JabsBossManager.update();
+      firstBrineBody.isErased.mockReturnValue(true);
+      JabsBossManager.update();
+      const tintsInFirstAttempt = $gameScreen.startTint.mock.calls.length;
+      startSummoning(reactions);
+
+      // Act
+      JabsBossManager.update();
+
+      // Assert- the second attempt's boss is untouched, so its masterwork has not even arrived to fall.
+      expect(tintsInFirstAttempt).toBe(1);
+      expect($gameScreen.startTint).toHaveBeenCalledTimes(1);
+    });
+
+    it('leaves a bystander that was never summoned alone when the fight ends', () =>
+    {
+      // Arrange- a bystander held back for a moment the fight never reaches.
+      const mayor = new JabsBossParticipant('mayor', ENEMY_ID, ENEMY_NAME, SPAWN_X, SPAWN_Y, ENEMY_ID);
+      const watcher = new JabsBossParticipant(
+        'watcher', TWIN_ENEMY_ID, TWIN_ENEMY_NAME, TWIN_X, TWIN_Y, TWIN_ENEMY_ID, true, true);
+      const reactions = [ onHealth(50, [ summonStep('watcher') ]) ];
+      const encounter = new JabsBossEncounter('late', ARENA_MAP_ID, [ mayor, watcher ], 'shared', [], 0, reactions);
+      JabsBossManager.registerEncounters([ encounter ]);
+      const mayorBody = buildBody(BODY_EVENT_ID, buildJabsBattler(false, false, 100));
+      $jabsEngine.addEnemyToMap.mockReturnValueOnce(mayorBody);
+      holdOnMap([ mayorBody ]);
+      JabsBossManager.startEncounter('late');
+
+      // Act
+      JabsBossManager.endEncounter();
+
+      // Assert- the fight ended all the way through, leaving the boss standing where it stood.
+      expect(JabsBossManager.hasActiveEncounter()).toBe(false);
+      expect(mayorBody.erase).not.toHaveBeenCalled();
+    });
+
+    it('throws before spawning anything when the boss is held back to be summoned', () =>
+    {
+      // Arrange
+      const mayor = new JabsBossParticipant('mayor', ENEMY_ID, ENEMY_NAME, SPAWN_X, SPAWN_Y, ENEMY_ID, false, true);
+      const reactions = [ onStart([ summonStep('mayor') ]) ];
+      const encounter = new JabsBossEncounter('late-boss', ARENA_MAP_ID, [ mayor ], 'shared', [], 0, reactions);
+      JabsBossManager.registerEncounters([ encounter ]);
+
+      // Act
+      const act = () => JabsBossManager.startEncounter('late-boss');
+
+      // Assert
+      expect(act).toThrow(
+        /encounter \[ late-boss ] lists summoned participant \[ mayor ] first, where its boss belongs, but a boss is there/);
+      expect($jabsEngine.addEnemyToMap).not.toHaveBeenCalled();
+    });
+
+    it('throws before spawning anything when a summon names nobody', () =>
+    {
+      // Arrange
+      JabsBossManager.registerEncounters([ buildSummoningEncounter([ onStart([ summonStep('brine'), summonStep('') ]) ]) ]);
+
+      // Act
+      const act = () => JabsBossManager.startEncounter('workshop');
+
+      // Assert
+      expect(act).toThrow(/reaction \[ opening ] summons nobody: a summon names the participant it brings in/);
+      expect($jabsEngine.addEnemyToMap).not.toHaveBeenCalled();
+    });
+
+    it('throws before spawning anything when a summon names a participant the encounter does not have', () =>
+    {
+      // Arrange
+      const reactions = [ onStart([ summonStep('brine'), summonStep('ghost') ]) ];
+      JabsBossManager.registerEncounters([ buildSummoningEncounter(reactions) ]);
+
+      // Act
+      const act = () => JabsBossManager.startEncounter('workshop');
+
+      // Assert
+      expect(act).toThrow(/reaction \[ opening ] names participant \[ ghost ]/);
+      expect($jabsEngine.addEnemyToMap).not.toHaveBeenCalled();
+    });
+
+    it('throws before spawning anything when a summon names a participant there from the start', () =>
+    {
+      // Arrange
+      const reactions = [ onStart([ summonStep('brine'), summonStep('mayor') ]) ];
+      JabsBossManager.registerEncounters([ buildSummoningEncounter(reactions) ]);
+
+      // Act
+      const act = () => JabsBossManager.startEncounter('workshop');
+
+      // Assert
+      expect(act).toThrow(/reaction \[ opening ] summons participant \[ mayor ], but it is there from the start/);
+      expect($jabsEngine.addEnemyToMap).not.toHaveBeenCalled();
+    });
+
+    it('throws before spawning anything when nothing ever summons a participant held back to be summoned', () =>
+    {
+      // Arrange- the first masterwork is summoned, and the second is only ever sealed.
+      const reactions = [ onStart([ summonStep('brine'), addStateStep('char') ]) ];
+      JabsBossManager.registerEncounters([ buildSummoningEncounter(reactions, [ 'brine', 'char' ]) ]);
+
+      // Act
+      const act = () => JabsBossManager.startEncounter('workshop');
+
+      // Assert
+      expect(act).toThrow(/encounter \[ workshop ] participant \[ char ] waits to be summoned, but no reaction ever summons it/);
+      expect($jabsEngine.addEnemyToMap).not.toHaveBeenCalled();
+    });
+
+    it('throws before spawning anything when a participant is summoned more than once', () =>
+    {
+      // Arrange- the first masterwork is summoned once, the way it should be, and the second twice.
+      const reactions = [
+        onStart([ summonStep('brine'), summonStep('char') ]),
+        onFallen([ 'brine' ], [ summonStep('char') ]),
+      ];
+      JabsBossManager.registerEncounters([ buildSummoningEncounter(reactions, [ 'brine', 'char' ]) ]);
+
+      // Act
+      const act = () => JabsBossManager.startEncounter('workshop');
+
+      // Assert
+      expect(act).toThrow(/encounter \[ workshop ] participant \[ char ] is summoned by \[ 2 ] steps, but a participant arrives/);
+      expect($jabsEngine.addEnemyToMap).not.toHaveBeenCalled();
+    });
+
+    it('throws before spawning anything when a routine summons a participant', () =>
+    {
+      // Arrange
+      const routine = new JabsBossRoutine('reinforce', CADENCE_FRAMES, [ summonStep('brine') ]);
+      JabsBossManager.registerEncounters([ buildSummoningEncounter([], [ 'brine' ], [ routine ]) ]);
+
+      // Act
+      const act = () => JabsBossManager.startEncounter('workshop');
+
+      // Assert
+      expect(act).toThrow(/routine \[ reinforce ] summons a participant, but a routine runs over and over/);
+      expect($jabsEngine.addEnemyToMap).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('jump', () =>
+  {
+    it('leaps the participant it names from where it stands onto its tile, through a scene of its own event', () =>
+    {
+      // Arrange- the twin stands between tiles, the way pixel movement leaves a body.
+      const { mayorBody, twinBattler } = startTwins([ onFallen([ 'mayor' ], [ jumpStep('twin') ]) ]);
+      Object.assign(twinBattler.getCharacter(), { x: 12.5, y: 6 });
+      mayorBody.isErased.mockReturnValue(true);
+
+      // Act
+      JabsBossManager.update();
+
+      // Assert- from (12.5, 6) onto the platform at (8, 19) is four and a half tiles left and thirteen down.
+      const route = {
+        list: [ { code: 14, parameters: [ -4.5, 13 ] }, { code: 0, parameters: [] } ],
+        repeat: false,
+        skippable: true,
+        wait: true,
+      };
+      expect(interpreters).toHaveLength(1);
+      expect(interpreters[0].setup).toHaveBeenCalledWith([
+        { code: 205, indent: 0, parameters: [ 0, route ] },
+        { code: 0, indent: 0, parameters: [] },
+      ], TWIN_BODY_EVENT_ID);
+    });
+
+    it('holds the steps behind a jump until it has landed', () =>
+    {
+      // Arrange
+      const jabsBattler = buildJabsBattler(false, false, 100);
+      startFlaring(jabsBattler, [ onStart([ jumpStep(''), addStateStep('') ]) ]);
+      JabsBossManager.update();
+      const sealedMidLeap = jabsBattler.getBattler().addState.mock.calls.length;
+
+      // Act
+      interpreters[0].isRunning.mockReturnValue(false);
+      JabsBossManager.update();
+
+      // Assert
+      expect(sealedMidLeap).toBe(0);
+      expect(jabsBattler.getBattler().addState).toHaveBeenCalledTimes(1);
+    });
+
+    it('skips the jump of a body no longer on the map, and carries on with the rest', () =>
+    {
+      // Arrange
+      const { twinBody, mayorBattler } = startTwins([ onFallen([ 'twin' ], [ jumpStep('twin'), addStateStep('mayor') ]) ]);
+      twinBody.isErased.mockReturnValue(true);
+
+      // Act
+      JabsBossManager.update();
+
+      // Assert
+      expect(interpreters).toHaveLength(0);
+      expect(mayorBattler.getBattler().addState).toHaveBeenCalledTimes(1);
+    });
+
+    it('throws when a jump names a participant the encounter does not have', () =>
+    {
+      // Arrange
+      registerFlaring([ onStart([ jumpStep('ghost') ]) ]);
+
+      // Act
+      const act = () => JabsBossManager.startEncounter('flaring');
+
+      // Assert
+      expect(act).toThrow(/reaction \[ opening ] names participant \[ ghost ]/);
     });
   });
 });

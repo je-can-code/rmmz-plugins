@@ -21,6 +21,11 @@
  * Most participants are bodies the fight is won by felling. A bystander is the exception: it stands in the
  * fight from its first frame without being part of winning it, the way an elemental might watch from the
  * edge of the room and cheer its champion on.
+ *
+ * Most participants are also on the map from the fight's first frame. A summoned participant is the exception
+ * to that: it is held back until a step summons it, the way a maker calls her masterworks down one at a time,
+ * and it arrives on its own tile, from its own template. From then on it is a participant like any other, and
+ * until then it is still one the fight is waiting on.
  */
 class JabsBossParticipant
 {
@@ -59,13 +64,13 @@ class JabsBossParticipant
   #expect = String.empty;
 
   /**
-   * The x coordinate of the tile this participant appears on when the encounter starts.
+   * The x coordinate of the tile this participant appears on, when the encounter starts or when it is summoned.
    * @type {number}
    */
   #x = 0;
 
   /**
-   * The y coordinate of the tile this participant appears on when the encounter starts.
+   * The y coordinate of the tile this participant appears on, when the encounter starts or when it is summoned.
    * @type {number}
    */
   #y = 0;
@@ -81,6 +86,16 @@ class JabsBossParticipant
   #bystander = false;
 
   /**
+   * Whether this participant is held back as the fight starts, with no body on the map until a step summons it.
+   *
+   * It is a participant all the while: the fight is not won until it has been summoned and has fallen, and a
+   * reaction can wait on it falling. Exactly one step brings it in, and once it has, nothing about it differs from
+   * a participant that was there from the first frame.
+   * @type {boolean}
+   */
+  #summoned = false;
+
+  /**
    * Constructor.
    * @param {string} key The author-facing name for this participant.
    * @param {number} enemyId The id of the enemy this participant is.
@@ -89,8 +104,9 @@ class JabsBossParticipant
    * @param {number} y The y coordinate of the tile this participant appears on.
    * @param {number} templateId The id of the clone map event this participant spawns from.
    * @param {boolean} bystander Whether this participant is part of the fight without being part of winning it.
+   * @param {boolean} summoned Whether this participant waits off the map until a step summons it.
    */
-  constructor(key, enemyId, expect, x, y, templateId, bystander = false)
+  constructor(key, enemyId, expect, x, y, templateId, bystander = false, summoned = false)
   {
     this.#key = key;
     this.#enemyId = enemyId;
@@ -99,6 +115,7 @@ class JabsBossParticipant
     this.#y = y;
     this.#templateId = templateId;
     this.#bystander = bystander;
+    this.#summoned = summoned;
   }
 
   /**
@@ -138,7 +155,7 @@ class JabsBossParticipant
   }
 
   /**
-   * Gets the x coordinate of the tile this participant appears on when the encounter starts.
+   * Gets the x coordinate of the tile this participant appears on, when the encounter starts or when it is summoned.
    * @returns {number}
    */
   x()
@@ -147,7 +164,7 @@ class JabsBossParticipant
   }
 
   /**
-   * Gets the y coordinate of the tile this participant appears on when the encounter starts.
+   * Gets the y coordinate of the tile this participant appears on, when the encounter starts or when it is summoned.
    * @returns {number}
    */
   y()
@@ -162,6 +179,15 @@ class JabsBossParticipant
   isBystander()
   {
     return this.#bystander;
+  }
+
+  /**
+   * Gets whether this participant waits off the map until a step summons it.
+   * @returns {boolean}
+   */
+  isSummoned()
+  {
+    return this.#summoned;
   }
 }
 

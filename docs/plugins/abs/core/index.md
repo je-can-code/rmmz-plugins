@@ -53,7 +53,8 @@
 * [Combos](notetags/skills/combos.md) - The tags configuring what skill can be followed up after using a skill, and when it becomes available.
 * [AI Skill Exclusion](notetags/skills/ai-skill-exclusion.md) - The tag excluding a skill from the pool of skills an AI battler can select.
 * [Guarding](notetags/skills/guarding.md) - The tags configuring a guard skill's damage reduction, parry window and counter skills.
-* [Unparryable](notetags/skills/unparryable.md) - The tag making a skill unable to be parried under any circumstances.
+* [Unparryable](notetags/skills/unparryable.md) - The tag turning off implicit (passive) parry for a skill.
+* [No Self Kill & No Target Kill](notetags/skills/no-self-kill-and-no-target-kill.md) - The tags stopping a battler's skills one HP short of killing itself, or an opponent.
 * [Parry Extension Rate (PER)](notetags/skills/parry-extension-rate-per.md) - The tag defining how many percent-points of parry window extension a source contributes.
 * [Retaliate](notetags/skills/retaliate.md) - The tag defining a skill a battler has a chance to fire in immediate retaliation when struck.
 * [On Own Defeat](notetags/skills/on-own-defeat.md) - The tag defining a parting skill a battler may fire when it is defeated.
@@ -122,6 +123,7 @@
 * [Muted](notetags/states/muted.md) - The tag locking a battler's combat skills while the state is applied.
 * [Paralyzed](notetags/states/paralyzed.md) - The tag locking a battler's movement, basic attacks and combat skills all at once.
 * [State-Application Immunity & Resistance](notetags/states/state-application-immunity-resistance.md) - The tags blocking states from being applied to a battler, or reducing the chance they land.
+* [No Damage](notetags/states/no-damage.md) - The tag letting a battler be healed but never hurt.
 * [Skill Transform](notetags/states/skill-transform.md) - The tag transforming one equipped skill into another at runtime.
 * [Slot Transform](notetags/states/slot-transform.md) - The tag redirecting an entire slot to a skill, regardless of what is equipped in it.
 * [Slip Damage](notetags/states/slip-damage.md) - The tags defining how a state diminishes or replenishes HP, MP or TP on every tick.

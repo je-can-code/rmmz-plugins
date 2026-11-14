@@ -1,7 +1,7 @@
 ---
 type: notetag
 title: Unparryable
-description: The tag making a skill unable to be parried under any circumstances.
+description: The tag turning off implicit (passive) parry for a skill.
 tags: [abs, tag, skill, parry]
 ---
 
@@ -9,7 +9,11 @@ tags: [abs, tag, skill, parry]
 
 ## Description
 
-Makes a skill unable to be parried under any circumstances.
+Turns off implicit (passive) parry for a skill. The defender's pressure roll can neither parry it outright nor turn it
+into a glancing blow.
+
+Explicit parry still works: a timed `<parry>` window negates the skill like any other hit, and a held `<guard>` still
+reduces it. See [Guarding](guarding.md).
 
 ## TAG USAGE
 
@@ -22,4 +26,4 @@ Makes a skill unable to be parried under any circumstances.
 ## TAG EXAMPLES
 
 `<unparryable>`
-This skill is unable to be parried under any circumstances.
+This skill is never passively parried or glanced; a timed parry still stops it.

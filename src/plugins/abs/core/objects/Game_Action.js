@@ -215,6 +215,9 @@ Game_Action.prototype.executeJabsAction = function(target)
       value = this.applyGlancingDamageReduction(value);
     }
 
+    // a target that takes no damage takes none of this, now that every multiplier has had its say.
+    value = this.applyDamageImmunity(target, value);
+
     // actually apply the damage to the target.
     this.executeDamage(target, value);
   }
@@ -230,6 +233,163 @@ Game_Action.prototype.executeJabsAction = function(target)
   // applies common events that may be a part of a skill's effect.
   this.applyGlobal();
 };
+
+//region damage limits
+/**
+ * Holds back all of a hit's damage when its target takes no damage, via `<noDamage>`.<br/>
+ * This runs on the final number, after every multiplier and the glancing cut, and before shields or
+ * drains ever see it. So a shield loses nothing to a hit that couldn't hurt, a drain takes nothing,
+ * and none of the target's on-damage reactions fire. A negative value is a heal and always lands.
+ * @param {Game_Battler} target The target of this action.
+ * @param {number} value The damage this action would deal.
+ * @returns {number}
+ */
+Game_Action.prototype.applyDamageImmunity = function(target, value)
+{
+  // heals and empty hits pass untouched.
+  if (value <= 0) return value;
+
+  // a target that takes no damage takes none of this.
+  if (target.isImmuneToDamage()) return 0;
+
+  // anyone else takes all of it.
+  return value;
+};
+
+/**
+ * Extends {@link #executeHpDamage}.<br/>
+ * Holds a blow barred from killing its target one HP short of doing so. This sits beneath shields,
+ * so a shield absorbs its share first and only what gets past it is held back.
+ */
+J.ABS.Aliased.Game_Action.set('executeHpDamage', Game_Action.prototype.executeHpDamage);
+Game_Action.prototype.executeHpDamage = function(target, value)
+{
+  // a blow barred from killing its target stops one HP short.
+  const heldValue = this.applyKillFloor(target, value);
+
+  // perform original logic.
+  J.ABS.Aliased.Game_Action.get('executeHpDamage')
+    .call(this, target, heldValue);
+};
+
+/**
+ * Holds HP damage one point short of killing its target, when this action is barred from killing
+ * that target ({@link #isBarredFromKilling}).<br/>
+ * HP can sit at a fraction, because regeneration and level scaling don't round, so the most a held
+ * blow can take is the whole HP above one, and never less than nothing.
+ * @param {Game_Battler} target The target of this action.
+ * @param {number} value The HP damage this action would deal.
+ * @returns {number}
+ */
+Game_Action.prototype.applyKillFloor = function(target, value)
+{
+  // heals and empty hits pass untouched.
+  if (value <= 0) return value;
+
+  // a blow free to kill lands in full.
+  if (this.isBarredFromKilling(target) === false) return value;
+
+  // a held blow takes everything but the last HP.
+  const mostItCanTake = Math.max(0, Math.floor(target.hp) - 1);
+  return Math.min(value, mostItCanTake);
+};
+
+/**
+ * Whether or not a kill floor bars this action from killing the given target.<br/>
+ * `<noSelfKill>` covers the caster hitting itself, and `<noTargetKill>` covers the caster hitting an
+ * opponent. Both read the caster's own note sources, and their `this` forms read the skill's own
+ * note. An ally caught by friendly fire is covered by neither.
+ * @param {Game_Battler} target The target of this action.
+ * @returns {boolean}
+ */
+Game_Action.prototype.isBarredFromKilling = function(target)
+{
+  const subject = this.subject();
+  const skill = this.item();
+
+  // the caster hitting itself answers only to the self floor.
+  if (subject === target) return subject.hasNoSelfKill(skill);
+
+  // a caster free to kill its targets is free to kill this one.
+  if (subject.hasNoTargetKill(skill) === false) return false;
+
+  // the target floor spares opponents only.
+  return this.isAgainstOpponent(target);
+};
+
+/**
+ * Whether or not the given target stands on a team opposed to this action's caster.<br/>
+ * Teams belong to the battlers on the map. A caster that left the map before its action landed, such
+ * as one felled with a projectile still in flight, leaves only the database's copy of its row behind
+ * as this action's subject, which has no team to read. Then an actor and an enemy count as opponents,
+ * which is how the two sides stand unless an event says otherwise.
+ * @param {Game_Battler} target The target of this action.
+ * @returns {boolean}
+ */
+Game_Action.prototype.isAgainstOpponent = function(target)
+{
+  const subject = this.subject();
+
+  // find the caster on the map, where its team lives.
+  const caster = JABS_AiManager.getBattlerByUuid(subject.getUuid());
+
+  // a caster gone from the map has no team left, so an actor and an enemy stand opposed.
+  if (!caster) return subject.isActor() !== target.isActor();
+
+  // otherwise the team rules decide, against the target's own team.
+  const victim = JABS_AiManager.getBattlerByUuid(target.getUuid());
+  return caster.isOpposingTeam(victim.getTeam());
+};
+
+/**
+ * Extends {@link #itemEffectRecoverHp}.<br/>
+ * A Recover HP effect written below zero is harm, which a target that takes no damage ignores.
+ */
+J.ABS.Aliased.Game_Action.set('itemEffectRecoverHp', Game_Action.prototype.itemEffectRecoverHp);
+Game_Action.prototype.itemEffectRecoverHp = function(target, effect)
+{
+  // a harmful recover effect does nothing to a target that takes no damage.
+  if (this.isIgnoredRecoverHarm(target, target.mhp, effect)) return;
+
+  // perform original logic.
+  J.ABS.Aliased.Game_Action.get('itemEffectRecoverHp')
+    .call(this, target, effect);
+};
+
+/**
+ * Extends {@link #itemEffectRecoverMp}.<br/>
+ * A Recover MP effect written below zero is harm, which a target that takes no damage ignores.
+ */
+J.ABS.Aliased.Game_Action.set('itemEffectRecoverMp', Game_Action.prototype.itemEffectRecoverMp);
+Game_Action.prototype.itemEffectRecoverMp = function(target, effect)
+{
+  // a harmful recover effect does nothing to a target that takes no damage.
+  if (this.isIgnoredRecoverHarm(target, target.mmp, effect)) return;
+
+  // perform original logic.
+  J.ABS.Aliased.Game_Action.get('itemEffectRecoverMp')
+    .call(this, target, effect);
+};
+
+/**
+ * Whether or not a recover effect is harm that its target ignores.<br/>
+ * Recover HP and Recover MP each take a rate of the target's maximum plus a flat amount, and either
+ * may be written below zero, which turns the effect into damage.
+ * @param {Game_Battler} target The target of this action.
+ * @param {number} maximum The target's maximum of the resource being recovered.
+ * @param {RPG_UsableEffect} effect The recover effect being applied.
+ * @returns {boolean}
+ */
+Game_Action.prototype.isIgnoredRecoverHarm = function(target, maximum, effect)
+{
+  // a recover effect that restores always lands.
+  const recovered = (maximum * effect.value1) + effect.value2;
+  if (recovered >= 0) return false;
+
+  // a harmful one lands only on a target that can be hurt.
+  return target.isImmuneToDamage();
+};
+//endregion damage limits
 
 /**
  * Calculates whether or not this action is evaded by the target.
