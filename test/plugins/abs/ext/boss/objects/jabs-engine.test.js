@@ -17,6 +17,18 @@ describe('J-ABS-Boss JABS_Engine', () =>
   let originalResolve;
 
   /**
+   * The engine's own handling of a defeated enemy this ship aliases, recording the order things happen in.
+   * @type {Function}
+   */
+  let originalDefeated;
+
+  /**
+   * Everything the defeat alias set in motion, in order.
+   * @type {string[]}
+   */
+  const calls = [];
+
+  /**
    * The manager the alias asks.
    *
    * Imported inside `beforeAll` rather than at the top of the file on purpose: `vi.resetModules()` starts a new
@@ -32,9 +44,11 @@ describe('J-ABS-Boss JABS_Engine', () =>
     vi.resetModules();
 
     originalResolve = vi.fn(() => ENGINE_DISTANCE);
+    originalDefeated = vi.fn(() => calls.push('engine'));
 
     globalThis.JABS_Engine = function() {};
     globalThis.JABS_Engine.prototype.resolveKnockbackDistance = originalResolve;
+    globalThis.JABS_Engine.prototype.handleDefeatedEnemy = originalDefeated;
 
     globalThis.J = { ABS: { EXT: { BOSS: { Aliased: { JABS_Engine: new Map() } } } } };
 
@@ -88,6 +102,32 @@ describe('J-ABS-Boss JABS_Engine', () =>
         .toHaveBeenCalledWith(action, target);
       expect(distance)
         .toBe(ENGINE_DISTANCE);
+    });
+  });
+
+  describe('handleDefeatedEnemy()', () =>
+  {
+    it('lets the engine handle the defeat first, then tells the boss fight an enemy fell', () =>
+    {
+      // Arrange
+      calls.length = 0;
+      originalDefeated.mockClear();
+      const onEnemyDefeated = vi.spyOn(JabsBossManager, 'onEnemyDefeated')
+        .mockImplementation(() => calls.push('fight'));
+      const engine = new globalThis.JABS_Engine();
+      const defeated = { defeated: true };
+      const caster = { caster: true };
+
+      // Act
+      engine.handleDefeatedEnemy(defeated, caster);
+
+      // Assert: the engine got the same enemy and caster, and the fight heard of it after the engine was done.
+      expect(originalDefeated)
+        .toHaveBeenCalledWith(defeated, caster);
+      expect(onEnemyDefeated)
+        .toHaveBeenCalledTimes(1);
+      expect(calls)
+        .toEqual([ 'engine', 'fight' ]);
     });
   });
 });

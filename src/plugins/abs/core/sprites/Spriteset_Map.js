@@ -712,6 +712,9 @@ Spriteset_Map.prototype.collectActiveCastPreviewItems = function ()
     .filter(ev => ev.isJabsBattler())
     .forEach(ev =>
     {
+      // an erased body has left the map, and whatever it was winding up left with it.
+      if (ev.isErased()) return;
+
       // find the underlying JABS battler for this event.
       const jabsBattler = ev.getJabsBattler();
       if (!jabsBattler) return; // no battler.
@@ -721,6 +724,12 @@ Spriteset_Map.prototype.collectActiveCastPreviewItems = function ()
 
       // require casting/channeling state + a decided action to preview.
       if (!jabsBattler.isCastingOrChanneling()) return; // not casting or channeling.
+
+      // a caster that fell mid-cast will never fire it, so there is nothing left to warn anyone of, however long its
+      // body lies there saying its last words.
+      const caster = jabsBattler.getBattler();
+      if (caster.isDead()) return;
+
       const decided = jabsBattler.getDecidedAction();
       if (!decided || !decided.length) return; // no actions decided.
 
@@ -728,8 +737,7 @@ Spriteset_Map.prototype.collectActiveCastPreviewItems = function ()
       const [ action ] = decided;
 
       // battler-level opt-out.
-      const battlerCore = jabsBattler.getBattler();
-      const ref = battlerCore.databaseData();
+      const ref = caster.databaseData();
       if (RPGManager.checkForBooleanFromNoteByRegex(ref, J.ABS.RegExp.NoCastPreviewsBattler)) return;
 
       // skill-level opt-out.

@@ -461,14 +461,15 @@ describe('Spriteset_Map cast previews', () =>
    * @param {boolean} isCasting Whether it is winding them up.
    * @returns {Object} A stand-in for the battler's `Game_Event`.
    */
-  const buildBattlerEvent = (uuid, decided, isCasting) => ({
+  const buildBattlerEvent = (uuid, decided, isCasting, isDead = false, isErased = false) => ({
     isJabsBattler: () => true,
+    isErased: () => isErased,
     getJabsBattlerUuid: () => uuid,
     getJabsBattler: () => ({
       isPlayer: () => false,
       isCastingOrChanneling: () => isCasting,
       getDecidedAction: () => decided,
-      getBattler: () => ({ databaseData: () => ({ note: '' }) }),
+      getBattler: () => ({ databaseData: () => ({ note: '' }), isDead: () => isDead }),
     }),
   });
 
@@ -604,6 +605,36 @@ describe('Spriteset_Map cast previews', () =>
       // Assert
       expect(items.map(item => item.key)).toEqual([ 'castpreview:foe:0', 'castpreview:foe:1', 'castpreview:foe:2' ]);
       expect(items.map(item => item.action)).toEqual(spokes);
+    });
+
+    it('drops the unfinished cast of a caster that fell mid-cast, and keeps a living caster\'s', () =>
+    {
+      // Arrange: both are winding the same kind of cast up; only one of them is still alive to fire it.
+      const fallen = buildBattlerEvent('fallen', [ buildAction({ shape: 'circle', range: 2, facing: 2 }) ], true, true);
+      const living = buildBattlerEvent('living', [ buildAction({ shape: 'circle', range: 2, facing: 2 }) ], true, false);
+      globalThis.$gameMap.events = () => [ fallen, living ];
+      const spriteset = Object.create(globalThis.Spriteset_Map.prototype);
+
+      // Act
+      const items = spriteset.collectActiveCastPreviewItems();
+
+      // Assert
+      expect(items.map(item => item.key)).toEqual([ 'castpreview:living:0' ]);
+    });
+
+    it('drops the unfinished cast of a body erased off the map, and keeps one still standing', () =>
+    {
+      // Arrange: both are alive and winding up; one has been taken off the map mid-cast.
+      const erased = buildBattlerEvent('erased', [ buildAction({ shape: 'line', range: 3, facing: 6 }) ], true, false, true);
+      const standing = buildBattlerEvent('standing', [ buildAction({ shape: 'line', range: 3, facing: 6 }) ], true, false, false);
+      globalThis.$gameMap.events = () => [ erased, standing ];
+      const spriteset = Object.create(globalThis.Spriteset_Map.prototype);
+
+      // Act
+      const items = spriteset.collectActiveCastPreviewItems();
+
+      // Assert
+      expect(items.map(item => item.key)).toEqual([ 'castpreview:standing:0' ]);
     });
   });
 

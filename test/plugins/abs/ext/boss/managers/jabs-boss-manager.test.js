@@ -2353,6 +2353,127 @@ describe('J-ABS-Boss JabsBossManager (unit, all downstream dependencies mocked)'
     });
   });
 
+  describe('onEnemyDefeated()', () =>
+  {
+    /**
+     * Starts the given encounter with its bodies handed back by the spawner in the order the fight asks for them,
+     * and the map holding every one of them.
+     * @param {JabsBossEncounter} encounter The encounter to stage.
+     * @param {object[]} bodies The bodies the spawner hands back, in the order the fight spawns them.
+     */
+    const stage = (encounter, bodies) =>
+    {
+      JabsBossManager.registerEncounters([ encounter ]);
+      bodies.forEach(body => $jabsEngine.addEnemyToMap.mockReturnValueOnce(body));
+      holdOnMap(bodies);
+      JabsBossManager.startEncounter(encounter.key());
+    };
+
+    it('takes the fight\'s hazards off the map the moment the boss falls, before its death scene has played', () =>
+    {
+      // Arrange- the boss is dead, but not yet erased: its last words are still to come.
+      const hazard = buildHazard();
+      startFlaring(buildJabsBattler(true, false, 0), [ onStart([ spawnStep() ]) ], [ hazard ]);
+
+      // Act
+      JabsBossManager.onEnemyDefeated();
+
+      // Assert- the hazard is gone, while the win itself still waits on the death scene.
+      expect(hazard.erase).toHaveBeenCalledTimes(1);
+      expect(JabsBossManager.isBossDefeated()).toBe(false);
+    });
+
+    it('leaves the fight\'s hazards standing while the boss still stands', () =>
+    {
+      // Arrange
+      const hazard = buildHazard();
+      startFlaring(buildJabsBattler(false, false, 100), [ onStart([ spawnStep() ]) ], [ hazard ]);
+
+      // Act
+      JabsBossManager.onEnemyDefeated();
+
+      // Assert
+      expect(hazard.erase).not.toHaveBeenCalled();
+    });
+
+    it('leaves the fight\'s hazards standing while another body the fight is won by felling still stands', () =>
+    {
+      // Arrange
+      const hazard = buildHazard();
+      const mayorBody = buildBody(BODY_EVENT_ID, buildJabsBattler(true, false, 0));
+      const twinBody = buildBody(TWIN_BODY_EVENT_ID, buildJabsBattler(false, false, 100, TWIN_ENEMY_ID, TWIN_BODY_EVENT_ID));
+      stage(buildTwinEncounter([ onStart([ spawnStep() ]) ]), [ mayorBody, twinBody, hazard ]);
+
+      // Act
+      JabsBossManager.onEnemyDefeated();
+
+      // Assert
+      expect(hazard.erase).not.toHaveBeenCalled();
+    });
+
+    it('counts a body already erased as down, alongside one still saying its last words', () =>
+    {
+      // Arrange- the mayor fell long ago and is gone; the twin has only just died.
+      const hazard = buildHazard();
+      const mayorBody = buildBody(BODY_EVENT_ID, buildJabsBattler(false, false, 0));
+      const twinBody = buildBody(TWIN_BODY_EVENT_ID, buildJabsBattler(true, false, 0, TWIN_ENEMY_ID, TWIN_BODY_EVENT_ID));
+      stage(buildTwinEncounter([ onStart([ spawnStep() ]) ]), [ mayorBody, twinBody, hazard ]);
+      mayorBody.isErased.mockReturnValue(true);
+
+      // Act
+      JabsBossManager.onEnemyDefeated();
+
+      // Assert
+      expect(hazard.erase).toHaveBeenCalledTimes(1);
+    });
+
+    it('leaves the fight\'s hazards standing while a body the fight is won by felling has yet to be summoned', () =>
+    {
+      // Arrange- the boss is dead, and its masterwork has not been called down yet.
+      const hazard = buildHazard();
+      const mayorBody = buildBody(BODY_EVENT_ID, buildJabsBattler(true, false, 0));
+      const reactions = [ onStart([ spawnStep() ]), onHealth(50, [ summonStep('brine') ]) ];
+      stage(buildSummoningEncounter(reactions), [ mayorBody, hazard ]);
+
+      // Act
+      JabsBossManager.onEnemyDefeated();
+
+      // Assert
+      expect(hazard.erase).not.toHaveBeenCalled();
+    });
+
+    it('pays a bystander no mind, and leaves it standing until the fight is won', () =>
+    {
+      // Arrange- the boss is dead; the body watching from the edge of the room is not.
+      const hazard = buildHazard();
+      const mayorBody = buildBody(BODY_EVENT_ID, buildJabsBattler(true, false, 0));
+      const watcherBody = buildBody(TWIN_BODY_EVENT_ID, buildJabsBattler(false, false, 100, TWIN_ENEMY_ID, TWIN_BODY_EVENT_ID));
+      stage(buildWatchedEncounter([ onStart([ spawnStep() ]) ]), [ mayorBody, watcherBody, hazard ]);
+
+      // Act
+      JabsBossManager.onEnemyDefeated();
+
+      // Assert- only what the fight spawned goes now; whoever stood by leaves with the win.
+      expect(hazard.erase).toHaveBeenCalledTimes(1);
+      expect(watcherBody.erase).not.toHaveBeenCalled();
+    });
+
+    it('does nothing at all with no fight on', () =>
+    {
+      // Arrange- a fight ended, which already took its hazard away once.
+      const hazard = buildHazard();
+      startFlaring(buildJabsBattler(true, false, 0), [ onStart([ spawnStep() ]) ], [ hazard ]);
+      JabsBossManager.endEncounter();
+
+      // Act
+      const act = () => JabsBossManager.onEnemyDefeated();
+
+      // Assert
+      expect(act).not.toThrow();
+      expect(hazard.erase).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe('tint', () =>
   {
     it('shifts the screen toward the tone it names, over the time it names', () =>

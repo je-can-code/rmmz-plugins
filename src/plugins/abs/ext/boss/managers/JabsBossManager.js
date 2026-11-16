@@ -1401,9 +1401,62 @@ class JabsBossManager
    */
   static #isEveryBodyGone()
   {
-    return this.#activeEncounter.participants()
-      .filter(participant => participant.isBystander() === false)
+    return this.#winningParticipants()
       .every(participant => this.#hasFallen(participant.key()));
+  }
+
+  /**
+   * Gets the participants the active encounter is won by felling: every one of them but its bystanders.
+   * @returns {JabsBossParticipant[]}
+   */
+  static #winningParticipants()
+  {
+    return this.#activeEncounter.participants()
+      .filter(participant => participant.isBystander() === false);
+  }
+
+  /**
+   * Answers an enemy falling while a fight is on. The moment the last body the fight is won by felling goes down,
+   * whatever the fight spawned for itself leaves the map with it, before any death scene can play: a hazard has
+   * no business striking at the player through the boss's last words. The win itself is still told to the story
+   * once every death scene has played out.<br/>
+   * J-ABS calls this from the very handler that starts a defeated enemy's death scene, because the fight's own
+   * update stands still for as long as a scene is playing, and would only notice once the scene was over.
+   */
+  static onEnemyDefeated()
+  {
+    // no fight on, so nothing of a fight's to take away.
+    if (!this.hasActiveEncounter()) return;
+
+    // a body the fight is won by felling is still standing.
+    const isEveryWinningBodyDown = this.#winningParticipants()
+      .every(participant => this.#isDown(participant.key()));
+    if (isEveryWinningBodyDown === false) return;
+
+    // whatever the fight spawned goes with its last winning body.
+    this.#clearExtraBodies();
+  }
+
+  /**
+   * Determines whether the participant of the given name is down: dead, whether or not its death scene has
+   * played out yet. A participant still waiting to be summoned is not down, since it has yet to arrive.
+   * @param {string} key The participant's author-facing name.
+   * @returns {boolean}
+   */
+  static #isDown(key)
+  {
+    // a participant with no body yet has not so much as stood.
+    if (this.#participantBodies.has(key) === false) return false;
+
+    const body = this.#participantBodies.get(key);
+
+    // a body erased once its last words were said has finished falling.
+    if (body.isErased()) return true;
+
+    // a body still on the map is down the moment its battler dies, though its death scene may be yet to play.
+    return body.getJabsBattler()
+      .getBattler()
+      .isDead();
   }
 
   /**

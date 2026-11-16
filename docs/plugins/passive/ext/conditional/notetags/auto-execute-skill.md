@@ -12,6 +12,13 @@ tags: [passive-conditional, tag, skill, trigger, condition]
 Fires a map skill through JABS `forceMapAction` — no MP/TP cost, no skill cooldown. Victims may parry and retaliate.
 Payload skill owns radius, hitbox, and formula.
 
+### Cast time
+
+A payload with a `<castTime>` winds up first. It takes its bearer's cast slot, so the map paints its telegraph and
+counts the windup down exactly as for any cast, and it fires the moment the windup ends, still with no cost and no
+cooldown. A bearer already deciding or casting something keeps it and skips that firing; a timed or proximity rule
+tries again on the next frame, while an event-driven one (a hit, a kill) lets that event pass.
+
 ### Conditions
 
 PARAM meaning matches [`autoApplyState` CONDITIONS](auto-apply-state.md), plus the four- or five-value tuple

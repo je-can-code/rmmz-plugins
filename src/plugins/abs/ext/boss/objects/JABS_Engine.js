@@ -20,4 +20,23 @@ JABS_Engine.prototype.resolveKnockbackDistance = function(action, target)
   return J.ABS.EXT.BOSS.Aliased.JABS_Engine.get('resolveKnockbackDistance')
     .call(this, action, target);
 };
+
+/**
+ * Extends {@link #handleDefeatedEnemy}.<br/>
+ * Also tells the boss fight an enemy fell, so the moment its last winning body goes down, whatever the fight
+ * spawned leaves with it. This is the handler that starts the fallen enemy's death scene, and the fight's own
+ * update stands still while a scene plays, so here is the last moment before the boss's last words.
+ * @param {JABS_Battler} defeatedTarget The enemy that was defeated.
+ * @param {JABS_Battler} caster The battler that defeated it.
+ */
+J.ABS.EXT.BOSS.Aliased.JABS_Engine.set('handleDefeatedEnemy', JABS_Engine.prototype.handleDefeatedEnemy);
+JABS_Engine.prototype.handleDefeatedEnemy = function(defeatedTarget, caster)
+{
+  // perform original logic.
+  J.ABS.EXT.BOSS.Aliased.JABS_Engine.get('handleDefeatedEnemy')
+    .call(this, defeatedTarget, caster);
+
+  // a fight whose last winning body just fell takes what it spawned with it.
+  JabsBossManager.onEnemyDefeated();
+};
 //endregion JABS_Engine

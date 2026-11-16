@@ -119,8 +119,8 @@ the way an elemental might watch from the edge of the room and cheer its champio
 ```
 
 It spawns with the rest, and any step can name it, so it can say its lines from where it stands. The fight is won once
-every other participant has fallen, and a bystander still standing then leaves the map with the fight, the same way
-whatever the fight spawned for itself does. Ending the fight takes it away too.
+every other participant has fallen and finished dying, and a bystander still standing then leaves the map with the
+fight. Ending the fight takes it away too.
 
 The first participant is the boss, so it can never be a bystander, and an encounter with no participants at all is no
 fight. Either one stops the fight from starting.
@@ -289,7 +289,8 @@ something and then lashes out does it in that order. Once a fight is won, nothin
 `spawn` copies its body from the enemy clone map exactly the way a participant does: from the slot matching `enemyId`,
 or from `template` when it names one, and plays `animation` over it as it arrives when it names one. What a fight
 spawns is part of the fight without being part of winning it - a hazard waking as the boss is worn down, say. Whatever
-is still standing when the fight is won or ended is taken off the map with it.
+is still standing is taken off the map the moment the last participant the fight is won by felling goes down, before
+any death scene plays, so no hazard strikes through a boss's last words. Ending the fight takes it away too.
 
 `summon` brings in the participant it names, which has to be one marked `"summoned"`, and plays `animation` over it as
 it arrives when it names one. Unlike every other step, naming nobody does not mean the boss: the boss is there from the

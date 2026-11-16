@@ -209,4 +209,6 @@ All tags are optional. Omitting a tag leaves that property at its default value.
 ### Cast preview
 
 These tags control the hitbox preview overlay that is shown on the map while a battler is casting a skill. Previews are
-visible by default if the hitbox overlay system is enabled.
+visible by default if the hitbox overlay system is enabled. A battler that falls mid-cast never fires the cast, so its
+preview goes with it, even while its body is still on the map playing out its death; the same goes for a body taken off
+the map mid-cast.

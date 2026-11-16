@@ -1137,6 +1137,12 @@ Victims may parry and retaliate normally. The payload skill owns its own radius,
 formula. Do not tag the payload skill itself with `<autoExecuteSkill>` (depth-guarded, but still —
 don't).
 
+A payload with a `<castTime>` winds up first. It takes its bearer's cast slot, so the map paints its
+telegraph and counts the windup down exactly as for any cast, and it fires the moment the windup ends,
+still with no cost and no cooldown. A bearer already deciding or casting something keeps it and skips
+that firing; a timed or proximity rule tries again on the next frame, while an event-driven one (a hit,
+a kill) lets that event pass.
+
 ```
 <autoExecuteSkill:[1022, enemiesNearby, 1, 60]>
 <autoExecuteSkill:[1023, enemiesNearbyBelow, 1, 60, 1]>

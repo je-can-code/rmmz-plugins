@@ -1135,7 +1135,7 @@ describe('J-Passive-Conditional (direct src import)', () =>
       globalThis.Graphics.frameCount = 1000;
 
       mockJabsBattler = {
-        createJabsActionFromSkill: () => [ { id: 'preview' } ],
+        createJabsActionFromSkill: () => [ { id: 'preview', getCastTime: () => 0 } ],
         getBattler: () => null,
       };
 
@@ -1470,6 +1470,215 @@ describe('J-Passive-Conditional (direct src import)', () =>
 
       // Cleanup
       globalThis.J.PASSIVE.EXT.CONDITIONAL.Metadata.autoExecuteSkillMaxDepth = savedDepth;
+    });
+
+    describe('payloads with a cast time', () =>
+    {
+      /** @type {object} */
+      let actor;
+
+      /** @type {object[]} */
+      let volley;
+
+      /** @type {boolean} */
+      let castComplete;
+
+      beforeEach(() =>
+      {
+        castComplete = false;
+
+        // a two-action volley, the shape a multi-projectile payload decides.
+        volley = [
+          { id: 'left', getCastTime: () => 30, isCastComplete: () => castComplete, getBaseSkill: () => ({ id: 511 }) },
+          { id: 'right', getCastTime: () => 30, isCastComplete: () => castComplete, getBaseSkill: () => ({ id: 511 }) },
+        ];
+
+        actor = buildMomentumToolkitActor([ '<autoExecuteSkill:[511, time, 240]>' ]);
+        actor.getUuid = () => 'winding-actor';
+        actor.isDead = () => false;
+        globalThis.$dataSkills = [];
+        globalThis.$dataSkills[511] = { id: 511, stypeId: 1 };
+
+        // the map battler's cast slot, shaped like JABS_Battler's: one decision at a time and a countdown.
+        Object.assign(mockJabsBattler, {
+          decided: null,
+          countdown: 0,
+          casting: false,
+          cleared: 0,
+          createJabsActionFromSkill: () => volley,
+          getBattler: () => actor,
+          isActionDecided() { return this.decided !== null; },
+          isCastingOrChanneling() { return this.casting; },
+          setDecidedAction(actions) { this.decided = actions; },
+          getDecidedAction() { return this.decided; },
+          setCastCountdown(frames) { this.countdown = frames; },
+          clearDecidedAction() { this.cleared += 1; this.decided = null; },
+          processQueuedActions: vi.fn(),
+        });
+
+        // the instant path is the only way a payload fires; the AI's road and the bare executors are never taken.
+        globalThis.$jabsEngine.executeMapAction = vi.fn();
+        globalThis.$jabsEngine.executeMapActions = vi.fn();
+      });
+
+      it('winds the payload up in the bearer\'s cast slot instead of firing it', () =>
+      {
+        // Arrange- set up in beforeEach: a 30-frame volley on a time rule, and a bearer with nothing on.
+
+        // Act
+        globalThis.AutoExecuteSkillManager.processTimeRules(actor);
+
+        // Assert
+        expect(mockJabsBattler.decided).toBe(volley);
+        expect(mockJabsBattler.countdown).toBe(30);
+        expect(globalThis.__forcedSkills).toEqual([]);
+      });
+
+      it('refuses a windup while the bearer has a decision of its own', () =>
+      {
+        // Arrange
+        const ownDecision = [ { id: 'own', getCastTime: () => 0, isCastComplete: () => false } ];
+        mockJabsBattler.decided = ownDecision;
+
+        // Act
+        const result = globalThis.AutoExecuteSkillManager.dispatch(actor, 511);
+
+        // Assert
+        expect(result).toBe(false);
+        expect(mockJabsBattler.decided).toBe(ownDecision);
+        expect(mockJabsBattler.countdown).toBe(0);
+      });
+
+      it('refuses a windup while the bearer is already casting or channeling', () =>
+      {
+        // Arrange
+        mockJabsBattler.casting = true;
+
+        // Act
+        const result = globalThis.AutoExecuteSkillManager.dispatch(actor, 511);
+
+        // Assert
+        expect(result).toBe(false);
+        expect(mockJabsBattler.decided).toBeNull();
+        expect(mockJabsBattler.countdown).toBe(0);
+      });
+
+      it('tries a refused windup again on the very next frame', () =>
+      {
+        // Arrange- refused while busy, which must not stamp the rule's 240-frame cooldown.
+        mockJabsBattler.casting = true;
+        globalThis.AutoExecuteSkillManager.processTimeRules(actor);
+        mockJabsBattler.casting = false;
+        globalThis.Graphics.frameCount = 1001;
+
+        // Act
+        globalThis.AutoExecuteSkillManager.processTimeRules(actor);
+
+        // Assert
+        expect(mockJabsBattler.decided).toBe(volley);
+        expect(mockJabsBattler.countdown).toBe(30);
+      });
+
+      it('never lands a decision it did not wind up', () =>
+      {
+        // Arrange- the bearer's own finished cast, which is its AI's to fire.
+        const ownDecision = [ { id: 'own', getCastTime: () => 30, isCastComplete: () => true } ];
+        mockJabsBattler.decided = ownDecision;
+
+        // Act
+        globalThis.AutoExecuteSkillManager.landWindup(mockJabsBattler);
+
+        // Assert
+        expect(globalThis.__forcedSkills).toEqual([]);
+        expect(mockJabsBattler.decided).toBe(ownDecision);
+        expect(mockJabsBattler.cleared).toBe(0);
+      });
+
+      it('drops a windup once its slot holds another decision', () =>
+      {
+        // Arrange- an equal copy of the volley is still a different decision.
+        globalThis.AutoExecuteSkillManager.dispatch(actor, 511);
+        castComplete = true;
+        mockJabsBattler.decided = [ ...volley ];
+        globalThis.AutoExecuteSkillManager.landWindup(mockJabsBattler);
+        mockJabsBattler.decided = volley;
+
+        // Act- the original volley back in the slot must not revive a windup already dropped.
+        globalThis.AutoExecuteSkillManager.landWindup(mockJabsBattler);
+
+        // Assert
+        expect(globalThis.__forcedSkills).toEqual([]);
+        expect(mockJabsBattler.cleared).toBe(0);
+      });
+
+      it('waits while the windup is still counting down', () =>
+      {
+        // Arrange
+        globalThis.AutoExecuteSkillManager.dispatch(actor, 511);
+
+        // Act
+        globalThis.AutoExecuteSkillManager.landWindup(mockJabsBattler);
+
+        // Assert- nothing fired yet, and the windup is still there to land once it completes.
+        expect(globalThis.__forcedSkills).toEqual([]);
+        expect(mockJabsBattler.decided).toBe(volley);
+        castComplete = true;
+        globalThis.AutoExecuteSkillManager.landWindup(mockJabsBattler);
+        expect(globalThis.__forcedSkills).toEqual([ 511 ]);
+      });
+
+      it('drops the windup of a bearer that fell while winding up', () =>
+      {
+        // Arrange
+        globalThis.AutoExecuteSkillManager.dispatch(actor, 511);
+        castComplete = true;
+        actor.isDead = () => true;
+        globalThis.AutoExecuteSkillManager.landWindup(mockJabsBattler);
+        actor.isDead = () => false;
+
+        // Act- standing again must not revive a windup already dropped.
+        globalThis.AutoExecuteSkillManager.landWindup(mockJabsBattler);
+
+        // Assert
+        expect(globalThis.__forcedSkills).toEqual([]);
+        expect(mockJabsBattler.cleared).toBe(0);
+      });
+
+      it('fires a finished windup once, through the instant path, then gives the slot back', () =>
+      {
+        // Arrange
+        globalThis.AutoExecuteSkillManager.dispatch(actor, 511);
+        castComplete = true;
+
+        // Act
+        globalThis.AutoExecuteSkillManager.landWindup(mockJabsBattler);
+        globalThis.AutoExecuteSkillManager.landWindup(mockJabsBattler);
+
+        // Assert- once, the way an instant payload fires, never the AI's road with its costs and cooldowns.
+        expect(globalThis.__forcedSkills).toEqual([ 511 ]);
+        expect(globalThis.$jabsEngine.executeMapAction).not.toHaveBeenCalled();
+        expect(globalThis.$jabsEngine.executeMapActions).not.toHaveBeenCalled();
+        expect(mockJabsBattler.processQueuedActions).not.toHaveBeenCalled();
+        expect(mockJabsBattler.cleared).toBe(1);
+        expect(mockJabsBattler.decided).toBeNull();
+      });
+
+      it('keeps the depth guard up while a finished windup fires', () =>
+      {
+        // Arrange- the firing tries to dispatch again, the way a payload's own effects could.
+        const nested = [];
+        globalThis.__forceMapActionHook = () => nested.push(globalThis.AutoExecuteSkillManager.dispatch(actor, 511));
+        globalThis.AutoExecuteSkillManager.dispatch(actor, 511);
+        castComplete = true;
+
+        // Act
+        globalThis.AutoExecuteSkillManager.landWindup(mockJabsBattler);
+
+        // Assert- refused while the payload fires, and free again once it has.
+        expect(nested).toEqual([ false ]);
+        globalThis.__forceMapActionHook = null;
+        expect(globalThis.AutoExecuteSkillManager.dispatch(actor, 511)).toBe(true);
+      });
     });
   });
 
@@ -3087,7 +3296,7 @@ describe('J-Passive-Conditional (direct src import)', () =>
 
     describe('update (extended)', () =>
     {
-      it('runs movement tracking and reconcile after the base update logic', () =>
+      it('lands a finished windup, then runs movement tracking and reconcile after the base update logic', () =>
       {
         // Arrange
         const battler = buildMomentumToolkitActor([]);
@@ -3095,12 +3304,17 @@ describe('J-Passive-Conditional (direct src import)', () =>
         jabsBattler.getCharacter = () => null;
         jabsBattler.getBattler = () => battler;
         const reconcileSpy = vi.spyOn(battler, 'updatePassiveRuleReconcileTimer').mockImplementation(() => {});
+        const landSpy = vi.spyOn(globalThis.AutoExecuteSkillManager, 'landWindup').mockImplementation(() => {});
 
         // Act
         jabsBattler.update();
 
-        // Assert- with no character, movement tracking no-ops, but reconcile still runs.
+        // Assert- with no character, movement tracking no-ops, but the landing and the reconcile still run.
+        expect(landSpy).toHaveBeenCalledWith(jabsBattler);
         expect(reconcileSpy).toHaveBeenCalled();
+
+        // Cleanup
+        landSpy.mockRestore();
       });
     });
 
