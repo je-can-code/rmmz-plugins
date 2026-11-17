@@ -16,13 +16,15 @@ class JABS_EnemyAI
    * An ai trait that prevents this user from executing skills that are
    * elementally ineffective against their target.
    * Consults memories to avoid previously-resisted skills.
+   * Strips a positive state off its target when one of its skills can remove it.
    */
   careful = false;
 
   /**
    * An ai trait that encourages this user to always use the most elementally
-   * effective skill available.
+   * effective skill available, choosing evenly among skills that are equally effective.
    * Weights memories toward previously-effective skills.
+   * Its pick of the most effective skill is widened by extensions; J-ABS-Shield aims it at a target's shield first.
    */
   executor = false;
 
@@ -33,8 +35,11 @@ class JABS_EnemyAI
   reckless = false;
 
   /**
-   * An ai trait that prefers skills which apply negative states to the target.
+   * An ai trait that prefers skills which apply negative states to the target, unless this user is also an executor,
+   * whose equally effective skills stay equally likely.
    * Consults memories for previously-exploited status vulnerabilities.
+   * Casts first a skill that follows up on a state its target carries, then a skill that cuts its target's cast
+   * when that cast can be cut.
    */
   tactical = false;
 
@@ -104,7 +109,7 @@ class JABS_EnemyAI
   /**
    * Decides an action based on this battler's AI traits, the target, and available skills.
    * Coordination (leader/follower) is handled upstream by {@link JABS_AiManager}.
-   * Priority order: support layer → berserker check → attack layer → generic.
+   * Priority order: tactical opening → support layer → berserker check → attack layer → generic.
    * @param {JABS_Battler} user The battler of the AI deciding a skill.
    * @param {JABS_Battler} target The target battler to decide an action against.
    * @param {number[]} availableSkills A collection of all skill ids to potentially pick from.
@@ -113,7 +118,7 @@ class JABS_EnemyAI
   decideAction(user, target, availableSkills)
   {
     // filter out the unusable or invalid skills.
-    const usableSkills = this.filterUncastableSkills(user, availableSkills);
+    const castableSkills = this.filterUncastableSkills(user, availableSkills);
 
     const {
       careful,
@@ -125,6 +130,16 @@ class JABS_EnemyAI
       healer,
       buffer,
     } = this;
+
+    // a tactical mind reads the moment before anything else: a state a skill was saved for, or a cast to cut.
+    if (tactical)
+    {
+      const opening = this.decideTacticalOpening(user, target, castableSkills);
+      if (opening.length) return opening;
+    }
+
+    // a skill saved for a follow-up never comes up any other way.
+    const usableSkills = this.filterFollowUpOnlySkills(user, castableSkills);
 
     // warn if reckless has no skills available.
     if (reckless && usableSkills.length === 0)
@@ -165,6 +180,31 @@ class JABS_EnemyAI
 
     // no traits active — fall back to generic random selection.
     return this.decideGenericAction(user, usableSkills);
+  }
+
+  /**
+   * The tactical opening: a skill that follows up on a state the target carries, else one that cuts its cast.<br/>
+   * A combo underway keeps its rhythm, so no opening is taken while one is due.
+   * @param {JABS_Battler} user The battler deciding the action.
+   * @param {JABS_Battler} target The battler being targeted.
+   * @param {number[]} castableSkills The skills the user can cast right now, saved ones included.
+   * @returns {number[]} Exactly one skill id, or empty when the moment offers no opening.
+   */
+  decideTacticalOpening(user, target, castableSkills)
+  {
+    // a combo underway is followed through by the ordinary path.
+    if (this.shouldFollowWithCombo(user)) return [];
+
+    // the state a skill was saved for comes first: it is the whole reason it was saved.
+    const followUp = this.decideFollowUp(user, target, castableSkills);
+    if (followUp) return [ followUp ];
+
+    // then a cast that can be cut, never with a skill saved for a follow-up.
+    const unsavedSkills = this.filterFollowUpOnlySkills(user, castableSkills);
+    const interrupt = this.decideInterrupt(user, target, unsavedSkills);
+    if (interrupt) return [ interrupt ];
+
+    return [];
   }
 
   //region support wrappers
@@ -273,7 +313,9 @@ class JABS_EnemyAI
 
   /**
    * Decides an attack-oriented action to perform based on active traits.
-   * Applies careful/executor/tactical filters in sequence, then calls memory-influenced selection.
+   * A careful battler first strips a protection off its target when it can; otherwise the careful filter applies, then
+   * the executor's judgment, or the tactical preference for a battler that is no executor, before the final pick. An
+   * executor's equally effective skills reach that pick untouched, so it chooses evenly among them.
    * @param {JABS_Battler} user The battler to decide the skill for.
    * @param {number[]} usableSkills The available skills to use.
    * @returns {number[]}
@@ -288,6 +330,14 @@ class JABS_EnemyAI
     if (!usableSkills.length) return [ user.getEnemyBasicAttack() ];
 
     const target = user.getTarget();
+
+    // careful: a protection on the target is worth stripping before anything is thrown at it.
+    if (this.careful)
+    {
+      const strip = this.decideStrip(user, target, usableSkills);
+      if (strip) return [ strip ];
+    }
+
     let filtered = usableSkills;
 
     // careful: remove elementally ineffective skills.
@@ -296,14 +346,14 @@ class JABS_EnemyAI
       filtered = this.filterElementallyIneffectiveSkills(filtered, user, target);
     }
 
-    // executor: keep only the most elementally effective skill.
+    // executor: the skills most effective against this target, as core and any extension judge it. what it finds
+    // equally effective stays equally likely, so no other preference narrows its judgment.
     if (this.executor)
     {
-      filtered = this.findMostElementallyEffectiveSkill(filtered, user, target);
+      filtered = this.filterForExecutorSkills(filtered, user, target);
     }
-
-    // tactical: prefer skills that apply negative states to the target.
-    if (this.tactical)
+    // tactical, for a battler that is no executor: prefer skills that apply negative states to the target.
+    else if (this.tactical)
     {
       filtered = this.filterForTacticalSkills(filtered, user, target);
     }
@@ -430,7 +480,10 @@ class JABS_EnemyAI
     }
 
     const basicAttackSkillId = followerBattler.getEnemyBasicAttack();
-    let skillsToUse = followerBattler.getSkillIdsFromEnemy();
+    const followerSkills = followerBattler.getSkillIdsFromEnemy();
+
+    // a skill saved for a follow-up never comes up in a leader's directive either.
+    let skillsToUse = this.filterFollowUpOnlySkills(followerBattler, followerSkills);
 
     if (!skillsToUse.length) return [ basicAttackSkillId ];
 

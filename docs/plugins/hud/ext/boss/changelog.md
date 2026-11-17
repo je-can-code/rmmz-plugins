@@ -11,6 +11,10 @@ All the versioning and history of changes live here.
 
 ## The Actual Changelog
 
+### 1.2.0
+  - Added `BossFrameManager.setBossFromEncounter()`, which frames the boss of the running J-ABS-Boss encounter.
+  - Fixed bug with the boss frame staying up, and remembering its boss, after leaving the map, starting a new game or
+    loading a save.
 ### 1.1.0
   - The boss frame now has a wide gauge centered under the boss's name, with its level above and its afflictions below.
     While it is up, the target frame waits beneath it, and never opens for the boss itself.

@@ -309,6 +309,31 @@ class BossFrameManager
 
   //endregion show
 
+  //region reset
+  /**
+   * Stands the boss frame down entirely, as it stood when the game booted: nobody framed, nothing asked of it, and
+   * not up.<br/>
+   * This manager is static, so everything here outlives whatever it was framing. The frame's window is rebuilt with
+   * every map, but a frame left up when the party wipes mid-fight, walks out of the room, or loads a save would carry
+   * its flag into the next game or the next map, holding the target frame below a boss frame that is no longer there,
+   * and remembering a boss from a map that is gone.
+   */
+  static resetBossFrame()
+  {
+    // nobody is framed.
+    this.boss = null;
+
+    // nothing is asked of the frame.
+    this.#newBossRequest = false;
+    this.#hideBossRequest = false;
+    this.#showBossRequest = false;
+
+    // and it is not up.
+    this.#bossFrameActive = false;
+  }
+
+  //endregion reset
+
   //region active
   /**
    * Whether the boss frame is meant to be on screen right now.

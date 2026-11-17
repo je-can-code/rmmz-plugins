@@ -10,7 +10,7 @@ globalThis.J ||= {};
 (() =>
 {
   // check to ensure we have the minimum required version of the J-Base plugin.
-  const requiredBaseVersion = '3.2.0';
+  const requiredBaseVersion = '4.4.0';
   const hasBaseRequirement = J.BASE.Helpers.satisfies(J.BASE.Metadata.Version, requiredBaseVersion);
   if (hasBaseRequirement === false)
   {
@@ -18,7 +18,7 @@ globalThis.J ||= {};
   }
 
   // check to ensure we have the minimum required version of the J-ABS plugin.
-  const requiredJabsVersion = '4.13.0';
+  const requiredJabsVersion = '4.29.0';
   const hasJabsRequirement = J.BASE.Helpers.satisfies(J.ABS.Metadata.version.version(), requiredJabsVersion);
   if (hasJabsRequirement === false)
   {
@@ -41,6 +41,7 @@ J.ABS.EXT.BOSS.Metadata = new J_BossPluginMetadata(__PLUGIN_NAME__, __PLUGIN_VER
  * A collection of all aliased methods for this plugin.
  */
 J.ABS.EXT.BOSS.Aliased = {
+  DataManager: new Map(),
   Game_Map: new Map(),
   JABS_Engine: new Map(),
 };

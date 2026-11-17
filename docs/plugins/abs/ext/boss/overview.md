@@ -3,7 +3,7 @@ type: overview
 title: The Plugin Overview
 description: The general overview for what this plugin is about along with the when and how you might use it.
 tags: [abs-boss, overview]
-version: "1.0.1"
+version: "2.0.0"
 ---
 
 # Overview
@@ -32,9 +32,9 @@ Participants are a list rather than a single boss on purpose. A lone boss, a bos
 twins, and a swarm sharing a single health pool are all the same structure with a different win condition, so none of
 them require a new shape later.
 
-Nothing in this plugin draws anything. What a boss is - a battler, a health pool, a set of behaviors - is combat
-knowledge, and a frame drawn around a health bar is a view of that knowledge. Anything wanting to display a boss asks
-this plugin for it.
+This plugin draws no frame or health bar of its own. What a boss is - a battler, a health pool, a set of behaviors - is
+combat knowledge, and a frame drawn around a health bar is a view of that knowledge. Anything wanting to display a boss
+asks this plugin for it.
 
 ## Authoring an encounter
 
@@ -107,7 +107,8 @@ that enemy turns up.
 
 Put a fight's own templates past the last enemy id on the clone map, where no enemy added later can ever claim the
 slot. A `template` of `0`, or none at all, means the enemy's own slot. Whichever template it comes from, the body still
-has to turn out to be the enemy the participant names, or the fight does not start.
+has to turn out to be the enemy the participant names. A body that doesn't stops the fight from starting, or, for a
+participant summoned partway through, stops the fight the moment it is summoned.
 
 ### Bystanders
 
@@ -174,6 +175,12 @@ fight is over there: `JabsBossManager.isBossDefeated()` turns true once it is wo
 Winning does not end the encounter. Whatever waits on the switch still runs `end-encounter` once it is done with the
 fight.
 
+A fight never outlives its map or its game, so nothing needs an `end-encounter` when a fight is left unfinished.
+Leaving the map ends it the way `end-encounter` would: its bodies were that map's events and stay behind with it, and
+a tint it laid over the screen is handed back. A new game or a loaded save forgets it outright, since everything it
+touched belonged to the game that ended. Either way, a party that wipes or walks out mid-fight never carries its boss
+along.
+
 A switch the game does not have stops the fight from starting. RPG Maker quietly ignores a switch it does not have, so
 without that check the boss would fall and the story would wait on it forever.
 
@@ -182,8 +189,8 @@ without that check the boss would fall and the story would wait on it forever.
 `shared` means the encounter layers behavior on top of a boss that its normal AI continues to drive. This is the
 default and it is what most fights want.
 
-`scripted` means the encounter drives the boss outright for the duration of a routine, and the routine is expected to
-suppress the normal AI itself.
+`scripted` is recorded but nothing reads it, so it behaves exactly like `shared`. A routine that wants the boss to
+itself suppresses the normal AI with its own steps, typically by rooting the boss while it acts.
 
 ### Cadence
 
@@ -194,9 +201,10 @@ Only fight time counts. While an event is running or a message is on screen, the
 still, and the encounter's routines wait right along with it. A boss can arrive at the start of its entrance scene and
 still take its first scripted turn a full interval after the fighting begins.
 
-When a routine comes due while the boss cannot act - stunned, or already casting - that execution is skipped rather
-than queued. Queueing would mean a stun releases into every missed execution firing back to back. A routine's turn is
-judged by the boss, the first participant, whichever participant its steps act on.
+When a routine comes due while the boss is already casting or channeling, it holds its turn and takes it the first
+moment the boss is free, once. It never queues: a long cast releasing into every missed execution firing back to back
+would read as a bug. A routine's turn is judged by the boss, the first participant, whichever participant its steps act
+on.
 
 A `quickenRoutine` step makes a routine faster for the rest of the fight, and the wait already underway shortens along
 with it, so the fight speeds up at that moment rather than one execution later. A routine quickened past zero runs as
@@ -250,8 +258,9 @@ Each reaction fires once per fight, and a fight started again starts with every 
 reactions wait while an event is running or a message is on screen.
 
 A reaction to a moment no fight has, a `fallen` reaction listing nobody, a `health` reaction waiting for 0% or 100% or
-anything past them, or a reaction listing a participant the encounter does not have, stops the fight from starting. A
-misspelled name would otherwise wait for a body that never falls.
+anything past them, or a `fallen` or `health` reaction listing a participant the encounter does not have, stops the
+fight from starting. A misspelled name would otherwise wait for a body that never falls. A `start` reaction waits on
+nobody, so whatever it lists is never read.
 
 ### Steps
 
@@ -336,9 +345,10 @@ seal meant to last until a reaction lifts it wants `<indefiniteState>` on the st
 `changeImage` takes a character sheet's file name in `image` and the character on it in `index`. A spawned body has a
 single page, so nothing that refreshes the map puts its old look back.
 
-A step naming a participant, routine, skill or state the encounter cannot find stops the fight from starting, and so
-does a `tint` that is not four numbers, a `dialogue` or `log` with no lines, or a `face` that is not one of the four
-facings. A verb nothing implements fails the moment it is performed.
+A step naming a participant or routine the encounter does not have stops the fight from starting, and so does a `tint`
+that is not four numbers, a `dialogue` or `log` with no lines, or a `blink` or `face` that is not one of the four
+facings. The skill, state, enemy or animation a step uses is checked through its `expect`, below. A verb nothing
+implements fails the moment it is performed.
 
 ### Cast time
 
@@ -359,9 +369,11 @@ itself, through the same checks and the same firing the AI uses.
 
 ### The `expect` property
 
-Every database reference carries the name that row had when the encounter was authored: each participant's enemy,
-and the skill, state, spawned enemy or animation each step uses. Before a fight runs, those names are checked against the database as it stands
-now. Leave `expect` empty to skip the check for that reference.
+Every database reference carries the name that row had when the encounter was authored: each participant's enemy, and
+the one row a step is about, which is the skill a `forceSkill` or `learnSkill` step uses, the state an `addState` or
+`removeState` step uses, the enemy a `spawn` step wakes, or the animation an `animation` step plays. Before a fight
+runs, those names are checked against the database as it stands now. Leave a step's `expect` empty to skip the check
+for that reference; the animation a `blink`, `spawn` or `summon` flares with is never checked.
 
 This exists because a stale id fails silently. When a database is rebalanced and ids move, a fight that references the
 old numbers keeps running - it just summons the wrong enemy or casts the wrong skill, forever, without complaint.

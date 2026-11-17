@@ -578,6 +578,62 @@ describe('BossFrameManager (direct src import)', () =>
     });
   });
 
+  describe('resetBossFrame', () =>
+  {
+    it('stands the frame down and forgets the boss it was framing', () =>
+    {
+      // Arrange- a boss framed and the frame up, the way a fight leaves it.
+      const boss = makeBoss(100);
+      BossFrameManager.setBossFrame(boss);
+      BossFrameManager.requestShowBossFrame();
+      const wasActive = BossFrameManager.isBossFrameActive();
+
+      // Act
+      BossFrameManager.resetBossFrame();
+
+      // Assert
+      expect(wasActive).toBe(true);
+      expect(BossFrameManager.isBossFrameActive()).toBe(false);
+      expect(BossFrameManager.getBossFrame()).toBeNull();
+    });
+
+    it('drops every request still waiting on the frame', () =>
+    {
+      // Arrange- a new boss, a show and a hide, none of them acted on yet.
+      BossFrameManager.setBossFrame(makeBoss(100));
+      BossFrameManager.requestShowBossFrame();
+      BossFrameManager.requestHideBossFrame();
+      const waiting = [
+        BossFrameManager.needsBossFrameRefresh(),
+        BossFrameManager.needsBossFrameShowing(),
+        BossFrameManager.needsBossFrameHiding(),
+      ];
+
+      // Act
+      BossFrameManager.resetBossFrame();
+
+      // Assert
+      expect(waiting).toEqual([ true, true, true ]);
+      expect(BossFrameManager.needsBossFrameRefresh()).toBe(false);
+      expect(BossFrameManager.needsBossFrameShowing()).toBe(false);
+      expect(BossFrameManager.needsBossFrameHiding()).toBe(false);
+    });
+
+    it('lets the target frame rest where it always does again', () =>
+    {
+      // Arrange- while the frame is up, the target frame waits below it.
+      BossFrameManager.requestShowBossFrame();
+      const heldAt = BossFrameManager.targetFrameY(10, 120);
+
+      // Act
+      BossFrameManager.resetBossFrame();
+
+      // Assert
+      expect(heldAt).toBe(120);
+      expect(BossFrameManager.targetFrameY(10, 120)).toBe(10);
+    });
+  });
+
   describe('isBossFrameActive', () =>
   {
     it('reports the boss frame inactive until it is shown', () =>

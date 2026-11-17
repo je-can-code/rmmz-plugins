@@ -11,6 +11,9 @@ All the versioning and history of changes live here.
 
 ## The Actual Changelog
 
+### 1.3.0
+  - An executor AI facing a raised shield now reaches first for skills with `<shieldBypass>` or `<shieldDamage>`.
+  - Raised minimum J-ABS version requirement to 4.29.0.
 ### 1.2.1
   - Shield break skills read every state the bearer carries, passives included, so a passive's `<shieldBreak>` fires.
   - The bearer builds and fires each break skill itself, writing the broken shield's cap onto every action it builds,

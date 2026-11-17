@@ -15,7 +15,7 @@ globalThis.J ||= {};
   }
 
   // Check to ensure we have the minimum required version of the J-ABS plugin.
-  const requiredJabsVersion = '4.13.0';
+  const requiredJabsVersion = '4.29.0';
   const hasJabsRequirement = J.BASE.Helpers.satisfies(J.ABS.Metadata.version.version(), requiredJabsVersion);
   if (!hasJabsRequirement)
   {
@@ -47,6 +47,7 @@ J.ABS.EXT.SHIELD.Aliased = {
   Game_Action: new Map(),
   Game_Actor: new Map(),
   Game_Battler: new Map(),
+  JABS_AI: new Map(),
   JABS_Engine: new Map(),
   JABS_State: new Map(),
   JABS_StateBuilder: new Map(),

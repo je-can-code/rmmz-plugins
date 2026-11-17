@@ -52,6 +52,7 @@
 * [Delay](notetags/skills/delay.md) - The tag allowing a skill to sit on the map for a duration before triggering.
 * [Combos](notetags/skills/combos.md) - The tags configuring what skill can be followed up after using a skill, and when it becomes available.
 * [AI Skill Exclusion](notetags/skills/ai-skill-exclusion.md) - The tag excluding a skill from the pool of skills an AI battler can select.
+* [AI Follow-Up](notetags/skills/ai-follow-up.md) - The tags making a tactical enemy cast a skill first while its target carries a given state, and save it for that.
 * [Guarding](notetags/skills/guarding.md) - The tags configuring a guard skill's damage reduction, parry window and counter skills.
 * [Unparryable](notetags/skills/unparryable.md) - The tag turning off implicit (passive) parry for a skill.
 * [No Self Kill & No Target Kill](notetags/skills/no-self-kill-and-no-target-kill.md) - The tags stopping a battler's skills one HP short of killing itself, or an opponent.

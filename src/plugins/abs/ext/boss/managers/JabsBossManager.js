@@ -409,17 +409,42 @@ class JabsBossManager
    */
   static endEncounter()
   {
+    // hand back what the fight put on the map and over the screen, while it is still known what that was.
     this.#clearExtraBodies();
     this.#clearBystanders();
     this.#restoreTone();
+
+    // then forget the fight itself.
+    this.discardEncounter();
+  }
+
+  /**
+   * Forgets the active encounter without touching anything it left in the world.
+   *
+   * This is for a fight whose game ended underneath it. This manager is static, so it outlives the game it was
+   * keeping score for: a party that wipes mid-fight goes back to the title with the fight still on the books, and
+   * the first enemy to fall in whatever game comes next would be checked against a boss that no longer exists. A
+   * new game and a loaded save each build a world of their own, and the bodies, hazards and tint belonged to the
+   * one that ended. There is nothing of theirs left to take off the map or hand back to the screen, and doing
+   * either would reach into the new world instead. All that is left to undo is this manager's memory of the fight.
+   */
+  static discardEncounter()
+  {
+    // which fight this was, and whether it was ever won.
     this.#activeEncounter = null;
+    this.#bossDefeated = false;
+
+    // where its routines stood, what had already happened in it, and what it was still in the middle of doing.
     this.#routineCountdowns.clear();
     this.#routineCadences.clear();
     this.#firedReactions.clear();
-    this.#participantBodies.clear();
-    this.#bossDefeated = false;
     this.#lanes = [];
     this.#forcedCasts.clear();
+
+    // who stood in it and what it put in the world, so a fight started later finds none of it.
+    this.#participantBodies.clear();
+    this.#extraBodies = [];
+    this.#toneBeforeFight = [];
   }
 
   /**
@@ -1231,6 +1256,10 @@ class JabsBossManager
    */
   static #updateReactions()
   {
+    // a fight already won answers nothing more: winning takes its bystanders off the map, and leaving that way is not
+    // falling.
+    if (this.#bossDefeated) return;
+
     // the fight beginning was answered as it began; every other moment is watched for from here.
     this.#activeEncounter.reactions()
       .filter(reaction => reaction.trigger() !== JabsBossReaction.Triggers.Start)
@@ -1392,11 +1421,11 @@ class JabsBossManager
    * Determines whether every body the active encounter is won by felling has fallen and finished dying.
    *
    * J-ABS erases a fallen body only once its death scene has played out, so an erased body is one whose
-   * last words have all been said. Each body is asked directly rather than looked up on the map: a body
-   * the map no longer holds may only have been left behind by a player walking off of it, which is not
-   * the same thing at all as a boss that has fallen. A bystander is never asked at all, since the fight is
-   * not won by felling it, and a participant still waiting to be summoned keeps the fight going until it has
-   * arrived and fallen too.
+   * last words have all been said. Each body is asked directly rather than looked up on the map: a fallen
+   * body's slot is freed once it leaves the map, and whatever is dropped next can move into it, so the map
+   * can no longer say whether the boss fell. The body still can. A bystander is never asked at all, since the
+   * fight is not won by felling it, and a participant still waiting to be summoned keeps the fight going until
+   * it has arrived and fallen too.
    * @returns {boolean}
    */
   static #isEveryBodyGone()
@@ -1507,9 +1536,9 @@ class JabsBossManager
     // a routine still playing its last run waits for it to finish, rather than starting a second run over the top.
     if (this.#isRoutinePlaying(routine)) return;
 
-    // a boss that cannot act right now- stunned, already casting, mid-swing- gets its turn skipped
-    // rather than queued. Queueing would mean a stun releases into every missed execution firing
-    // back to back, which reads as a bug to the player even though the arithmetic is correct.
+    // a boss that cannot act right now- off the map, fallen, or already casting- holds its turn at zero and takes it
+    // the first frame it can, once, rather than queuing. Queueing would mean a long cast releases into every missed
+    // execution firing back to back, which reads as a bug to the player even though the arithmetic is correct.
     if (this.#canExecuteRoutine() === false) return;
 
     this.#executeRoutine(routine);

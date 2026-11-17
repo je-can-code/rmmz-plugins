@@ -4216,6 +4216,31 @@ class JABS_Battler
   };
 
   /**
+   * Whether a landed `<interrupt:MAGNIFIER>` hit would cut this battler's cast or channel right now.<br/>
+   * It has to be casting or channeling, the skill in flight must not carry `<thisCannotBeInterrupted>`, and none of
+   * the battler's own note sources may carry `<cannotBeInterrupted>`. The engine asks this when such a hit lands,
+   * and a tactical AI asks it before spending an interrupt.
+   * @returns {boolean}
+   */
+  isInterruptible()
+  {
+    // only a battler mid-cast or mid-channel has anything to cut.
+    if (this.isCastingOrChanneling() === false) return false;
+
+    // an immunity on the skill in flight wins first.
+    const decidedActions = this.getDecidedAction();
+    const skillInFlight = decidedActions
+      ? decidedActions.at(0).getBaseSkill()
+      : null;
+    if (skillInFlight && skillInFlight.jabsThisCannotBeInterrupted) return false;
+
+    // then the battler-wide immunity, from any of its own note sources.
+    if (this.getBattler().isImmuneToInterrupt()) return false;
+
+    return true;
+  };
+
+  /**
    * Whether or not the currently in-flight cast/channel roots this battler in place, per its own
    * `<cannotMoveToInterrupt>` tag. Always false when not casting/channeling at all.
    * @returns {boolean}

@@ -123,6 +123,123 @@ describe('J-ABS-Diagonal Game_Event (unit, all downstream dependencies mocked)',
       // Assert
       expect(originalInitMembers).toHaveBeenCalledTimes(1);
       expect(event._j._abs._diag._initialDirection).toBe(0);
+      expect(event._j._abs._diag._seekTurnX).toBe(-1);
+      expect(event._j._abs._diag._seekTurnY).toBe(-1);
+    });
+  });
+
+  describe('seek turn position', () =>
+  {
+    it('records where the event turned, for both axes', () =>
+    {
+      // Arrange
+      const event = buildEvent();
+
+      // Act
+      event.setSeekTurnPosition(4.5, 7);
+
+      // Assert
+      expect(event.getSeekTurnX()).toBe(4.5);
+      expect(event.getSeekTurnY()).toBe(7);
+    });
+  });
+
+  describe('hasTravelledATileSinceSeekTurn', () =>
+  {
+    /**
+     * Builds an event standing at the given position that last turned at (5, 5).
+     * @param {number} x Where the event stands now, along x.
+     * @param {number} y Where the event stands now, along y.
+     * @returns {object}
+     */
+    function buildTurnedEvent(x, y)
+    {
+      const event = buildEvent();
+      event.setSeekTurnPosition(5, 5);
+      event.x = x;
+      event.y = y;
+      return event;
+    }
+
+    it('is true for an event that has never turned', () =>
+    {
+      // Arrange- standing right where a turn would be measured from, so only "never turned" can answer yes.
+      const event = buildEvent();
+      event.x = -1;
+      event.y = -1;
+
+      // Act
+      const result = event.hasTravelledATileSinceSeekTurn();
+
+      // Assert
+      expect(result).toBe(true);
+    });
+
+    it('is false half a tile from the last turn', () =>
+    {
+      // Arrange
+      const event = buildTurnedEvent(5.5, 5);
+
+      // Act
+      const result = event.hasTravelledATileSinceSeekTurn();
+
+      // Assert
+      expect(result).toBe(false);
+    });
+
+    it('is true exactly one tile from the last turn', () =>
+    {
+      // Arrange
+      const event = buildTurnedEvent(6, 5);
+
+      // Act
+      const result = event.hasTravelledATileSinceSeekTurn();
+
+      // Assert
+      expect(result).toBe(true);
+    });
+
+    it('is true for a diagonal run of whole tiles whose summed steps land a hair under one', () =>
+    {
+      // Arrange- four quarter-tile diagonal steps from the last turn, summed the way pixel movement sums them; the
+      // total falls a hair under one tile, which is the whole point.
+      const event = buildTurnedEvent(5, 5);
+      const diagonalStep = 0.25 / Math.SQRT2;
+      [ 1, 2, 3, 4 ].forEach(() =>
+      {
+        event.x += diagonalStep;
+        event.y += diagonalStep;
+      });
+
+      // Act
+      const result = event.hasTravelledATileSinceSeekTurn();
+
+      // Assert
+      expect(result).toBe(true);
+    });
+
+    it('is false for a diagonal drift that falls short of a tile', () =>
+    {
+      // Arrange- about 0.85 tiles in a straight line, though each axis alone is 0.6.
+      const event = buildTurnedEvent(5.6, 5.6);
+
+      // Act
+      const result = event.hasTravelledATileSinceSeekTurn();
+
+      // Assert
+      expect(result).toBe(false);
+    });
+
+    it('is true for a diagonal drift past a tile, though neither axis alone reaches one', () =>
+    {
+      // Arrange- about 1.13 tiles in a straight line, each axis only 0.8.
+      const event = buildTurnedEvent(5.8, 5.8);
+
+      // Act
+      const result = event.hasTravelledATileSinceSeekTurn();
+
+      // Assert
+      expect(result).toBe(true);
     });
   });
 
@@ -839,15 +956,27 @@ describe('J-ABS-Diagonal Game_Event (unit, all downstream dependencies mocked)',
 
     describe('seekBattler', () =>
     {
-      it('gradually rotates toward the resolved direction, then moves straight in the current direction', () =>
+      /**
+       * Builds a seeker facing right from (4, 5) with its turn and move stubbed, so each call shows whether it turned.
+       * @returns {object}
+       */
+      function buildSeeker()
       {
-        // Arrange
-        const battler = { getX: () => 3, getY: () => 3 };
         const event = buildEvent({ _direction: 2 });
         event.setCustomDirection(6);
+        event.x = 4;
+        event.y = 5;
         event.findDiagonalDirectionTo = vi.fn(() => 8);
         event.gradualRotateToDirection = vi.fn();
         event.moveStraight = vi.fn();
+        return event;
+      }
+
+      it('turns at once on its first call, records where, then moves straight in the current direction', () =>
+      {
+        // Arrange
+        const battler = { getX: () => 3, getY: () => 3 };
+        const event = buildSeeker();
 
         // Act
         event.seekBattler(battler);
@@ -856,6 +985,47 @@ describe('J-ABS-Diagonal Game_Event (unit, all downstream dependencies mocked)',
         expect(event.findDiagonalDirectionTo).toHaveBeenCalledWith(3, 3);
         expect(event.gradualRotateToDirection).toHaveBeenCalledWith(6, 8);
         expect(event.moveStraight).toHaveBeenCalledWith(2);
+        expect(event.getSeekTurnX()).toBe(4);
+        expect(event.getSeekTurnY()).toBe(5);
+      });
+
+      it('moves straight without turning until a whole tile has passed', () =>
+      {
+        // Arrange- the first call turns at (4, 5); the event has since drifted only a quarter tile.
+        const battler = { getX: () => 3, getY: () => 3 };
+        const event = buildSeeker();
+        event.seekBattler(battler);
+        event.findDiagonalDirectionTo.mockClear();
+        event.gradualRotateToDirection.mockClear();
+        event.moveStraight.mockClear();
+        event.x = 4.25;
+
+        // Act
+        event.seekBattler(battler);
+
+        // Assert
+        expect(event.findDiagonalDirectionTo).not.toHaveBeenCalled();
+        expect(event.gradualRotateToDirection).not.toHaveBeenCalled();
+        expect(event.moveStraight).toHaveBeenCalledWith(2);
+        expect(event.getSeekTurnX()).toBe(4);
+      });
+
+      it('turns again once a whole tile has passed, and measures the next one from there', () =>
+      {
+        // Arrange- the first call turns at (4, 5); the event has since travelled a full tile.
+        const battler = { getX: () => 3, getY: () => 3 };
+        const event = buildSeeker();
+        event.seekBattler(battler);
+        event.gradualRotateToDirection.mockClear();
+        event.x = 5;
+
+        // Act
+        event.seekBattler(battler);
+
+        // Assert
+        expect(event.gradualRotateToDirection).toHaveBeenCalledTimes(1);
+        expect(event.getSeekTurnX()).toBe(5);
+        expect(event.getSeekTurnY()).toBe(5);
       });
     });
 

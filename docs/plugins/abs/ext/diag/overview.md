@@ -3,7 +3,7 @@ type: overview
 title: The Plugin Overview
 description: The general overview for what this plugin is about along with the when and how you might use it.
 tags: [abs-diag, overview]
-version: "1.1.3"
+version: "1.1.4"
 ---
 
 # Overview
@@ -69,8 +69,9 @@ too can sorta gradually home into your current targets and/or your last hit targ
 
 What is "Seeking"?
 
-"Seeking" is defined as turning 45 degrees once per step while moving toward the target, NOT respecting terrain that the
-action cannot pass. In most cases, the action events will probably have 'through' checked, so it will simply be the
+"Seeking" is defined as turning at most 45 degrees per tile travelled while moving toward the target (so under pixel
+movement, where a step is only a sliver of a tile, it still curves rather than pivoting in place), NOT respecting terrain
+that the action cannot pass. In most cases, the action events will probably have 'through' checked, so it will simply be the
 somewhat most direct route to the target, but should the action not have 'through' checked, it will loosely head towards
 the target until a collision with something impassible.
 

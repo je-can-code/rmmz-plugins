@@ -11,6 +11,24 @@ All the versioning and history of changes live here.
 
 ## The Actual Changelog
 
+### 4.29.0
+  - Added `<noDamage>`, which lets a battler be healed but never hurt.
+  - Added `<noSelfKill>` and `<noTargetKill>`, with `<thisNoSelfKill>` and `<thisNoTargetKill>` for a single skill,
+    which stop a battler's skills one HP short of killing itself or an opponent.
+  - Added `<aiFollowUp:[STATE_IDS]>`, which makes a tactical enemy cast a skill first while its target carries one of
+    those states, and `<aiFollowUpOnly>`, which saves a skill for that moment.
+  - Updated the tactical AI trait to cut its target's cast with an `<interrupt>` skill when that cast can be cut.
+  - Updated the careful AI trait to strip a positive state off its target first, with a skill aimed at the opposition.
+  - Updated the executor AI trait to choose evenly among equally effective skills.
+  - Added filterForExecutorSkills, which a plugin can alias to widen how an executor judges a skill.
+  - Updated enemy AI and skill slots to read the skills each enemy has learned for itself.
+  - Fixed bug with luck still changing the chance of a Certain Hit landing its states.
+  - Fixed bug with a skill scoped to the user landing on another battler instead of its caster.
+  - Fixed bug with the cleanser AI trait cleansing an ally with a skill aimed at the opposition.
+  - Fixed bug with an enemy's learnSkill not reporting whether anything was learned.
+  - Fixed bug with the game crashing when a summon expired with a balloon or animation still playing on it.
+  - Fixed bug with a cast preview staying on the floor after its caster fell or left the map mid-cast.
+  - Requires J-Base 4.4.0.
 ### 4.28.0
   - Added `<noRewardPoints>`, which stops an enemy granting experience, gold, SDP points or AP. Loot still drops.
   - Added `<no:exp>` and `<no:gold>`, which stop one of them at a time.

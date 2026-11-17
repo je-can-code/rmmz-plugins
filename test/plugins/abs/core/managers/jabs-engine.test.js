@@ -5377,9 +5377,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
     function buildTarget(overrides = {})
     {
       return Object.assign({
-        isCastingOrChanneling: () => true,
-        getDecidedAction: () => null,
-        getBattler: () => ({ isImmuneToInterrupt: () => false }),
+        isInterruptible: () => true,
         interrupt: vi.fn(),
       }, overrides);
     }
@@ -5391,71 +5389,45 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       }, overrides);
     }
 
-    it('does nothing when the target is not casting or channeling', () =>
-    {
-      const engine = new JABS_Engine();
-      const target = buildTarget({ isCastingOrChanneling: () => false });
-      const action = buildAction();
-
-      engine.checkInterrupt(action, target);
-
-      expect(target.interrupt).not.toHaveBeenCalled();
-    });
-
     it('does nothing when the attacking skill carries no interrupt magnifier', () =>
     {
+      // Arrange- the target can be cut, so the missing magnifier is the only reason nothing happens.
       const engine = new JABS_Engine();
       const target = buildTarget();
       const action = buildAction({ getBaseSkill: () => ({ jabsInterruptMagnifier: 0 }) });
 
+      // Act
       engine.checkInterrupt(action, target);
 
+      // Assert
       expect(target.interrupt).not.toHaveBeenCalled();
     });
 
-    it('does nothing when the interrupted skill is itself immune to interruption', () =>
+    it('does nothing when the target\'s cast cannot be cut', () =>
     {
+      // Arrange- the skill carries a magnifier, so the target's own rule is the only reason nothing happens.
       const engine = new JABS_Engine();
-      const target = buildTarget({
-        getDecidedAction: () => [ { getBaseSkill: () => ({ jabsThisCannotBeInterrupted: true }) } ],
-      });
+      const target = buildTarget({ isInterruptible: () => false });
       const action = buildAction();
 
+      // Act
       engine.checkInterrupt(action, target);
 
-      expect(target.interrupt).not.toHaveBeenCalled();
-    });
-
-    it('does nothing when the target battler is wholly immune to interruption', () =>
-    {
-      const engine = new JABS_Engine();
-      const target = buildTarget({ getBattler: () => ({ isImmuneToInterrupt: () => true }) });
-      const action = buildAction();
-
-      engine.checkInterrupt(action, target);
-
+      // Assert
       expect(target.interrupt).not.toHaveBeenCalled();
     });
 
     it('interrupts the target with the skill\'s magnifier otherwise', () =>
     {
+      // Arrange
       const engine = new JABS_Engine();
       const target = buildTarget();
       const action = buildAction();
 
+      // Act
       engine.checkInterrupt(action, target);
 
-      expect(target.interrupt).toHaveBeenCalledWith(2, false);
-    });
-
-    it('still interrupts when there is no in-flight decided action to check for skill-specific immunity', () =>
-    {
-      const engine = new JABS_Engine();
-      const target = buildTarget({ getDecidedAction: () => null });
-      const action = buildAction();
-
-      engine.checkInterrupt(action, target);
-
+      // Assert
       expect(target.interrupt).toHaveBeenCalledWith(2, false);
     });
   });

@@ -9,7 +9,7 @@ dependencies:
     base: true
     orderAfter: true
   - key: J-ABS
-    version: 4.13.0
+    version: 4.29.0
     base: true
     orderAfter: true
   - key: J-Elementalistics

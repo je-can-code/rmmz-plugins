@@ -4447,6 +4447,92 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
         expect(jabsBattler.hasUninterruptibleMovementLock()).toBe(true);
       });
     });
+
+    describe('isInterruptible', () =>
+    {
+      /**
+       * Builds a battler whose busy state, in-flight skill and battler-wide immunity are each set by hand.
+       * @param {object} options The busy flag, the in-flight skill (or null for nothing decided) and the immunity.
+       * @returns {{jabsBattler: JABS_Battler, isImmuneToInterrupt: Function}}
+       */
+      function buildCaster({ busy, inFlightSkill, immune })
+      {
+        const jabsBattler = buildBattler();
+        jabsBattler.isCastingOrChanneling = () => busy;
+        jabsBattler.setDecidedAction(inFlightSkill
+          ? [ { getBaseSkill: () => inFlightSkill } ]
+          : null);
+        const isImmuneToInterrupt = vi.fn(() => immune);
+        jabsBattler.getBattler = () => ({ isImmuneToInterrupt });
+        return { jabsBattler, isImmuneToInterrupt };
+      }
+
+      it('is false when not casting or channeling', () =>
+      {
+        // Arrange- nothing else stands in the way, so being idle is the only reason.
+        const { jabsBattler } = buildCaster({
+          busy: false,
+          inFlightSkill: { jabsThisCannotBeInterrupted: false },
+          immune: false,
+        });
+
+        // Act
+        const result = jabsBattler.isInterruptible();
+
+        // Assert
+        expect(result).toBe(false);
+      });
+
+      it('is false when the skill in flight cannot be interrupted, without asking the battler', () =>
+      {
+        // Arrange- the battler is not immune, so the skill's own tag is the only reason.
+        const { jabsBattler, isImmuneToInterrupt } = buildCaster({
+          busy: true,
+          inFlightSkill: { jabsThisCannotBeInterrupted: true },
+          immune: false,
+        });
+
+        // Act
+        const result = jabsBattler.isInterruptible();
+
+        // Assert
+        expect(result).toBe(false);
+        expect(isImmuneToInterrupt).not.toHaveBeenCalled();
+      });
+
+      it('is false when nothing is decided and the battler is immune', () =>
+      {
+        // Arrange
+        const { jabsBattler, isImmuneToInterrupt } = buildCaster({
+          busy: true,
+          inFlightSkill: null,
+          immune: true,
+        });
+
+        // Act
+        const result = jabsBattler.isInterruptible();
+
+        // Assert
+        expect(result).toBe(false);
+        expect(isImmuneToInterrupt).toHaveBeenCalledTimes(1);
+      });
+
+      it('is true for a cast whose skill and battler are both open to it', () =>
+      {
+        // Arrange
+        const { jabsBattler } = buildCaster({
+          busy: true,
+          inFlightSkill: { jabsThisCannotBeInterrupted: false },
+          immune: false,
+        });
+
+        // Act
+        const result = jabsBattler.isInterruptible();
+
+        // Assert
+        expect(result).toBe(true);
+      });
+    });
   });
 
   describe('interrupt', () =>

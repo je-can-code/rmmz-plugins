@@ -11,6 +11,8 @@ All the versioning and history of changes live here.
 
 ## The Actual Changelog
 
+### 1.9.1
+  - Fixed Game_Enemy#learnSkill returning nothing instead of whether the skill was learned.
 ### 1.9.0
   - Added Game_Item#carryWhenSynthetic, so a synthetic row keeps the fields a real database row would have carried.
 ### 1.8.0

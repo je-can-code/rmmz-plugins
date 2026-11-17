@@ -223,45 +223,192 @@ class JABS_AI
   {
     if (skillsToUse.length <= 1) return skillsToUse;
 
-    return skillsToUse.filter(skillId =>
-    {
-      const testAction = new Game_Action(user.getBattler());
-      testAction.setSkill(skillId);
-      const rate = testAction.calcElementRate(target.getBattler());
-      return rate >= 1;
-    });
+    // a skill the target resists is not worth casting while anything else is on offer.
+    return skillsToUse.filter(skillId => this.elementRateAgainst(skillId, user, target) >= 1);
   }
 
   /**
-   * Narrows the skill list to the single most elementally effective skill against the target.
-   * Returns the original array unchanged if only one skill is present.
+   * Narrows the skill list to the skills most elementally effective against the target: every skill tied at the best
+   * rate, in the order given.<br/>
+   * A skill that strikes the target's weakness is chosen whenever it is on offer, and skills that are equally
+   * effective stay equally likely, the final pick choosing evenly among them.<br/>
+   * A careful enemy's filter runs first and can leave nothing to judge, when its target resists everything on offer;
+   * nothing then comes back.
    * @param {number[]} skillsToUse The available skills to use.
    * @param {JABS_Battler} user The battler deciding the action.
    * @param {JABS_Battler} target The battler being targeted.
    * @returns {number[]}
    */
-  findMostElementallyEffectiveSkill(skillsToUse, user, target)
+  findMostElementallyEffectiveSkills(skillsToUse, user, target)
   {
-    if (skillsToUse.length <= 1) return skillsToUse;
+    // how hard each skill strikes this target by element, in the same order as the skills.
+    const rates = skillsToUse.map(skillId => this.elementRateAgainst(skillId, user, target));
 
-    const elementalSkillCollection = [];
-    skillsToUse.forEach(skillId =>
-    {
-      const testAction = new Game_Action(user.getBattler());
-      testAction.setSkill(skillId);
-      const rate = testAction.calcElementRate(target.getBattler());
-      elementalSkillCollection.push([ skillId, rate ]);
-    });
+    // the best rate on offer.
+    const bestRate = Math.max(...rates);
 
-    // sort descending by elemental effectiveness. subtracting rather than branching keeps the
-    // comparator consistent- a branch that answers 0 where it should answer a sign still sorts
-    // correctly under V8, which makes the branches impossible to test.
-    elementalSkillCollection.sort((a, b) => b[1] - a[1]);
+    // every skill reaching it stays in the running.
+    return skillsToUse.filter((_skillId, index) => rates[index] === bestRate);
+  }
 
-    // wrap result as an array so the caller can use decideFromNoneToManySkills uniformly.
-    return [ elementalSkillCollection[0][0] ];
+  /**
+   * How hard a skill strikes the target by element: the engine's own element rate for that skill, as cast by the
+   * user. Above 1 is a weakness, below 1 a resistance.
+   * @param {number} skillId The skill being judged.
+   * @param {JABS_Battler} user The battler who would cast it.
+   * @param {JABS_Battler} target The battler it would strike.
+   * @returns {number}
+   */
+  elementRateAgainst(skillId, user, target)
+  {
+    // a throwaway action is how the engine judges a skill's element against a battler.
+    const testAction = new Game_Action(user.getBattler());
+    testAction.setSkill(skillId);
+
+    return testAction.calcElementRate(target.getBattler());
+  }
+
+  /**
+   * The executor's pick: the skills most effective against this target.<br/>
+   * Core judges effectiveness by element alone; extensions widen it, as J-ABS-Shield does for a shielded target.
+   * @param {number[]} skillsToUse The available skills to use.
+   * @param {JABS_Battler} user The battler deciding the action.
+   * @param {JABS_Battler} target The battler being targeted.
+   * @returns {number[]}
+   */
+  filterForExecutorSkills(skillsToUse, user, target)
+  {
+    return this.findMostElementallyEffectiveSkills(skillsToUse, user, target);
+  }
+
+  /**
+   * Drops every skill saved for a follow-up, so it never comes up in an ordinary decision.
+   * @param {JABS_Battler} user The battler deciding the action.
+   * @param {number[]} skillsToUse The available skills to use.
+   * @returns {number[]}
+   */
+  filterFollowUpOnlySkills(user, skillsToUse)
+  {
+    return skillsToUse.filter(skillId => user.getSkill(skillId).jabsAiFollowUpOnly === false);
   }
   //endregion attack filters
+
+  //region openings
+  /**
+   * Finds a skill that follows up on a state the target carries right now, saved-for-it or not.
+   * @param {JABS_Battler} user The battler deciding the action.
+   * @param {JABS_Battler} target The battler being targeted.
+   * @param {number[]} usableSkills The skills the user can cast right now.
+   * @returns {number} The skill id, or 0 when nothing follows up on any state the target has.
+   */
+  decideFollowUp(user, target, usableSkills)
+  {
+    // the target's current states, by id.
+    const targetStateIds = target.getBattler()
+      .states()
+      .map(state => state.id);
+
+    // the first skill naming any of them is the one this moment was waiting for.
+    const followUpSkillId = usableSkills.find(skillId =>
+    {
+      const { jabsAiFollowUpStateIds } = user.getSkill(skillId);
+      return jabsAiFollowUpStateIds.some(stateId => targetStateIds.includes(stateId));
+    });
+
+    return followUpSkillId ?? 0;
+  }
+
+  /**
+   * Finds the skill that would cut the target's cast, choosing the one with the largest interrupt magnifier, but only
+   * when the cast can actually be cut: an interrupt spent on an immune cast is a wasted turn.
+   * @param {JABS_Battler} user The battler deciding the action.
+   * @param {JABS_Battler} target The battler being targeted.
+   * @param {number[]} usableSkills The skills the user can cast right now.
+   * @returns {number} The skill id, or 0 when there is no cast to cut or nothing to cut it with.
+   */
+  decideInterrupt(user, target, usableSkills)
+  {
+    // a target that isn't mid-cast, or whose cast is immune, offers nothing to cut.
+    if (target.isInterruptible() === false) return 0;
+
+    let bestSkillId = 0;
+    let bestMagnifier = 0;
+    usableSkills.forEach(skillId =>
+    {
+      // the strongest interrupt wins, and the first one listed wins a tie.
+      const { jabsInterruptMagnifier } = user.getSkill(skillId);
+      if (jabsInterruptMagnifier > bestMagnifier)
+      {
+        bestSkillId = skillId;
+        bestMagnifier = jabsInterruptMagnifier;
+      }
+    });
+
+    return bestSkillId;
+  }
+
+  /**
+   * Finds a skill aimed at the opposition that strips a positive state off the target. A skill purging buffs
+   * wholesale comes first, since it strips whatever the target carries; otherwise the target's states are read in the
+   * order it carries them, and the first one some skill can remove is the one stripped, with the skill that removes it
+   * most reliably.
+   * @param {JABS_Battler} user The battler deciding the action.
+   * @param {JABS_Battler} target The battler being targeted.
+   * @param {number[]} usableSkills The skills the user can cast right now.
+   * @returns {number} The skill id, or 0 when the target carries nothing the user can strip.
+   */
+  decideStrip(user, target, usableSkills)
+  {
+    // only what protects the target is worth stripping.
+    const positiveStates = target.getBattler()
+      .states()
+      .filter(state => state.isNegativeType() === false);
+
+    // a target with nothing protecting it offers nothing to strip.
+    if (positiveStates.length === 0) return 0;
+
+    // only a skill aimed at the opposition takes anything off the target: one aimed at the user's own side lands
+    // there instead, whatever it would remove.
+    const strippingSkills = usableSkills.filter(skillId => this.buildTestAction(user, skillId)
+      .isForOpponent());
+
+    // a skill that purges buffs wholesale strips whatever the target carries.
+    const purgerSkillId = this.findBuffPurger(user, strippingSkills);
+    if (purgerSkillId !== 0) return purgerSkillId;
+
+    // the first protection something can remove is the one stripped; the early exit is why this is a for..of.
+    for (const state of positiveStates)
+    {
+      const stripSkillId = this.determineBestSkillForStateCleansing(strippingSkills, state.id, user);
+      if (stripSkillId !== 0) return stripSkillId;
+    }
+
+    return 0;
+  }
+
+  /**
+   * Finds a skill that purges buffs wholesale through `<purgeStates>`: one whose polarity is `positive` or `all`.
+   * A purge left at its default polarity strips only negative states, so it is no use against a protection.
+   * @param {JABS_Battler} user The battler deciding the action.
+   * @param {number[]} usableSkills The skills the user can cast right now.
+   * @returns {number} The skill id, or 0 when none of them purges buffs.
+   */
+  findBuffPurger(user, usableSkills)
+  {
+    const purgerSkillId = usableSkills.find(skillId =>
+    {
+      // a skill without the tag purges nothing.
+      const purgeParams = user.getSkill(skillId).jabsPurgeStatesParams;
+      if (purgeParams === null) return false;
+
+      // only a purge of positive states, or of every state, takes buffs off.
+      const [ polarity ] = purgeParams;
+      return polarity === 'positive' || polarity === 'all';
+    });
+
+    return purgerSkillId ?? 0;
+  }
+  //endregion openings
 
   //region support decisions
   /**
@@ -276,6 +423,11 @@ class JABS_AI
     const nearbyAllies = user.getAllNearbyAllies();
     let bestSkillId = 0;
 
+    // only a skill aimed at the user's own side takes anything off an ally: one aimed at the opposition lands there
+    // instead, whatever it would remove.
+    const cleansingSkills = availableSkills.filter(skillId => this.buildTestAction(user, skillId)
+      .isForFriend());
+
     nearbyAllies.forEach(ally =>
     {
       const allyBattler = ally.getBattler();
@@ -285,17 +437,30 @@ class JABS_AI
       const cleansableState = allyStates.find(state =>
       {
         const isNegative = state.isNegativeType();
-        const canBeCleansed = this.determineBestSkillForStateCleansing(availableSkills, state.id, user);
+        const canBeCleansed = this.determineBestSkillForStateCleansing(cleansingSkills, state.id, user);
         return isNegative && canBeCleansed;
       });
 
       if (cleansableState)
       {
-        bestSkillId = this.determineBestSkillForStateCleansing(availableSkills, cleansableState.id, user);
+        bestSkillId = this.determineBestSkillForStateCleansing(cleansingSkills, cleansableState.id, user);
       }
     });
 
     return bestSkillId;
+  }
+
+  /**
+   * Builds the action a skill would be cast as, so where it is aimed can be read before the skill is chosen.
+   * @param {JABS_Battler} user The battler who would cast it.
+   * @param {number} skillId The skill to read.
+   * @returns {Game_Action}
+   */
+  buildTestAction(user, skillId)
+  {
+    const testAction = new Game_Action(user.getBattler());
+    testAction.setSkill(skillId);
+    return testAction;
   }
 
   /**
@@ -517,7 +682,7 @@ class JABS_AI
   }
 
   /**
-   * Finds the skill with the highest removal rate for the given state.
+   * Finds the skill with the highest removal rate for the given state, or 0 when none of them removes it.
    * @param {number[]} availableSkills The skill ids available to choose from.
    * @param {number} stateIdToBeCleansed The id of the state to be cleansed.
    * @param {JABS_Battler} healer The battler choosing the skill.
@@ -525,7 +690,7 @@ class JABS_AI
    */
   determineBestSkillForStateCleansing(availableSkills, stateIdToBeCleansed, healer)
   {
-    let bestSkillForStateCleansing = null;
+    let bestSkillForStateCleansing = 0;
     let highestCleanseRate = 0.0;
 
     availableSkills.forEach(skillId =>

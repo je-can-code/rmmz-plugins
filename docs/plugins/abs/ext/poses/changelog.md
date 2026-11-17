@@ -11,6 +11,8 @@ All the versioning and history of changes live here.
 
 ## The Actual Changelog
 
+### 1.0.8
+  - Fixed action poses never playing from a one-character ($) sheet.
 ### 1.0.7
   - Removed the commented-out warnings for a missing pose sheet, and said in a comment why the branch stays silent: it
     runs on every execution of the skill, so a report would repeat for as long as the asset is absent.

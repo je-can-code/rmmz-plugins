@@ -8,7 +8,7 @@ tags: [base, save, data]
 # Storage
 
 This plugin will add the `_base` namespace to every battler, to hold what it caches about the battler's notes, traits
-and equipment. Only actors reach a savefile.
+and equipment, and on an enemy, the skills it has learned since it appeared. Only actors reach a savefile.
 
 ## Parent
 

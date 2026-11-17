@@ -1861,6 +1861,145 @@ describe('J-ABS-Boss JabsBossManager (unit, all downstream dependencies mocked)'
       expect(wonBeforeEnding).toBe(true);
       expect(JabsBossManager.isBossDefeated()).toBe(false);
     });
+
+    it('erases nothing once the map it was fought on is gone, and still hands the screen back', () =>
+    {
+      // Arrange- the party left mid-fight, and the new map's own events now sit in the old slots.
+      $gameScreen.toneTarget.mockReturnValue([ 0, -51, -51, 0 ]);
+      const hazard = buildHazard();
+      startFlaring(buildJabsBattler(false, false, 100), [ onStart([ tintStep(), spawnStep() ]) ], [ hazard ]);
+      const newcomers = [ buildBody(BODY_EVENT_ID, undefined), buildBody(HAZARD_EVENT_ID, undefined) ];
+      holdOnMap(newcomers);
+      $gameScreen.startTint.mockClear();
+
+      // Act
+      JabsBossManager.endEncounter();
+
+      // Assert
+      expect(hazard.erase).not.toHaveBeenCalled();
+      expect(newcomers[0].erase).not.toHaveBeenCalled();
+      expect(newcomers[1].erase).not.toHaveBeenCalled();
+      expect($gameScreen.startTint).toHaveBeenCalledWith([ 0, -51, -51, 0 ], 0);
+    });
+  });
+
+  describe('discardEncounter', () =>
+  {
+    it('forgets the fight, so the next enemy to fall in another game finds no boss to check', () =>
+    {
+      // Arrange- the game ended mid-fight: J-ABS rebuilt its battlers for the new map, and the old body has none.
+      const body = startWithBoss(buildJabsBattler(false, false, 100));
+      body.getJabsBattler = () => undefined;
+
+      // Act
+      JabsBossManager.discardEncounter();
+
+      // Assert
+      expect(JabsBossManager.hasActiveEncounter()).toBe(false);
+      expect(JabsBossManager.activeEncounter()).toBeNull();
+      expect(() => JabsBossManager.onEnemyDefeated()).not.toThrow();
+    });
+
+    it('forgets the bodies it spawned, even one still standing on the map', () =>
+    {
+      // Arrange
+      const body = startWithBoss(buildJabsBattler(false, false, 100));
+      const participant = JabsBossManager.activeEncounter()
+        .primaryParticipant();
+
+      // Act
+      JabsBossManager.discardEncounter();
+
+      // Assert- the map still holds the body, so only the manager forgetting it can explain the null.
+      expect($gameMap.event(BODY_EVENT_ID)).toBe(body);
+      expect(JabsBossManager.getParticipantJabsBattler(participant)).toBeNull();
+    });
+
+    it('forgets a fight already won', () =>
+    {
+      // Arrange
+      const body = startWithBoss(buildJabsBattler(true, false, 0));
+      body.isErased.mockReturnValue(true);
+      JabsBossManager.update();
+      const wonBeforeDiscarding = JabsBossManager.isBossDefeated();
+
+      // Act
+      JabsBossManager.discardEncounter();
+
+      // Assert
+      expect(wonBeforeDiscarding).toBe(true);
+      expect(JabsBossManager.isBossDefeated()).toBe(false);
+    });
+
+    it('leaves the screen as it is, rather than handing it the tone the fight found', () =>
+    {
+      // Arrange- the same fight that ending hands the screen back for.
+      $gameScreen.toneTarget.mockReturnValue([ 0, -51, -51, 0 ]);
+      startFlaring(buildJabsBattler(false, false, 100), [ onStart([ tintStep() ]) ]);
+      $gameScreen.startTint.mockClear();
+
+      // Act
+      JabsBossManager.discardEncounter();
+
+      // Assert
+      expect($gameScreen.startTint).not.toHaveBeenCalled();
+    });
+
+    it('leaves a hazard the fight woke where it stands', () =>
+    {
+      // Arrange
+      const hazard = buildHazard();
+      startFlaring(buildJabsBattler(false, false, 100), [ onStart([ spawnStep() ]) ], [ hazard ]);
+
+      // Act
+      JabsBossManager.discardEncounter();
+
+      // Assert
+      expect(hazard.erase).not.toHaveBeenCalled();
+    });
+
+    it('leaves a bystander where it stands', () =>
+    {
+      // Arrange
+      const { watcherBody } = startWatched();
+
+      // Act
+      JabsBossManager.discardEncounter();
+
+      // Assert
+      expect(watcherBody.erase).not.toHaveBeenCalled();
+    });
+
+    it('leaves an end-encounter afterwards nothing of the discarded fight to take off the map', () =>
+    {
+      // Arrange- the hazard still stands where the map can find it, so only forgetting it can spare it.
+      const hazard = buildHazard();
+      startFlaring(buildJabsBattler(false, false, 100), [ onStart([ spawnStep() ]) ], [ hazard ]);
+      JabsBossManager.discardEncounter();
+
+      // Act
+      JabsBossManager.endEncounter();
+
+      // Assert
+      expect(hazard.erase).not.toHaveBeenCalled();
+    });
+
+    it('lets a fight started later remember its own room, not the tone the discarded fight found', () =>
+    {
+      // Arrange- the discarded fight found the screen reddened; the next one finds it clear.
+      $gameScreen.toneTarget.mockReturnValue([ 0, -51, -51, 0 ]);
+      startFlaring(buildJabsBattler(false, false, 100), [ onStart([ tintStep() ]) ]);
+      JabsBossManager.discardEncounter();
+      $gameScreen.toneTarget.mockReturnValue([ 0, 0, 0, 0 ]);
+      startFlaring(buildJabsBattler(false, false, 100), [ onStart([ tintStep() ]) ]);
+      $gameScreen.startTint.mockClear();
+
+      // Act
+      JabsBossManager.endEncounter();
+
+      // Assert
+      expect($gameScreen.startTint).toHaveBeenCalledWith([ 0, 0, 0, 0 ], 0);
+    });
   });
 
   describe('isParticipant', () =>
@@ -3043,6 +3182,26 @@ describe('J-ABS-Boss JabsBossManager (unit, all downstream dependencies mocked)'
 
       // Assert
       expect(watcherBody.erase).toHaveBeenCalledTimes(1);
+    });
+
+    it('answers nothing once the fight is won, though winning took a watched bystander off the map', () =>
+    {
+      // Arrange- a reaction waits on the bystander falling. The boss falls first, and the win takes the bystander off
+      // the map, which really erases it here, without it ever having fallen.
+      const { mayorBody, watcherBody } = startWatched([ onFallen([ 'watcher' ], [ tintStep() ]) ]);
+      watcherBody.erase.mockImplementation(() => watcherBody.isErased.mockReturnValue(true));
+      mayorBody.isErased.mockReturnValue(true);
+      JabsBossManager.update();
+      const won = JabsBossManager.isBossDefeated();
+      $gameScreen.startTint.mockClear();
+
+      // Act
+      JabsBossManager.update();
+
+      // Assert
+      expect(won).toBe(true);
+      expect(watcherBody.isErased()).toBe(true);
+      expect($gameScreen.startTint).not.toHaveBeenCalled();
     });
 
     it('leaves a bystander standing while the fight goes on', () =>

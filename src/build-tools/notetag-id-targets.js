@@ -94,6 +94,7 @@ const APTITUDE_DOMAINS = {
 export const NotetagIdTargets = {
   // J-ABS.
   actionId: [ { position: 0, table: 'JabsActionMapEvents' } ],
+  aiFollowUp: [ { position: 'each', table: 'States' } ],
   applyStateOnExpire: [ { position: 0, table: 'States' } ],
   bonusDamageIfSelfState: [ { position: 0, table: 'States' } ],
   bonusDamageIfState: [ { position: 0, table: 'States' } ],

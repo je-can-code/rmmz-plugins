@@ -2051,15 +2051,21 @@ Enemy events, Enemies (database default)
 always (shapes skill selection every decision)
 
 **Effect:**
-tunes how this enemy chooses and uses skills. TRAIT is one of: `careful` (avoids elementally
-ineffective skills, generally smarter), `executor` (maximizes damage, targets weak spots),
-`reckless` (never basic-attacks, spams learned skills), `healer` (prioritizes healing nearby
-allies), `cleanser` (removes negative states from allies), `buffer` (applies positive states to
-allies before attacking), `tactical` (repositions to optimal range before using a skill), or
-`berserker` (goes all-out below an HP threshold, ignoring range/cooldown/efficiency). Multiple
-traits can stack on one enemy; careful/reckless amplify the judgment of other traits when
-combined. `follower`/`leader` are also accepted as backward-compatible aliases for the AI ROLE
-tags below.
+tunes how this enemy chooses and uses skills. TRAIT is one of: `careful` (drops skills its target
+resists, and first strips a positive state off its target when one of its skills aimed at the
+opposition can remove it, a skill that purges buffs wholesale through `<purgeStates>` before any other),
+`executor` (picks the skill most effective against its target, evenly among skills equally effective;
+with J-ABS-Shield, first a skill that bypasses shields or bites into them while its target has a shield
+up), `reckless` (never
+basic-attacks, spams learned skills), `healer` (prioritizes healing nearby allies), `cleanser`
+(removes negative states from allies with skills aimed at its own side), `buffer` (applies positive states to allies before
+attacking), `tactical` (prefers skills that apply states, unless it is also an executor, whose
+equally effective picks stay even; before anything else it casts a skill that follows up on a state
+its target carries, see `<aiFollowUp>`, then a skill that cuts its target's cast when that cast can
+be cut), or `berserker` (goes all-out below an HP threshold,
+ignoring range/cooldown/efficiency). Multiple traits can stack on one enemy; careful/reckless
+amplify the judgment of other traits when combined. `follower`/`leader` are also accepted as
+backward-compatible aliases for the AI ROLE tags below.
 
 ```
 <aiTrait:careful>
@@ -2068,7 +2074,7 @@ tags below.
 A careful healer: avoids bad elemental matchups and picks the best-fit heal for the situation
 rather than just the strongest one.
 
-**See also:** `<aiRole:...>`
+**See also:** `<aiRole:...>`, `<aiFollowUp>`
 
 ---
 
@@ -2875,6 +2881,34 @@ must exceed LINK_TIME or the combo is unreachable.
 <comboStarter>
 ```
 An AI-usable opener that makes skill 5 pressable after 8 frames, auto-clearing after 60 total.
+
+---
+
+### `<aiFollowUp:[STATE_IDS]>` / `<aiFollowUpOnly>`
+
+**Applies to:**
+Skills
+
+**When:**
+an enemy AI with the `tactical` trait deciding its next action
+
+**Effect:**
+`aiFollowUp` names the states a skill follows up on: while its target carries one of them, a
+tactical enemy casts this skill before anything but a combo already under way, ahead of interrupts,
+support and ordinary picks. That is how a boss reads a combo off the field: one battler lays a
+state, another cashes it in. `aiFollowUpOnly` makes an enemy save the skill for that moment: it
+never comes up in an ordinary decision or as an interrupt, so it is never on cooldown when the
+moment arrives, though a skill whose `<combo>` names it still chains into it. Unlike
+`<aiSkillExclusion>`, a saved skill stays in the AI's pool. A skill saved this way on an enemy
+without the tactical trait is cast only through such a combo. Ally AI does not read either tag.
+
+```
+<aiFollowUp:[2090]>
+<aiFollowUpOnly>
+```
+This skill is cast only as a follow-up, and first, whenever its caster's target carries state 2090.
+
+**See also:** `<aiTrait>`, `<aiSkillExclusion>`
 
 ---
 
@@ -7724,6 +7758,31 @@ Multiple tags across sources sum their bonus fractions together before the final
 <sdpBonusFormula:[a.getMasteryCount() * 0.01]>
 ```
 An actor with 20 mastered subgroups gains an extra 20% SDP points on top of `<sdpMultiplier>`.
+
+**See also:** `<sdpMultiplier>`
+
+---
+
+### `<sdpBlackout>`
+
+**Applies to:**
+Actors, Classes, Weapons, Armors, States (any of the actor's own note sources; in practice a state)
+
+**When:**
+for as long as the actor carries it
+
+**Effect:**
+switches off every panel the actor has ranked: no core parameter, ex- or sp-parameter, max TP or catalog-key
+bonus (critical damage, drops, shields, resources, proficiency, AP, SDP gain) is granted until the source is gone.
+Ranks, points and unlocks are untouched, so nothing is lost, and ranking up during a blackout still works; the new
+rank lights up with the rest. Max HP, MP and TP shrink with everything else, so the engine trims the current values
+to fit as the source lands, and lifting it restores the maximums but never what was trimmed. Masteries are learned
+skills rather than panels, and stay.
+
+```
+<sdpBlackout>
+```
+On a 15-second state, the afflicted actor fights on their base stats alone for those 15 seconds.
 
 **See also:** `<sdpMultiplier>`
 

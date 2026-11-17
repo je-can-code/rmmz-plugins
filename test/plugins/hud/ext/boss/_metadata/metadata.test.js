@@ -31,6 +31,18 @@ describe('J-HUD-BossFrame metadata (direct src import)', () =>
     await import('../../../../../../src/plugins/hud/ext/boss/_metadata/initialization.js');
   });
 
+  it('declares the aliased-method map for the data manager it patches', () =>
+  {
+    // Arrange & Act & Assert
+    expect(globalThis.J.HUD.EXT.BOSS.Aliased.DataManager).toBeInstanceOf(Map);
+  });
+
+  it('declares the aliased-method map for the game map it patches', () =>
+  {
+    // Arrange & Act & Assert
+    expect(globalThis.J.HUD.EXT.BOSS.Aliased.Game_Map).toBeInstanceOf(Map);
+  });
+
   it('declares the aliased-method map for the hud manager it patches', () =>
   {
     // Arrange & Act & Assert- a missing map surfaces later as "cannot read set of undefined".

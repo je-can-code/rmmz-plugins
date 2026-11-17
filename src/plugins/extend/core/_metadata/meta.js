@@ -4,7 +4,7 @@
 // PLUGIN_VERSION → the header's @plugindesc and __PLUGIN_VERSION__ in the ship; the book's overview stamps it too.
 // PLUGIN_DESC_TAG and PLUGIN_DESCRIPTION → the rest of the header's @plugindesc.
 export const PLUGIN_NAME = 'J-Extend';
-export const PLUGIN_VERSION = '1.9.0';
+export const PLUGIN_VERSION = '1.9.1';
 export const PLUGIN_DESC_TAG = 'EXTEND';
 export const PLUGIN_DESCRIPTION = 'Extends the capabilities of skills/actions.';
 //endregion ship-meta

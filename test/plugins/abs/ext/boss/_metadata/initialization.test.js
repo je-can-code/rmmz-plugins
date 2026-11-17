@@ -77,6 +77,8 @@ describe('J-ABS-Boss initialization', () =>
       const { Aliased } = globalThis.J.ABS.EXT.BOSS;
 
       // Assert: a missing map surfaces later as "cannot read set of undefined" at patch time.
+      expect(Aliased.DataManager)
+        .toBeInstanceOf(Map);
       expect(Aliased.Game_Map)
         .toBeInstanceOf(Map);
       expect(Aliased.JABS_Engine)
@@ -90,6 +92,8 @@ describe('J-ABS-Boss initialization', () =>
       const { Aliased } = globalThis.J.ABS.EXT.BOSS;
 
       // Assert
+      expect(Aliased.DataManager.size)
+        .toBe(0);
       expect(Aliased.Game_Map.size)
         .toBe(0);
       expect(Aliased.JABS_Engine.size)

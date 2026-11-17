@@ -11,6 +11,9 @@ All the versioning and history of changes live here.
 
 ## The Actual Changelog
 
+### 1.1.3
+  - Harmful packets now answer to J-ABS's `<noDamage>`, `<noSelfKill>` and `<noTargetKill>`.
+  - Raised minimum J-ABS version requirement to 4.29.0.
 ### 1.1.2
   - Routed the formula-failure warning and its stack through J-Base's new Diagnostics, so it names J-ABS-Formula in the
     console.

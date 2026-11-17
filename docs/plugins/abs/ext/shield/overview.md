@@ -3,7 +3,7 @@ type: overview
 title: The Plugin Overview
 description: The general overview for what this plugin is about along with the when and how you might use it.
 tags: [abs-shield, overview]
-version: "1.2.1"
+version: "1.3.0"
 ---
 
 # Overview
@@ -47,6 +47,12 @@ effectively mitigate 10 hits- assuming each hit deals at least 1 damage.
 
 Currently, [slip damage](../../core/notetags/states/slip-damage.md) (aka damage over time) is not mitigated by shields.
 It will apply directly to the battler, leaving shields intact. This may change in a future update.
+
+### Executor AI
+
+An enemy with `<aiTrait:executor>` facing a raised shield first reaches for a skill that bypasses shields
+(`<shieldBypass>`) or deals bonus damage to them (`<shieldDamage:[FORMULA]>`), and picks the most effective of those.
+Typed shields and typed bypasses are not matched against each other in that choice: any bypass or bonus counts.
 
 ## Plugin parameters and commands
 

@@ -80,9 +80,34 @@ describe('JABS_EnemyAI (unit, all downstream dependencies mocked)', () =>
           return skillsToUse;
         }
 
-        findMostElementallyEffectiveSkill(skillsToUse)
+        findMostElementallyEffectiveSkills(skillsToUse)
         {
           return skillsToUse;
+        }
+
+        filterForExecutorSkills(skillsToUse)
+        {
+          return skillsToUse;
+        }
+
+        filterFollowUpOnlySkills(_user, skillsToUse)
+        {
+          return skillsToUse;
+        }
+
+        decideFollowUp()
+        {
+          return 0;
+        }
+
+        decideInterrupt()
+        {
+          return 0;
+        }
+
+        decideStrip()
+        {
+          return 0;
         }
 
         decideCleansing()
@@ -342,6 +367,161 @@ describe('JABS_EnemyAI (unit, all downstream dependencies mocked)', () =>
       expect(warnSpy).not.toHaveBeenCalled();
       warnSpy.mockRestore();
     });
+
+    it('casts a tactical opening before any other layer, reading the saved skills too', () =>
+    {
+      // Arrange- a tactical cleanser whose cleanse is primed to answer, so the opening is the only reason it is not.
+      const ai = new JABS_EnemyAI(false, false, false, false, true, false, true);
+      const user = buildBattler();
+      const target = buildBattler();
+      const openingSpy = vi.spyOn(ai, 'decideTacticalOpening').mockReturnValue([ 8 ]);
+      vi.spyOn(ai, 'filterFollowUpOnlySkills').mockReturnValue([ 2 ]);
+      const cleanserSpy = vi.spyOn(ai, 'decideCleanserAction').mockReturnValue([ 5 ]);
+      const attackSpy = vi.spyOn(ai, 'decideAttackAction').mockReturnValue([ 9 ]);
+
+      // Act
+      const result = ai.decideAction(user, target, [ 1, 2 ]);
+
+      // Assert
+      expect(result).toEqual([ 8 ]);
+      expect(openingSpy).toHaveBeenCalledWith(user, target, [ 1, 2 ]);
+      expect(cleanserSpy).not.toHaveBeenCalled();
+      expect(attackSpy).not.toHaveBeenCalled();
+    });
+
+    it('falls through to the other layers when the tactical opening offers nothing', () =>
+    {
+      // Arrange
+      const ai = new JABS_EnemyAI(false, false, false, false, false, false, true);
+      vi.spyOn(ai, 'decideTacticalOpening').mockReturnValue([]);
+      const attackSpy = vi.spyOn(ai, 'decideAttackAction').mockReturnValue([ 9 ]);
+
+      // Act
+      const result = ai.decideAction(buildBattler(), buildBattler(), [ 1, 2 ]);
+
+      // Assert
+      expect(result).toEqual([ 9 ]);
+      expect(attackSpy).toHaveBeenCalled();
+    });
+
+    it('never looks for an opening without the tactical trait', () =>
+    {
+      // Arrange- the opening is primed to answer, so only the trait gate can keep it from being asked.
+      const ai = new JABS_EnemyAI(true);
+      const openingSpy = vi.spyOn(ai, 'decideTacticalOpening').mockReturnValue([ 8 ]);
+      vi.spyOn(ai, 'decideAttackAction').mockReturnValue([ 9 ]);
+
+      // Act
+      const result = ai.decideAction(buildBattler(), buildBattler(), [ 1, 2 ]);
+
+      // Assert
+      expect(openingSpy).not.toHaveBeenCalled();
+      expect(result).toEqual([ 9 ]);
+    });
+
+    it('keeps skills saved for a follow-up out of every ordinary layer', () =>
+    {
+      // Arrange
+      const ai = new JABS_EnemyAI(true);
+      const user = buildBattler();
+      const savedFilterSpy = vi.spyOn(ai, 'filterFollowUpOnlySkills').mockReturnValue([ 2 ]);
+      const attackSpy = vi.spyOn(ai, 'decideAttackAction').mockReturnValue([ 9 ]);
+
+      // Act
+      ai.decideAction(user, buildBattler(), [ 1, 2 ]);
+
+      // Assert
+      expect(savedFilterSpy).toHaveBeenCalledWith(user, [ 1, 2 ]);
+      expect(attackSpy).toHaveBeenCalledWith(user, [ 2 ]);
+    });
+  });
+
+  describe('decideTacticalOpening()', () =>
+  {
+    it('takes no opening while a combo is due', () =>
+    {
+      // Arrange- a follow-up is primed to answer, so the due combo is the only reason none is taken.
+      const ai = new JABS_EnemyAI();
+      vi.spyOn(ai, 'shouldFollowWithCombo').mockReturnValue(true);
+      const followUpSpy = vi.spyOn(ai, 'decideFollowUp').mockReturnValue(5);
+
+      // Act
+      const result = ai.decideTacticalOpening(buildBattler(), buildBattler(), [ 1, 2 ]);
+
+      // Assert
+      expect(result).toEqual([]);
+      expect(followUpSpy).not.toHaveBeenCalled();
+    });
+
+    it('takes the follow-up first, without looking for a cast to cut', () =>
+    {
+      // Arrange- an interrupt is primed too, so the follow-up's priority is what is being pinned.
+      const ai = new JABS_EnemyAI();
+      const user = buildBattler();
+      const target = buildBattler();
+      const followUpSpy = vi.spyOn(ai, 'decideFollowUp').mockReturnValue(5);
+      const interruptSpy = vi.spyOn(ai, 'decideInterrupt').mockReturnValue(6);
+
+      // Act
+      const result = ai.decideTacticalOpening(user, target, [ 1, 2 ]);
+
+      // Assert
+      expect(result).toEqual([ 5 ]);
+      expect(followUpSpy).toHaveBeenCalledWith(user, target, [ 1, 2 ]);
+      expect(interruptSpy).not.toHaveBeenCalled();
+    });
+
+    it('cuts the target\'s cast when nothing follows up', () =>
+    {
+      // Arrange
+      const ai = new JABS_EnemyAI();
+      const user = buildBattler();
+      const target = buildBattler();
+      vi.spyOn(ai, 'decideFollowUp').mockReturnValue(0);
+      const interruptSpy = vi.spyOn(ai, 'decideInterrupt').mockReturnValue(6);
+
+      // Act
+      const result = ai.decideTacticalOpening(user, target, [ 1, 2 ]);
+
+      // Assert
+      expect(result).toEqual([ 6 ]);
+      expect(interruptSpy).toHaveBeenCalledWith(user, target, [ 1, 2 ]);
+    });
+
+    it('never spends a skill saved for a follow-up as an interrupt', () =>
+    {
+      // Arrange- skill 1 is saved; only the unsaved skill 2 may be weighed as an interrupt.
+      const ai = new JABS_EnemyAI();
+      const user = buildBattler();
+      const target = buildBattler();
+      vi.spyOn(ai, 'decideFollowUp').mockReturnValue(0);
+      const savedFilterSpy = vi.spyOn(ai, 'filterFollowUpOnlySkills').mockReturnValue([ 2 ]);
+      const interruptSpy = vi.spyOn(ai, 'decideInterrupt').mockReturnValue(2);
+
+      // Act
+      const result = ai.decideTacticalOpening(user, target, [ 1, 2 ]);
+
+      // Assert
+      expect(result).toEqual([ 2 ]);
+      expect(savedFilterSpy).toHaveBeenCalledWith(user, [ 1, 2 ]);
+      expect(interruptSpy).toHaveBeenCalledWith(user, target, [ 2 ]);
+    });
+
+    it('offers nothing when neither a follow-up nor an interrupt is there', () =>
+    {
+      // Arrange
+      const ai = new JABS_EnemyAI();
+      const followUpSpy = vi.spyOn(ai, 'decideFollowUp').mockReturnValue(0);
+      const interruptSpy = vi.spyOn(ai, 'decideInterrupt').mockReturnValue(0);
+
+      // Act
+      const result = ai.decideTacticalOpening(buildBattler(), buildBattler(), [ 1, 2 ]);
+
+      // Assert
+      expect(result).toEqual([]);
+      expect(followUpSpy).toHaveBeenCalledTimes(1);
+      expect(interruptSpy).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('wrapSupportSkillId()', () =>
@@ -534,15 +714,73 @@ describe('JABS_EnemyAI (unit, all downstream dependencies mocked)', () =>
       expect(filterSpy).toHaveBeenCalled();
     });
 
-    it('applies the executor filter when active', () =>
+    it('hands the pick what the executor judges, with no tactical narrowing after it', () =>
     {
-      const ai = new JABS_EnemyAI(false, true);
-      const filterSpy = vi.spyOn(ai, 'findMostElementallyEffectiveSkill').mockReturnValue([ 1 ]);
+      // Arrange: tactical is on as well and primed to narrow, so only the executor branch can keep it from running,
+      // and the pick has to receive the executor's ties untouched.
+      const ai = new JABS_EnemyAI(false, true, false, false, false, false, true);
+      const executorSpy = vi.spyOn(ai, 'filterForExecutorSkills').mockReturnValue([ 2, 3 ]);
+      const tacticalSpy = vi.spyOn(ai, 'filterForTacticalSkills').mockReturnValue([ 2 ]);
+      const pickSpy = vi.spyOn(ai, 'decideFromNoneToManySkills').mockReturnValue(3);
+      const user = buildBattler();
+
+      // Act
+      const result = ai.decideAttackAction(user, [ 1, 2, 3 ]);
+
+      // Assert
+      expect(executorSpy).toHaveBeenCalled();
+      expect(tacticalSpy).not.toHaveBeenCalled();
+      expect(pickSpy).toHaveBeenCalledWith(user, [ 2, 3 ]);
+      expect(result).toEqual([ 3 ]);
+    });
+
+    it('strips a protection off the target before any filter when careful', () =>
+    {
+      // Arrange
+      const ai = new JABS_EnemyAI(true);
+      const target = buildBattler();
+      const user = buildBattler({ getTarget: () => target });
+      const stripSpy = vi.spyOn(ai, 'decideStrip').mockReturnValue(4);
+      const filterSpy = vi.spyOn(ai, 'filterElementallyIneffectiveSkills');
+
+      // Act
+      const result = ai.decideAttackAction(user, [ 1, 2 ]);
+
+      // Assert
+      expect(result).toEqual([ 4 ]);
+      expect(stripSpy).toHaveBeenCalledWith(user, target, [ 1, 2 ]);
+      expect(filterSpy).not.toHaveBeenCalled();
+    });
+
+    it('falls through to the filters when careful finds nothing to strip', () =>
+    {
+      // Arrange
+      const ai = new JABS_EnemyAI(true);
+      vi.spyOn(ai, 'decideStrip').mockReturnValue(0);
+      const filterSpy = vi.spyOn(ai, 'filterElementallyIneffectiveSkills');
       vi.spyOn(ai, 'decideFromNoneToManySkills').mockReturnValue(1);
 
-      ai.decideAttackAction(buildBattler(), [ 1, 2 ]);
+      // Act
+      const result = ai.decideAttackAction(buildBattler(), [ 1, 2 ]);
 
+      // Assert
+      expect(result).toEqual([ 1 ]);
       expect(filterSpy).toHaveBeenCalled();
+    });
+
+    it('never strips without the careful trait', () =>
+    {
+      // Arrange- the strip is primed to answer, so only the trait gate can keep it from being asked.
+      const ai = new JABS_EnemyAI(false, true);
+      const stripSpy = vi.spyOn(ai, 'decideStrip').mockReturnValue(4);
+      vi.spyOn(ai, 'decideFromNoneToManySkills').mockReturnValue(1);
+
+      // Act
+      const result = ai.decideAttackAction(buildBattler(), [ 1, 2 ]);
+
+      // Assert
+      expect(stripSpy).not.toHaveBeenCalled();
+      expect(result).toEqual([ 1 ]);
     });
 
     it('applies the tactical filter when active', () =>
@@ -584,7 +822,7 @@ describe('JABS_EnemyAI (unit, all downstream dependencies mocked)', () =>
     {
       // Arrange- executor OFF, same pass-through reasoning as the careful case above.
       const ai = new JABS_EnemyAI(false, false);
-      const filterSpy = vi.spyOn(ai, 'findMostElementallyEffectiveSkill');
+      const filterSpy = vi.spyOn(ai, 'filterForExecutorSkills');
       vi.spyOn(ai, 'decideFromNoneToManySkills').mockReturnValue(1);
 
       // Act
@@ -885,6 +1123,26 @@ describe('JABS_EnemyAI (unit, all downstream dependencies mocked)', () =>
       vi.spyOn(ai, 'filterSkillsHealerPriority').mockReturnValue([]);
 
       expect(ai.decideActionForFollower(buildBattler(), follower)).toEqual([ 77 ]);
+    });
+
+    it('keeps the follower\'s skills saved for a follow-up out of the leader\'s directive', () =>
+    {
+      // Arrange
+      const ai = new JABS_EnemyAI(true);
+      const leader = buildBattler();
+      const follower = buildBattler({
+        getSkillIdsFromEnemy: () => [ 1, 2 ],
+        getBattler: () => ({ canPaySkillCost: () => true, skill: () => ({}) }),
+      });
+      const savedFilterSpy = vi.spyOn(ai, 'filterFollowUpOnlySkills').mockReturnValue([ 2 ]);
+      const attackSpy = vi.spyOn(ai, 'decideAttackAction').mockReturnValue([ 2 ]);
+
+      // Act
+      ai.decideActionForFollower(leader, follower);
+
+      // Assert
+      expect(savedFilterSpy).toHaveBeenCalledWith(follower, [ 1, 2 ]);
+      expect(attackSpy).toHaveBeenCalledWith(leader, [ 2 ]);
     });
 
     it('falls back to the basic attack when the chosen skill cannot be paid for', () =>

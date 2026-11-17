@@ -3843,22 +3843,12 @@ class JABS_Engine
    */
   checkInterrupt(action, target)
   {
-    // only a target currently casting/channeling has anything to interrupt.
-    if (!target.isCastingOrChanneling()) return;
-
     // the attacking skill must actually carry interrupt capability.
     const magnifier = action.getBaseSkill().jabsInterruptMagnifier;
     if (!magnifier) return;
 
-    // a skill-specific immunity on the interrupted skill itself takes priority.
-    const decidedActions = target.getDecidedAction();
-    const interruptedSkill = decidedActions
-      ? decidedActions.at(0).getBaseSkill()
-      : null;
-    if (interruptedSkill && interruptedSkill.jabsThisCannotBeInterrupted) return;
-
-    // battler-wide immunity, sourced from any of the target's own note sources.
-    if (target.getBattler().isImmuneToInterrupt()) return;
+    // the target has to be mid-cast, with nothing making that cast immune.
+    if (target.isInterruptible() === false) return;
 
     target.interrupt(magnifier, false);
   }

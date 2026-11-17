@@ -11,6 +11,10 @@ All the versioning and history of changes live here.
 
 ## The Actual Changelog
 
+### 4.4.0
+  - Added Spriteset_Base#animationSprites and Spriteset_Map#balloonSprites.
+  - Added Game_Enemy#enemyActions, the actions an enemy's database entry lists plus any it has learned.
+  - Fixed an enemy learning a skill teaching it to every enemy of the same id, including ones spawned later.
 ### 4.3.0
   - Added CharacterFrame and Window_Base.drawCharacterStanding, which draw a character's front-facing standing frame.
 ### 4.2.1

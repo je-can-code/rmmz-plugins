@@ -57,6 +57,10 @@ function makeActor(id)
   {
     return id;
   };
+
+  // these actors have no database row behind them, so every panel bonus's note scan reads J-Base's
+  // test hook instead: an empty chain, unless a test hands the actor some notes.
+  actor.__testNoteSources = [];
   return actor;
 }
 
@@ -83,6 +87,10 @@ describe('J-SDP Game_Actor.param (ATK) and Game_Party SDP helpers (direct src im
     // sdp's own Game_Actor.js#getSdpBonusForCoreParam relies on this bare global to translate a
     // core param id (e.g. ATK=2, MHP=0) into its registry key (e.g. 'atk', 'mhp').
     ({ default: globalThis.ParameterKeys } = await import('../../../../src/plugins/_base/core/core/ParameterKeys.js'));
+
+    // every panel bonus first asks whether the actor's notes black the panels out, through this bare
+    // global, so the real one reads the real note chain J-Base's getAllNotes assembles.
+    ({ default: globalThis.RPGManager } = await import('../../../../src/plugins/_base/core/managers/RPGManager.js'));
 
     setPluginContextToJSdp();
     await import('../../../../src/plugins/sdp/core/_metadata/initialization.js');
@@ -190,6 +198,33 @@ describe('J-SDP Game_Actor.param (ATK) and Game_Party SDP helpers (direct src im
 
       // Act & Assert
       expect(actor.param(MHP_PARAM_ID)).toBe(1);
+    });
+  });
+
+  describe('sdpBlackout over the real note chain', () =>
+  {
+    it('switches the panel\'s max HP off while a source carries the tag, and back on after', () =>
+    {
+      // Arrange
+      hookBaseMhp100();
+      const actor = makeActor(1);
+      actor.unlockSdpByKey('vitest_panel');
+      actor.rankUpPanel('vitest_panel');
+      actor.rankUpPanel('vitest_panel');
+
+      // Act
+      const before = actor.param(MHP_PARAM_ID);
+      actor.__testNoteSources = [ { note: '<sdpBlackout>' } ];
+      const during = actor.param(MHP_PARAM_ID);
+      const rankDuring = actor.getSdpByKey('vitest_panel').currentRank;
+      actor.__testNoteSources = [];
+      const after = actor.param(MHP_PARAM_ID);
+
+      // Assert
+      expect(before).toBe(102);
+      expect(during).toBe(100);
+      expect(after).toBe(102);
+      expect(rankDuring).toBe(2);
     });
   });
 

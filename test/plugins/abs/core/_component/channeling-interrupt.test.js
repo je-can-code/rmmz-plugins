@@ -594,6 +594,9 @@ describe('J-ABS channeling and interruption (direct src import)', () =>
         isCastingOrChanneling: () => busy,
         getDecidedAction: () => (inFlightSkill ? [ { getBaseSkill: () => inFlightSkill } ] : null),
         getBattler: () => ({ isImmuneToInterrupt: () => immune }),
+
+        // the engine asks the battler's own rule, so the real one keeps this test end to end.
+        isInterruptible: globalThis.JABS_Battler.prototype.isInterruptible,
         interrupt(magnifier, isSelf)
         {
           calls.push({ magnifier, isSelf });

@@ -3,7 +3,7 @@ type: overview
 title: The Plugin Overview
 description: The general overview for what this plugin is about along with the when and how you might use it.
 tags: [abs, overview]
-version: "4.28.0"
+version: "4.29.0"
 ---
 
 # Overview
@@ -83,8 +83,9 @@ trait found in the middle of the third page in the trait picker. An enemy withou
 
 #### Available skills
 
-Any skills listed in the "Action Patterns" section of an enemy in the database will be considered available. To create a
-skill usable in JABS, see the "SETTING UP YOUR SKILLS" section below.
+Any skills listed in the "Action Patterns" section of an enemy in the database will be considered available, along with
+any skill that enemy has learned since it appeared. To create a skill usable in JABS, see the "SETTING UP YOUR SKILLS"
+section below.
 
 #### Note about conditions
 
