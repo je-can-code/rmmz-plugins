@@ -281,11 +281,22 @@ describe('J-ABS Game_Action application and guard-related damage modification (d
       return action;
     }
 
+    /**
+     * Builds a target whose result is the given one, and who can be hurt unless told otherwise.
+     * @param {object} result The result the target hands back.
+     * @param {boolean} immuneToDamage Whether or not the target takes no damage.
+     * @returns {object}
+     */
+    function buildTarget(result, immuneToDamage = false)
+    {
+      return { result: () => result, isImmuneToDamage: () => immuneToDamage };
+    }
+
     it('computes and executes damage when the skill has a damage formula', () =>
     {
       // Arrange
       const action = buildDamageAction();
-      const target = { result: () => ({ glancing: false }) };
+      const target = buildTarget({ glancing: false });
 
       // Act
       action.executeJabsAction(target);
@@ -294,12 +305,25 @@ describe('J-ABS Game_Action application and guard-related damage modification (d
       expect(action.executeDamage).toHaveBeenCalledWith(target, 10);
     });
 
+    it('hands executeDamage nothing when the target takes no damage', () =>
+    {
+      // Arrange
+      const action = buildDamageAction();
+      const target = buildTarget({ glancing: false }, true);
+
+      // Act
+      action.executeJabsAction(target);
+
+      // Assert
+      expect(action.executeDamage).toHaveBeenCalledWith(target, 0);
+    });
+
     it('skips damage calculation entirely when the skill has no damage formula', () =>
     {
       // Arrange
       const action = buildDamageAction();
       action.item = () => ({ damage: { type: 0 }, effects: [] });
-      const target = { result: () => ({ glancing: false }) };
+      const target = buildTarget({ glancing: false });
 
       // Act
       action.executeJabsAction(target);
@@ -313,7 +337,7 @@ describe('J-ABS Game_Action application and guard-related damage modification (d
       // Arrange
       const action = buildDamageAction({ isHitCritical: () => true });
       const result = { glancing: true };
-      const target = { result: () => result };
+      const target = buildTarget(result);
 
       // Act
       action.executeJabsAction(target);
@@ -327,7 +351,7 @@ describe('J-ABS Game_Action application and guard-related damage modification (d
       // Arrange
       const action = buildDamageAction({ isHitCritical: () => true });
       const result = { glancing: false };
-      const target = { result: () => result };
+      const target = buildTarget(result);
 
       // Act
       action.executeJabsAction(target);
@@ -341,7 +365,7 @@ describe('J-ABS Game_Action application and guard-related damage modification (d
       // Arrange
       const action = buildDamageAction();
       action.applyGlancingDamageReduction = vi.fn(() => 3);
-      const target = { result: () => ({ glancing: true }) };
+      const target = buildTarget({ glancing: true });
 
       // Act
       action.executeJabsAction(target);
@@ -358,7 +382,7 @@ describe('J-ABS Game_Action application and guard-related damage modification (d
       const effectB = {};
       const action = buildDamageAction();
       action.item = () => ({ damage: { type: 0 }, effects: [ effectA, effectB ] });
-      const target = { result: () => ({ glancing: false }) };
+      const target = buildTarget({ glancing: false });
 
       // Act
       action.executeJabsAction(target);

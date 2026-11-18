@@ -112,6 +112,7 @@ describe('J-ABS RPG_Skill effects (direct src import)', () =>
       [ 'jabsFreeCombo', '<freeCombo>' ],
       [ 'jabsComboStarter', '<comboStarter>' ],
       [ 'jabsAiSkillExclusion', '<aiSkillExclusion>' ],
+      [ 'jabsAiFollowUpOnly', '<aiFollowUpOnly>' ],
       [ 'jabsOffhandEligible', '<offhandEligible>' ],
     ])('%s is true with its tag present, false with it absent', (prop, tag) =>
     {
@@ -129,6 +130,33 @@ describe('J-ABS RPG_Skill effects (direct src import)', () =>
     {
       expect(buildSkill(tag)[prop]).toBe(true);
       expect(buildSkill('')[prop]).toBeNull();
+    });
+  });
+
+  describe('jabsAiFollowUpStateIds', () =>
+  {
+    it('reads every state id the skill follows up on', () =>
+    {
+      // Arrange
+      const skill = buildSkill('<aiFollowUp:[2090, 4]>');
+
+      // Act
+      const stateIds = skill.jabsAiFollowUpStateIds;
+
+      // Assert
+      expect(stateIds).toEqual([ 2090, 4 ]);
+    });
+
+    it('is empty when the skill follows up on nothing', () =>
+    {
+      // Arrange- a sibling ai tag sits in the note, so only the follow-up tag itself can produce ids.
+      const skill = buildSkill('<aiFollowUpOnly>');
+
+      // Act
+      const stateIds = skill.jabsAiFollowUpStateIds;
+
+      // Assert
+      expect(stateIds).toEqual([]);
     });
   });
 

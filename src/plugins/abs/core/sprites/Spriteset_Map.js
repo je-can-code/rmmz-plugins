@@ -275,6 +275,8 @@ Spriteset_Map.prototype.removeActionSprite = function (actionEvent)
       // destroy the sprite to stop updates and free resources.
       if (!sprite.destroyed)
       {
+        // end whatever is still playing on it first, or that reads the destroyed sprite on the next frame.
+        this.endEffectsOn(sprite);
         sprite.destroy();
       }
 
@@ -297,6 +299,8 @@ Spriteset_Map.prototype.removeActionSprite = function (actionEvent)
       }
       if (sprite && !sprite.destroyed)
       {
+        // end whatever is still playing on it first, or that reads the destroyed sprite on the next frame.
+        this.endEffectsOn(sprite);
         sprite.destroy();
       }
     }
@@ -351,6 +355,38 @@ Spriteset_Map.prototype.purgeActionSpritesByUuid = function (uuid)
     this.destroyCastPreviewSprite(previewSprite);
     delete previewDict[previewKey];
   }
+};
+
+/**
+ * Ends every balloon and animation still playing on a character sprite that is about to be destroyed.<br/>
+ * Called by every path here that destroys a character sprite: expired actions and collected loot alike.
+ *
+ * The engine never destroys a character's sprite while the map is up, so its balloons and animations hold on to
+ * their target until they finish, reading its position every frame. J-ABS does destroy them, and a destroyed sprite
+ * has no position left to read: whatever is still playing on it throws on the very next frame. An ordinary projectile
+ * never carries either, but a summon is an action that is also a battler. It gets alerted, engaged and struck like
+ * any other, so its time can run out with a "!" over its head or a hit still flashing on it.
+ *
+ * Ending them, rather than holding the sprite back until they finish, is deliberate. The character they belong to is
+ * leaving the map this frame, and a balloon or a flash hanging over a spot nobody occupies would only read as a
+ * ghost. Nor does it cut a killing blow short as a rule: defeat only erases a summon, and its sprite stays until its
+ * time runs out, so the animation that felled it plays on unless the kill came in that time's last moments.
+ * @param {Sprite_Character} sprite The character sprite about to be destroyed.
+ */
+Spriteset_Map.prototype.endEffectsOn = function(sprite)
+{
+  // the effects remember the character they were requested on, so that is what to look for.
+  const character = sprite.character();
+
+  // any balloon over this character ends with it.
+  const balloons = this.balloonSprites()
+    .filter(balloon => balloon.targetObject === character);
+  balloons.forEach(this.removeBalloon, this);
+
+  // and so does any animation playing on it.
+  const animations = this.animationSprites()
+    .filter(animation => animation.targetObjects.includes(character));
+  animations.forEach(this.removeAnimation, this);
 };
 //endregion action sprites
 
@@ -529,6 +565,8 @@ Spriteset_Map.prototype.removeLootSprite = function (lootEvent)
     // destroy the sprite to stop updates and free resources.
     if (!sprite.destroyed)
     {
+      // end whatever is still playing on it first, or that reads the destroyed sprite on the next frame.
+      this.endEffectsOn(sprite);
       sprite.destroy();
     }
   }
@@ -674,6 +712,9 @@ Spriteset_Map.prototype.collectActiveCastPreviewItems = function ()
     .filter(ev => ev.isJabsBattler())
     .forEach(ev =>
     {
+      // an erased body has left the map, and whatever it was winding up left with it.
+      if (ev.isErased()) return;
+
       // find the underlying JABS battler for this event.
       const jabsBattler = ev.getJabsBattler();
       if (!jabsBattler) return; // no battler.
@@ -683,6 +724,12 @@ Spriteset_Map.prototype.collectActiveCastPreviewItems = function ()
 
       // require casting/channeling state + a decided action to preview.
       if (!jabsBattler.isCastingOrChanneling()) return; // not casting or channeling.
+
+      // a caster that fell mid-cast will never fire it, so there is nothing left to warn anyone of, however long its
+      // body lies there saying its last words.
+      const caster = jabsBattler.getBattler();
+      if (caster.isDead()) return;
+
       const decided = jabsBattler.getDecidedAction();
       if (!decided || !decided.length) return; // no actions decided.
 
@@ -690,8 +737,7 @@ Spriteset_Map.prototype.collectActiveCastPreviewItems = function ()
       const [ action ] = decided;
 
       // battler-level opt-out.
-      const battlerCore = jabsBattler.getBattler();
-      const ref = battlerCore.databaseData();
+      const ref = caster.databaseData();
       if (RPGManager.checkForBooleanFromNoteByRegex(ref, J.ABS.RegExp.NoCastPreviewsBattler)) return;
 
       // skill-level opt-out.

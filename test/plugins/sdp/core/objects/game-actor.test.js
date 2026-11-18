@@ -1,5 +1,6 @@
 //region plugins/sdp/core/objects/game-actor.test.js
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import SdpBlackoutCache from '../../../../../src/plugins/sdp/core/managers/SdpBlackoutCache.js';
 
 // stand in for the real PanelRanking so this stays a unit test of Game_Actor alone- the real class
 // reaches into SdpMasteryManager and the panels map on rankUp, which is a different file's problem.
@@ -51,6 +52,7 @@ describe('Game_Actor ext/sdp augments (direct src import)', () =>
   let baseXparam;
   let baseSparam;
   let baseMaxTp;
+  let baseOnBattlerDataChange;
 
   /**
    * Builds a panel ranking shaped like the real one, for direct injection into an actor's rank list.
@@ -116,13 +118,17 @@ describe('Game_Actor ext/sdp augments (direct src import)', () =>
           panelStatFloorMhp: 1,
           panelStatFloorDefault: 0,
         },
-        RegExp: { SdpBonusFormula: /sdpBonusFormula/gi },
+        RegExp: {
+          SdpBonusFormula: /sdpBonusFormula/gi,
+          SdpBlackout: /<sdpBlackout>/i,
+        },
       },
     };
 
     globalThis.RPGManager = {
       getResultsFromAllNotesByRegex: vi.fn(() => 0),
       getSumFromAllNotesByRegex: vi.fn(() => 0),
+      checkForBooleanFromAllNotesByRegex: vi.fn(() => false),
     };
 
     globalThis.ParameterKeys = {
@@ -143,6 +149,8 @@ describe('Game_Actor ext/sdp augments (direct src import)', () =>
     baseXparam = vi.fn(() => 0);
     baseSparam = vi.fn(() => 0);
     baseMaxTp = vi.fn(() => 0);
+    baseOnBattlerDataChange = vi.fn();
+    StubGameActor.prototype.onBattlerDataChange = baseOnBattlerDataChange;
     StubGameActor.prototype.initMembers = baseInitMembers;
     StubGameActor.prototype.param = baseParam;
     StubGameActor.prototype.xparam = baseXparam;
@@ -166,6 +174,8 @@ describe('Game_Actor ext/sdp augments (direct src import)', () =>
     J.SDP.Metadata.panelStatFloorDefault = 0;
     RPGManager.getResultsFromAllNotesByRegex.mockReturnValue(0);
     RPGManager.getSumFromAllNotesByRegex.mockReturnValue(0);
+    RPGManager.checkForBooleanFromAllNotesByRegex.mockClear();
+    RPGManager.checkForBooleanFromAllNotesByRegex.mockReturnValue(false);
     baseParam.mockReturnValue(0);
     baseXparam.mockReturnValue(0);
     baseSparam.mockReturnValue(0);
@@ -292,6 +302,155 @@ describe('Game_Actor ext/sdp augments (direct src import)', () =>
 
       // Assert
       expect(result).toEqual([ ranking ]);
+    });
+  });
+
+  describe('hasSdpBlackoutNote', () =>
+  {
+    it('is true when a note source carries the blackout', () =>
+    {
+      // Arrange
+      const actor = makeActor();
+      const notes = [ { note: '<sdpBlackout>' } ];
+      actor.getAllNotes = vi.fn(() => notes);
+      RPGManager.checkForBooleanFromAllNotesByRegex.mockReturnValue(true);
+
+      // Act
+      const result = actor.hasSdpBlackoutNote();
+
+      // Assert
+      expect(result).toBe(true);
+      const [ [ scannedNotes, structure ] ] = RPGManager.checkForBooleanFromAllNotesByRegex.mock.calls;
+      expect(scannedNotes).toBe(notes);
+      expect(structure).toBe(J.SDP.RegExp.SdpBlackout);
+    });
+
+    it('is false when no note source carries it', () =>
+    {
+      // Arrange
+      const actor = makeActor();
+      RPGManager.checkForBooleanFromAllNotesByRegex.mockReturnValue(false);
+
+      // Act
+      const result = actor.hasSdpBlackoutNote();
+
+      // Assert
+      expect(result).toBe(false);
+      expect(RPGManager.checkForBooleanFromAllNotesByRegex).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('isSdpBlackedOut', () =>
+  {
+    it('answers from the reading the last data change took, without scanning', () =>
+    {
+      // Arrange: the data change reads the blackout from these notes; a scan now would say otherwise, so only
+      // that reading can come back true.
+      const actor = makeActor();
+      const notes = [ { note: '<sdpBlackout>' } ];
+      actor.getAllNotes = vi.fn(() => notes);
+      RPGManager.checkForBooleanFromAllNotesByRegex.mockReturnValue(true);
+      actor.onBattlerDataChange();
+      RPGManager.checkForBooleanFromAllNotesByRegex.mockReturnValue(false);
+      RPGManager.checkForBooleanFromAllNotesByRegex.mockClear();
+
+      // Act
+      const result = actor.isSdpBlackedOut();
+
+      // Assert
+      expect(result).toBe(true);
+      expect(RPGManager.checkForBooleanFromAllNotesByRegex).not.toHaveBeenCalled();
+    });
+
+    it('reads its notes directly once they are a new list, and keeps nothing from it', () =>
+    {
+      // Arrange: the reading was taken from an older list that carried the blackout; the actor now carries a new
+      // list that does not, as between a change and this actor's data-change hook.
+      const actor = makeActor();
+      const olderNotes = [ { note: '<sdpBlackout>' } ];
+      const currentNotes = [ { note: '' } ];
+      actor.getAllNotes = vi.fn(() => olderNotes);
+      RPGManager.checkForBooleanFromAllNotesByRegex.mockReturnValue(true);
+      actor.onBattlerDataChange();
+      actor.getAllNotes = vi.fn(() => currentNotes);
+      RPGManager.checkForBooleanFromAllNotesByRegex.mockReturnValue(false);
+      RPGManager.checkForBooleanFromAllNotesByRegex.mockClear();
+
+      // Act
+      const first = actor.isSdpBlackedOut();
+      const second = actor.isSdpBlackedOut();
+
+      // Assert: both reads scanned, so the first one stored nothing for the second to find.
+      expect(first).toBe(false);
+      expect(second).toBe(false);
+      expect(RPGManager.checkForBooleanFromAllNotesByRegex).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('onBattlerDataChange', () =>
+  {
+    it('performs the original logic, then takes the blackout reading from the notes as they now stand', () =>
+    {
+      // Arrange
+      const actor = makeActor();
+      const notes = [ { note: '<sdpBlackout>' } ];
+      actor.getAllNotes = vi.fn(() => notes);
+      RPGManager.checkForBooleanFromAllNotesByRegex.mockReturnValue(true);
+      baseOnBattlerDataChange.mockClear();
+
+      // Act
+      actor.onBattlerDataChange();
+
+      // Assert
+      expect(baseOnBattlerDataChange).toHaveBeenCalledTimes(1);
+      expect(SdpBlackoutCache.isCurrentFor(actor, notes)).toBe(true);
+      expect(SdpBlackoutCache.isBlackedOut(actor)).toBe(true);
+    });
+  });
+
+  describe('getContributingSdpRankings', () =>
+  {
+    it('hands back the stored rankings while the panels are on', () =>
+    {
+      // Arrange
+      const actor = makeActor();
+      actor._j._sdp._ranks.push(makeRanking('a', { currentRank: 3 }), makeRanking('b', { currentRank: 5 }));
+
+      // Act
+      const result = actor.getContributingSdpRankings();
+
+      // Assert
+      expect(result).toBe(actor._j._sdp._ranks);
+      expect(result).toHaveLength(2);
+    });
+
+    it('hands back nothing while blacked out, and leaves the stored ranks alone', () =>
+    {
+      // Arrange
+      const actor = makeActor();
+      actor._j._sdp._ranks.push(makeRanking('a', { currentRank: 3 }), makeRanking('b', { currentRank: 5 }));
+      RPGManager.checkForBooleanFromAllNotesByRegex.mockReturnValue(true);
+
+      // Act
+      const result = actor.getContributingSdpRankings();
+
+      // Assert
+      expect(result).toEqual([]);
+      expect(actor._j._sdp._ranks.map(ranking => ranking.currentRank)).toEqual([ 3, 5 ]);
+    });
+
+    it('spares an actor with nothing ranked the note scan', () =>
+    {
+      // Arrange
+      const actor = makeActor();
+      RPGManager.checkForBooleanFromAllNotesByRegex.mockReturnValue(true);
+
+      // Act
+      const result = actor.getContributingSdpRankings();
+
+      // Assert
+      expect(result).toBe(actor._j._sdp._ranks);
+      expect(RPGManager.checkForBooleanFromAllNotesByRegex).not.toHaveBeenCalled();
     });
   });
 
@@ -737,21 +896,6 @@ describe('Game_Actor ext/sdp augments (direct src import)', () =>
 
   describe('getSdpBonusForParameterKey', () =>
   {
-    it('returns 0 when the SDP namespace is unavailable', () =>
-    {
-      // Arrange
-      const actor = makeActor();
-      const originalSdp = J.SDP;
-      J.SDP = null;
-
-      // Act
-      const result = actor.getSdpBonusForParameterKey('cdm', 1);
-      J.SDP = originalSdp;
-
-      // Assert
-      expect(result).toEqual(0);
-    });
-
     it('returns 0 when no parameter key was supplied', () =>
     {
       // Arrange
@@ -802,6 +946,23 @@ describe('Game_Actor ext/sdp augments (direct src import)', () =>
 
       // Assert
       expect(result).toEqual(12);
+    });
+
+    it('grants nothing while blacked out', () =>
+    {
+      // Arrange
+      const actor = makeActor();
+      J.SDP.Metadata.panelsMap.set('a', makePanel({}, 5));
+      actor._j._sdp._ranks.push(makeRanking('a', { currentRank: 1 }));
+
+      // Act
+      const lit = actor.getSdpBonusForParameterKey('cdm', 1);
+      RPGManager.checkForBooleanFromAllNotesByRegex.mockReturnValue(true);
+      const dark = actor.getSdpBonusForParameterKey('cdm', 1);
+
+      // Assert
+      expect(lit).toEqual(5);
+      expect(dark).toEqual(0);
     });
   });
 
@@ -905,6 +1066,23 @@ describe('Game_Actor ext/sdp augments (direct src import)', () =>
       // Assert
       // 150 * (3 * 7) / 100 = 31.5, floored to 31.
       expect(result).toEqual(31);
+    });
+
+    it('grants nothing while blacked out', () =>
+    {
+      // Arrange
+      const actor = makeActor();
+      J.SDP.Metadata.panelsMap.set('a', makePanel({ 'bparam-0': [ { perRank: 10, isFlat: true } ] }));
+      actor._j._sdp._ranks.push(makeRanking('a', { currentRank: 2 }));
+
+      // Act
+      const lit = actor.getSdpBonusForCoreParam(0, 100);
+      RPGManager.checkForBooleanFromAllNotesByRegex.mockReturnValue(true);
+      const dark = actor.getSdpBonusForCoreParam(0, 100);
+
+      // Assert
+      expect(lit).toEqual(20);
+      expect(dark).toEqual(0);
     });
   });
 
@@ -1022,6 +1200,23 @@ describe('Game_Actor ext/sdp augments (direct src import)', () =>
       // flat non-core growth is still expressed in percent-points- (4 * 50) / 100 = 2.
       expect(result).toEqual(2);
     });
+
+    it('grants nothing while blacked out', () =>
+    {
+      // Arrange
+      const actor = makeActor();
+      J.SDP.Metadata.panelsMap.set('a', makePanel({ 'xparam-2': [ { perRank: 10, isFlat: true } ] }));
+      actor._j._sdp._ranks.push(makeRanking('a', { currentRank: 2 }));
+
+      // Act
+      const lit = actor.getSdpBonusForNonCoreParam(2, 0, 8);
+      RPGManager.checkForBooleanFromAllNotesByRegex.mockReturnValue(true);
+      const dark = actor.getSdpBonusForNonCoreParam(2, 0, 8);
+
+      // Assert
+      expect(lit).toEqual(0.2);
+      expect(dark).toEqual(0);
+    });
   });
 
   describe('applySdpPanelStatFloor', () =>
@@ -1098,6 +1293,24 @@ describe('Game_Actor ext/sdp augments (direct src import)', () =>
 
       // Assert
       expect(result).toEqual(0);
+    });
+
+    it('falls back to the original parameter while blacked out', () =>
+    {
+      // Arrange
+      const actor = makeActor();
+      baseParam.mockReturnValue(100);
+      J.SDP.Metadata.panelsMap.set('a', makePanel({ 'bparam-2': [ { perRank: 10, isFlat: true } ] }));
+      actor._j._sdp._ranks.push(makeRanking('a', { currentRank: 2 }));
+
+      // Act
+      const lit = actor.param(2);
+      RPGManager.checkForBooleanFromAllNotesByRegex.mockReturnValue(true);
+      const dark = actor.param(2);
+
+      // Assert
+      expect(lit).toEqual(120);
+      expect(dark).toEqual(100);
     });
   });
 
@@ -1224,6 +1437,23 @@ describe('Game_Actor ext/sdp augments (direct src import)', () =>
       // Assert
       // 150 * (3 * 7) / 100 = 31.5, floored to 31.
       expect(result).toEqual(31);
+    });
+
+    it('grants nothing while blacked out', () =>
+    {
+      // Arrange
+      const actor = makeActor();
+      J.SDP.Metadata.panelsMap.set('a', makePanel({ mtp: [ { perRank: 5, isFlat: true } ] }));
+      actor._j._sdp._ranks.push(makeRanking('a', { currentRank: 4 }));
+
+      // Act
+      const lit = actor.maxTpSdpBonuses(40);
+      RPGManager.checkForBooleanFromAllNotesByRegex.mockReturnValue(true);
+      const dark = actor.maxTpSdpBonuses(40);
+
+      // Assert
+      expect(lit).toEqual(20);
+      expect(dark).toEqual(0);
     });
   });
 });

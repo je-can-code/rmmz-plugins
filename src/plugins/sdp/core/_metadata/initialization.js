@@ -71,6 +71,27 @@ J.SDP.RegExp = {
    */
   NoSdp: /<no: ?sdp>/i,
 
+  /**
+   * The declaration that switches off every panel an actor has ranked, for as long as the actor carries it.
+   * Ranks, points and unlocks are untouched, so nothing is lost: every bonus a panel grants (core parameters, ex- and
+   * sp-parameters, max TP, and every catalog key other plugins read) simply reads as nothing until the source is gone.
+   * Max HP, MP and TP shrink with the rest, so the engine trims the current values to fit as the source lands, and
+   * lifting it restores the maximums but never what was trimmed. Masteries are learned skills, not panels, and stay.
+   *
+   * <pre>
+   * Structure:
+   *  <sdpBlackout>
+   *
+   * Example:
+   *  <sdpBlackout>
+   *
+   * Translation:
+   *  While this is on the actor, none of their panels grants anything.
+   * </pre>
+   * @type {RegExp}
+   */
+  SdpBlackout: /<sdpBlackout>/i,
+
   // natural growth tags for sdr, bound to the parameter at boot.
   SdpRateBuffPlus: /<sdrBuffPlus:\[([+\-*/ ().\w]+)]>/gi,
   SdpRateBuffRate: /<sdrBuffRate:\[([+\-*/ ().\w]+)]>/gi,

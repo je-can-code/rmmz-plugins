@@ -99,6 +99,10 @@ describe('J-ABS-Formula Game_Action (unit, all downstream dependencies mocked)',
     action.subject = () => action._subject;
     action.item = () => action._item;
 
+    // J-ABS core's damage limits sit downstream of this ship, so here they let everything through.
+    action.applyDamageImmunity = (recipient, value) => value;
+    action.applyKillFloor = (recipient, value) => value;
+
     return Object.assign(action, overrides);
   }
 
@@ -663,6 +667,103 @@ describe('J-ABS-Formula Game_Action (unit, all downstream dependencies mocked)',
 
       // Assert
       expect(action.generateFormulaActionLogIfAvailable).toHaveBeenCalledWith(recipient, 10, 'hp', 42);
+    });
+
+    it('lets nothing land, pop or log when the limits hold a harmful packet to nothing', () =>
+    {
+      // Arrange
+      const action = buildAction();
+      action.evaluateFormula = () => 10;
+      action.pipeFormulaThroughBattleCalculations = () => 10;
+      action.limitFormulaPacketDamage = vi.fn(() => 0);
+      action.makeSuccess = vi.fn();
+      action.onFormulaResourceDelta = vi.fn();
+      action.generateFormulaActionLogIfAvailable = vi.fn();
+      const recipient = buildRecipient();
+
+      // Act
+      action.applyFormulaModePacket({ formula: 'a.atk', resource: 'hp' }, recipient);
+
+      // Assert
+      expect(action.limitFormulaPacketDamage).toHaveBeenCalledWith(recipient, 10, 'hp');
+      expect(recipient.gainHp).not.toHaveBeenCalled();
+      expect(action.makeSuccess).not.toHaveBeenCalled();
+      expect(action.onFormulaResourceDelta).not.toHaveBeenCalled();
+      expect(action.generateFormulaActionLogIfAvailable).not.toHaveBeenCalled();
+    });
+
+    it('never holds back a healing packet', () =>
+    {
+      // Arrange
+      const action = buildAction();
+      action.evaluateFormula = () => -6;
+      action.pipeFormulaThroughBattleCalculations = () => 6;
+      action.limitFormulaPacketDamage = vi.fn(() => 0);
+      action.makeSuccess = vi.fn();
+      action.onFormulaResourceDelta = vi.fn();
+      action.generateFormulaActionLogIfAvailable = vi.fn();
+      const recipient = buildRecipient();
+
+      // Act
+      action.applyFormulaModePacket({ formula: '-a.mat', resource: 'hp' }, recipient);
+
+      // Assert
+      expect(action.limitFormulaPacketDamage).not.toHaveBeenCalled();
+      expect(recipient.gainHp).toHaveBeenCalledWith(6);
+    });
+  });
+
+  describe('limitFormulaPacketDamage', () =>
+  {
+    it('lets a TP packet through untouched, consulting neither limit', () =>
+    {
+      // Arrange
+      const action = buildAction();
+      action.applyDamageImmunity = vi.fn(() => 0);
+      action.applyKillFloor = vi.fn(() => 0);
+      const recipient = { id: 'recipient' };
+
+      // Act
+      const result = action.limitFormulaPacketDamage(recipient, 9, 'tp');
+
+      // Assert
+      expect(result).toBe(9);
+      expect(action.applyDamageImmunity).not.toHaveBeenCalled();
+      expect(action.applyKillFloor).not.toHaveBeenCalled();
+    });
+
+    it('holds an MP packet to the damage immunity alone, since MP cannot kill', () =>
+    {
+      // Arrange
+      const action = buildAction();
+      action.applyDamageImmunity = vi.fn(() => 3);
+      action.applyKillFloor = vi.fn(() => 0);
+      const recipient = { id: 'recipient' };
+
+      // Act
+      const result = action.limitFormulaPacketDamage(recipient, 9, 'mp');
+
+      // Assert
+      expect(result).toBe(3);
+      expect(action.applyDamageImmunity).toHaveBeenCalledWith(recipient, 9);
+      expect(action.applyKillFloor).not.toHaveBeenCalled();
+    });
+
+    it('holds an HP packet to the damage immunity, then to the kill floor', () =>
+    {
+      // Arrange
+      const action = buildAction();
+      action.applyDamageImmunity = vi.fn(() => 12);
+      action.applyKillFloor = vi.fn(() => 5);
+      const recipient = { id: 'recipient' };
+
+      // Act
+      const result = action.limitFormulaPacketDamage(recipient, 20, 'hp');
+
+      // Assert
+      expect(result).toBe(5);
+      expect(action.applyDamageImmunity).toHaveBeenCalledWith(recipient, 20);
+      expect(action.applyKillFloor).toHaveBeenCalledWith(recipient, 12);
     });
   });
 

@@ -41,6 +41,7 @@ describe('JABS_AI (unit, all downstream dependencies mocked)', () =>
       this.setSkill = vi.fn((skillId) => { this._item = { skillId }; });
       this.isForAliveFriend = vi.fn(() => this._item?.isForAliveFriend ?? false);
       this.isForFriend = vi.fn(() => this._item?.isForFriend ?? true);
+      this.isForOpponent = vi.fn(() => this._item?.isForOpponent ?? true);
       this.isRecover = vi.fn(() => this._item?.isRecover ?? false);
       this.isHpEffect = vi.fn(() => this._item?.isHpEffect ?? false);
       this.isForUser = vi.fn(() => this._item?.isForUser ?? false);
@@ -469,41 +470,409 @@ describe('JABS_AI (unit, all downstream dependencies mocked)', () =>
     });
   });
 
-  describe('findMostElementallyEffectiveSkill()', () =>
+  describe('findMostElementallyEffectiveSkills()', () =>
   {
-    it('returns the list unfiltered when it has one or fewer entries', () =>
+    it('keeps every skill tied at the best rate, in order, and drops the rest', () =>
     {
+      // Arrange: two skills share the best rate, with a neutral skill before them and a resisted one between, so
+      // keeping only the first best, keeping everything, or keeping everything at least neutral all answer wrongly.
       const ai = new JABS_AI();
-
-      expect(ai.findMostElementallyEffectiveSkill([ 1 ], buildBattler(), buildBattler())).toEqual([ 1 ]);
-    });
-
-    it('returns an empty list untouched rather than reaching into it', () =>
-    {
-      // Arrange: a "careful" enemy runs the ineffective-skill filter before this one, and that
-      // filter can legitimately empty the list when every option is resisted. Without the count
-      // guard the sort result is indexed at [0][0] and the enemy's turn dies on a TypeError.
-      const ai = new JABS_AI();
-
-      // Act
-      const remaining = ai.findMostElementallyEffectiveSkill([], buildBattler(), buildBattler());
-
-      // Assert
-      expect(remaining).toEqual([]);
-    });
-
-    it('narrows to the single most elementally effective skill', () =>
-    {
-      const ai = new JABS_AI();
+      const ratesBySkill = { 1: 1, 2: 3, 3: 0.5, 4: 3 };
       GameActionMock.mockImplementation(function(battler)
       {
         this.battler = battler;
         this._skillId = null;
         this.setSkill = (id) => { this._skillId = id; };
-        this.calcElementRate = () => (this._skillId === 2 ? 2 : 1);
+        this.calcElementRate = () => ratesBySkill[this._skillId];
       });
 
-      expect(ai.findMostElementallyEffectiveSkill([ 1, 2, 3 ], buildBattler(), buildBattler())).toEqual([ 2 ]);
+      // Act
+      const best = ai.findMostElementallyEffectiveSkills([ 1, 2, 3, 4 ], buildBattler(), buildBattler());
+
+      // Assert
+      expect(best).toEqual([ 2, 4 ]);
+    });
+  });
+
+  describe('elementRateAgainst()', () =>
+  {
+    it('casts the skill from the user at the target and hands back the engine rate', () =>
+    {
+      // Arrange: the user and the target carry different battlers, and only the right skill cast the right way
+      // round reads the weakness; anything else reads neutral.
+      const ai = new JABS_AI();
+      const userBattler = { side: 'user' };
+      const targetBattler = { side: 'target' };
+      GameActionMock.mockImplementation(function(battler)
+      {
+        this.battler = battler;
+        this._skillId = null;
+        this.setSkill = (id) => { this._skillId = id; };
+        this.calcElementRate = against =>
+        {
+          const isRightWayRound = this.battler === userBattler && against === targetBattler;
+          return isRightWayRound && this._skillId === 12 ? 2.5 : 1;
+        };
+      });
+      const user = buildBattler({ getBattler: () => userBattler });
+      const target = buildBattler({ getBattler: () => targetBattler });
+
+      // Act
+      const rate = ai.elementRateAgainst(12, user, target);
+
+      // Assert
+      expect(rate).toBe(2.5);
+    });
+  });
+
+  describe('filterForExecutorSkills()', () =>
+  {
+    it('judges effectiveness by element, handing back exactly what that judgment picks', () =>
+    {
+      // Arrange
+      const ai = new JABS_AI();
+      const user = buildBattler();
+      const target = buildBattler();
+      const elementalSpy = vi.spyOn(ai, 'findMostElementallyEffectiveSkills').mockReturnValue([ 7 ]);
+
+      // Act
+      const result = ai.filterForExecutorSkills([ 1, 7 ], user, target);
+
+      // Assert
+      expect(result).toEqual([ 7 ]);
+      expect(elementalSpy).toHaveBeenCalledWith([ 1, 7 ], user, target);
+    });
+  });
+
+  describe('filterFollowUpOnlySkills()', () =>
+  {
+    it('drops the skills saved for a follow-up and keeps the rest', () =>
+    {
+      // Arrange
+      const ai = new JABS_AI();
+      const user = buildBattler({ getSkill: skillId => ({ jabsAiFollowUpOnly: skillId === 1 }) });
+
+      // Act
+      const result = ai.filterFollowUpOnlySkills(user, [ 1, 2 ]);
+
+      // Assert
+      expect(result).toEqual([ 2 ]);
+    });
+  });
+
+  describe('decideFollowUp()', () =>
+  {
+    /**
+     * Builds a user whose skills follow up on the given state ids: skill 1 on 12, skill 2 on 9, skill 3 on nothing.
+     * @returns {object}
+     */
+    function buildFollowUpUser()
+    {
+      const followUpStateIdsBySkill = {
+        1: [ 12 ],
+        2: [ 9 ],
+        3: [],
+      };
+      return buildBattler({ getSkill: skillId => ({ jabsAiFollowUpStateIds: followUpStateIdsBySkill[skillId] }) });
+    }
+
+    it('finds the skill that follows up on a state the target carries', () =>
+    {
+      // Arrange- the target carries 4 and 9; only skill 2 names either of them.
+      const ai = new JABS_AI();
+      const target = buildBattler({ getBattler: () => ({ states: () => [ { id: 4 }, { id: 9 } ] }) });
+
+      // Act
+      const result = ai.decideFollowUp(buildFollowUpUser(), target, [ 1, 2, 3 ]);
+
+      // Assert
+      expect(result).toBe(2);
+    });
+
+    it('finds nothing when no skill follows up on what the target carries', () =>
+    {
+      // Arrange
+      const ai = new JABS_AI();
+      const target = buildBattler({ getBattler: () => ({ states: () => [ { id: 7 } ] }) });
+
+      // Act
+      const result = ai.decideFollowUp(buildFollowUpUser(), target, [ 1, 2, 3 ]);
+
+      // Assert
+      expect(result).toBe(0);
+    });
+  });
+
+  describe('decideInterrupt()', () =>
+  {
+    /**
+     * Builds a user whose skills carry the given interrupt magnifiers, by skill id.
+     * @param {Object<number, number>} magnifiersBySkill The magnifier each skill id carries.
+     * @returns {object}
+     */
+    function buildInterruptUser(magnifiersBySkill)
+    {
+      return buildBattler({ getSkill: skillId => ({ jabsInterruptMagnifier: magnifiersBySkill[skillId] }) });
+    }
+
+    it('spends nothing on a cast that cannot be cut', () =>
+    {
+      // Arrange- a strong interrupt is on hand, so the target's rule is the only reason none is chosen.
+      const ai = new JABS_AI();
+      const user = buildInterruptUser({ 1: 200 });
+      const target = buildBattler({ isInterruptible: () => false });
+
+      // Act
+      const result = ai.decideInterrupt(user, target, [ 1 ]);
+
+      // Assert
+      expect(result).toBe(0);
+    });
+
+    it('picks the largest magnifier, the first of a tie', () =>
+    {
+      // Arrange
+      const ai = new JABS_AI();
+      const user = buildInterruptUser({
+        1: 0,
+        2: 150,
+        3: 200,
+        4: 200,
+      });
+      const target = buildBattler({ isInterruptible: () => true });
+
+      // Act
+      const result = ai.decideInterrupt(user, target, [ 1, 2, 3, 4 ]);
+
+      // Assert
+      expect(result).toBe(3);
+    });
+
+    it('finds nothing when no skill can interrupt', () =>
+    {
+      // Arrange
+      const ai = new JABS_AI();
+      const user = buildInterruptUser({
+        1: 0,
+        2: 0,
+      });
+      const target = buildBattler({ isInterruptible: () => true });
+
+      // Act
+      const result = ai.decideInterrupt(user, target, [ 1, 2 ]);
+
+      // Assert
+      expect(result).toBe(0);
+    });
+  });
+
+  describe('decideStrip()', () =>
+  {
+    /**
+     * Builds a user whose skill 1 removes state 4, skill 2 removes state 60 and skill 4 removes state 50, all at a full
+     * rate, and whose skill 3 purges every buff it lands on.
+     * @returns {object}
+     */
+    function buildStripUser()
+    {
+      const removedStateBySkill = {
+        1: 4,
+        2: 60,
+        4: 50,
+      };
+      const purgeBySkill = { 3: [ 'positive', false, 99 ] };
+      return buildBattler({
+        getSkill: skillId => ({
+          effects: [ { code: 22, dataId: removedStateBySkill[skillId], value1: 1 } ],
+          jabsPurgeStatesParams: purgeBySkill[skillId] ?? null,
+        }),
+      });
+    }
+
+    it('reaches for a skill that purges buffs before naming any one of them', () =>
+    {
+      // Arrange- skill 2 could strip state 60 by name, but the purger takes everything, so it wins.
+      const ai = new JABS_AI();
+      const target = buildBattler({
+        getBattler: () => ({
+          states: () => [
+            { id: 50, isNegativeType: () => false },
+            { id: 60, isNegativeType: () => false },
+          ],
+        }),
+      });
+
+      // Act
+      const result = ai.decideStrip(buildStripUser(), target, [ 1, 2, 3 ]);
+
+      // Assert
+      expect(result).toBe(3);
+    });
+
+    it('offers nothing to strip off a target with no buffs, purger or not', () =>
+    {
+      // Arrange- the purger is on hand, so only the missing buffs keep it from being chosen.
+      const ai = new JABS_AI();
+      const target = buildBattler({ getBattler: () => ({ states: () => [ { id: 4, isNegativeType: () => true } ] }) });
+
+      // Act
+      const result = ai.decideStrip(buildStripUser(), target, [ 3, 1 ]);
+
+      // Assert
+      expect(result).toBe(0);
+    });
+
+    it('strips the first positive state a skill can remove', () =>
+    {
+      // Arrange- 4 is negative and removable, 50 is positive with no remover, 60 is positive and removable.
+      const ai = new JABS_AI();
+      const target = buildBattler({
+        getBattler: () => ({
+          states: () => [
+            { id: 4, isNegativeType: () => true },
+            { id: 50, isNegativeType: () => false },
+            { id: 60, isNegativeType: () => false },
+          ],
+        }),
+      });
+
+      // Act
+      const result = ai.decideStrip(buildStripUser(), target, [ 1, 2 ]);
+
+      // Assert
+      expect(result).toBe(2);
+    });
+
+    it('strips nothing when no skill on hand removes the buff the target carries', () =>
+    {
+      // Arrange- state 50 is a buff, but skill 1 only removes state 4 and no purger is on hand.
+      const ai = new JABS_AI();
+      const target = buildBattler({ getBattler: () => ({ states: () => [ { id: 50, isNegativeType: () => false } ] }) });
+
+      // Act
+      const result = ai.decideStrip(buildStripUser(), target, [ 1 ]);
+
+      // Assert
+      expect(result).toBe(0);
+    });
+
+    it('strips nothing off a target carrying only what hurts it', () =>
+    {
+      // Arrange- skill 1 could remove state 4, but 4 is negative, so it is left alone.
+      const ai = new JABS_AI();
+      const target = buildBattler({ getBattler: () => ({ states: () => [ { id: 4, isNegativeType: () => true } ] }) });
+
+      // Act
+      const result = ai.decideStrip(buildStripUser(), target, [ 1, 2 ]);
+
+      // Assert
+      expect(result).toBe(0);
+    });
+
+    it('passes over a purge aimed at its own side, which would land on its allies instead', () =>
+    {
+      // Arrange- skill 3 purges every buff and would come first, but it is aimed at the user's own side.
+      const ai = new JABS_AI();
+      const target = buildBattler({ getBattler: () => ({ states: () => [ { id: 60, isNegativeType: () => false } ] }) });
+      GameActionMock.mockImplementation(function(battler)
+      {
+        this.battler = battler;
+        this.setSkill = skillId => { this.skillId = skillId; };
+        this.isForOpponent = () => this.skillId !== 3;
+      });
+
+      // Act
+      const result = ai.decideStrip(buildStripUser(), target, [ 3, 2 ]);
+
+      // Assert
+      expect(result).toBe(2);
+    });
+
+    it('passes over a remover aimed at its own side to the next buff one aimed at the target can strip', () =>
+    {
+      // Arrange- state 50 comes first, but only skill 4 removes it, and skill 4 is aimed at the user's own side.
+      const ai = new JABS_AI();
+      const target = buildBattler({
+        getBattler: () => ({
+          states: () => [
+            { id: 50, isNegativeType: () => false },
+            { id: 60, isNegativeType: () => false },
+          ],
+        }),
+      });
+      GameActionMock.mockImplementation(function(battler)
+      {
+        this.battler = battler;
+        this.setSkill = skillId => { this.skillId = skillId; };
+        this.isForOpponent = () => this.skillId !== 4;
+      });
+
+      // Act
+      const result = ai.decideStrip(buildStripUser(), target, [ 4, 2 ]);
+
+      // Assert
+      expect(result).toBe(2);
+    });
+  });
+
+  describe('findBuffPurger()', () =>
+  {
+    /**
+     * Builds a user whose skills carry the given `<purgeStates>` parameters, by skill id; a missing entry has no tag.
+     * @param {Object<number, Array>} purgeBySkill The purge parameters each skill id carries.
+     * @returns {object}
+     */
+    function buildPurgeUser(purgeBySkill)
+    {
+      return buildBattler({ getSkill: skillId => ({ jabsPurgeStatesParams: purgeBySkill[skillId] ?? null }) });
+    }
+
+    it('finds the skill purging positive states, past one with no tag and one purging only negatives', () =>
+    {
+      // Arrange
+      const ai = new JABS_AI();
+      const user = buildPurgeUser({
+        2: [ 'negative', false, 5 ],
+        3: [ 'positive', false, 99 ],
+      });
+
+      // Act
+      const result = ai.findBuffPurger(user, [ 1, 2, 3 ]);
+
+      // Assert
+      expect(result).toBe(3);
+    });
+
+    it('finds the skill purging every state', () =>
+    {
+      // Arrange
+      const ai = new JABS_AI();
+      const user = buildPurgeUser({
+        1: [ 'negative' ],
+        2: [ 'all' ],
+      });
+
+      // Act
+      const result = ai.findBuffPurger(user, [ 1, 2 ]);
+
+      // Assert
+      expect(result).toBe(2);
+    });
+
+    it('finds nothing when no purge takes buffs off', () =>
+    {
+      // Arrange- a purge left at its default polarity strips only negatives.
+      const ai = new JABS_AI();
+      const user = buildPurgeUser({
+        2: [ 'negative', false, 2 ],
+        3: [],
+      });
+
+      // Act
+      const result = ai.findBuffPurger(user, [ 1, 2, 3 ]);
+
+      // Assert
+      expect(result).toBe(0);
     });
   });
 
@@ -544,6 +913,70 @@ describe('JABS_AI (unit, all downstream dependencies mocked)', () =>
       });
 
       expect(ai.decideCleansing(user, [ 9 ])).toEqual(9);
+    });
+
+    it('never cleanses a positive state off an ally, even one a skill could remove', () =>
+    {
+      // Arrange- skill 9 removes state 5, so only the state's polarity keeps it from being chosen.
+      const ai = new JABS_AI();
+      const ally = { getBattler: () => ({ states: () => [ { id: 5, isNegativeType: () => false } ] }) };
+      const user = buildBattler({
+        getAllNearbyAllies: () => [ ally ],
+        getSkill: () => ({ effects: [ { code: 22, dataId: 5, value1: 0.5 } ] }),
+      });
+
+      // Act
+      const result = ai.decideCleansing(user, [ 9 ]);
+
+      // Assert
+      expect(result).toEqual(0);
+    });
+
+    it('passes over a negative state nothing can remove to one it can', () =>
+    {
+      // Arrange- state 2 comes first and has no remover; state 5 behind it does.
+      const ai = new JABS_AI();
+      const ally = {
+        getBattler: () => ({
+          states: () => [
+            { id: 2, isNegativeType: () => true },
+            { id: 5, isNegativeType: () => true },
+          ],
+        }),
+      };
+      const user = buildBattler({
+        getAllNearbyAllies: () => [ ally ],
+        getSkill: () => ({ effects: [ { code: 22, dataId: 5, value1: 0.5 } ] }),
+      });
+
+      // Act
+      const result = ai.decideCleansing(user, [ 9 ]);
+
+      // Assert
+      expect(result).toEqual(9);
+    });
+
+    it('passes over a remover aimed at the opposition, which would land on the target instead', () =>
+    {
+      // Arrange- skill 8 removes state 5 more reliably than skill 9, but it is aimed at the opposition.
+      const ai = new JABS_AI();
+      const ally = { getBattler: () => ({ states: () => [ { id: 5, isNegativeType: () => true } ] }) };
+      const user = buildBattler({
+        getAllNearbyAllies: () => [ ally ],
+        getSkill: skillId => ({ effects: [ { code: 22, dataId: 5, value1: skillId === 8 ? 1 : 0.5 } ] }),
+      });
+      GameActionMock.mockImplementation(function(battler)
+      {
+        this.battler = battler;
+        this.setSkill = skillId => { this.skillId = skillId; };
+        this.isForFriend = () => this.skillId !== 8;
+      });
+
+      // Act
+      const result = ai.decideCleansing(user, [ 8, 9 ]);
+
+      // Assert
+      expect(result).toEqual(9);
     });
   });
 
@@ -1111,12 +1544,12 @@ describe('JABS_AI (unit, all downstream dependencies mocked)', () =>
 
   describe('determineBestSkillForStateCleansing()', () =>
   {
-    it('returns null when no skill cleanses the given state', () =>
+    it('returns 0 when no skill cleanses the given state', () =>
     {
       const ai = new JABS_AI();
       const healer = buildBattler({ getSkill: () => ({ effects: [] }) });
 
-      expect(ai.determineBestSkillForStateCleansing([ 1 ], 5, healer)).toBeNull();
+      expect(ai.determineBestSkillForStateCleansing([ 1 ], 5, healer)).toBe(0);
     });
 
     it('picks the skill with the highest cleanse rate for the state', () =>
@@ -1174,7 +1607,7 @@ describe('JABS_AI (unit, all downstream dependencies mocked)', () =>
       expect(bestSkill).toEqual(1);
     });
 
-    it('returns null when every effect matches only half the predicate', () =>
+    it('returns 0 when every effect matches only half the predicate', () =>
     {
       // Arrange: nothing here removes state 5, so there is no cleansing skill to nominate.
       const ai = new JABS_AI();
@@ -1195,7 +1628,7 @@ describe('JABS_AI (unit, all downstream dependencies mocked)', () =>
       const bestSkill = ai.determineBestSkillForStateCleansing([ 1 ], 5, healer);
 
       // Assert
-      expect(bestSkill).toBeNull();
+      expect(bestSkill).toBe(0);
     });
   });
 

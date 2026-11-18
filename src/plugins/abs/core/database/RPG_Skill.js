@@ -554,6 +554,30 @@ Object.defineProperty(RPG_Skill.prototype, 'jabsAiSkillExclusion', {
 });
 
 /**
+ * The ids of the states this skill follows up on, from `<aiFollowUp:[STATE_IDS]>`. While a tactical enemy AI's target
+ * carries one of them, the AI casts this skill before anything else. Empty when it follows up on nothing.
+ * @type {number[]}
+ */
+Object.defineProperty(RPG_Skill.prototype, 'jabsAiFollowUpStateIds', {
+  get: function()
+  {
+    return RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.AiFollowUp);
+  },
+});
+
+/**
+ * Whether an enemy AI saves this skill for its follow-up, from `<aiFollowUpOnly>`: it is never chosen in an ordinary
+ * decision or as an interrupt, only as a follow-up.
+ * @type {boolean}
+ */
+Object.defineProperty(RPG_Skill.prototype, 'jabsAiFollowUpOnly', {
+  get: function()
+  {
+    return RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.RegExp.AiFollowUpOnly);
+  },
+});
+
+/**
  * The JABS combo skill id that this skill can lead into if the skill is learned
  * by the caster.
  * @type {number|null}

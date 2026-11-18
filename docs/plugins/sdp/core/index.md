@@ -13,6 +13,7 @@
 * [SDP Unlock](notetags/sdp-unlock.md) - The tag making an item unlock an SDP upon use, in addition to whatever else it does.
 * [SDP Points (Enemies Only)](notetags/sdp-points-enemies-only.md) - The tag defining how many SDP points the party gains from defeating an enemy.
 * [No SDP](notetags/no-sdp.md) - The tag letting an enemy refuse the SDP points it would pay on defeat.
+* [SDP Blackout](notetags/sdp-blackout.md) - The tag switching off every panel an actor has ranked while the actor carries it.
 * [SDP Multipliers](notetags/sdp-multipliers.md) - The tag for modifying the rate at which SDP points are gained.
 * [SDP Bonus Formula](notetags/sdp-bonus-formula.md) - The tag scaling the SDP points an actor gains by a formula, applied after the sdpMultiplier step.
 * [Natural Growth](notetags/natural-growth.md) - The integration details with the J-NaturalGrowth plugin.

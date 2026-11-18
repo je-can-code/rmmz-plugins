@@ -1447,6 +1447,21 @@ Game_Actor.prototype.getBonusHitsSources = function()
 
 //region map effects
 /**
+ * Extends {@link #executeFloorDamage}.<br/>
+ * An actor that takes no damage walks damage floors unharmed, so the floor neither hurts nor flashes.
+ */
+J.ABS.Aliased.Game_Actor.set('executeFloorDamage', Game_Actor.prototype.executeFloorDamage);
+Game_Actor.prototype.executeFloorDamage = function()
+{
+  // an actor that takes no damage walks damage floors unharmed.
+  if (this.isImmuneToDamage()) return;
+
+  // perform original logic.
+  J.ABS.Aliased.Game_Actor.get('executeFloorDamage')
+    .call(this);
+};
+
+/**
  * Replaces the map damage with JABS' version of the map damage.
  */
 J.ABS.Aliased.Game_Actor.set('performMapDamage', Game_Actor.prototype.performMapDamage);

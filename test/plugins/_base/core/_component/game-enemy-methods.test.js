@@ -37,7 +37,7 @@ describe('J-Base Game_Enemy methods (direct src import)', () =>
   {
     const enemy = Object.create(globalThis.Game_Enemy.prototype);
     enemy._enemyId = 1;
-    enemy._j = { _base: { _cachedTraitObjects: null } };
+    enemy._j = { _base: { _cachedTraitObjects: null, _learnedActions: [] } };
     return enemy;
   }
 
@@ -261,9 +261,10 @@ describe('J-Base Game_Enemy methods (direct src import)', () =>
       // Assert
       expect(result).toBe(false);
       expect(actions).toHaveLength(0);
+      expect(enemy.learnedActions()).toHaveLength(0);
     });
 
-    it('adds a new rating-5 action and returns true when the skill was not already known', () =>
+    it('adds a new rating-5 action to what this enemy learned, never to its database entry, and returns true', () =>
     {
       // Arrange
       const enemy = buildEnemy();
@@ -274,9 +275,10 @@ describe('J-Base Game_Enemy methods (direct src import)', () =>
       // Act
       const result = enemy.learnSkill(5);
 
-      // Assert
+      // Assert: the entry is shared by every enemy of this id, so it must come through untouched.
       expect(result).toBe(true);
-      expect(actions).toEqual([
+      expect(actions).toHaveLength(0);
+      expect(enemy.learnedActions()).toEqual([
         { conditionParam1: 0, conditionParam2: 0, conditionType: 0, rating: 5, skillId: 5 },
       ]);
     });

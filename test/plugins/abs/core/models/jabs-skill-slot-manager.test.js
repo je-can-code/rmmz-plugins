@@ -78,7 +78,7 @@ describe('JABS_SkillSlotManager (direct src import)', () =>
     return {
       isActor: () => false,
       isEnemy: () => true,
-      databaseData: () => ({ actions: [ { skillId: 10 }, { skillId: 11 } ] }),
+      enemyActions: () => [ { skillId: 10 }, { skillId: 11 } ],
       basicAttackSkillId: () => 0,
       skill: id => ({ id, name: `Skill${id}` }),
       ...overrides,
@@ -147,11 +147,29 @@ describe('JABS_SkillSlotManager (direct src import)', () =>
     {
       const manager = new JABS_SkillSlotManager();
       manager.setupSlots(buildEnemy({
-        databaseData: () => ({ actions: [ { skillId: 10 }, { skillId: 10 } ] }),
+        enemyActions: () => [ { skillId: 10 }, { skillId: 10 } ],
       }));
 
       // gcd + dodge + offhand + 1 unique skill = 4 slots.
       expect(manager.getAllSlots()).toHaveLength(4);
+    });
+
+    it('gives a skill the enemy learned in the field a slot, though its database entry never lists it', () =>
+    {
+      // Arrange: the database entry knows only skill 10; this enemy has since learned skill 12.
+      const manager = new JABS_SkillSlotManager();
+      const enemy = buildEnemy({
+        databaseData: () => ({ actions: [ { skillId: 10 } ] }),
+        enemyActions: () => [ { skillId: 10 }, { skillId: 12 } ],
+      });
+
+      // Act
+      manager.setupSlots(enemy);
+
+      // Assert
+      const slottedSkillIds = manager.getAllSlots()
+        .map(slot => slot.id);
+      expect(slottedSkillIds).toContain(12);
     });
 
     it('assigns the first dodge-classified skill to the dodge slot', () =>

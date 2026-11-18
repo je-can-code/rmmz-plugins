@@ -1137,6 +1137,12 @@ Victims may parry and retaliate normally. The payload skill owns its own radius,
 formula. Do not tag the payload skill itself with `<autoExecuteSkill>` (depth-guarded, but still —
 don't).
 
+A payload with a `<castTime>` winds up first. It takes its bearer's cast slot, so the map paints its
+telegraph and counts the windup down exactly as for any cast, and it fires the moment the windup ends,
+still with no cost and no cooldown. A bearer already deciding or casting something keeps it and skips
+that firing; a timed or proximity rule tries again on the next frame, while an event-driven one (a hit,
+a kill) lets that event pass.
+
 ```
 <autoExecuteSkill:[1022, enemiesNearby, 1, 60]>
 <autoExecuteSkill:[1023, enemiesNearbyBelow, 1, 60, 1]>
@@ -2045,15 +2051,21 @@ Enemy events, Enemies (database default)
 always (shapes skill selection every decision)
 
 **Effect:**
-tunes how this enemy chooses and uses skills. TRAIT is one of: `careful` (avoids elementally
-ineffective skills, generally smarter), `executor` (maximizes damage, targets weak spots),
-`reckless` (never basic-attacks, spams learned skills), `healer` (prioritizes healing nearby
-allies), `cleanser` (removes negative states from allies), `buffer` (applies positive states to
-allies before attacking), `tactical` (repositions to optimal range before using a skill), or
-`berserker` (goes all-out below an HP threshold, ignoring range/cooldown/efficiency). Multiple
-traits can stack on one enemy; careful/reckless amplify the judgment of other traits when
-combined. `follower`/`leader` are also accepted as backward-compatible aliases for the AI ROLE
-tags below.
+tunes how this enemy chooses and uses skills. TRAIT is one of: `careful` (drops skills its target
+resists, and first strips a positive state off its target when one of its skills aimed at the
+opposition can remove it, a skill that purges buffs wholesale through `<purgeStates>` before any other),
+`executor` (picks the skill most effective against its target, evenly among skills equally effective;
+with J-ABS-Shield, first a skill that bypasses shields or bites into them while its target has a shield
+up), `reckless` (never
+basic-attacks, spams learned skills), `healer` (prioritizes healing nearby allies), `cleanser`
+(removes negative states from allies with skills aimed at its own side), `buffer` (applies positive states to allies before
+attacking), `tactical` (prefers skills that apply states, unless it is also an executor, whose
+equally effective picks stay even; before anything else it casts a skill that follows up on a state
+its target carries, see `<aiFollowUp>`, then a skill that cuts its target's cast when that cast can
+be cut), or `berserker` (goes all-out below an HP threshold,
+ignoring range/cooldown/efficiency). Multiple traits can stack on one enemy; careful/reckless
+amplify the judgment of other traits when combined. `follower`/`leader` are also accepted as
+backward-compatible aliases for the AI ROLE tags below.
 
 ```
 <aiTrait:careful>
@@ -2062,7 +2074,7 @@ tags below.
 A careful healer: avoids bad elemental matchups and picks the best-fit heal for the situation
 rather than just the strongest one.
 
-**See also:** `<aiRole:...>`
+**See also:** `<aiRole:...>`, `<aiFollowUp>`
 
 ---
 
@@ -2872,6 +2884,34 @@ An AI-usable opener that makes skill 5 pressable after 8 frames, auto-clearing a
 
 ---
 
+### `<aiFollowUp:[STATE_IDS]>` / `<aiFollowUpOnly>`
+
+**Applies to:**
+Skills
+
+**When:**
+an enemy AI with the `tactical` trait deciding its next action
+
+**Effect:**
+`aiFollowUp` names the states a skill follows up on: while its target carries one of them, a
+tactical enemy casts this skill before anything but a combo already under way, ahead of interrupts,
+support and ordinary picks. That is how a boss reads a combo off the field: one battler lays a
+state, another cashes it in. `aiFollowUpOnly` makes an enemy save the skill for that moment: it
+never comes up in an ordinary decision or as an interrupt, so it is never on cooldown when the
+moment arrives, though a skill whose `<combo>` names it still chains into it. Unlike
+`<aiSkillExclusion>`, a saved skill stays in the AI's pool. A skill saved this way on an enemy
+without the tactical trait is cast only through such a combo. Ally AI does not read either tag.
+
+```
+<aiFollowUp:[2090]>
+<aiFollowUpOnly>
+```
+This skill is cast only as a follow-up, and first, whenever its caster's target carries state 2090.
+
+**See also:** `<aiTrait>`, `<aiSkillExclusion>`
+
+---
+
 ### `<guard:[FLAT, PERCENT]>` / `<parry:VAL>`
 
 **Applies to:**
@@ -2881,7 +2921,7 @@ Skills, Items with the configured "Guard Skill Type"
 while guarding is held (guard) / in the window right after guard is raised (parry)
 
 **Effect:**
-`guard` reduces incoming damage by FLAT (applied first) then PERCENT (both usually negative).
+`guard` reduces incoming damage by PERCENT (applied first), then FLAT (both usually negative).
 `parry` opens a VAL-frame "just guard" window that fully mitigates one incoming hit — window opens
 when guarding starts and counts down; a successful parry stops guarding entirely (re-press to
 parry again). Explicit parry (this tag) is distinct from JABS's implicit/passive parry
@@ -2891,7 +2931,7 @@ parry again). Explicit parry (this tag) is distinct from JABS's implicit/passive
 <guard:[-10, -25]>
 <parry:12>
 ```
-Guarding cuts 10 flat damage then 25% off the remainder; the first 12 frames of guard are a full
+Guarding cuts 25% off, then 10 flat damage off the remainder; the first 12 frames of guard are a full
 parry window.
 
 **See also:** `<unparryable>`, `<per>`, `<ignoreParry>`
@@ -2908,8 +2948,9 @@ a hit is guarded or parried
 
 **Effect:**
 fires SKILL back at CHANCE percent per guarded/parried hit. If both are available on the same
-hit, counter-parry takes precedence over counter-guard. `unparryable` makes a skill impossible to
-parry under any circumstance, regardless of the defender's parry window.
+hit, counter-parry takes precedence over counter-guard. `unparryable` turns off implicit (passive)
+parry for a skill, so the defender's pressure roll never parries it outright or turns it into a
+glancing blow; a timed `<parry>` window still negates it, and a held `<guard>` still reduces it.
 
 ```
 <counterParry:[7, 100]>
@@ -3016,7 +3057,8 @@ This battler's attacks always bypass 25% of the defender's guard pressure.
 ```
 <thisIgnoreParry:100>
 ```
-This particular skill bypasses guard entirely; the battler's other skills are unaffected.
+This particular skill ignores all of the defender's guard pressure, so it is never passively parried;
+a held guard and a timed parry still work against it, and the battler's other skills are unaffected.
 
 **See also:** `<guard>`/`<parry>`, `<unparryable>`, `<per>`
 
@@ -4003,6 +4045,74 @@ type classifier (`1 - 50/100 = 0.5`).
 ```
 Less resistant: increases the application chance of any `<type:negative>`-tagged state by 50%
 (`1 - (-50)/100 = 1.5`) — this battler is easier to afflict with ailments, not harder.
+
+---
+
+### `<noDamage>`
+
+**Applies to:**
+Actors, Classes, Enemies, Weapons, Armors, States, Skills (any of the battler's own note sources; a
+skill counts while the battler knows it)
+
+**When:**
+anything would harm this battler's HP or MP
+
+**Effect:**
+the battler takes no damage, whatever its type and wherever it comes from. That covers hits and drains
+on HP or MP, J-ABS-Formula packets, damage over time, natural regeneration run below zero, damage floors,
+and Recover HP/MP effects written below zero. A hit is held back as its final number, after every
+multiplier, so it reaches shields and drains as 0. A shield loses nothing, a drain takes nothing, and no
+on-damage reaction fires. A held-back damage-over-time tick doesn't land, doesn't pop up, and isn't
+recorded as the last thing that hit the battler. Healing still lands. The tag doesn't stop states from
+applying: a poison still goes on, it just ticks for nothing. Things that aren't damage still go through:
+skill costs, TP loss, event commands that set HP or MP, and the death state, which `<immuneToAll>` blocks.
+
+```
+<noDamage>
+```
+On a state: while it's applied, the battler can be healed but never hurt.
+
+**See also:** `<immuneToAll>`, `<noSelfKill>` / `<noTargetKill>`
+
+---
+
+### `<noSelfKill>` / `<thisNoSelfKill>` / `<noTargetKill>` / `<thisNoTargetKill>`
+
+**Applies to:**
+`noSelfKill`/`noTargetKill`: Actors, Classes, Enemies, Weapons, Armors, States, Skills (the CASTER's own
+note sources; a skill counts while the battler knows it). `thisNoSelfKill`/`thisNoTargetKill`: Skills
+(only while that skill is the one being cast)
+
+**When:**
+a skill cast by the tagged battler would take HP to 0
+
+**Effect:**
+the blow stops one HP short of killing. The self floor covers the caster hitting itself. The target floor
+covers the caster hitting an opponent, decided by team, like a False Swipe. An ally caught by friendly
+fire is covered by neither and can still die. The floor holds a skill's damage and its J-ABS-Formula
+packets. It applies after every multiplier and after shields have absorbed their share. A target already
+at 1 HP takes nothing, and one at a fraction above 1 keeps that fraction. Damage over time, skill costs,
+a Recover HP effect written below zero, and the death state are not held back.
+
+| Variant | Read from | Spares |
+|---|---|---|
+| `<noSelfKill>` | the caster's notes | the caster, from everything it casts |
+| `<thisNoSelfKill>` | the skill's own note | the caster, from this skill |
+| `<noTargetKill>` | the caster's notes | opponents, from everything it casts |
+| `<thisNoTargetKill>` | the skill's own note | opponents, from this skill |
+
+```
+<noSelfKill>
+```
+On an enemy whose pulse hits itself as well as the party: the pulse can bring it down to 1 HP, but the
+last blow has to come from someone else.
+
+```
+<thisNoTargetKill>
+```
+On a skill: it can leave an opponent at 1 HP but never kills it.
+
+**See also:** `<noDamage>`, `<immuneToAll>`
 
 ---
 
@@ -7648,6 +7758,31 @@ Multiple tags across sources sum their bonus fractions together before the final
 <sdpBonusFormula:[a.getMasteryCount() * 0.01]>
 ```
 An actor with 20 mastered subgroups gains an extra 20% SDP points on top of `<sdpMultiplier>`.
+
+**See also:** `<sdpMultiplier>`
+
+---
+
+### `<sdpBlackout>`
+
+**Applies to:**
+Actors, Classes, Weapons, Armors, States (any of the actor's own note sources; in practice a state)
+
+**When:**
+for as long as the actor carries it
+
+**Effect:**
+switches off every panel the actor has ranked: no core parameter, ex- or sp-parameter, max TP or catalog-key
+bonus (critical damage, drops, shields, resources, proficiency, AP, SDP gain) is granted until the source is gone.
+Ranks, points and unlocks are untouched, so nothing is lost, and ranking up during a blackout still works; the new
+rank lights up with the rest. Max HP, MP and TP shrink with everything else, so the engine trims the current values
+to fit as the source lands, and lifting it restores the maximums but never what was trimmed. Masteries are learned
+skills rather than panels, and stay.
+
+```
+<sdpBlackout>
+```
+On a 15-second state, the afflicted actor fights on their base stats alone for those 15 seconds.
 
 **See also:** `<sdpMultiplier>`
 

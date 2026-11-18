@@ -30,9 +30,9 @@ describe('J-ABS-Poses JABS_Battler (unit, all downstream dependencies mocked)', 
     // $jabsEngine is a bare RMMZ-style singleton global; only canUpdatePoses reaches for it.
     globalThis.$jabsEngine = { absEnabled: true };
 
-    // ImageManager/Utils are bare RMMZ singleton globals; only tryStartPose reaches for them.
+    // ImageManager is a bare RMMZ singleton global; only tryStartPose reaches for it. Utils is deliberately absent:
+    // the pose sheet's disk check uses the literal file name, and an encodeURI creeping back would throw here.
     globalThis.ImageManager = { loadCharacter: vi.fn() };
-    globalThis.Utils = { encodeURI: (name) => name };
 
     // JABS_Battler.prototype.<method> is aliased ("original") before this file overwrites each;
     // stub each with a bare mock rather than pulling in the real JABS_Battler chain.
@@ -335,6 +335,22 @@ describe('J-ABS-Poses JABS_Battler (unit, all downstream dependencies mocked)', 
       // Assert
       expect(globalThis.ImageManager.loadCharacter).not.toHaveBeenCalled();
       expect(battler.getCharacter().setImage).not.toHaveBeenCalled();
+    });
+
+    it('checks the disk for a one-character sheet\'s pose by its literal file name', () =>
+    {
+      // Arrange
+      const battler = buildBattler();
+      battler.getCharacter()._characterName = '$chara_je';
+      globalThis.J.ABS.EXT.POSES.Helpers.gameAssetExists.mockReturnValue(true);
+      const skill = { jabsPoseDuration: 25, jabsPoseSuffix: '-grd', jabsPoseIndex: 0 };
+
+      // Act
+      battler.tryStartPose(skill);
+
+      // Assert
+      expect(globalThis.J.ABS.EXT.POSES.Helpers.gameAssetExists).toHaveBeenCalledWith('img/characters/$chara_je-grd.png');
+      expect(battler.getCharacter().setImage).toHaveBeenCalledWith('$chara_je-grd', 0);
     });
   });
 

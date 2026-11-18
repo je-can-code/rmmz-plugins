@@ -11,7 +11,7 @@ globalThis.J ||= {};
 (() =>
 {
   // Check to ensure we have the minimum required version of the J-Base plugin.
-  const requiredBaseVersion = '4.2.0';
+  const requiredBaseVersion = '4.4.0';
   const hasBaseRequirement = J.BASE.Helpers.satisfies(J.BASE.Metadata.Version, requiredBaseVersion);
   if (!hasBaseRequirement)
   {
@@ -499,6 +499,44 @@ J.ABS.RegExp = {
   ComboAction: /<combo:[ ]?(\[\d+(?:,[ ]?\d+){0,2}])>/gi,
   ComboStarter: /<comboStarter>/gi,
   AiSkillExclusion: /<aiSkillExclusion>/gi,
+
+  /**
+   * The states a skill follows up on. While its target carries one of them, an enemy AI with the tactical trait casts
+   * this skill before anything else, which is how a boss reads a combo off the field: one battler lays a state,
+   * another cashes it in. Ally AI does not read it.
+   *
+   * <pre>
+   * Structure:
+   *  <aiFollowUp:[STATE_IDS]>
+   *
+   * Example:
+   *  <aiFollowUp:[2090, 4]>
+   *
+   * Translation:
+   *  While its target carries state 2090 or state 4, a tactical enemy casts this first.
+   * </pre>
+   * @type {RegExp}
+   */
+  AiFollowUp: /<aiFollowUp:[ ]?(\[[\d, ]+])>/i,
+
+  /**
+   * The declaration that an enemy AI saves a skill for its follow-up: it never comes up in an ordinary decision or as
+   * an interrupt, only when its target carries a state it follows up on, so it is never on cooldown when that moment
+   * arrives. Unlike `<aiSkillExclusion>`, the skill stays in the AI's pool. Ally AI does not read it.
+   *
+   * <pre>
+   * Structure:
+   *  <aiFollowUpOnly>
+   *
+   * Example:
+   *  <aiFollowUpOnly>
+   *
+   * Translation:
+   *  An enemy casts this only as a follow-up.
+   * </pre>
+   * @type {RegExp}
+   */
+  AiFollowUpOnly: /<aiFollowUpOnly>/i,
   FreeCombo: /<freeCombo>/gi,
 
   // learning-related
@@ -814,6 +852,17 @@ J.ABS.RegExp = {
 
   // casting/channeling interruption immunity, read from all of a battler's own note sources.
   CannotBeInterrupted: /<cannotBeInterrupted>/i,
+
+  // damage immunity, read from all of a battler's own note sources: no harm lowers its HP or MP.
+  NoDamage: /<noDamage>/i,
+
+  // kill floors, read from all of a battler's own note sources: what it casts stops one HP short of
+  // killing itself (self) or an opponent (target). The "this" forms are skill-scoped, read from the
+  // executing skill's own note only.
+  NoSelfKill: /<noSelfKill>/i,
+  ThisNoSelfKill: /<thisNoSelfKill>/i,
+  NoTargetKill: /<noTargetKill>/i,
+  ThisNoTargetKill: /<thisNoTargetKill>/i,
 
   // function-related.
   ReapplyType: /<stackType:[ ]?(refresh|extend|stack)>/gi,

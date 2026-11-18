@@ -3,7 +3,7 @@ type: overview
 title: The Plugin Overview
 description: The general overview for what this plugin is about along with the when and how you might use it.
 tags: [sdp, overview]
-version: "4.9.0"
+version: "4.10.0"
 ---
 
 # Overview
@@ -46,6 +46,8 @@ In order to rank up these SDPs, you'll need to use SDP points. These can be acqu
   [No SDP](notetags/no-sdp.md)).
 - SDP points are stored and spent on a per-actor basis.
 - SDP points for an actor cannot be reduced below 0.
+- A state (or any note source) carrying `<sdpBlackout>` switches an actor's panels off without costing a rank (see
+  [SDP Blackout](notetags/sdp-blackout.md)).
 - Stat Distribution Panels are unlocked for all members of the party.
 - Stat Distribution Panel rewards can unlock other panels.
 

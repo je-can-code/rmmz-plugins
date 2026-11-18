@@ -29,6 +29,10 @@ Damage path (positive results):
 - Native guard
 - Variance
 - JABS guard/parry reductions
+- J-ABS's damage limits, last: a recipient carrying `<noDamage>` loses no HP or MP to the packet, and an HP packet
+  stops one HP short of killing the caster itself under `<noSelfKill>`, or an opponent under `<noTargetKill>` (or
+  their `this` forms on the parent skill). An ally caught by the packet is covered by neither. A packet held to nothing
+  shows no popup and writes no log. TP packets answer to neither, since draining TP isn't damage.
 
 Healing path (negative results turned positive internally):
 

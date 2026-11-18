@@ -200,7 +200,13 @@ Game_Action.prototype.applyFormulaModePacket = function(effect, recipient)
 
   // finalize and apply by resource.
   // enforce non-negative integer.
-  const mag = Math.max(0, Math.round(piped));
+  const rounded = Math.max(0, Math.round(piped));
+
+  // a harmful packet answers to the same limits a hit does.
+  const mag = isDamage
+    ? this.limitFormulaPacketDamage(recipient, rounded, effect.resource)
+    : rounded;
+
   // no net impact.
   if (mag === 0) return;
 
@@ -273,6 +279,32 @@ Game_Action.prototype.applyFormulaModePacket = function(effect, recipient)
   r.reduced = snapshot.reduced;
   r.physical = snapshot.physical;
   r.drain = snapshot.drain;
+};
+
+/**
+ * Holds back a harmful packet the way J-ABS holds back a hit.<br/>
+ * A recipient that takes no damage loses no HP or MP to it ({@link Game_Action#applyDamageImmunity}),
+ * and a packet barred from killing its recipient stops one HP short of it
+ * ({@link Game_Action#applyKillFloor}). Draining TP isn't damage, so a TP packet lands untouched, and
+ * MP can't kill anyone, so only HP answers to the kill floors.
+ * @param {Game_Battler} recipient The recipient.
+ * @param {number} magnitude The packet's damage, already through the battle pipeline.
+ * @param {"hp"|"mp"|"tp"} resource The resource this packet targets.
+ * @returns {number} The damage the packet may actually deal.
+ */
+Game_Action.prototype.limitFormulaPacketDamage = function(recipient, magnitude, resource)
+{
+  // draining TP isn't damage, so it lands untouched.
+  if (resource === FormulaEffect.Resource.TP) return magnitude;
+
+  // a recipient that takes no damage loses none of its HP or MP.
+  const unharmedMagnitude = this.applyDamageImmunity(recipient, magnitude);
+
+  // MP can't kill anyone, so it answers to nothing more.
+  if (resource === FormulaEffect.Resource.MP) return unharmedMagnitude;
+
+  // HP stops one short when this packet is barred from killing its recipient.
+  return this.applyKillFloor(recipient, unharmedMagnitude);
 };
 
 /**

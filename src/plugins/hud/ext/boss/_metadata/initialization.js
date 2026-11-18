@@ -52,6 +52,8 @@ J.HUD.EXT.BOSS.Metadata = new JHudBoss_PluginMetadata(__PLUGIN_NAME__, __PLUGIN_
  * A collection of all aliased methods for this plugin.
  */
 J.HUD.EXT.BOSS.Aliased = {};
+J.HUD.EXT.BOSS.Aliased.DataManager = new Map();
+J.HUD.EXT.BOSS.Aliased.Game_Map = new Map();
 J.HUD.EXT.BOSS.Aliased.Hud_Manager = new Map();
 J.HUD.EXT.BOSS.Aliased.JABS_Battler = new Map();
 J.HUD.EXT.BOSS.Aliased.Scene_Map = new Map();

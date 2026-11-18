@@ -3843,22 +3843,12 @@ class JABS_Engine
    */
   checkInterrupt(action, target)
   {
-    // only a target currently casting/channeling has anything to interrupt.
-    if (!target.isCastingOrChanneling()) return;
-
     // the attacking skill must actually carry interrupt capability.
     const magnifier = action.getBaseSkill().jabsInterruptMagnifier;
     if (!magnifier) return;
 
-    // a skill-specific immunity on the interrupted skill itself takes priority.
-    const decidedActions = target.getDecidedAction();
-    const interruptedSkill = decidedActions
-      ? decidedActions.at(0).getBaseSkill()
-      : null;
-    if (interruptedSkill && interruptedSkill.jabsThisCannotBeInterrupted) return;
-
-    // battler-wide immunity, sourced from any of the target's own note sources.
-    if (target.getBattler().isImmuneToInterrupt()) return;
+    // the target has to be mid-cast, with nothing making that cast immune.
+    if (target.isInterruptible() === false) return;
 
     target.interrupt(magnifier, false);
   }
@@ -4890,6 +4880,16 @@ class JABS_Engine
     const gameAction = jabsAction.getAction();
     const casterJabsBattler = jabsAction.getCaster();
 
+    // self-targeting takes FIRST PRIORITY, and skips every check below on purpose. A user-scope skill has exactly one
+    // possible target, so there is nothing to search for: the search below picks among the battlers it finds and
+    // answers with whoever it meets first, which for a self-scope skill is only ever right by accident. Nor does the
+    // caster's own targetability matter- a battler nobody else can touch can still heal or buff itself.
+    if (gameAction.isForUser())
+    {
+      // return only the caster as the target.
+      return [ casterJabsBattler ];
+    }
+
     // grab the allied target selected by the caster of this action.
     const allyTarget = casterJabsBattler.getAllyTarget();
 
@@ -5037,15 +5037,6 @@ class JABS_Engine
           }
 
           // stop processing for this battler either way.
-          return;
-        }
-
-        // non-spatial direct actions use proximity between caster and target.
-        if (gameAction.isForUser())
-        {
-          // self-targeting direct actions always hit the target candidate.
-          targetsHit.push(battler);
-          hitOne = true;
           return;
         }
 

@@ -3,6 +3,7 @@ import './_metadata/initialization.js';
 import './_models/JABS_Shield.js';
 import './_models/JABS_State.js';
 import './_models/JABS_StateBuilder.js';
+import './_models/JABS_AI.js';
 import './database/RPG_UsableItem.js';
 import './managers/ColorManager.js';
 import './managers/TextManager.js';

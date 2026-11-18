@@ -1,5 +1,6 @@
 //region Game_Actor
 import PanelRanking from '../models/PanelRanking.js';
+import SdpBlackoutCache from '../managers/SdpBlackoutCache.js';
 
 /**
  * Extends {@link #initMembers}.<br/>
@@ -94,6 +95,77 @@ Game_Actor.prototype.getSdpByKey = function(key)
 Game_Actor.prototype.getAllSdpRankings = function()
 {
   return this._j._sdp._ranks;
+};
+
+/**
+ * Whether this actor's panels are switched off right now, through `<sdpBlackout>` on any of its own note sources
+ * (in practice a state, such as a boss's scramble).<br/>
+ * A blacked-out actor keeps every rank, point and unlock; the panels simply grant nothing until the source is gone.
+ * Every panel bonus asks this on every parameter read, so it answers from the reading {@link #onBattlerDataChange}
+ * took. Between a change and that hook (another plugin's refresh earlier in the same cascade can read a parameter)
+ * the reading belongs to the old notes, so the notes are read directly instead; nothing is stored here either way.
+ * @returns {boolean}
+ */
+Game_Actor.prototype.isSdpBlackedOut = function()
+{
+  // the notes this actor carries right now; J-Base hands back a new list whenever any of them changes.
+  const notes = this.getAllNotes();
+
+  // the reading taken at the last data change answers for exactly the notes it was taken from.
+  if (SdpBlackoutCache.isCurrentFor(this, notes)) return SdpBlackoutCache.isBlackedOut(this);
+
+  // mid-cascade, before this actor's reading is retaken: read the notes as they stand.
+  return this.hasSdpBlackoutNote();
+};
+
+/**
+ * Whether any of this actor's note sources carries `<sdpBlackout>`, read straight from its notes.<br/>
+ * The scan behind {@link #isSdpBlackedOut}: taken once per data change, and directly only in the brief window
+ * before that change's reading is taken.
+ * @returns {boolean}
+ */
+Game_Actor.prototype.hasSdpBlackoutNote = function()
+{
+  return RPGManager.checkForBooleanFromAllNotesByRegex(this.getAllNotes(), J.SDP.RegExp.SdpBlackout) === true;
+};
+
+/**
+ * Extends {@link #onBattlerDataChange}.<br/>
+ * Also retakes the panel blackout reading. A change to this actor's data is the only way its notes can change, and
+ * J-Base runs this hook for every actor at setup and after a load too, so the reading is never older than the notes.
+ */
+J.SDP.Aliased.Game_Actor.set('onBattlerDataChange', Game_Actor.prototype.onBattlerDataChange);
+Game_Actor.prototype.onBattlerDataChange = function()
+{
+  // perform original logic.
+  J.SDP.Aliased.Game_Actor.get('onBattlerDataChange')
+    .call(this);
+
+  // the notes as they stand after this change; J-Base has just let go of the old list.
+  const notes = this.getAllNotes();
+
+  // read the blackout once, here, for every parameter read until the next change.
+  SdpBlackoutCache.record(this, notes, this.hasSdpBlackoutNote());
+};
+
+/**
+ * The rankings whose panels are granting their bonuses right now: every ranking this actor has, or none at all while
+ * the panels are blacked out.<br/>
+ * Every panel bonus reads from here, while storage, menus and masteries read {@link #getAllSdpRankings}, so a
+ * blackout never costs a rank.
+ * @returns {PanelRanking[]}
+ */
+Game_Actor.prototype.getContributingSdpRankings = function()
+{
+  const rankings = this.getAllSdpRankings();
+
+  // an actor with nothing ranked has nothing to switch off, and is spared the note scan.
+  if (rankings.length === 0) return rankings;
+
+  // a blackout switches every panel off at once; the stored ranks themselves are never touched.
+  if (this.isSdpBlackedOut() === true) return [];
+
+  return rankings;
 };
 
 /**
@@ -351,7 +423,8 @@ Game_Actor.prototype.getSdpBonusForParameterKey = function(parameterKey, basePar
 {
   if (!parameterKey) return 0;
 
-  const panelRankings = this.getAllSdpRankings();
+  // only panels that are switched on grant anything.
+  const panelRankings = this.getContributingSdpRankings();
   if (!panelRankings.length) return 0;
 
   let val = 0;
@@ -389,7 +462,9 @@ Game_Actor.prototype.getSdpBonusForCustomParam = function(paramId, baseParam)
 Game_Actor.prototype.getSdpBonusForCoreParam = function(paramId, baseParam)
 {
   const parameterKey = ParameterKeys.bparamKey(paramId);
-  const panelRankings = this.getAllSdpRankings();
+
+  // only panels that are switched on grant anything.
+  const panelRankings = this.getContributingSdpRankings();
   if (!panelRankings.length) return 0;
   if (!parameterKey) return 0;
 
@@ -437,7 +512,9 @@ Game_Actor.prototype.getSdpBonusForNonCoreParam = function(sparamId, baseParam, 
   const parameterKey = idExtra === 8
     ? ParameterKeys.xparamKey(sparamId)
     : ParameterKeys.sparamKey(sparamId);
-  const panelRankings = this.getAllSdpRankings();
+
+  // only panels that are switched on grant anything.
+  const panelRankings = this.getContributingSdpRankings();
   if (!panelRankings.length) return 0;
   if (!parameterKey) return 0;
 
@@ -577,8 +654,8 @@ Game_Actor.prototype.maxTp = function()
  */
 Game_Actor.prototype.maxTpSdpBonuses = function(baseMaxTp)
 {
-  // grab the current rankings of panels for the party.
-  const panelRankings = this.getAllSdpRankings();
+  // grab the rankings whose panels are switched on; a blackout leaves none.
+  const panelRankings = this.getContributingSdpRankings();
 
   // if we have no rankings, then there is no bonuses from SDP.
   if (!panelRankings.length) return 0;

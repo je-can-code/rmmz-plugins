@@ -16,6 +16,7 @@ import './managers/MasteryPayloadLocator.js';
 import './managers/MasteryProseResolver.js';
 import './managers/MasteryTagShapes.js';
 import './managers/SdpMasteryManager.js';
+import './managers/SdpBlackoutCache.js';
 
 import './_metadata/initialization.js';
 

@@ -159,11 +159,8 @@ class JABS_SkillSlotManager
     gcdSlot.getCooldown().enableBase();
     this.slots().push(gcdSlot);
 
-    // grab the database data.
-    const battlerData = enemy.databaseData();
-
-    // filter the skills.
-    const skillIds = battlerData.actions
+    // filter the skills, reading the enemy's own actions so any it learned in the field get a slot too.
+    const skillIds = enemy.enemyActions()
       .filter(action => this.filterActionSkills(enemy, action))
       .map(action => action.skillId);
 

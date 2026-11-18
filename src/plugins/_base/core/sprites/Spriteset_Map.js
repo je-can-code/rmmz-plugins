@@ -46,6 +46,20 @@ Spriteset_Map.prototype.setCharacterSprites = function(newCharacterSprites)
 };
 
 /**
+ * Gets the balloons currently showing over characters on the map.
+ *
+ * Each one remembers the character it was requested on, as `targetObject`, and reads the position of that
+ * character's sprite every frame until it finishes. So anything taking a character's sprite away before then has to
+ * end the balloons over it first.
+ * @returns {Sprite_Balloon[]} The balloonSprites.
+ */
+Spriteset_Map.prototype.balloonSprites = function()
+{
+  // hand back the balloons currently showing.
+  return this._balloonSprites;
+};
+
+/**
  * Extends {@link Spriteset_Map.createLowerLayer}.<br/>
  * Also builds the plane that every character's captions are drawn on.
  */

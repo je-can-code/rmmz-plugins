@@ -11,6 +11,8 @@ All the versioning and history of changes live here.
 
 ## The Actual Changelog
 
+### 4.10.0
+  - Added `<sdpBlackout>`, which switches off every panel an actor has ranked while the actor carries it.
 ### 4.9.0
   - Added `<no:sdp>`, which stops an enemy granting SDP points.
 ### 4.8.1

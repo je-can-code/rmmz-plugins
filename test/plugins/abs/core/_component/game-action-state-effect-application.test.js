@@ -258,40 +258,40 @@ describe('J-ABS Game_Action state-related effect application (direct src import)
       return { action, target };
     }
 
-    it('applies only the luck modifier when useAttackerStateRate is false and resistances are skipped', () =>
+    it('sets aside the target resistances and the luck modifier alike when the action is a certain hit', () =>
     {
-      // Arrange- certain hit skips target resistances entirely.
-      const { action, target } = buildContext({ lukEffectRate: 0.5, certainHit: true });
+      // Arrange- a certain hit against a resistant target, with the luck gap against the attacker.
+      const { action, target } = buildContext({ stateRate: 0.5, stateTypeResistRate: 0.5, lukEffectRate: 0.5, certainHit: true });
 
-      // Act- baseChance 1.0 * 1.0 (no attacker rate) * 0.5 (luck) = 0.5 -> 50.
+      // Act- nothing but the base chance remains: 1.0 -> 100.
       const d100 = action.calculateStateApplicationD100(target, 5, 1.0, false);
 
-      // Assert
-      expect(d100).toBe(50);
+      // Assert- 50 would mean luck crept back in, 25 or 13 the resistances too.
+      expect(d100).toBe(100);
     });
 
-    it('folds in the attacker state rate when useAttackerStateRate is true', () =>
+    it('folds in the attacker state rate when useAttackerStateRate is true, even on a certain hit', () =>
     {
-      // Arrange
-      const { action, target } = buildContext({ attackStatesRate: 0.5, certainHit: true });
+      // Arrange- the resistances and luck that a certain hit sets aside are both against the attacker here.
+      const { action, target } = buildContext({ attackStatesRate: 0.5, stateRate: 0.5, lukEffectRate: 0.5, certainHit: true });
 
-      // Act- 1.0 * 0.5 (attacker rate) * 1.0 (luck) = 0.5 -> 50.
+      // Act- 1.0 * 0.5 (attacker rate) = 0.5 -> 50.
       const d100 = action.calculateStateApplicationD100(target, 5, 1.0, true);
 
       // Assert
       expect(d100).toBe(50);
     });
 
-    it('folds in target resistances when the action is not a certain hit', () =>
+    it('folds in the target resistances and the luck modifier when the action is not a certain hit', () =>
     {
       // Arrange
-      const { action, target } = buildContext({ stateRate: 0.5, stateTypeResistRate: 0.5, certainHit: false });
+      const { action, target } = buildContext({ stateRate: 0.5, stateTypeResistRate: 0.5, lukEffectRate: 0.8, certainHit: false });
 
-      // Act- 1.0 * 0.5 * 0.5 * 1.0 (luck) = 0.25 -> 25.
+      // Act- 1.0 * 0.5 * 0.5 * 0.8 (luck) = 0.2 -> 20.
       const d100 = action.calculateStateApplicationD100(target, 5, 1.0, false);
 
       // Assert
-      expect(d100).toBe(25);
+      expect(d100).toBe(20);
     });
   });
 

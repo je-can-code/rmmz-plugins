@@ -56,6 +56,23 @@ describe('Game_Enemy ext/extend augments (direct src import)', () =>
       // Assert
       expect(FakeOverlayManager.invalidate).toHaveBeenCalledWith(enemy);
     });
+
+    it('hands back exactly what the original reported, learned or not', () =>
+    {
+      // Arrange: both answers, so neither a constant true nor a constant false could pass.
+      const enemy = new Game_Enemy();
+      globalThis.J.EXTEND.Aliased.Game_Enemy.get('learnSkill')
+        .mockReturnValueOnce(true)
+        .mockReturnValueOnce(false);
+
+      // Act
+      const learnedNew = enemy.learnSkill(5);
+      const learnedAgain = enemy.learnSkill(5);
+
+      // Assert
+      expect(learnedNew).toBe(true);
+      expect(learnedAgain).toBe(false);
+    });
   });
 });
 //endregion plugins/extend/core/objects/game-enemy.test.js

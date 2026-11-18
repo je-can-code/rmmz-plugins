@@ -11,6 +11,8 @@ All the versioning and history of changes live here.
 
 ## The Actual Changelog
 
+### 1.1.4
+  - Fixed seeking actions pivoting in place under pixel movement instead of curving toward their target.
 ### 1.1.3
   - Removed obsolete J.ABS.EXT.CYCLE / CycloneMovement guards from the moveStraight and moveDiagonally overrides;
     diagonal logic now runs unconditionally since Cyclone Movement is no longer supported.

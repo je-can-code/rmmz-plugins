@@ -11,6 +11,9 @@ All the versioning and history of changes live here.
 
 ## The Actual Changelog
 
+### 1.5.0
+  - An `<autoExecuteSkill>` payload with a `<castTime>` now winds up, telegraph and all, before it fires.
+  - Such a payload is skipped while its bearer is already deciding or casting something.
 ### 1.4.1
   - Fixed a crash on moving when `<removeStateOnMove>` clears a state that a `stand` rule grants.
 ### 1.4.0

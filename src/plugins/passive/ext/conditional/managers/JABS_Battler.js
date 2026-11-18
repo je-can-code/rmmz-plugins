@@ -7,7 +7,8 @@ import SkillExecutionStateRemovalManager from './SkillExecutionStateRemovalManag
 
 /**
  * Extends {@link JABS_Battler#update}.<br/>
- * Throttles passive rule reconciles and stamps movement timestamps for sinceLast/movedWithin rules.
+ * Lands an auto-executed skill whose windup just ended, throttles passive rule reconciles, and stamps
+ * movement timestamps for sinceLast/movedWithin rules.
  */
 J.PASSIVE.EXT.CONDITIONAL.Aliased.JABS_Battler.set('update', JABS_Battler.prototype.update);
 JABS_Battler.prototype.update = function()
@@ -15,6 +16,9 @@ JABS_Battler.prototype.update = function()
   // perform original logic.
   J.PASSIVE.EXT.CONDITIONAL.Aliased.JABS_Battler.get('update')
     .call(this);
+
+  // the update above counts a cast down, so an auto-executed windup that just ended fires in this same frame.
+  AutoExecuteSkillManager.landWindup(this);
 
   // keep movement stamps and reconcile timer in sync with map simulation.
   this.updatePassiveRuleMovementTracking();

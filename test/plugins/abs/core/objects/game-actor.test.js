@@ -65,7 +65,7 @@ describe('J-ABS Game_Actor (unit, all downstream dependencies mocked)', () =>
     // stub "original" hooks so J.ABS.Aliased.Game_Actor.set(key, Game_Actor.prototype.key) captures
     // real functions instead of undefined- these are captured but only some are ever invoked.
     [ 'setup', 'onBattlerDataChange', 'onDeath', 'onRevive', 'onLevelUp', 'onLevelDown',
-      'onLearnNewSkill', 'performMapDamage', 'turnEndOnMap', 'getSkillTransformSources' ]
+      'onLearnNewSkill', 'performMapDamage', 'turnEndOnMap', 'getSkillTransformSources', 'executeFloorDamage' ]
       .forEach(key => { Game_Actor.prototype[key] = function() {}; });
     globalThis.Game_Actor = Game_Actor;
 
@@ -1624,6 +1624,39 @@ describe('J-ABS Game_Actor (unit, all downstream dependencies mocked)', () =>
   //endregion JABS bonus hits
 
   //region map effects
+  describe('executeFloorDamage()', () =>
+  {
+    it('leaves an actor that takes no damage unharmed by the floor', () =>
+    {
+      // Arrange
+      const original = vi.fn();
+      globalThis.J.ABS.Aliased.Game_Actor.set('executeFloorDamage', original);
+      const actor = buildActor();
+      actor.isImmuneToDamage = () => true;
+
+      // Act
+      actor.executeFloorDamage();
+
+      // Assert
+      expect(original).not.toHaveBeenCalled();
+    });
+
+    it('lets the floor hurt an actor that can be hurt', () =>
+    {
+      // Arrange
+      const original = vi.fn();
+      globalThis.J.ABS.Aliased.Game_Actor.set('executeFloorDamage', original);
+      const actor = buildActor();
+      actor.isImmuneToDamage = () => false;
+
+      // Act
+      actor.executeFloorDamage();
+
+      // Assert
+      expect(original).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe('performMapDamage()/performJabsFloorDamage()', () =>
   {
     it('delegates to the JABS floor damage path when JABS is enabled', () =>

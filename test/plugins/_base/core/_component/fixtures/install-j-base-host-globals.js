@@ -377,6 +377,15 @@ export function installJBaseHostGlobals(
     this._states = [];
   };
 
+  // And in real RMMZ, Game_Enemy.prototype.initMembers is a method of its own that calls
+  // Game_Battler.prototype.initMembers at call time. That matters the moment anything aliases the
+  // enemy's initMembers: an alias captures whatever it finds, and an inherited method captured
+  // directly would skip every Game_Battler alias installed after it.
+  sandbox.Game_Enemy.prototype.initMembers = function()
+  {
+    sandbox.Game_Battler.prototype.initMembers.call(this);
+  };
+
   // J-Base's natural bonus seam, which every parameter owner adds into its value. It is laid down here
   // rather than left to J-Base's Game_Battler.js because in the shipped game J-Base always loads before
   // any owner does, so an owner under test should find the seam answering zero exactly as it would there.

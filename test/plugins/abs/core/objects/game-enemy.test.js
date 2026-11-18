@@ -212,9 +212,10 @@ describe('J-ABS Game_Enemy (unit, all downstream dependencies mocked)', () =>
       const enemy = buildEnemy();
       const onLearnSpy = vi.spyOn(enemy, 'onLearnNewSkill');
 
-      enemy.learnSkill(5);
+      const learned = enemy.learnSkill(5);
 
       expect(onLearnSpy).not.toHaveBeenCalled();
+      expect(learned).toBe(false);
     });
 
     it('triggers learn effects and re-initializes skill slots when a new skill was learned', () =>
@@ -224,10 +225,11 @@ describe('J-ABS Game_Enemy (unit, all downstream dependencies mocked)', () =>
       const onLearnSpy = vi.spyOn(enemy, 'onLearnNewSkill').mockImplementation(() => {});
       const initSpy = vi.spyOn(enemy, 'initAbsSkills').mockImplementation(() => {});
 
-      enemy.learnSkill(5);
+      const learned = enemy.learnSkill(5);
 
       expect(onLearnSpy).toHaveBeenCalledWith(5);
       expect(initSpy).toHaveBeenCalled();
+      expect(learned).toBe(true);
     });
   });
 

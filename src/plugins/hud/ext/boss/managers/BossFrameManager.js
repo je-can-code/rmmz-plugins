@@ -72,6 +72,31 @@ class BossFrameManager
     this.setBossFrame(bossTarget);
   }
 
+  /**
+   * Sets the current boss to the primary body of the running boss encounter.<br/>
+   * This is how a boss that J-ABS-Boss spawned gets its frame. A spawned body's event id is only
+   * decided at the moment it appears, so there is no id anyone could have handed over ahead of time
+   * the way {@link setBossByEventId} expects.
+   */
+  static setBossFromEncounter()
+  {
+    // grab the body the running encounter put on the map.
+    const bossJabsBattler = this.#findEncounterBoss();
+
+    // with no fight running, or its boss off the map, there is nothing to frame.
+    if (!bossJabsBattler)
+    {
+      Diagnostics.error(__PLUGIN_NAME__, 'could not create a boss from the running boss encounter.');
+      throw new Error('Failed to create boss for boss frame.');
+    }
+
+    // build the boss framedTarget from that body.
+    const bossTarget = this.#createBossFrameFromJabsBattler(bossJabsBattler);
+
+    // set the boss.
+    this.setBossFrame(bossTarget);
+  }
+
   //region boss checking
   /**
    * Get the {@link Game_Battler} associated with this boss.
@@ -284,6 +309,31 @@ class BossFrameManager
 
   //endregion show
 
+  //region reset
+  /**
+   * Stands the boss frame down entirely, as it stood when the game booted: nobody framed, nothing asked of it, and
+   * not up.<br/>
+   * This manager is static, so everything here outlives whatever it was framing. The frame's window is rebuilt with
+   * every map, but a frame left up when the party wipes mid-fight, walks out of the room, or loads a save would carry
+   * its flag into the next game or the next map, holding the target frame below a boss frame that is no longer there,
+   * and remembering a boss from a map that is gone.
+   */
+  static resetBossFrame()
+  {
+    // nobody is framed.
+    this.boss = null;
+
+    // nothing is asked of the frame.
+    this.#newBossRequest = false;
+    this.#hideBossRequest = false;
+    this.#showBossRequest = false;
+
+    // and it is not up.
+    this.#bossFrameActive = false;
+  }
+
+  //endregion reset
+
   //region active
   /**
    * Whether the boss frame is meant to be on screen right now.
@@ -355,6 +405,31 @@ class BossFrameManager
     const bossJabsBattler = $gameMap.event(eventId)
       .getJabsBattler();
 
+    // build the frame from that battler.
+    return this.#createBossFrameFromJabsBattler(bossJabsBattler);
+  }
+
+  /**
+   * Finds the primary body of the running boss encounter, if there is one to find.
+   * @returns {JABS_Battler|null} The boss's battler, or null when there is no fight to ask.
+   */
+  static #findEncounterBoss()
+  {
+    // J-ABS-Boss is genuinely optional, so without it there is no encounter to ask.
+    const bossManager = globalThis.JabsBossManager;
+    if (!bossManager) return null;
+
+    // the encounter answers for itself: nothing when no fight is running or its boss is off the map.
+    return bossManager.getBossJabsBattler();
+  }
+
+  /**
+   * Creates a {@link FramedTarget} for the given boss battler.
+   * @param {JABS_Battler} bossJabsBattler The boss to frame.
+   * @returns {FramedTarget}
+   */
+  static #createBossFrameFromJabsBattler(bossJabsBattler)
+  {
     // grab the battler from the jabs battler.
     const bossBattler = bossJabsBattler.getBattler();
 

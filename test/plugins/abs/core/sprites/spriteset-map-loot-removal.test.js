@@ -91,6 +91,10 @@ describe('Spriteset_Map loot sprite removal', () =>
     spriteset.characterSprites = () => sprites;
     spriteset.tilemap = () => tilemap;
 
+    // nothing is playing on any drop; ending effects before a destroy is covered on its own.
+    spriteset.balloonSprites = () => [];
+    spriteset.animationSprites = () => [];
+
     // Act
     removeLootSprite.call(spriteset, buildLootEvent('loot-c'));
 

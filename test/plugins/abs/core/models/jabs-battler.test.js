@@ -2620,12 +2620,30 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       const skill1 = { id: 1 };
       const skill2 = { id: 2 };
       jabsBattler.getBattler = () => ({
-        enemy: () => ({ actions: [ { skillId: 1 }, { skillId: 2 } ] }),
+        enemyActions: () => [ { skillId: 1 }, { skillId: 2 } ],
         skill: (id) => (id === 1 ? skill1 : skill2),
       });
       jabsBattler.aiSkillFilter = (skill) => skill === skill1;
 
       expect(jabsBattler.getSkillIdsFromEnemy()).toEqual([ 1 ]);
+    });
+
+    it('getSkillIdsFromEnemy includes a skill the enemy learned in the field, though its database entry never lists it', () =>
+    {
+      // Arrange: the database entry knows only skill 1; this enemy has since learned skill 3.
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({
+        enemy: () => ({ actions: [ { skillId: 1 } ] }),
+        enemyActions: () => [ { skillId: 1 }, { skillId: 3 } ],
+        skill: (id) => ({ id }),
+      });
+      jabsBattler.aiSkillFilter = () => true;
+
+      // Act
+      const skillIds = jabsBattler.getSkillIdsFromEnemy();
+
+      // Assert
+      expect(skillIds).toEqual([ 1, 3 ]);
     });
 
     it('aiSkillFilter excludes explicitly-excluded skills', () =>
@@ -4427,6 +4445,92 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
         jabsBattler.setDecidedAction([ { getBaseSkill: () => ({ jabsCannotMoveToInterrupt: true }) } ]);
 
         expect(jabsBattler.hasUninterruptibleMovementLock()).toBe(true);
+      });
+    });
+
+    describe('isInterruptible', () =>
+    {
+      /**
+       * Builds a battler whose busy state, in-flight skill and battler-wide immunity are each set by hand.
+       * @param {object} options The busy flag, the in-flight skill (or null for nothing decided) and the immunity.
+       * @returns {{jabsBattler: JABS_Battler, isImmuneToInterrupt: Function}}
+       */
+      function buildCaster({ busy, inFlightSkill, immune })
+      {
+        const jabsBattler = buildBattler();
+        jabsBattler.isCastingOrChanneling = () => busy;
+        jabsBattler.setDecidedAction(inFlightSkill
+          ? [ { getBaseSkill: () => inFlightSkill } ]
+          : null);
+        const isImmuneToInterrupt = vi.fn(() => immune);
+        jabsBattler.getBattler = () => ({ isImmuneToInterrupt });
+        return { jabsBattler, isImmuneToInterrupt };
+      }
+
+      it('is false when not casting or channeling', () =>
+      {
+        // Arrange- nothing else stands in the way, so being idle is the only reason.
+        const { jabsBattler } = buildCaster({
+          busy: false,
+          inFlightSkill: { jabsThisCannotBeInterrupted: false },
+          immune: false,
+        });
+
+        // Act
+        const result = jabsBattler.isInterruptible();
+
+        // Assert
+        expect(result).toBe(false);
+      });
+
+      it('is false when the skill in flight cannot be interrupted, without asking the battler', () =>
+      {
+        // Arrange- the battler is not immune, so the skill's own tag is the only reason.
+        const { jabsBattler, isImmuneToInterrupt } = buildCaster({
+          busy: true,
+          inFlightSkill: { jabsThisCannotBeInterrupted: true },
+          immune: false,
+        });
+
+        // Act
+        const result = jabsBattler.isInterruptible();
+
+        // Assert
+        expect(result).toBe(false);
+        expect(isImmuneToInterrupt).not.toHaveBeenCalled();
+      });
+
+      it('is false when nothing is decided and the battler is immune', () =>
+      {
+        // Arrange
+        const { jabsBattler, isImmuneToInterrupt } = buildCaster({
+          busy: true,
+          inFlightSkill: null,
+          immune: true,
+        });
+
+        // Act
+        const result = jabsBattler.isInterruptible();
+
+        // Assert
+        expect(result).toBe(false);
+        expect(isImmuneToInterrupt).toHaveBeenCalledTimes(1);
+      });
+
+      it('is true for a cast whose skill and battler are both open to it', () =>
+      {
+        // Arrange
+        const { jabsBattler } = buildCaster({
+          busy: true,
+          inFlightSkill: { jabsThisCannotBeInterrupted: false },
+          immune: false,
+        });
+
+        // Act
+        const result = jabsBattler.isInterruptible();
+
+        // Assert
+        expect(result).toBe(true);
       });
     });
   });
@@ -6882,6 +6986,33 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       expect(jabsBattler.isWithinScope(action, user)).toBe(true);
     });
 
+    it('refuses anyone but the caster for a self-scope action, even an ally every friendly check would admit', async () =>
+    {
+      // Arrange: the flags the engine really reports for "the user"- it counts as a friendly, single-target scope
+      // too- aimed at a same-team, animate ally on an indirect action. Every path to yes below the self rule is
+      // open, so only that rule can refuse it.
+      const { default: JABS_TeamRules } = await import('../../../../../src/plugins/abs/core/managers/JABS_TeamRules.js');
+      JABS_TeamRules.isFriendly = vi.fn(() => true);
+      JABS_TeamRules.isOpposed = vi.fn(() => false);
+      const jabsBattler = buildBattler();
+      const { action } = buildActionAndUser({
+        isForUser: () => true,
+        isForFriend: () => true,
+        isForOne: () => true,
+      });
+      const ally = { getUuid: () => 'ally-uuid', isInanimate: () => false };
+
+      // Act
+      const withinScope = jabsBattler.isWithinScope(action, ally);
+
+      // Assert
+      expect(withinScope).toBe(false);
+
+      // restore the team rules this file's later cases expect, rather than leaking them onward.
+      JABS_TeamRules.isFriendly = vi.fn(() => false);
+      JABS_TeamRules.isOpposed = vi.fn(() => true);
+    });
+
     it('refuses a single-scope action that already hit, even when the target would otherwise qualify', async () =>
     {
       // Arrange: the existing already-hit case arranges no scope that could have said yes, so the
@@ -6910,10 +7041,9 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
 
     it('recognises the caster as the target by uuid, not only by an explicit self scope', async () =>
     {
-      // Arrange: the self-scope case above sets isForUser, which makes the target read as the
-      // caster on its own - so the uuid comparison beside it never has to work. An ally-scoped
-      // heal aimed at the caster is the case that needs the comparison, and refusing it would
-      // leave a healer unable to heal themselves.
+      // Arrange: no self scope here, so the uuid comparison is the only thing that can tell the
+      // target is the caster. An ally-scoped heal aimed at the caster is the case that needs it,
+      // and refusing it would leave a healer unable to heal themselves.
       const { default: JABS_TeamRules } = await import('../../../../../src/plugins/abs/core/managers/JABS_TeamRules.js');
       JABS_TeamRules.isFriendly = vi.fn(() => false);
       JABS_TeamRules.isOpposed = vi.fn(() => false);
@@ -9015,6 +9145,133 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
 
       expect(gainTp).not.toHaveBeenCalled();
     });
+
+    it('processNaturalHpRegen skips a draining tick on a battler that takes no damage', () =>
+    {
+      // Arrange
+      const gainHp = vi.fn();
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ hp: 50, mhp: 100, hrg: -1, rec: 1, gainHp, isImmuneToDamage: () => true });
+      jabsBattler.calculatedRegen = () => -5;
+
+      // Act
+      jabsBattler.processNaturalHpRegen(false);
+
+      // Assert
+      expect(gainHp).not.toHaveBeenCalled();
+    });
+
+    it('processNaturalMpRegen skips a draining tick on a battler that takes no damage', () =>
+    {
+      // Arrange
+      const gainMp = vi.fn();
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ mp: 50, mmp: 100, mrg: -1, rec: 1, gainMp, isImmuneToDamage: () => true });
+      jabsBattler.calculatedRegen = () => -5;
+
+      // Act
+      jabsBattler.processNaturalMpRegen(false);
+
+      // Assert
+      expect(gainMp).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('isIgnoredRegenHarm', () =>
+  {
+    it('is false for regeneration that restores, even on a battler that takes no damage', () =>
+    {
+      // Arrange
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ isImmuneToDamage: () => true });
+
+      // Act
+      const result = jabsBattler.isIgnoredRegenHarm(4);
+
+      // Assert
+      expect(result).toBe(false);
+    });
+
+    it('is true for a draining tick on a battler that takes no damage', () =>
+    {
+      // Arrange
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ isImmuneToDamage: () => true });
+
+      // Act
+      const result = jabsBattler.isIgnoredRegenHarm(-4);
+
+      // Assert
+      expect(result).toBe(true);
+    });
+
+    it('is false for a draining tick on a battler that can be hurt', () =>
+    {
+      // Arrange
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ isImmuneToDamage: () => false });
+
+      // Act
+      const result = jabsBattler.isIgnoredRegenHarm(-4);
+
+      // Assert
+      expect(result).toBe(false);
+    });
+  });
+
+  describe('isIgnoredSlipHarm', () =>
+  {
+    it('is false for a healing tick, even on a battler that takes no damage', () =>
+    {
+      // Arrange
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ isImmuneToDamage: () => true });
+
+      // Act
+      const result = jabsBattler.isIgnoredSlipHarm(8, 0);
+
+      // Assert
+      expect(result).toBe(false);
+    });
+
+    it('is false for a tick draining TP, even on a battler that takes no damage', () =>
+    {
+      // Arrange
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ isImmuneToDamage: () => true });
+
+      // Act
+      const result = jabsBattler.isIgnoredSlipHarm(-8, 2);
+
+      // Assert
+      expect(result).toBe(false);
+    });
+
+    it('is true for a harmful MP tick on a battler that takes no damage', () =>
+    {
+      // Arrange
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ isImmuneToDamage: () => true });
+
+      // Act
+      const result = jabsBattler.isIgnoredSlipHarm(-8, 1);
+
+      // Assert
+      expect(result).toBe(true);
+    });
+
+    it('is false for a harmful HP tick on a battler that can be hurt', () =>
+    {
+      // Arrange
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ isImmuneToDamage: () => false });
+
+      // Act
+      const result = jabsBattler.isIgnoredSlipHarm(-8, 0);
+
+      // Assert
+      expect(result).toBe(false);
+    });
   });
 
   describe('processStateTick', () =>
@@ -9079,7 +9336,7 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
     {
       const jabsBattler = buildBattler();
       jabsBattler.getBattler = () => ({
-        isDead: () => false, rec: 2, getUuid: () => 'uuid', setLastHitSource: vi.fn(),
+        isDead: () => false, rec: 2, getUuid: () => 'uuid', setLastHitSource: vi.fn(), isImmuneToDamage: () => false,
       });
       jabsBattler.stateSlipHp = () => 5;
       jabsBattler.stateSlipMp = () => -5;
@@ -9097,7 +9354,7 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
     {
       const jabsBattler = buildBattler();
       const battler = {
-        isDead: () => false, rec: 1, getUuid: () => 'uuid', setLastHitSource: vi.fn(),
+        isDead: () => false, rec: 1, getUuid: () => 'uuid', setLastHitSource: vi.fn(), isImmuneToDamage: () => false,
       };
       jabsBattler.getBattler = () => battler;
       jabsBattler.stateSlipHp = () => -10;
@@ -9110,6 +9367,29 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       jabsBattler.processStateTick({ id: 9 });
 
       expect(battler.setLastHitSource).toHaveBeenCalledWith('state', 'source-uuid', 9);
+    });
+
+    it('lets nothing land, pop or record when a harmful tick meets a battler that takes no damage', () =>
+    {
+      // Arrange
+      const jabsBattler = buildBattler();
+      const battler = {
+        isDead: () => false, rec: 1, getUuid: () => 'uuid', setLastHitSource: vi.fn(), isImmuneToDamage: () => true,
+      };
+      jabsBattler.getBattler = () => battler;
+      jabsBattler.stateSlipHp = () => -10;
+      jabsBattler.stateSlipMp = () => 0;
+      jabsBattler.stateSlipTp = () => 0;
+      jabsBattler.applySlipEffect = vi.fn();
+      jabsBattler.onSlipRegenTick = vi.fn();
+
+      // Act
+      jabsBattler.processStateTick({ id: 1 });
+
+      // Assert
+      expect(jabsBattler.applySlipEffect).not.toHaveBeenCalled();
+      expect(jabsBattler.onSlipRegenTick).not.toHaveBeenCalled();
+      expect(battler.setLastHitSource).not.toHaveBeenCalled();
     });
 
     it('does not record a last-hit source when the slip amount is healing, not damage', () =>
@@ -9172,7 +9452,7 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
     {
       const jabsBattler = buildBattler();
       jabsBattler.getBattler = () => ({
-        isDead: () => false, rec: 1, getUuid: () => 'uuid', setLastHitSource: vi.fn(),
+        isDead: () => false, rec: 1, getUuid: () => 'uuid', setLastHitSource: vi.fn(), isImmuneToDamage: () => false,
       });
       jabsBattler.stateSlipHp = () => -10;
       jabsBattler.stateSlipMp = () => 0;
@@ -9196,7 +9476,7 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
     {
       const jabsBattler = buildBattler();
       jabsBattler.getBattler = () => ({
-        isDead: () => false, rec: 1, getUuid: () => 'uuid', setLastHitSource: vi.fn(),
+        isDead: () => false, rec: 1, getUuid: () => 'uuid', setLastHitSource: vi.fn(), isImmuneToDamage: () => false,
       });
       jabsBattler.stateSlipHp = () => -10;
       jabsBattler.stateSlipMp = () => 0;

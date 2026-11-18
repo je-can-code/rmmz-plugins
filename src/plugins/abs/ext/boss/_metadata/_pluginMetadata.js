@@ -2,6 +2,7 @@
 import JabsBossEncounter from '../models/JabsBossEncounter.js';
 import JabsBossManager from '../managers/JabsBossManager.js';
 import JabsBossParticipant from '../models/JabsBossParticipant.js';
+import JabsBossReaction from '../models/JabsBossReaction.js';
 import JabsBossRoutine from '../models/JabsBossRoutine.js';
 import JabsBossStep from '../models/JabsBossStep.js';
 
@@ -79,19 +80,61 @@ class J_BossPluginMetadata
     const rawRoutines = rawEncounter.routines ?? [];
     const routines = rawRoutines.map(raw => this.parseRoutine(raw));
 
-    return new JabsBossEncounter(rawEncounter.key, rawEncounter.map, participants, aiControl, routines);
+    // a fight whose ending the story learns some other way names no switch, and zero is that "none".
+    const defeatSwitchId = rawEncounter.defeatSwitch ?? 0;
+
+    // reactions are optional too; a boss that does the same thing from start to finish has none.
+    const rawReactions = rawEncounter.reactions ?? [];
+    const reactions = rawReactions.map(raw => this.parseReaction(raw));
+
+    const { key, map } = rawEncounter;
+    return new JabsBossEncounter(key, map, participants, aiControl, routines, defeatSwitchId, reactions);
   }
 
   /**
    * Builds one participant out of its raw configuration.
+   *
+   * A participant names an enemy and the tile it appears on rather than an event, because the
+   * encounter spawns its own bodies when it starts. The same configuration then serves every map the
+   * fight is staged on.
    * @param {any} rawParticipant The unparsed participant from configuration.
    * @returns {JabsBossParticipant}
    */
   parseParticipant(rawParticipant)
   {
-    const { key, eventId, enemyId, expect } = rawParticipant;
+    const { key, enemyId, expect, x, y } = rawParticipant;
 
-    return new JabsBossParticipant(key, eventId, enemyId, expect);
+    // a participant naming no template of its own spawns from the slot matching its enemy id, and zero
+    // is that "none".
+    const template = rawParticipant.template ?? 0;
+    const templateId = template === 0 ? enemyId : template;
+
+    // a participant is a body the fight is won by felling unless it says it is only standing by.
+    const bystander = rawParticipant.bystander === true;
+
+    // a participant is on the map from the fight's first frame unless it says it waits to be summoned.
+    const summoned = rawParticipant.summoned === true;
+
+    return new JabsBossParticipant(key, enemyId, expect, x, y, templateId, bystander, summoned);
+  }
+
+  /**
+   * Builds one reaction out of its raw configuration.
+   * @param {any} rawReaction The unparsed reaction from configuration.
+   * @returns {JabsBossReaction}
+   */
+  parseReaction(rawReaction)
+  {
+    const { key, on } = rawReaction;
+
+    // only a fallen or health trigger waits on anybody, so a reaction to anything else names nobody.
+    const participantKeys = rawReaction.participants ?? [];
+    const steps = rawReaction.steps.map(raw => this.parseStep(raw));
+
+    // only a health trigger waits on a percent, and zero is that "none" for every other trigger.
+    const belowPercent = rawReaction.below ?? 0;
+
+    return new JabsBossReaction(key, on, participantKeys, steps, belowPercent);
   }
 
   /**
@@ -101,10 +144,13 @@ class J_BossPluginMetadata
    */
   parseRoutine(rawRoutine)
   {
-    const cadenceFrames = Math.round(rawRoutine.cadence * FRAMES_PER_SECOND);
+    const cadenceFrames = this.secondsToFrames(rawRoutine.cadence);
     const steps = rawRoutine.steps.map(raw => this.parseStep(raw));
 
-    return new JabsBossRoutine(rawRoutine.key, cadenceFrames, steps);
+    // a routine runs from the first frame of its fight unless it says it waits to be started.
+    const dormant = rawRoutine.dormant === true;
+
+    return new JabsBossRoutine(rawRoutine.key, cadenceFrames, steps, dormant);
   }
 
   /**
@@ -114,13 +160,99 @@ class J_BossPluginMetadata
    */
   parseStep(rawStep)
   {
-    const { verb, skill, expect } = rawStep;
+    // every field any verb reads is read for every step, and each one this step's verb has no use for
+    // simply sits at its "none". That keeps one shape for every step, whatever its verb.
+    const details = {
+      ...this.parseStepReferences(rawStep),
+      ...this.parseStepPlacement(rawStep),
+      ...this.parseStepPresentation(rawStep),
+    };
 
-    // a skill defaults to observing its own cast time, because the common case is an attack the
-    // player is meant to see coming. Removing the wind-up is the exception and must be asked for.
-    const cast = rawStep.cast !== false;
+    return new JabsBossStep(rawStep.verb, details);
+  }
 
-    return new JabsBossStep(verb, skill, expect, cast);
+  /**
+   * Reads what a step acts on and refers to: its participant, the skill, state or routine it names, and the
+   * time it works across.
+   * @param {any} rawStep The unparsed step from configuration.
+   * @returns {Object} Those fields of the step's details.
+   */
+  parseStepReferences(rawStep)
+  {
+    return {
+      // a step naming nobody acts on the boss itself.
+      participantKey: rawStep.participant ?? String.empty,
+      skillId: rawStep.skill ?? 0,
+      stateId: rawStep.state ?? 0,
+
+      // an author who records no name gets no drift tripwire, which is their choice to make.
+      expect: rawStep.expect ?? String.empty,
+
+      // a skill defaults to observing its own cast time, because the common case is an attack the
+      // player is meant to see coming. Removing the wind-up is the exception and must be asked for.
+      cast: rawStep.cast !== false,
+      routineKey: rawStep.routine ?? String.empty,
+
+      // authors speed a routine up, let a tint settle, or pause, in seconds- the same unit they wrote cadences in.
+      frames: this.secondsToFrames(rawStep.seconds ?? 0),
+    };
+  }
+
+  /**
+   * Reads where a step puts things: the enemy a spawn puts on the map, the clone map slot it copies, the tile
+   * a spawn, a blink or a jump lands on, the way a blink leaves its participant facing, and the way a facing
+   * step turns it.
+   * @param {any} rawStep The unparsed step from configuration.
+   * @returns {Object} Those fields of the step's details.
+   */
+  parseStepPlacement(rawStep)
+  {
+    // a spawn naming no template of its own copies the slot matching its enemy id, exactly the way a
+    // participant does, and zero is that "none".
+    const enemyId = rawStep.enemyId ?? 0;
+    const template = rawStep.template ?? 0;
+    const templateId = template === 0 ? enemyId : template;
+
+    return {
+      enemyId,
+      templateId,
+      x: rawStep.x ?? 0,
+      y: rawStep.y ?? 0,
+
+      // a blink that names no facing leaves its participant facing the way it already was. A facing step has
+      // no such fallback, and starting a fight refuses one that names no way to face.
+      direction: rawStep.direction ?? 0,
+    };
+  }
+
+  /**
+   * Reads how a step looks and sounds: a changed look, a tint, an animation, and a line with its face and speaker,
+   * whether said aloud or written to the dialogue log.
+   * @param {any} rawStep The unparsed step from configuration.
+   * @returns {Object} Those fields of the step's details.
+   */
+  parseStepPresentation(rawStep)
+  {
+    return {
+      characterName: rawStep.image ?? String.empty,
+      characterIndex: rawStep.index ?? 0,
+      tone: rawStep.tone ?? [],
+      animationId: rawStep.animation ?? 0,
+      face: rawStep.face ?? String.empty,
+      faceIndex: rawStep.faceIndex ?? 0,
+      speaker: rawStep.speaker ?? String.empty,
+      lines: rawStep.lines ?? [],
+    };
+  }
+
+  /**
+   * Translates an author-facing count of seconds into engine frames, rounded to a whole frame.
+   * @param {number} seconds The seconds to translate.
+   * @returns {number}
+   */
+  secondsToFrames(seconds)
+  {
+    return Math.round(seconds * FRAMES_PER_SECOND);
   }
 }
 

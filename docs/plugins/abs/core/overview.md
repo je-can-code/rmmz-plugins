@@ -3,7 +3,7 @@ type: overview
 title: The Plugin Overview
 description: The general overview for what this plugin is about along with the when and how you might use it.
 tags: [abs, overview]
-version: "4.28.0"
+version: "4.29.0"
 ---
 
 # Overview
@@ -83,8 +83,9 @@ trait found in the middle of the third page in the trait picker. An enemy withou
 
 #### Available skills
 
-Any skills listed in the "Action Patterns" section of an enemy in the database will be considered available. To create a
-skill usable in JABS, see the "SETTING UP YOUR SKILLS" section below.
+Any skills listed in the "Action Patterns" section of an enemy in the database will be considered available, along with
+any skill that enemy has learned since it appeared. To create a skill usable in JABS, see the "SETTING UP YOUR SKILLS"
+section below.
 
 #### Note about conditions
 
@@ -209,4 +210,6 @@ All tags are optional. Omitting a tag leaves that property at its default value.
 ### Cast preview
 
 These tags control the hitbox preview overlay that is shown on the map while a battler is casting a skill. Previews are
-visible by default if the hitbox overlay system is enabled.
+visible by default if the hitbox overlay system is enabled. A battler that falls mid-cast never fires the cast, so its
+preview goes with it, even while its body is still on the map playing out its death; the same goes for a body taken off
+the map mid-cast.

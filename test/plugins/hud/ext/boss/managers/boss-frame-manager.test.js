@@ -146,6 +146,51 @@ describe('BossFrameManager (direct src import)', () =>
     });
   });
 
+  describe('setBossFromEncounter', () =>
+  {
+    it('throws when the boss plugin is not installed to ask', () =>
+    {
+      // Arrange
+      // no JabsBossManager exists, which is how the frame finds itself without J-ABS-Boss.
+
+      // Act/Assert- pinned to the deliberate refusal, not the TypeError it stands in front of.
+      expect(() => BossFrameManager.setBossFromEncounter()).toThrow('Failed to create boss for boss frame.');
+    });
+
+    it('throws when the encounter has no boss on the map to frame', () =>
+    {
+      // Arrange
+      globalThis.JabsBossManager = { getBossJabsBattler: () => null };
+
+      // Act/Assert
+      expect(() => BossFrameManager.setBossFromEncounter()).toThrow('Failed to create boss for boss frame.');
+
+      delete globalThis.JabsBossManager;
+    });
+
+    it('builds and sets a boss FramedTarget from the body the encounter spawned', () =>
+    {
+      // Arrange- the spawned body has no event id anyone knew ahead of time, so the frame must never
+      // go looking for one on the map.
+      const battler = { name: () => 'Gluttonwolf Mayor', currentHpPercent100: vi.fn() };
+      const jabsBattler = { getBattler: () => battler, decorateFramedTarget: vi.fn() };
+      globalThis.JabsBossManager = { getBossJabsBattler: () => jabsBattler };
+
+      // Act
+      BossFrameManager.setBossFromEncounter();
+
+      // Assert
+      const boss = BossFrameManager.getBossFrame();
+      expect(boss.name).toEqual('Gluttonwolf Mayor');
+      expect(boss.battler).toBe(battler);
+      expect(jabsBattler.decorateFramedTarget).toHaveBeenCalledWith(boss, jabsBattler);
+      expect(BossFrameManager.needsBossFrameRefresh()).toEqual(true);
+      expect(globalThis.$gameMap.event).not.toHaveBeenCalled();
+
+      delete globalThis.JabsBossManager;
+    });
+  });
+
   describe('getBossGameBattler', () =>
   {
     it('returns null when there is no boss', () =>
@@ -530,6 +575,62 @@ describe('BossFrameManager (direct src import)', () =>
 
       // Assert
       expect(BossFrameManager.needsBossFrameShowing()).toEqual(false);
+    });
+  });
+
+  describe('resetBossFrame', () =>
+  {
+    it('stands the frame down and forgets the boss it was framing', () =>
+    {
+      // Arrange- a boss framed and the frame up, the way a fight leaves it.
+      const boss = makeBoss(100);
+      BossFrameManager.setBossFrame(boss);
+      BossFrameManager.requestShowBossFrame();
+      const wasActive = BossFrameManager.isBossFrameActive();
+
+      // Act
+      BossFrameManager.resetBossFrame();
+
+      // Assert
+      expect(wasActive).toBe(true);
+      expect(BossFrameManager.isBossFrameActive()).toBe(false);
+      expect(BossFrameManager.getBossFrame()).toBeNull();
+    });
+
+    it('drops every request still waiting on the frame', () =>
+    {
+      // Arrange- a new boss, a show and a hide, none of them acted on yet.
+      BossFrameManager.setBossFrame(makeBoss(100));
+      BossFrameManager.requestShowBossFrame();
+      BossFrameManager.requestHideBossFrame();
+      const waiting = [
+        BossFrameManager.needsBossFrameRefresh(),
+        BossFrameManager.needsBossFrameShowing(),
+        BossFrameManager.needsBossFrameHiding(),
+      ];
+
+      // Act
+      BossFrameManager.resetBossFrame();
+
+      // Assert
+      expect(waiting).toEqual([ true, true, true ]);
+      expect(BossFrameManager.needsBossFrameRefresh()).toBe(false);
+      expect(BossFrameManager.needsBossFrameShowing()).toBe(false);
+      expect(BossFrameManager.needsBossFrameHiding()).toBe(false);
+    });
+
+    it('lets the target frame rest where it always does again', () =>
+    {
+      // Arrange- while the frame is up, the target frame waits below it.
+      BossFrameManager.requestShowBossFrame();
+      const heldAt = BossFrameManager.targetFrameY(10, 120);
+
+      // Act
+      BossFrameManager.resetBossFrame();
+
+      // Assert
+      expect(heldAt).toBe(120);
+      expect(BossFrameManager.targetFrameY(10, 120)).toBe(10);
     });
   });
 
