@@ -697,7 +697,7 @@ export function installPixelAbsExtHostGlobals(sandbox = globalThis, extParams = 
   // present at runtime and the ext reads it without probing. The fixture has to honor that.
   sandbox.J.ABS.EXT.ALLYAI = sandbox.J.ABS.EXT.ALLYAI || {
     Metadata: {
-      FormationTolerance: 0.45,
+      StanceTolerance: 0.45,
     },
   };
 
@@ -824,12 +824,12 @@ export function installPixelAbsExtHostGlobals(sandbox = globalThis, extParams = 
   JABS_Battler.prototype.updatePixelIdleWander = noop;
   JABS_Battler.prototype.smartMoveTowardCoordinates = noop;
 
-  // the formation give-up seams Ally AI hangs on every battler, which the pixel formation mover
+  // the stance give-up seams Ally AI hangs on every battler, which the pixel stance mover
   // calls. Never stalled by default, so a test that says nothing about the give-up exercises the
   // movement branches it was written for.
-  JABS_Battler.prototype.observeFormationApproach = noop;
-  JABS_Battler.prototype.clearFormationApproach = noop;
-  JABS_Battler.prototype.hasGivenUpOnFormationSlot = function()
+  JABS_Battler.prototype.observeStanceApproach = noop;
+  JABS_Battler.prototype.clearStanceApproach = noop;
+  JABS_Battler.prototype.hasGivenUpOnStanceSpot = function()
   {
     return this.__givenUpOnSlot === true;
   };

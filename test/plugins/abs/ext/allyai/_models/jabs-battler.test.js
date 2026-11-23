@@ -5,6 +5,8 @@ describe('J-ABS-AllyAI JABS_Battler (unit, all downstream dependencies mocked)',
 {
   let originalShouldEngage;
   let originalInitIdleInfo;
+  let originalInitBattleInfo;
+  let originalUpdateTimers;
 
   beforeAll(async () =>
   {
@@ -12,14 +14,20 @@ describe('J-ABS-AllyAI JABS_Battler (unit, all downstream dependencies mocked)',
 
     globalThis.J = {
       ABS: {
+        Balloons: { Exclamation: 1, Sweat: 6 },
         EXT: {
           ALLYAI: {
             Aliased: { JABS_Battler: new Map() },
-            // the two knobs the formation seams read. Distinct values, so a seam reading the wrong
-            // one of them shows up as a wrong answer rather than as a coincidence.
+            // the knobs the stance seams read. Distinct values, so a seam reading the wrong one of
+            // them shows up as a wrong answer rather than as a coincidence.
             Metadata: {
-              FormationProgressEpsilon: 0.05,
-              FormationStallFrames: 3,
+              StanceProgressEpsilon: 0.05,
+              StanceSpotDrift: 0.5,
+              StanceStallFrames: 3,
+              StanceFacingSettleFrames: 2,
+              StanceCatchUpDistance: 1.5,
+              StanceTolerance: 0.25,
+              PullBackFrames: 180,
             },
           },
         },
@@ -29,7 +37,11 @@ describe('J-ABS-AllyAI JABS_Battler (unit, all downstream dependencies mocked)',
     globalThis.JABS_BattlerCoreData = {
       Builder: () => ({ setBattler: vi.fn().mockReturnThis(), build: vi.fn(() => ({ built: true })) }),
     };
-    globalThis.JABS_AiManager = { getAlliedBattlersWithinRange: vi.fn() };
+    globalThis.JABS_AiManager = {
+      getAlliedBattlersWithinRange: vi.fn(),
+      getClosestOpposingBattler: vi.fn(),
+    };
+    globalThis.Graphics = { frameCount: 100 };
 
     // JABS_AllyAI is a downstream dependency (a sibling model file) imported only for its JSDoc
     // type reference; mock it entirely rather than pulling in its real JABS_AI superclass chain.
@@ -52,6 +64,12 @@ describe('J-ABS-AllyAI JABS_Battler (unit, all downstream dependencies mocked)',
     originalInitIdleInfo = vi.fn();
     JABS_Battler.prototype.initIdleInfo = originalInitIdleInfo;
 
+    originalInitBattleInfo = vi.fn();
+    JABS_Battler.prototype.initBattleInfo = originalInitBattleInfo;
+
+    originalUpdateTimers = vi.fn();
+    JABS_Battler.prototype.updateTimers = originalUpdateTimers;
+
     globalThis.JABS_Battler = JABS_Battler;
 
     await import('../../../../../../src/plugins/abs/ext/allyai/_models/JABS_Battler.js');
@@ -61,12 +79,16 @@ describe('J-ABS-AllyAI JABS_Battler (unit, all downstream dependencies mocked)',
   {
     originalShouldEngage.mockReset();
 
-    // the aliased original is shared across this whole file, and several cases now seed a battler
-    // by calling the method that reaches it. Counting calls is only meaningful from zero.
+    // the aliased originals are shared across this whole file, and several cases seed a battler by
+    // calling the method that reaches them. Counting calls is only meaningful from zero.
     originalInitIdleInfo.mockReset();
+    originalInitBattleInfo.mockReset();
+    originalUpdateTimers.mockReset();
     globalThis.JABS_AiManager.getAlliedBattlersWithinRange.mockReset();
-    globalThis.$gameParty = { isAggro: () => false };
-    globalThis.$jabsEngine = { getPlayer1: vi.fn(() => ({ hasBattlerLastHit: () => false })) };
+    globalThis.JABS_AiManager.getClosestOpposingBattler.mockReset();
+    globalThis.Graphics.frameCount = 100;
+    globalThis.$gameParty = { getPartyStanceType: () => ({ engagesFirst: false }) };
+    globalThis.$jabsEngine = { getPlayer1: vi.fn(() => ({ lastHit: () => null })) };
   });
 
   function buildBattler(overrides = {})
@@ -74,6 +96,16 @@ describe('J-ABS-AllyAI JABS_Battler (unit, all downstream dependencies mocked)',
     const battler = Object.create(globalThis.JABS_Battler.prototype);
     battler.isEnemy = () => false;
     return Object.assign(battler, overrides);
+  }
+
+  /**
+   * Builds a battler the leader could have struck.
+   * @param {object} overrides Anything to replace on it.
+   * @returns {object}
+   */
+  function buildFoe(overrides = {})
+  {
+    return Object.assign({ isInanimate: () => false, isDead: () => false }, overrides);
   }
 
   describe('createAlly', () =>
@@ -103,93 +135,176 @@ describe('J-ABS-AllyAI JABS_Battler (unit, all downstream dependencies mocked)',
   {
     it('defers to the original logic for enemies', () =>
     {
+      // Arrange
       const battler = buildBattler({ isEnemy: () => true });
       originalShouldEngage.mockReturnValue(true);
       const target = { isInanimate: () => false };
 
+      // Act
       const result = battler.shouldEngage(target, 5);
 
+      // Assert
       expect(originalShouldEngage).toHaveBeenCalledWith(target, 5);
       expect(result).toBe(true);
     });
 
-    it('defers to the original logic when the party is aggro and the target is animate', () =>
+    it('delegates to shouldAllyEngage for allies', () =>
     {
-      globalThis.$gameParty.isAggro = () => true;
-      const battler = buildBattler();
-      originalShouldEngage.mockReturnValue(true);
-      const target = { isInanimate: () => false };
-
-      const result = battler.shouldEngage(target, 5);
-
-      expect(originalShouldEngage).toHaveBeenCalledWith(target, 5);
-      expect(result).toBe(true);
-    });
-
-    it('delegates to shouldAllyEngage when the party is aggro but the target is inanimate', () =>
-    {
-      globalThis.$gameParty.isAggro = () => true;
+      // Arrange
       const battler = buildBattler();
       battler.shouldAllyEngage = vi.fn(() => 'ally-decision');
-      const target = { isInanimate: () => true };
+      const target = { isInanimate: () => false };
 
+      // Act
       const result = battler.shouldEngage(target, 5);
 
+      // Assert
       expect(battler.shouldAllyEngage).toHaveBeenCalledWith(target, 5);
       expect(originalShouldEngage).not.toHaveBeenCalled();
-      expect(result).toBe('ally-decision');
-    });
-
-    it('delegates to shouldAllyEngage for a passive ally', () =>
-    {
-      const battler = buildBattler();
-      battler.shouldAllyEngage = vi.fn(() => 'ally-decision');
-      const target = { isInanimate: () => false };
-
-      const result = battler.shouldEngage(target, 5);
-
-      expect(battler.shouldAllyEngage).toHaveBeenCalledWith(target, 5);
       expect(result).toBe('ally-decision');
     });
   });
 
   describe('shouldAllyEngage', () =>
   {
+    /**
+     * An ally that passes every gate up to the stance, so each case below changes one thing.
+     * @param {object} overrides Anything to replace on it.
+     * @returns {object}
+     */
+    const buildWillingAlly = (overrides = {}) => buildBattler(Object.assign({
+      getAllyAiMode: () => null,
+      isPullingBack: () => false,
+      inSightRange: () => true,
+      isAlerted: () => false,
+      isLeaderFighting: () => false,
+    }, overrides));
+
     it('never engages when the ally mode is do-nothing', () =>
     {
-      const battler = buildBattler({ getAllyAiMode: () => ({ isDoNothing: () => true }) });
+      // Arrange - alerted too, so only the do-nothing gate can explain the refusal.
+      const battler = buildWillingAlly({ getAllyAiMode: () => ({ isDoNothing: () => true }), isAlerted: () => true });
+
+      // Act & Assert
       expect(battler.shouldAllyEngage({ isInanimate: () => false }, 5)).toBe(false);
+    });
+
+    it('gets past the do-nothing gate when the ally mode is not do-nothing', () =>
+    {
+      // Arrange
+      const battler = buildWillingAlly({ getAllyAiMode: () => ({ isDoNothing: () => false }), isAlerted: () => true });
+
+      // Act & Assert
+      expect(battler.shouldAllyEngage({ isInanimate: () => false }, 5)).toBe(true);
     });
 
     it('never engages an inanimate target', () =>
     {
-      const battler = buildBattler({ getAllyAiMode: () => null });
+      // Arrange
+      const battler = buildWillingAlly({ isAlerted: () => true });
+
+      // Act & Assert
       expect(battler.shouldAllyEngage({ isInanimate: () => true }, 5)).toBe(false);
+    });
+
+    it('never engages while pulling back', () =>
+    {
+      // Arrange
+      const battler = buildWillingAlly({ isPullingBack: () => true, isAlerted: () => true });
+
+      // Act & Assert
+      expect(battler.shouldAllyEngage({ isInanimate: () => false }, 5)).toBe(false);
     });
 
     it('does not engage when the target is out of sight range', () =>
     {
-      const battler = buildBattler({ getAllyAiMode: () => null, inSightRange: () => false });
+      // Arrange
+      const battler = buildWillingAlly({ inSightRange: () => false, isAlerted: () => true });
+
+      // Act & Assert
       expect(battler.shouldAllyEngage({ isInanimate: () => false }, 5)).toBe(false);
     });
 
-    it('engages when alerted', () =>
+    it('engages when alerted, whatever the stance', () =>
     {
-      const battler = buildBattler({ getAllyAiMode: () => null, inSightRange: () => true, isAlerted: () => true });
+      // Arrange
+      const battler = buildWillingAlly({ isAlerted: () => true });
+
+      // Act & Assert
       expect(battler.shouldAllyEngage({ isInanimate: () => false }, 5)).toBe(true);
     });
 
-    it('engages when the player has a last-hit target, even without being alerted', () =>
+    it('engages when the leader is fighting, whatever the stance', () =>
     {
-      globalThis.$jabsEngine.getPlayer1.mockReturnValue({ hasBattlerLastHit: () => true });
-      const battler = buildBattler({ getAllyAiMode: () => null, inSightRange: () => true, isAlerted: () => false });
+      // Arrange
+      const battler = buildWillingAlly({ isLeaderFighting: () => true });
+
+      // Act & Assert
       expect(battler.shouldAllyEngage({ isInanimate: () => false }, 5)).toBe(true);
     });
 
-    it('does not engage when neither alerted nor the player has a last-hit target', () =>
+    it('engages anything in sight when the stance goes in first', () =>
     {
-      const battler = buildBattler({ getAllyAiMode: () => null, inSightRange: () => true, isAlerted: () => false });
+      // Arrange
+      globalThis.$gameParty.getPartyStanceType = () => ({ engagesFirst: true });
+      const battler = buildWillingAlly();
+
+      // Act & Assert
+      expect(battler.shouldAllyEngage({ isInanimate: () => false }, 5)).toBe(true);
+    });
+
+    it('waits when the stance does not go in first and nothing has called it in', () =>
+    {
+      // Arrange
+      const battler = buildWillingAlly();
+
+      // Act & Assert
       expect(battler.shouldAllyEngage({ isInanimate: () => false }, 5)).toBe(false);
+    });
+  });
+
+  describe('isLeaderFighting', () =>
+  {
+    it('is not fighting when the leader has struck nothing', () =>
+    {
+      // Arrange
+      const battler = buildBattler();
+
+      // Act & Assert
+      expect(battler.isLeaderFighting()).toBe(false);
+    });
+
+    it('is not fighting when the leader last struck something inanimate', () =>
+    {
+      // Arrange
+      const crate = buildFoe({ isInanimate: () => true });
+      globalThis.$jabsEngine.getPlayer1.mockReturnValue({ lastHit: () => crate });
+      const battler = buildBattler();
+
+      // Act & Assert
+      expect(battler.isLeaderFighting()).toBe(false);
+    });
+
+    it('is not fighting when the leader last struck something already defeated', () =>
+    {
+      // Arrange
+      const slime = buildFoe({ isDead: () => true });
+      globalThis.$jabsEngine.getPlayer1.mockReturnValue({ lastHit: () => slime });
+      const battler = buildBattler();
+
+      // Act & Assert
+      expect(battler.isLeaderFighting()).toBe(false);
+    });
+
+    it('is fighting when the leader last struck something alive that fights back', () =>
+    {
+      // Arrange
+      const slime = buildFoe();
+      globalThis.$jabsEngine.getPlayer1.mockReturnValue({ lastHit: () => slime });
+      const battler = buildBattler();
+
+      // Act & Assert
+      expect(battler.isLeaderFighting()).toBe(true);
     });
   });
 
@@ -285,10 +400,10 @@ describe('J-ABS-AllyAI JABS_Battler (unit, all downstream dependencies mocked)',
     });
   });
 
-  describe('the formation seams', () =>
+  describe('the stance seams', () =>
   {
     /**
-     * An ally with its idle state already seeded, which is when a formation tracker exists.
+     * An ally with its idle state already seeded, which is when the stance trackers exist.
      * @returns {object}
      */
     const buildIdleAlly = () =>
@@ -299,7 +414,7 @@ describe('J-ABS-AllyAI JABS_Battler (unit, all downstream dependencies mocked)',
       return battler;
     };
 
-    describe('observeFormationApproach', () =>
+    describe('observeStanceApproach', () =>
     {
       it('records a frame of no progress against the configured epsilon', () =>
       {
@@ -307,13 +422,13 @@ describe('J-ABS-AllyAI JABS_Battler (unit, all downstream dependencies mocked)',
         const ally = buildIdleAlly();
 
         // Act.
-        ally.observeFormationApproach(5, 10, 10);
-        ally.observeFormationApproach(5, 10, 10);
+        ally.observeStanceApproach(5, 10, 10);
+        ally.observeStanceApproach(5, 10, 10);
 
         // Assert - two observations, one of which opened the attempt, so one frame is spent.
-        expect(ally.hasGivenUpOnFormationSlot())
+        expect(ally.hasGivenUpOnStanceSpot())
           .toBe(false);
-        expect(ally.getFormationStall()
+        expect(ally.getStanceStall()
           .isStalled(1))
           .toBe(true);
       });
@@ -326,30 +441,43 @@ describe('J-ABS-AllyAI JABS_Battler (unit, all downstream dependencies mocked)',
         const ally = buildIdleAlly();
 
         // Act.
-        [ 9, 8, 7, 6, 5, 4, 3, 2 ].forEach(distance => ally.observeFormationApproach(distance, 10, 10));
+        [ 9, 8, 7, 6, 5, 4, 3, 2 ].forEach(distance => ally.observeStanceApproach(distance, 10, 10));
 
         // Assert - eight frames against a three-frame patience, and still trying.
-        expect(ally.hasGivenUpOnFormationSlot())
+        expect(ally.hasGivenUpOnStanceSpot())
           .toBe(false);
       });
 
-      it('starts over when the slot itself moves', () =>
+      it('holds the same attempt while the spot only drifts within the configured tolerance', () =>
       {
-        // Arrange - the party turns a corner and every slot shifts. An ally part-way through
-        // running out of patience against the old slot has a new problem, not a continuing one.
+        // Arrange - a shuffling ally drags its spot a hair each frame.
         const ally = buildIdleAlly();
-        [ 5, 5, 5, 5 ].forEach(distance => ally.observeFormationApproach(distance, 10, 10));
 
         // Act.
-        ally.observeFormationApproach(5, 12, 10);
+        [ 10, 10.1, 10.2, 10.3 ].forEach(spotX => ally.observeStanceApproach(5, spotX, 10));
+
+        // Assert - one attempt, three wasted frames, out of patience.
+        expect(ally.hasGivenUpOnStanceSpot())
+          .toBe(true);
+      });
+
+      it('starts over when the spot itself moves', () =>
+      {
+        // Arrange - the party turns a corner and the spot shifts. An ally part-way through
+        // running out of patience against the old spot has a new problem, not a continuing one.
+        const ally = buildIdleAlly();
+        [ 5, 5, 5 ].forEach(distance => ally.observeStanceApproach(distance, 10, 10));
+
+        // Act.
+        ally.observeStanceApproach(5, 12, 10);
 
         // Assert.
-        expect(ally.hasGivenUpOnFormationSlot())
+        expect(ally.hasGivenUpOnStanceSpot())
           .toBe(false);
       });
     });
 
-    describe('hasGivenUpOnFormationSlot', () =>
+    describe('hasGivenUpOnStanceSpot', () =>
     {
       it('gives up once the configured patience is spent', () =>
       {
@@ -358,10 +486,10 @@ describe('J-ABS-AllyAI JABS_Battler (unit, all downstream dependencies mocked)',
         const ally = buildIdleAlly();
 
         // Act.
-        [ 5, 5, 5, 5 ].forEach(distance => ally.observeFormationApproach(distance, 10, 10));
+        [ 5, 5, 5, 5 ].forEach(distance => ally.observeStanceApproach(distance, 10, 10));
 
         // Assert.
-        expect(ally.hasGivenUpOnFormationSlot())
+        expect(ally.hasGivenUpOnStanceSpot())
           .toBe(true);
       });
 
@@ -371,41 +499,31 @@ describe('J-ABS-AllyAI JABS_Battler (unit, all downstream dependencies mocked)',
         const ally = buildIdleAlly();
 
         // Act.
-        [ 5, 5, 5 ].forEach(distance => ally.observeFormationApproach(distance, 10, 10));
+        [ 5, 5, 5 ].forEach(distance => ally.observeStanceApproach(distance, 10, 10));
 
         // Assert.
-        expect(ally.hasGivenUpOnFormationSlot())
-          .toBe(false);
-      });
-
-      it('has not given up before anything has been observed at all', () =>
-      {
-        // Arrange - a freshly idle ally standing in its slot.
-        const ally = buildIdleAlly();
-
-        // Act & Assert.
-        expect(ally.hasGivenUpOnFormationSlot())
+        expect(ally.hasGivenUpOnStanceSpot())
           .toBe(false);
       });
     });
 
-    describe('clearFormationApproach', () =>
+    describe('clearStanceApproach', () =>
     {
-      it('spends the attempt, so the same slot is a new problem next time', () =>
+      it('spends the attempt, so the same spot is a new problem next time', () =>
       {
         // Arrange - an ally that gave up, then arrived.
         const ally = buildIdleAlly();
-        [ 5, 5, 5, 5 ].forEach(distance => ally.observeFormationApproach(distance, 10, 10));
+        [ 5, 5, 5, 5 ].forEach(distance => ally.observeStanceApproach(distance, 10, 10));
 
         // Act.
-        ally.clearFormationApproach();
+        ally.clearStanceApproach();
 
-        // Assert - and the very same slot, deliberately: a reset that only forgot the distance
+        // Assert - and the very same spot, deliberately: a reset that only forgot the distance
         // would resume the old attempt the moment this ally fell behind again.
-        expect(ally.hasGivenUpOnFormationSlot())
+        expect(ally.hasGivenUpOnStanceSpot())
           .toBe(false);
-        ally.observeFormationApproach(5, 10, 10);
-        expect(ally.hasGivenUpOnFormationSlot())
+        ally.observeStanceApproach(5, 10, 10);
+        expect(ally.hasGivenUpOnStanceSpot())
           .toBe(false);
       });
     });
@@ -418,14 +536,124 @@ describe('J-ABS-AllyAI JABS_Battler (unit, all downstream dependencies mocked)',
       const walking = buildIdleAlly();
 
       // Act.
-      [ 5, 5, 5, 5 ].forEach(distance => stuck.observeFormationApproach(distance, 10, 10));
-      [ 9, 8, 7, 6 ].forEach(distance => walking.observeFormationApproach(distance, 10, 10));
+      [ 5, 5, 5, 5 ].forEach(distance => stuck.observeStanceApproach(distance, 10, 10));
+      [ 9, 8, 7, 6 ].forEach(distance => walking.observeStanceApproach(distance, 10, 10));
 
       // Assert.
-      expect(stuck.hasGivenUpOnFormationSlot())
+      expect(stuck.hasGivenUpOnStanceSpot())
         .toBe(true);
-      expect(walking.hasGivenUpOnFormationSlot())
+      expect(walking.hasGivenUpOnStanceSpot())
         .toBe(false);
+    });
+
+    describe('observeLeaderFacing / getStanceFacing', () =>
+    {
+      it('lays the stance out from the first facing it sees', () =>
+      {
+        // Arrange
+        const ally = buildIdleAlly();
+
+        // Act
+        ally.observeLeaderFacing(6);
+
+        // Assert
+        expect(ally.getStanceFacing()).toBe(6);
+      });
+
+      it('turns the stance only after the configured settle frames', () =>
+      {
+        // Arrange - a settle of two frames.
+        const ally = buildIdleAlly();
+        ally.observeLeaderFacing(2);
+        ally.observeLeaderFacing(8);
+
+        // Act
+        const afterOneFrame = ally.getStanceFacing();
+        ally.observeLeaderFacing(8);
+
+        // Assert
+        expect(afterOneFrame).toBe(2);
+        expect(ally.getStanceFacing()).toBe(8);
+      });
+    });
+
+    describe('updateStanceCatchUp / isStanceCatchingUp', () =>
+    {
+      it('starts sprinting once well out of position', () =>
+      {
+        // Arrange
+        const ally = buildIdleAlly();
+
+        // Act
+        ally.updateStanceCatchUp(1.6);
+
+        // Assert
+        expect(ally.isStanceCatchingUp()).toBe(true);
+      });
+
+      it('does not start sprinting at exactly the catch-up distance', () =>
+      {
+        // Arrange - the boundary: strictly further than the distance is what starts a sprint.
+        const ally = buildIdleAlly();
+
+        // Act
+        ally.updateStanceCatchUp(1.5);
+
+        // Assert
+        expect(ally.isStanceCatchingUp()).toBe(false);
+      });
+
+      it('keeps sprinting while closer than the catch-up distance but not yet in position', () =>
+      {
+        // Arrange
+        const ally = buildIdleAlly();
+        ally.updateStanceCatchUp(3);
+
+        // Act
+        ally.updateStanceCatchUp(1);
+
+        // Assert
+        expect(ally.isStanceCatchingUp()).toBe(true);
+      });
+
+      it('stops sprinting once back within the stance tolerance', () =>
+      {
+        // Arrange
+        const ally = buildIdleAlly();
+        ally.updateStanceCatchUp(3);
+
+        // Act - exactly the tolerance counts as in position.
+        ally.updateStanceCatchUp(0.25);
+
+        // Assert
+        expect(ally.isStanceCatchingUp()).toBe(false);
+      });
+
+      it('still counts a sprint the frame after the stance last steered the ally', () =>
+      {
+        // Arrange
+        const ally = buildIdleAlly();
+        ally.updateStanceCatchUp(3);
+
+        // Act
+        globalThis.Graphics.frameCount = 101;
+
+        // Assert
+        expect(ally.isStanceCatchingUp()).toBe(true);
+      });
+
+      it('drops a sprint left over from before the stance last steered the ally', () =>
+      {
+        // Arrange - a sprint, then two frames of the ally doing something else.
+        const ally = buildIdleAlly();
+        ally.updateStanceCatchUp(3);
+
+        // Act
+        globalThis.Graphics.frameCount = 102;
+
+        // Assert
+        expect(ally.isStanceCatchingUp()).toBe(false);
+      });
     });
   });
 
@@ -443,7 +671,7 @@ describe('J-ABS-AllyAI JABS_Battler (unit, all downstream dependencies mocked)',
       expect(originalInitIdleInfo).toHaveBeenCalledTimes(1);
     });
 
-    it('seeds a formation stall tracker that starts with no attempt recorded', () =>
+    it('seeds a stance stall tracker that starts with no attempt recorded', () =>
     {
       // Arrange
       const battler = new globalThis.JABS_Battler();
@@ -453,13 +681,38 @@ describe('J-ABS-AllyAI JABS_Battler (unit, all downstream dependencies mocked)',
 
       // Assert
       // a single observation is a fresh attempt, so one frame of patience is not yet spent.
-      battler.getFormationStall()
-        .observe(5, 10, 10, 0.05);
-      expect(battler.getFormationStall()
+      battler.getStanceStall()
+        .observe(5, 10, 10, 0.05, 0.5);
+      expect(battler.getStanceStall()
         .isStalled(1)).toBe(false);
     });
 
-    it('gives each battler a tracker of its own', () =>
+    it('seeds a stance facing that has not seen any facing yet', () =>
+    {
+      // Arrange
+      const battler = new globalThis.JABS_Battler();
+
+      // Act
+      battler.initIdleInfo();
+
+      // Assert
+      expect(battler.getStanceFacing()).toBe(0);
+    });
+
+    it('starts out not sprinting', () =>
+    {
+      // Arrange
+      const battler = new globalThis.JABS_Battler();
+
+      // Act
+      battler.initIdleInfo();
+
+      // Assert
+      expect(battler.stanceCatchingUp()).toBe(false);
+      expect(battler.stanceFollowFrame()).toBe(0);
+    });
+
+    it('gives each battler trackers of its own', () =>
     {
       // Arrange
       const rupert = new globalThis.JABS_Battler();
@@ -469,16 +722,308 @@ describe('J-ABS-AllyAI JABS_Battler (unit, all downstream dependencies mocked)',
 
       // Act
       // only rupert is stuck; a shared tracker would strand his neighbour too.
-      rupert.getFormationStall()
-        .observe(5, 10, 10, 0.05);
-      rupert.getFormationStall()
-        .observe(5, 10, 10, 0.05);
+      rupert.getStanceStall()
+        .observe(5, 10, 10, 0.05, 0.5);
+      rupert.getStanceStall()
+        .observe(5, 10, 10, 0.05, 0.5);
+      rupert.observeLeaderFacing(4);
 
       // Assert
-      expect(rupert.getFormationStall()
+      expect(rupert.getStanceStall()
         .isStalled(1)).toBe(true);
-      expect(someoneElse.getFormationStall()
+      expect(someoneElse.getStanceStall()
         .isStalled(1)).toBe(false);
+      expect(someoneElse.getStanceFacing()).toBe(0);
+    });
+  });
+
+  describe('initBattleInfo()', () =>
+  {
+    it('still performs the original battle setup, and starts with no pull back in effect', () =>
+    {
+      // Arrange
+      const battler = new globalThis.JABS_Battler();
+
+      // Act
+      battler.initBattleInfo();
+
+      // Assert
+      expect(originalInitBattleInfo).toHaveBeenCalledTimes(1);
+      expect(battler.pullBackFrames()).toBe(0);
+    });
+  });
+
+  describe('updateTimers()', () =>
+  {
+    it('still updates the original timers, and counts down a pull back', () =>
+    {
+      // Arrange
+      const battler = new globalThis.JABS_Battler();
+      battler.setPullBackFrames(5);
+
+      // Act
+      battler.updateTimers();
+
+      // Assert
+      expect(originalUpdateTimers).toHaveBeenCalledTimes(1);
+      expect(battler.pullBackFrames()).toBe(4);
+    });
+  });
+
+  describe('processPullBackTimer / isPullingBack', () =>
+  {
+    it('counts nothing down when no pull back is in effect', () =>
+    {
+      // Arrange
+      const battler = new globalThis.JABS_Battler();
+      battler.setPullBackFrames(0);
+
+      // Act
+      battler.processPullBackTimer();
+
+      // Assert - never below zero.
+      expect(battler.pullBackFrames()).toBe(0);
+      expect(battler.isPullingBack()).toBe(false);
+    });
+
+    it('is still pulling back with a frame left', () =>
+    {
+      // Arrange
+      const battler = new globalThis.JABS_Battler();
+      battler.setPullBackFrames(2);
+
+      // Act
+      battler.processPullBackTimer();
+
+      // Assert
+      expect(battler.isPullingBack()).toBe(true);
+    });
+
+    it('stops pulling back as the last frame runs out', () =>
+    {
+      // Arrange
+      const battler = new globalThis.JABS_Battler();
+      battler.setPullBackFrames(1);
+
+      // Act
+      battler.processPullBackTimer();
+
+      // Assert
+      expect(battler.isPullingBack()).toBe(false);
+    });
+  });
+
+  describe('chargeOnCommand', () =>
+  {
+    /**
+     * An ally ready to charge, with every collaborator recorded.
+     * @param {object} overrides Anything to replace on it.
+     * @returns {object}
+     */
+    const buildChargingAlly = (overrides = {}) =>
+    {
+      const ally = buildBattler(Object.assign({
+        getAllyAiMode: () => ({ isDoNothing: () => false }),
+        isEngaged: () => false,
+        findChargeTarget: () => 'slime',
+        showBalloon: vi.fn(),
+        engageTarget: vi.fn(),
+      }, overrides));
+      ally.setPullBackFrames(30);
+
+      return ally;
+    };
+
+    it('does nothing for an ally told to do nothing', () =>
+    {
+      // Arrange
+      const ally = buildChargingAlly({ getAllyAiMode: () => ({ isDoNothing: () => true }) });
+
+      // Act
+      ally.chargeOnCommand();
+
+      // Assert - nor does the order cancel its pull back.
+      expect(ally.engageTarget).not.toHaveBeenCalled();
+      expect(ally.pullBackFrames()).toBe(30);
+    });
+
+    it('leaves an ally already fighting to its fight', () =>
+    {
+      // Arrange
+      const ally = buildChargingAlly({ isEngaged: () => true });
+
+      // Act
+      ally.chargeOnCommand();
+
+      // Assert
+      expect(ally.engageTarget).not.toHaveBeenCalled();
+      expect(ally.pullBackFrames()).toBe(30);
+    });
+
+    it('cancels the pull back but charges nothing when nothing is in reach', () =>
+    {
+      // Arrange
+      const ally = buildChargingAlly({ findChargeTarget: () => null });
+
+      // Act
+      ally.chargeOnCommand();
+
+      // Assert
+      expect(ally.pullBackFrames()).toBe(0);
+      expect(ally.showBalloon).not.toHaveBeenCalled();
+      expect(ally.engageTarget).not.toHaveBeenCalled();
+    });
+
+    it('cancels the pull back, shows the charge, and engages the target', () =>
+    {
+      // Arrange
+      const ally = buildChargingAlly();
+
+      // Act
+      ally.chargeOnCommand();
+
+      // Assert
+      expect(ally.pullBackFrames()).toBe(0);
+      expect(ally.showBalloon).toHaveBeenCalledWith(1);
+      expect(ally.engageTarget).toHaveBeenCalledWith('slime');
+    });
+  });
+
+  describe('findChargeTarget', () =>
+  {
+    it('charges whatever the leader is fighting when it is within reach', () =>
+    {
+      // Arrange - the nearest foe is a different battler, so answering it would be the wrong answer.
+      const leaderFoe = buildFoe();
+      globalThis.$jabsEngine.getPlayer1.mockReturnValue({ lastHit: () => leaderFoe });
+      globalThis.JABS_AiManager.getClosestOpposingBattler.mockReturnValue(buildFoe());
+      const ally = buildBattler({ isLeaderFighting: () => true, canChargeAt: () => true });
+
+      // Act & Assert
+      expect(ally.findChargeTarget()).toBe(leaderFoe);
+    });
+
+    it('falls back to the nearest foe when the leader\'s fight is out of reach', () =>
+    {
+      // Arrange
+      const leaderFoe = buildFoe();
+      const nearestFoe = buildFoe();
+      globalThis.$jabsEngine.getPlayer1.mockReturnValue({ lastHit: () => leaderFoe });
+      globalThis.JABS_AiManager.getClosestOpposingBattler.mockReturnValue(nearestFoe);
+      const ally = buildBattler({ isLeaderFighting: () => true, canChargeAt: target => target === nearestFoe });
+
+      // Act & Assert
+      expect(ally.findChargeTarget()).toBe(nearestFoe);
+    });
+
+    it('charges the nearest foe when the leader is not fighting', () =>
+    {
+      // Arrange
+      const nearestFoe = buildFoe();
+      globalThis.JABS_AiManager.getClosestOpposingBattler.mockReturnValue(nearestFoe);
+      const ally = buildBattler({ isLeaderFighting: () => false, canChargeAt: () => true });
+
+      // Act & Assert
+      expect(ally.findChargeTarget()).toBe(nearestFoe);
+    });
+
+    it('finds nothing when nothing is in sight', () =>
+    {
+      // Arrange
+      globalThis.JABS_AiManager.getClosestOpposingBattler.mockReturnValue(null);
+      const ally = buildBattler({ isLeaderFighting: () => false, canChargeAt: () => true });
+
+      // Act & Assert
+      expect(ally.findChargeTarget()).toBeNull();
+    });
+
+    it('finds nothing when the nearest thing in sight is inanimate', () =>
+    {
+      // Arrange
+      globalThis.JABS_AiManager.getClosestOpposingBattler.mockReturnValue(buildFoe({ isInanimate: () => true }));
+      const ally = buildBattler({ isLeaderFighting: () => false, canChargeAt: () => true });
+
+      // Act & Assert
+      expect(ally.findChargeTarget()).toBeNull();
+    });
+
+    it('finds nothing when the nearest foe is out of reach', () =>
+    {
+      // Arrange
+      globalThis.JABS_AiManager.getClosestOpposingBattler.mockReturnValue(buildFoe());
+      const ally = buildBattler({ isLeaderFighting: () => false, canChargeAt: () => false });
+
+      // Act & Assert
+      expect(ally.findChargeTarget()).toBeNull();
+    });
+  });
+
+  describe('canChargeAt', () =>
+  {
+    /**
+     * A foe at a fixed distance from the leader.
+     * @param {number} fromLeader How far the foe stands from the leader.
+     * @returns {object}
+     */
+    const buildFoeFromLeader = fromLeader => buildFoe({ distanceToDesignatedTarget: () => fromLeader });
+
+    it('cannot charge a foe beyond its pursuit range', () =>
+    {
+      // Arrange - close to the leader, so only the pursuit gate can refuse.
+      const ally = buildBattler({ distanceToDesignatedTarget: () => 20, inPursuitRange: () => false, getAllyLeashRange: () => 10 });
+
+      // Act & Assert
+      expect(ally.canChargeAt(buildFoeFromLeader(2))).toBe(false);
+    });
+
+    it('cannot charge a foe beyond its leash of the leader', () =>
+    {
+      // Arrange
+      const ally = buildBattler({ distanceToDesignatedTarget: () => 4, inPursuitRange: () => true, getAllyLeashRange: () => 10 });
+
+      // Act & Assert
+      expect(ally.canChargeAt(buildFoeFromLeader(10.5))).toBe(false);
+    });
+
+    it('can charge a foe at exactly its leash of the leader', () =>
+    {
+      // Arrange - the boundary.
+      const ally = buildBattler({ distanceToDesignatedTarget: () => 4, inPursuitRange: () => true, getAllyLeashRange: () => 10 });
+
+      // Act & Assert
+      expect(ally.canChargeAt(buildFoeFromLeader(10))).toBe(true);
+    });
+
+    it('measures the pursuit gate by its own distance to the foe', () =>
+    {
+      // Arrange
+      const inPursuitRange = vi.fn(() => true);
+      const ally = buildBattler({ distanceToDesignatedTarget: () => 7, inPursuitRange, getAllyLeashRange: () => 10 });
+      const foe = buildFoeFromLeader(2);
+
+      // Act
+      ally.canChargeAt(foe);
+
+      // Assert
+      expect(inPursuitRange).toHaveBeenCalledWith(foe, 7);
+    });
+  });
+
+  describe('pullBackOnCommand', () =>
+  {
+    it('drops its fight and its grudges, holds off for the configured frames, and shows it', () =>
+    {
+      // Arrange
+      const ally = buildBattler({ disengageTarget: vi.fn(), resetAllAggro: vi.fn(), showBalloon: vi.fn() });
+
+      // Act
+      ally.pullBackOnCommand();
+
+      // Assert
+      expect(ally.disengageTarget).toHaveBeenCalledTimes(1);
+      expect(ally.resetAllAggro).toHaveBeenCalledWith(null, true);
+      expect(ally.pullBackFrames()).toBe(180);
+      expect(ally.showBalloon).toHaveBeenCalledWith(6);
     });
   });
 });

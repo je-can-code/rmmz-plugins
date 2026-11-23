@@ -5,12 +5,22 @@ describe('J-ABS-AllyAI Game_Follower (unit, all downstream dependencies mocked)'
 {
   let originalChaseCharacter;
   let originalSetDirectionFix;
+  let originalRealMoveSpeed;
 
   beforeAll(async () =>
   {
     vi.resetModules();
 
-    globalThis.J = { ABS: { EXT: { ALLYAI: { Aliased: { Game_Follower: new Map() } } } } };
+    globalThis.J = {
+      ABS: {
+        EXT: {
+          ALLYAI: {
+            Aliased: { Game_Follower: new Map() },
+            Metadata: { StanceCatchUpSpeedBoost: 1 },
+          },
+        },
+      },
+    };
 
     function Game_Follower()
     {
@@ -18,8 +28,10 @@ describe('J-ABS-AllyAI Game_Follower (unit, all downstream dependencies mocked)'
 
     originalChaseCharacter = vi.fn();
     originalSetDirectionFix = vi.fn();
+    originalRealMoveSpeed = vi.fn(() => 4);
     Game_Follower.prototype.chaseCharacter = originalChaseCharacter;
     Game_Follower.prototype.setDirectionFix = originalSetDirectionFix;
+    Game_Follower.prototype.realMoveSpeed = originalRealMoveSpeed;
     globalThis.Game_Follower = Game_Follower;
 
     await import('../../../../../../src/plugins/abs/ext/allyai/objects/Game_Follower.js');
@@ -156,6 +168,64 @@ describe('J-ABS-AllyAI Game_Follower (unit, all downstream dependencies mocked)'
       expect(globalThis.$gamePlayer.deltaXFrom).toHaveBeenCalledWith(5);
       expect(globalThis.$gamePlayer.deltaYFrom).toHaveBeenCalledWith(5);
       expect(follower.jump).toHaveBeenCalledWith(1, 2);
+    });
+  });
+
+  describe('realMoveSpeed', () =>
+  {
+    it('moves at the party\'s pace while not catching up to its stance', () =>
+    {
+      // Arrange
+      const follower = buildFollower({ isCatchingUpToStance: () => false });
+
+      // Act
+      const speed = follower.realMoveSpeed();
+
+      // Assert
+      expect(originalRealMoveSpeed).toHaveBeenCalledTimes(1);
+      expect(speed).toBe(4);
+    });
+
+    it('sprints one speed step faster while catching up to its stance', () =>
+    {
+      // Arrange
+      const follower = buildFollower({ isCatchingUpToStance: () => true });
+
+      // Act
+      const speed = follower.realMoveSpeed();
+
+      // Assert
+      expect(speed).toBe(5);
+    });
+  });
+
+  describe('isCatchingUpToStance', () =>
+  {
+    it('is not catching up without a battler', () =>
+    {
+      // Arrange
+      const follower = buildFollower({ getJabsBattler: () => undefined });
+
+      // Act & Assert
+      expect(follower.isCatchingUpToStance()).toBe(false);
+    });
+
+    it('is catching up when its battler is', () =>
+    {
+      // Arrange
+      const follower = buildFollower({ getJabsBattler: () => ({ isStanceCatchingUp: () => true }) });
+
+      // Act & Assert
+      expect(follower.isCatchingUpToStance()).toBe(true);
+    });
+
+    it('is not catching up when its battler is not', () =>
+    {
+      // Arrange
+      const follower = buildFollower({ getJabsBattler: () => ({ isStanceCatchingUp: () => false }) });
+
+      // Act & Assert
+      expect(follower.isCatchingUpToStance()).toBe(false);
     });
   });
 });

@@ -1,4 +1,5 @@
 //region JABS_AiManager
+import JABS_Stance from '../_models/JABS_Stance.js';
 
 /**
  * Extends {@link #executeAi}.<br/>
@@ -48,7 +49,7 @@ JABS_AiManager.aiPhase0 = function(battler)
 
 /**
  * Decides what to do for allies in their idle phase.
- * When not alerted/engaged, allies follow the leader in a loose formation.
+ * When not alerted/engaged, allies keep to the party's stance around the leader.
  * @param {JABS_Battler} allyBattler The ally battler.
  */
 JABS_AiManager.allyAiPhase0 = function(allyBattler)
@@ -59,7 +60,7 @@ JABS_AiManager.allyAiPhase0 = function(allyBattler)
   // check if we can perform phase 0 logic for allies.
   if (!this.canPerformAllyPhase0(allyBattler)) return;
 
-  // do-nothing allies ignore alert state entirely and stay in formation.
+  // do-nothing allies ignore alert state entirely and keep to their stance.
   const allyAI = allyBattler.getAllyAiMode();
   const isDoNothing = allyAI && allyAI.isDoNothing();
 
@@ -128,8 +129,11 @@ JABS_AiManager.canPerformAllyPhase0 = function(allyBattler)
 };
 
 /**
- * Causes an ally to follow their leader (player1) intelligently while idle.
- * Uses a small formation offset per follower index, a leash, and keeps spacing.
+ * Causes an ally to keep to the party's stance around their leader (player1) while idle.
+ *
+ * The stance is a zone, so an ally already inside it stays where it is. One outside it heads for the
+ * nearest spot in it, sprinting if it has strayed far enough. The zone turns with the leader, but only
+ * once the leader has settled on a new facing.
  * @param {JABS_Battler} allyBattler The ally battler to reposition.
  */
 JABS_AiManager.allyFollowLeader = function(allyBattler)
@@ -146,19 +150,83 @@ JABS_AiManager.allyFollowLeader = function(allyBattler)
   // if the ally cannot move, do not follow.
   if (!allyBattler.canBattlerMove()) return;
 
-  // determine follower index to choose a formation slot.
+  // turn the stance with the leader once they have settled on a new facing.
+  const leaderFacing = leader.getCharacter()
+    .direction();
+  allyBattler.observeLeaderFacing(leaderFacing);
+
+  // find the nearest spot in the party's stance for this ally.
+  const spot = this.findStanceSpot(allyBattler, leader);
+  const [ spotX, spotY ] = spot;
+
+  // sprint back into the stance if this ally has strayed far enough from it.
+  const distance = this.distanceToSlot(allyBattler, spotX, spotY);
+  allyBattler.updateStanceCatchUp(distance);
+
+  // attempt to move toward the spot if needed.
+  this.moveTowardSlotIfNeeded(allyBattler, spotX, spotY);
+};
+
+/**
+ * Finds the nearest spot in the party's stance for an ally, as map coordinates.
+ * @param {JABS_Battler} allyBattler The ally battler being placed.
+ * @param {JABS_Battler} leaderBattler The leader the stance is laid out around.
+ * @returns {[number, number]} The [x, y] coordinates of the spot.
+ */
+JABS_AiManager.findStanceSpot = function(allyBattler, leaderBattler)
+{
+  // the stance the party has chosen.
+  const stance = $gameParty.getPartyStanceType();
+
+  // the lane this ally keeps within it, so several allies do not pile onto one spot.
   const followerIndex = this.getFollowerIndexFromBattler(allyBattler);
+  const lane = JABS_Stance.laneFor(Math.max(0, followerIndex));
 
-  // resolve the current formation type.
-  // TODO: resolve this from persisted game_system or maybe game_party?
-  const formationType = $gameParty.getPartyFormation();
+  // which way the stance is laid out right now.
+  const facing = allyBattler.getStanceFacing();
 
-  // compute the desired slot tile for this follower based on formation.
-  const coords = this.computeFormationTarget(leader, followerIndex, formationType);
-  const [ desiredX, desiredY ] = coords;
+  // compute the spot itself.
+  return this.computeStanceSpot(allyBattler, leaderBattler, stance, facing, lane);
+};
 
-  // attempt to move toward the desired formation slot if needed.
-  this.moveTowardSlotIfNeeded(allyBattler, desiredX, desiredY);
+/**
+ * Computes the nearest spot within a stance's zone to where an ally stands, as map coordinates.
+ *
+ * Both battlers are measured by their logical position, the same position every mover measures arrival
+ * against, so the answer means the same thing under tile and pixel movement alike: the ally's place
+ * relative to the leader is turned into the leader-facing-down frame the stance is defined in, brought to
+ * the nearest point of the zone there, and turned back out onto the map.
+ * @param {JABS_Battler} allyBattler The ally battler being placed.
+ * @param {JABS_Battler} leaderBattler The leader the stance is laid out around.
+ * @param {JABS_Stance} stance The stance the ally is keeping to.
+ * @param {2|4|6|8} facing The facing the stance is laid out from.
+ * @param {number} lane The lane this ally keeps within the stance.
+ * @returns {[number, number]} The [x, y] coordinates of the spot.
+ */
+JABS_AiManager.computeStanceSpot = function(allyBattler, leaderBattler, stance, facing, lane)
+{
+  // where the leader stands; the zone is measured from here.
+  const leaderCharacter = leaderBattler.getCharacter();
+  const leaderX = leaderCharacter.x;
+  const leaderY = leaderCharacter.y;
+
+  // where the ally stands relative to the leader, in the leader-facing-down frame.
+  const allyCharacter = allyBattler.getCharacter();
+  const fromLeaderX = allyCharacter.x - leaderX;
+  const fromLeaderY = allyCharacter.y - leaderY;
+  const allyOffset = this.unrotateOffsetForFacing(fromLeaderX, fromLeaderY, facing);
+  const [ side, forward ] = allyOffset;
+
+  // the nearest point of the zone, still in that frame, pulled inside it by the tolerance the movers count
+  // as arrival, so an ally that stops short of its spot still stops inside the zone.
+  const inset = J.ABS.EXT.ALLYAI.Metadata.StanceTolerance;
+  const spotOffset = stance.nearestSpot(side, forward, lane, inset);
+  const [ spotSide, spotForward ] = spotOffset;
+
+  // turned back out onto the map around the leader.
+  const mapOffset = this.rotateOffsetForFacing(spotSide, spotForward, facing);
+  const [ offsetX, offsetY ] = mapOffset;
+  return [ leaderX + offsetX, leaderY + offsetY ];
 };
 
 /**
@@ -247,76 +315,6 @@ JABS_AiManager.getFollowerIndexFromBattler = function(allyBattler)
 };
 
 /**
- * Computes the absolute map tile for a follower’s formation slot.
- * Offsets are defined assuming the leader faces DOWN (2); they will be rotated to match current facing.
- * @param {JABS_Battler} leaderBattler The leader battler.
- * @param {number} followerIndex The index of the follower (0-based).
- * @param {string} formationType The formation type key.
- * @returns {[number, number]} The [x, y] tile target for this follower.
- */
-JABS_AiManager.computeFormationTarget = function(leaderBattler, followerIndex, formationType)
-{
-  // cycle index through available slots.
-  const idx = Math.max(0, followerIndex);
-
-  // get offsets for the selected formation type (baseline: leader facing DOWN).
-  const offsets = this.getFormationOffsets(formationType);
-
-  // choose offset for this follower.
-  const chosen = offsets[idx % offsets.length];
-  const [ ox, oy ] = chosen;
-
-  // derive the leader's current facing.
-  const dir = leaderBattler.getCharacter()
-    .direction();
-
-  // rotate the baseline offset to the leader's current facing.
-  const rotated = this.rotateOffsetForFacing(ox, oy, dir);
-  const [ rx, ry ] = rotated;
-
-  // leader tile coords.
-  const lx = Math.floor(leaderBattler.getX());
-  const ly = Math.floor(leaderBattler.getY());
-
-  // return slot coords.
-  return this.calculateFormationSlotCoordinates(lx, rx, ly, ry);
-};
-
-/**
- * Gets the array of [x,y] tile offsets for the requested formation type.
- * Offsets are relative to the leader's current tile.
- * @param {string} formationKey The formation type key.
- * @returns {number[][]} The list of offsets.
- */
-JABS_AiManager.getFormationOffsets = function(formationKey)
-{
-  // identify the formation in question.
-  const foundFormation = J.ABS.EXT.ALLYAI.Metadata.FormationTypes
-    .find(formation => formation.key === formationKey) ?? J.ABS.EXT.ALLYAI.Metadata.FormationTypes[0];
-
-  // resolve and return offsets.
-  return foundFormation.formation;
-};
-
-/**
- * Calculates the formation slot's coordinates based on the given parameters.
- * @param {number} lx The leader's x coordinate.
- * @param {number} rx The rotated x.
- * @param {number} ly The leader's y coordinate.
- * @param {number} ry The rotated y.
- * @returns {[number, number]}
- */
-JABS_AiManager.calculateFormationSlotCoordinates = function(lx, rx, ly, ry)
-{
-  // compute absolute slot tile by applying the rotated offset.
-  const sx = lx + rx;
-  const sy = ly + ry;
-
-  // return slot coords.
-  return [ sx, sy ];
-};
-
-/**
  * Rotates a baseline offset [ox, oy] (assumed for leader facing DOWN) into the space of the given facing.
  * Directions follow RMMZ standard: 2=down, 4=left, 6=right, 8=up.
  * @param {number} ox The baseline x-offset (facing DOWN).
@@ -352,6 +350,45 @@ JABS_AiManager.rotateOffsetForFacing = function(ox, oy, dir)
 };
 
 /**
+ * Rotates an offset on the map back into the baseline frame of a leader facing DOWN - the exact reverse of
+ * {@link JABS_AiManager.rotateOffsetForFacing}, so turning an offset one way and then the other returns it
+ * unchanged.
+ *
+ * Stances are defined in that baseline frame, so this is how an ally's place on the map is read in terms a
+ * stance understands: how far in front of the leader it stands, and how far to one side.
+ * @param {number} mapX The x-offset on the map.
+ * @param {number} mapY The y-offset on the map.
+ * @param {2|4|6|8} dir The facing the offset is measured against.
+ * @returns {[number, number]} The baseline offset [x, y], as though the leader faced DOWN.
+ */
+JABS_AiManager.unrotateOffsetForFacing = function(mapX, mapY, dir)
+{
+  // switch on the facing to undo its rotation.
+  switch (dir)
+  {
+    // facing DOWN: identity transform.
+    case 2:
+      return [ mapX, mapY ];
+
+    // facing LEFT: undo the +90 degree turn: (x, y) -> (y, -x).
+    case 4:
+      return [ mapY, -mapX ];
+
+    // facing RIGHT: undo the -90 degree turn: (x, y) -> (-y, x).
+    case 6:
+      return [ -mapY, mapX ];
+
+    // facing UP: undo the 180 degree turn: (x, y) -> (-x, -y).
+    case 8:
+      return [ -mapX, -mapY ];
+
+    // unsupported/unknown direction: default to identity, matching the forward rotation.
+    default:
+      return [ mapX, mapY ];
+  }
+};
+
+/**
  * Issues a smart move toward the designated slot if outside tolerance and able to move.
  * @param {JABS_Battler} allyBattler The ally battler.
  * @param {number} desiredX The desired slot x.
@@ -371,28 +408,28 @@ JABS_AiManager.moveTowardSlotIfNeeded = function(allyBattler, desiredX, desiredY
   }
 
   // define a small tolerance to avoid jitter.
-  const tolerance = J.ABS.EXT.ALLYAI.Metadata.FormationTolerance;
+  const tolerance = J.ABS.EXT.ALLYAI.Metadata.StanceTolerance;
 
   // if within tolerance, do not micro-adjust.
   if (this.isWithinTolerance(allyBattler, desiredX, desiredY, tolerance))
   {
-    // standing in the slot spends the attempt; the next one starts from a clean history.
-    allyBattler.clearFormationApproach();
+    // standing in the spot spends the attempt; the next one starts from a clean history.
+    allyBattler.clearStanceApproach();
 
     return;
   }
 
   // measure this frame's approach before deciding whether another step is worth issuing.
   const distance = this.distanceToSlot(allyBattler, desiredX, desiredY);
-  allyBattler.observeFormationApproach(distance, desiredX, desiredY);
+  allyBattler.observeStanceApproach(distance, desiredX, desiredY);
 
   // an ally that has stopped getting closer stops trying.
   //
   // Issuing the move anyway is what produces the vibrating companion: the pathfinder rounds to a
   // tile, so an ally wedged near a boundary is handed the opposite answer on alternating frames,
   // and a move command faces its character whether or not the move succeeds. Standing still is both
-  // the correct answer to an unreachable slot and the only one that looks deliberate.
-  if (allyBattler.hasGivenUpOnFormationSlot()) return;
+  // the correct answer to an unreachable spot and the only one that looks deliberate.
+  if (allyBattler.hasGivenUpOnStanceSpot()) return;
 
   // acquire the character once.
   const character = allyBattler.getCharacter();
@@ -403,7 +440,7 @@ JABS_AiManager.moveTowardSlotIfNeeded = function(allyBattler, desiredX, desiredY
   // only issue a new move if able to move.
   if (allyBattler.canBattlerMove())
   {
-    // move intelligently toward the desired formation slot point (centered).
+    // move intelligently toward the stance spot.
     allyBattler.smartMoveTowardCoordinates(desiredX, desiredY);
   }
 };

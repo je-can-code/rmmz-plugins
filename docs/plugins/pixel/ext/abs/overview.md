@@ -10,7 +10,7 @@ version: "1.2.0"
 
 This plugin is `J-ABS-Pixelistics`: the JABS integration layer for [`J-Pixelistics`](../../core/overview.md).
 
-It adapts JABS-specific behavior (ally AI formation movement, JABS battler hitbox queries, action/projectile pixel
+It adapts JABS-specific behavior (ally AI stance movement, JABS battler hitbox queries, action/projectile pixel
 distance scaling, and the dodge step-count multiplier) to work with the fractional-coordinate system provided by
 `J-Pixelistics`.
 

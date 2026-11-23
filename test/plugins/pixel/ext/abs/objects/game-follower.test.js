@@ -3,7 +3,7 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 /**
  * The JABS-aware half of follower movement. Pixel core moves followers along the player's
- * breadcrumb trail; this plugin hands allies over to formation movement instead, and everything
+ * breadcrumb trail; this plugin hands allies over to stance movement instead, and everything
  * here is about making that handoff clean. Two systems writing a position to the same sprite each
  * frame is what these guards exist to prevent, so the assertions are about who is allowed to move
  * an ally rather than about where it ends up.
@@ -131,7 +131,7 @@ describe('J-ABS-Pixelistics Game_Follower ally handoff (direct src import)', () 
   //region chaseCharacter
   describe('chaseCharacter', () =>
   {
-    it('suppresses vanilla chasing for an ally owned by formation movement', () =>
+    it('suppresses vanilla chasing for an ally owned by stance movement', () =>
     {
       // Arrange
       const follower = makeFollower(0, 0, makeAllyBattler());
@@ -193,7 +193,7 @@ describe('J-ABS-Pixelistics Game_Follower ally handoff (direct src import)', () 
 
     it('clamps a resting ally so it stops drifting off its slot', () =>
     {
-      // Arrange: formation movement issues steps deliberately, so a frame with no step means
+      // Arrange: stance movement issues steps deliberately, so a frame with no step means
       // the ally is meant to be still- any lingering interpolation is drift.
       const follower = makeFollower(2, 2, makeAllyBattler());
       follower._stopCount = 15;
@@ -235,8 +235,8 @@ describe('J-ABS-Pixelistics Game_Follower ally handoff (direct src import)', () 
   });
   //endregion update
 
-  //region idle formation movement guard
-  describe('isIdleFormationMoveBlocked', () =>
+  //region idle stance movement guard
+  describe('isIdleStanceMoveBlocked', () =>
   {
     it('never blocks an ordinary follower', () =>
     {
@@ -244,19 +244,19 @@ describe('J-ABS-Pixelistics Game_Follower ally handoff (direct src import)', () 
       const follower = makeFollower(0, 0, undefined);
 
       // Act
-      const result = follower.isIdleFormationMoveBlocked();
+      const result = follower.isIdleStanceMoveBlocked();
 
       // Assert
       expect(result).toBe(false);
     });
 
-    it('blocks a resting ally, whose only legitimate movement comes from formation', () =>
+    it('blocks a resting ally, whose only legitimate movement comes from its stance', () =>
     {
       // Arrange
       const follower = makeFollower(0, 0, makeAllyBattler(false, false));
 
       // Act
-      const result = follower.isIdleFormationMoveBlocked();
+      const result = follower.isIdleStanceMoveBlocked();
 
       // Assert
       expect(result).toBe(true);
@@ -269,7 +269,7 @@ describe('J-ABS-Pixelistics Game_Follower ally handoff (direct src import)', () 
       follower.isMovePressed.mockReturnValue(true);
 
       // Act
-      const result = follower.isIdleFormationMoveBlocked();
+      const result = follower.isIdleStanceMoveBlocked();
 
       // Assert
       expect(result).toBe(false);
@@ -281,25 +281,25 @@ describe('J-ABS-Pixelistics Game_Follower ally handoff (direct src import)', () 
       const follower = makeFollower(0, 0, makeAllyBattler(true, false));
 
       // Act
-      const result = follower.isIdleFormationMoveBlocked();
+      const result = follower.isIdleStanceMoveBlocked();
 
       // Assert
       expect(result).toBe(false);
     });
 
-    it('allows an alerted ally, which is no longer in formation phase', () =>
+    it('allows an alerted ally, which is no longer keeping to its stance', () =>
     {
       // Arrange
       const follower = makeFollower(0, 0, makeAllyBattler(false, true));
 
       // Act
-      const result = follower.isIdleFormationMoveBlocked();
+      const result = follower.isIdleStanceMoveBlocked();
 
       // Assert
       expect(result).toBe(false);
     });
   });
-  //endregion idle formation movement guard
+  //endregion idle stance movement guard
 
   //region movement
   describe('moveStraight', () =>

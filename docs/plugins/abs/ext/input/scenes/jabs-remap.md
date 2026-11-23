@@ -12,6 +12,10 @@ group beside the key or button bound to it. Choosing an action waits for the nex
 after five seconds; the Tool input (Tab or Triangle) clears the selected action's binding. A strip along the bottom
 applies the new bindings, resets them to the defaults, undoes the changes made in the scene, or exits without saving.
 
+With `J-ABS-AllyAI` installed, an Ally Commands group lists the four ally orders as well: Ally Charge, Ally Pull Back,
+Stance: Safer and Stance: Bolder, on the right stick's four flicks by default. Without that plugin there is nobody to
+command, so the group is left out.
+
 ## How to call the scene
 
 The scene can be opened in any of these ways:

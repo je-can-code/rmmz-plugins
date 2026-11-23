@@ -298,6 +298,33 @@ describe('J-ABS-Input Input (unit, real pure siblings, engine surface stubbed)',
       expect(globalThis.Input.labelForSymbol('l3')).toEqual('L3');
     });
 
+    it('seeds the four ally orders onto flicks of the right stick', () =>
+    {
+      // Arrange/Act
+      globalThis.Input.ensureRemapBootstrapped();
+
+      // Assert
+      const bindings = globalThis.Input.getAllBindings('JABS');
+      expect(bindings.AllyCharge).toEqual([ 'rstick-up' ]);
+      expect(bindings.AllyPullBack).toEqual([ 'rstick-down' ]);
+      expect(bindings.AllyStanceSafer).toEqual([ 'rstick-left' ]);
+      expect(bindings.AllyStanceBolder).toEqual([ 'rstick-right' ]);
+    });
+
+    it('names the right stick flicks and lets the remap prompt capture them', () =>
+    {
+      // Arrange/Act
+      globalThis.Input.ensureRemapBootstrapped();
+
+      // Assert
+      expect(globalThis.Input.labelForSymbol('rstick-up')).toEqual('R-Stick Up');
+      expect(globalThis.Input.labelForSymbol('rstick-down')).toEqual('R-Stick Down');
+      expect(globalThis.Input.labelForSymbol('rstick-left')).toEqual('R-Stick Left');
+      expect(globalThis.Input.labelForSymbol('rstick-right')).toEqual('R-Stick Right');
+      expect(globalThis.Input.getRemapCaptureSymbols())
+        .toEqual(expect.arrayContaining([ 'rstick-up', 'rstick-down', 'rstick-left', 'rstick-right' ]));
+    });
+
     it('is idempotent- a second call does not re-run the bootstrap work', () =>
     {
       globalThis.Input.ensureRemapBootstrapped();
@@ -515,6 +542,71 @@ describe('J-ABS-Input Input (unit, real pure siblings, engine surface stubbed)',
 
       expect(globalThis.Input.getBindings('JABS', 'mainhand')).toEqual([]);
     });
+
+    it('keeps the live default of an action the snapshot predates', () =>
+    {
+      // Arrange- the live namespace knows an action the older snapshot never heard of.
+      globalThis.Input.seedDefaultBindings('JABS', { mainhand: [ 'ok' ], allyCommand: [ 'r3' ] });
+      globalThis.Input.getAllBindings('JABS');
+
+      // Act
+      globalThis.Input.importAllBindingsFromSave({ JABS: { mainhand: [ 'space' ] } });
+
+      // Assert
+      expect(globalThis.Input.getBindings('JABS', 'allyCommand')).toEqual([ 'r3' ]);
+    });
+
+    it('lets the snapshot\'s binding win over the live default for an action it does hold', () =>
+    {
+      // Arrange
+      globalThis.Input.seedDefaultBindings('JABS', { mainhand: [ 'ok' ], allyCommand: [ 'r3' ] });
+      globalThis.Input.getAllBindings('JABS');
+
+      // Act
+      globalThis.Input.importAllBindingsFromSave({ JABS: { mainhand: [ 'space' ] } });
+
+      // Assert
+      expect(globalThis.Input.getBindings('JABS', 'mainhand')).toEqual([ 'space' ]);
+    });
+
+    it('keeps a deliberate unbind from the snapshot rather than restoring the default', () =>
+    {
+      // Arrange
+      globalThis.Input.seedDefaultBindings('JABS', { mainhand: [ 'ok' ], allyCommand: [ 'r3' ] });
+      globalThis.Input.getAllBindings('JABS');
+
+      // Act
+      globalThis.Input.importAllBindingsFromSave({ JABS: { allyCommand: [] } });
+
+      // Assert
+      expect(globalThis.Input.getBindings('JABS', 'allyCommand')).toEqual([]);
+    });
+
+    it('leaves the other namespaces it was not handed exactly as they were', () =>
+    {
+      // Arrange
+      globalThis.Input.seedDefaultBindings('J.MAP', { 'minimap-toggle': [ 'dpad-up' ] });
+      globalThis.Input.getAllBindings('J.MAP');
+
+      // Act
+      globalThis.Input.importAllBindingsFromSave({ JABS: { mainhand: [ 'space' ] } });
+
+      // Assert
+      expect(globalThis.Input.getBindings('J.MAP', 'minimap-toggle')).toEqual([ 'dpad-up' ]);
+    });
+
+    it('shares no arrays with the snapshot it imported', () =>
+    {
+      // Arrange
+      const snapshot = { JABS: { mainhand: [ 'space' ] } };
+      globalThis.Input.importAllBindingsFromSave(snapshot);
+
+      // Act
+      snapshot.JABS.mainhand.push('intruder');
+
+      // Assert
+      expect(globalThis.Input.getBindings('JABS', 'mainhand')).toEqual([ 'space' ]);
+    });
   });
   //endregion registries
 
@@ -579,6 +671,111 @@ describe('J-ABS-Input Input (unit, real pure siblings, engine surface stubbed)',
 
       expect(globalThis.Input._currentState.left).toEqual(true);
       expect(globalThis.Input._currentState.right).toEqual(true);
+    });
+
+    it('turns a flick of the right stick into its own button on a full pass', () =>
+    {
+      // Arrange - the left stick at rest and the right stick flicked up.
+      globalThis.Input._flickThreshold = 0.7;
+      const gamepad = { index: 0, buttons: [], axes: [ 0, 0, 0, -1 ] };
+
+      // Act
+      globalThis.Input._updateGamepadState(gamepad);
+
+      // Assert - written into both state bags, and walking nowhere.
+      expect(globalThis.Input._currentState['rstick-up']).toEqual(true);
+      expect(globalThis.Input._gamepadStates[0]['rstick-up']).toEqual(true);
+      expect(globalThis.Input._currentState.up).toEqual(false);
+    });
+  });
+
+  describe('_resolveRightStickFlicks()', () =>
+  {
+    beforeEach(() =>
+    {
+      globalThis.Input._flickThreshold = 0.7;
+    });
+
+    /**
+     * Resolves the flicks for a pad whose right stick sits at the given push.
+     * @param {number} rightX How far the right stick is pushed right; negative is left.
+     * @param {number} rightY How far the right stick is pushed down; negative is up.
+     * @returns {Object<string, boolean>}
+     */
+    const flicksAt = (rightX, rightY) => globalThis.Input._resolveRightStickFlicks({ axes: [ 0, 0, rightX, rightY ] });
+
+    it('flicks up when pushed up past the threshold', () =>
+    {
+      expect(flicksAt(0, -0.9))
+        .toEqual({ 'rstick-up': true, 'rstick-down': false, 'rstick-left': false, 'rstick-right': false });
+    });
+
+    it('flicks down when pushed down past the threshold', () =>
+    {
+      expect(flicksAt(0, 0.9))
+        .toEqual({ 'rstick-up': false, 'rstick-down': true, 'rstick-left': false, 'rstick-right': false });
+    });
+
+    it('flicks left when pushed left past the threshold', () =>
+    {
+      expect(flicksAt(-0.9, 0))
+        .toEqual({ 'rstick-up': false, 'rstick-down': false, 'rstick-left': true, 'rstick-right': false });
+    });
+
+    it('flicks right when pushed right past the threshold', () =>
+    {
+      expect(flicksAt(0.9, 0))
+        .toEqual({ 'rstick-up': false, 'rstick-down': false, 'rstick-left': false, 'rstick-right': true });
+    });
+
+    it('counts a push of exactly the threshold as a flick', () =>
+    {
+      expect(flicksAt(0.7, 0)['rstick-right']).toEqual(true);
+    });
+
+    it('does not count a push just short of the threshold', () =>
+    {
+      expect(flicksAt(0.69, 0)['rstick-right']).toEqual(false);
+    });
+
+    it('gives a diagonal push to the axis pushed harder, and only that one', () =>
+    {
+      expect(flicksAt(0.8, -0.9))
+        .toEqual({ 'rstick-up': true, 'rstick-down': false, 'rstick-left': false, 'rstick-right': false });
+    });
+
+    it('gives an exact diagonal to the horizontal axis', () =>
+    {
+      expect(flicksAt(-0.8, 0.8))
+        .toEqual({ 'rstick-up': false, 'rstick-down': false, 'rstick-left': true, 'rstick-right': false });
+    });
+
+    it('never flicks a pad with no right stick', () =>
+    {
+      // Arrange - only the left stick's two axes, both pushed hard.
+      const flicks = globalThis.Input._resolveRightStickFlicks({ axes: [ 0.9, -0.9 ] });
+
+      // Assert
+      expect(flicks).toEqual({ 'rstick-up': false, 'rstick-down': false, 'rstick-left': false, 'rstick-right': false });
+    });
+  });
+
+  describe('_normalizeRightStickFlicks()', () =>
+  {
+    it('writes every right stick direction into both state bags', () =>
+    {
+      // Arrange - a flick right, so one direction is on and three are off in both bags.
+      globalThis.Input._flickThreshold = 0.7;
+      const s = { 'rstick-left': true };
+      const padState = {};
+
+      // Act
+      globalThis.Input._normalizeRightStickFlicks({ axes: [ 0, 0, 1, 0 ] }, s, padState);
+
+      // Assert - a direction left on from the frame before is switched off.
+      const expected = { 'rstick-up': false, 'rstick-down': false, 'rstick-left': false, 'rstick-right': true };
+      expect(s).toEqual(expected);
+      expect(padState).toEqual(expected);
     });
   });
 

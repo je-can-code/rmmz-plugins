@@ -25,6 +25,23 @@ No single input can be mapped to multiple actions. Mapping the same input to a s
 Be sure all actions you care about are mapped! These cannot be undone mid-run by the player! (but they can there is an
 exposed function on `Game_System` that will reset all input mapping back to defaults via script call if necessary).
 
+### Ally commands
+
+With `J-ABS-AllyAI` installed, the controller also gives four orders to the party's allies, one per flick of the right
+stick by default:
+
+- **Up**, Ally Charge: sends the allies charging in.
+- **Down**, Ally Pull Back: drops them out of the fight for a few seconds.
+- **Left**, Stance: Safer: steps the party's stance one rung toward hanging back.
+- **Right**, Stance: Bolder: steps it one rung toward leading the charge.
+
+Nothing else reads the right stick, so each of its four directions is a button of its own. A flick has to push the
+stick 70% of the way out, firmer than walking with the left stick, so a thumb resting on it gives no orders, and only
+the axis pushed harder counts, so a diagonal flick gives one order rather than two.
+
+All four orders are carried out by `J-ABS-AllyAI`. Without it, they are never listened for and do not appear in the
+[remap scene](scenes/jabs-remap.md). Like every other action, each can be rebound to any key or button.
+
 ## Note about notetags
 
 This plugin has no notetags of its own. Everything here is exposed via plugin parameters (input remapping) and a

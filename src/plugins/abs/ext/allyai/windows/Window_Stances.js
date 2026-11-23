@@ -1,17 +1,21 @@
-//region Window_Formations
+//region Window_Stances
 /**
- * A window that allows selection from a list of ally AI formations.
+ * A window that allows selection from the stances the party's allies can take.
  */
-class Window_Formations
+class Window_Stances
   extends Window_Command
 {
+  /**
+   * Constructor.
+   * @param {Rectangle} rect The shape of this window.
+   */
   constructor(rect)
   {
     super(rect);
   }
 
   /**
-   * Generates the command list for the JABS menu.
+   * Generates the command list of stances.
    */
   makeCommandList()
   {
@@ -22,23 +26,32 @@ class Window_Formations
     commands.forEach(this.addBuiltCommand, this);
   }
 
+  /**
+   * Builds one command for every stance the party can take.
+   * @returns {BuiltWindowCommand[]}
+   */
   buildCommands()
   {
-    // iterate over each of the commands.
-    return J.ABS.EXT.ALLYAI.Metadata.FormationTypes.map(this.buildCommand, this);
+    // iterate over each of the stances.
+    return J.ABS.EXT.ALLYAI.Metadata.StanceTypes.map(this.buildCommand, this);
   }
 
-  buildCommand(formation)
+  /**
+   * Builds the command for a single stance.
+   * @param {JABS_Stance} stance The stance to build a command for.
+   * @returns {BuiltWindowCommand}
+   */
+  buildCommand(stance)
   {
-    // extract some data from the formation.
+    // extract some data from the stance.
     const {
       key,
       name,
       description
-    } = formation;
+    } = stance;
 
-    // check if the currently selected formation is what this is.
-    const isEquipped = $gameParty.getPartyFormation() === key;
+    // check if the currently chosen stance is what this is.
+    const isEquipped = $gameParty.getPartyStance() === key;
 
     // build the icon based on whether or not its assigned.
     const iconIndex = isEquipped
@@ -47,12 +60,12 @@ class Window_Formations
 
     // build the new "command".
     return new WindowCommandBuilder(name)
-      .setSymbol("select-formation")
+      .setSymbol('select-stance')
       .setTextLines(description.split(/[\r\n]/i))
       .flagAsSubText()
       .setIconIndex(iconIndex)
       .setEnabled(true)
-      .setExtensionData(formation)
+      .setExtensionData(stance)
       .build();
   }
 
@@ -66,5 +79,5 @@ class Window_Formations
     return this.lineHeight() * 2;
   }
 }
-export default Window_Formations;
-//endregion Window_Formations
+export default Window_Stances;
+//endregion Window_Stances

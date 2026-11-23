@@ -1,5 +1,5 @@
 //region plugins/abs/ext/input/_models/jabs-standard-controller.test.js
-import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 /**
  * JABS_StandardController.js is a genuine ES `class` extending the bare-global `JABS_BaseController`
@@ -36,6 +36,11 @@ describe('JABS_StandardController (unit, JABS_BaseController/Input/JABS_InputAda
               CombatSkill2: 'combat-skill-2',
               CombatSkill3: 'combat-skill-3',
               CombatSkill4: 'combat-skill-4',
+              R3: 'r3',
+              RStickUp: 'rstick-up',
+              RStickDown: 'rstick-down',
+              RStickLeft: 'rstick-left',
+              RStickRight: 'rstick-right',
             },
           },
         },
@@ -72,6 +77,10 @@ describe('JABS_StandardController (unit, JABS_BaseController/Input/JABS_InputAda
       performStrafe: vi.fn(),
       performRotate: vi.fn(),
       performGuard: vi.fn(),
+      performAllyCharge: vi.fn(),
+      performAllyPullBack: vi.fn(),
+      performAllyStanceSafer: vi.fn(),
+      performAllyStanceBolder: vi.fn(),
     };
 
     ({ default: JABS_StandardController } =
@@ -113,6 +122,18 @@ describe('JABS_StandardController (unit, JABS_BaseController/Input/JABS_InputAda
 
       expect(controller.inputMapping.has('Dodge')).toEqual(false);
     });
+
+    it('seeds the four ally orders onto flicks of the right stick', () =>
+    {
+      // Arrange/Act
+      const controller = new JABS_StandardController();
+
+      // Assert
+      expect(controller.inputMapping.get('AllyCharge')).toEqual([ 'rstick-up' ]);
+      expect(controller.inputMapping.get('AllyPullBack')).toEqual([ 'rstick-down' ]);
+      expect(controller.inputMapping.get('AllyStanceSafer')).toEqual([ 'rstick-left' ]);
+      expect(controller.inputMapping.get('AllyStanceBolder')).toEqual([ 'rstick-right' ]);
+    });
   });
 
   describe('buildDefaultMapping()/resetToDefaults()', () =>
@@ -124,6 +145,21 @@ describe('JABS_StandardController (unit, JABS_BaseController/Input/JABS_InputAda
 
       expect(defaults.Dodge).toEqual([ 'r2' ]);
       expect(controller.inputMapping.has('Dodge')).toEqual(false);
+    });
+
+    it('includes the ally command on the right stick click among the defaults', () =>
+    {
+      // Arrange
+      const controller = new JABS_StandardController();
+
+      // Act
+      const defaults = controller.buildDefaultMapping();
+
+      // Assert
+      expect(defaults.AllyCharge).toEqual([ 'rstick-up' ]);
+      expect(defaults.AllyPullBack).toEqual([ 'rstick-down' ]);
+      expect(defaults.AllyStanceSafer).toEqual([ 'rstick-left' ]);
+      expect(defaults.AllyStanceBolder).toEqual([ 'rstick-right' ]);
     });
 
     it('resets live bindings to the defaults', () =>
@@ -295,8 +331,8 @@ describe('JABS_StandardController (unit, JABS_BaseController/Input/JABS_InputAda
       const subUpdates = [
         'updateMenuAction', 'updatePartyCycleAction', 'updateMainhandAction', 'updateOffhandAction',
         'updateToolAction', 'updateUsableItemAction', 'updateSprintCommand', 'updateCombatAction1',
-        'updateCombatAction2', 'updateCombatAction3', 'updateCombatAction4', 'updateGuardCommand',
-        'updateStrafeCommand', 'updateRotateCommand',
+        'updateCombatAction2', 'updateCombatAction3', 'updateCombatAction4', 'updateAllyOrders',
+        'updateGuardCommand', 'updateStrafeCommand', 'updateRotateCommand',
       ];
       const spies = subUpdates.map(name => vi.spyOn(controller, name).mockImplementation(() => {}));
 
@@ -526,6 +562,145 @@ describe('JABS_StandardController (unit, JABS_BaseController/Input/JABS_InputAda
     });
   });
   //endregion sprint
+
+  //region ally orders
+  describe('updateAllyOrders()', () =>
+  {
+    /**
+     * Installs or removes J-ABS-AllyAI's namespace, which is what decides whether ally orders have
+     * anyone to obey them.
+     * @param {boolean} installed Whether J-ABS-AllyAI should appear installed.
+     */
+    function setAllyAiInstalled(installed)
+    {
+      // the namespace the orders' availability is decided by.
+      if (installed)
+      {
+        globalThis.J.ABS.EXT.ALLYAI = {};
+        return;
+      }
+
+      delete globalThis.J.ABS.EXT.ALLYAI;
+    }
+
+    /**
+     * Makes exactly the given physical inputs read as triggered this frame.
+     * @param {string[]} symbols The physical inputs flicked this frame.
+     */
+    function flick(symbols)
+    {
+      globalThis.Input.isTriggered.mockImplementation(symbol => symbols.includes(symbol));
+    }
+
+    afterEach(() =>
+    {
+      // the namespace lives on a shared global, so it never outlives the test that installed it.
+      setAllyAiInstalled(false);
+    });
+
+    it('ignores every order without J-ABS-AllyAI, even with all four flicked', () =>
+    {
+      // Arrange- every order is flicked, so the missing plugin is the only thing that can say no.
+      setAllyAiInstalled(false);
+      flick([ 'rstick-up', 'rstick-down', 'rstick-left', 'rstick-right' ]);
+      const controller = new JABS_StandardController();
+
+      // Act
+      controller.updateAllyOrders();
+
+      // Assert
+      expect(globalThis.JABS_InputAdapter.performAllyCharge).not.toHaveBeenCalled();
+      expect(globalThis.JABS_InputAdapter.performAllyPullBack).not.toHaveBeenCalled();
+      expect(globalThis.JABS_InputAdapter.performAllyStanceSafer).not.toHaveBeenCalled();
+      expect(globalThis.JABS_InputAdapter.performAllyStanceBolder).not.toHaveBeenCalled();
+    });
+
+    it('charges on a flick up, and gives no other order', () =>
+    {
+      // Arrange
+      setAllyAiInstalled(true);
+      flick([ 'rstick-up' ]);
+      const controller = new JABS_StandardController();
+
+      // Act
+      controller.updateAllyOrders();
+
+      // Assert
+      expect(globalThis.JABS_InputAdapter.performAllyCharge).toHaveBeenCalledTimes(1);
+      expect(globalThis.JABS_InputAdapter.performAllyPullBack).not.toHaveBeenCalled();
+      expect(globalThis.JABS_InputAdapter.performAllyStanceSafer).not.toHaveBeenCalled();
+      expect(globalThis.JABS_InputAdapter.performAllyStanceBolder).not.toHaveBeenCalled();
+    });
+
+    it('pulls back on a flick down, and gives no other order', () =>
+    {
+      // Arrange
+      setAllyAiInstalled(true);
+      flick([ 'rstick-down' ]);
+      const controller = new JABS_StandardController();
+
+      // Act
+      controller.updateAllyOrders();
+
+      // Assert
+      expect(globalThis.JABS_InputAdapter.performAllyPullBack).toHaveBeenCalledTimes(1);
+      expect(globalThis.JABS_InputAdapter.performAllyCharge).not.toHaveBeenCalled();
+      expect(globalThis.JABS_InputAdapter.performAllyStanceSafer).not.toHaveBeenCalled();
+      expect(globalThis.JABS_InputAdapter.performAllyStanceBolder).not.toHaveBeenCalled();
+    });
+
+    it('steps the stance safer on a flick left, and gives no other order', () =>
+    {
+      // Arrange
+      setAllyAiInstalled(true);
+      flick([ 'rstick-left' ]);
+      const controller = new JABS_StandardController();
+
+      // Act
+      controller.updateAllyOrders();
+
+      // Assert
+      expect(globalThis.JABS_InputAdapter.performAllyStanceSafer).toHaveBeenCalledTimes(1);
+      expect(globalThis.JABS_InputAdapter.performAllyCharge).not.toHaveBeenCalled();
+      expect(globalThis.JABS_InputAdapter.performAllyPullBack).not.toHaveBeenCalled();
+      expect(globalThis.JABS_InputAdapter.performAllyStanceBolder).not.toHaveBeenCalled();
+    });
+
+    it('steps the stance bolder on a flick right, and gives no other order', () =>
+    {
+      // Arrange
+      setAllyAiInstalled(true);
+      flick([ 'rstick-right' ]);
+      const controller = new JABS_StandardController();
+
+      // Act
+      controller.updateAllyOrders();
+
+      // Assert
+      expect(globalThis.JABS_InputAdapter.performAllyStanceBolder).toHaveBeenCalledTimes(1);
+      expect(globalThis.JABS_InputAdapter.performAllyCharge).not.toHaveBeenCalled();
+      expect(globalThis.JABS_InputAdapter.performAllyPullBack).not.toHaveBeenCalled();
+      expect(globalThis.JABS_InputAdapter.performAllyStanceSafer).not.toHaveBeenCalled();
+    });
+
+    it('gives no order at all from some other button', () =>
+    {
+      // Arrange- a neighbouring input is pressed instead, which must not count as any ally order.
+      setAllyAiInstalled(true);
+      flick([ 'r3' ]);
+      const controller = new JABS_StandardController();
+
+      // Act
+      controller.updateAllyOrders();
+
+      // Assert
+      expect(globalThis.JABS_InputAdapter.performAllyCharge).not.toHaveBeenCalled();
+      expect(globalThis.JABS_InputAdapter.performAllyPullBack).not.toHaveBeenCalled();
+      expect(globalThis.JABS_InputAdapter.performAllyStanceSafer).not.toHaveBeenCalled();
+      expect(globalThis.JABS_InputAdapter.performAllyStanceBolder).not.toHaveBeenCalled();
+    });
+  });
+  //endregion ally orders
 
   //region combat skill enabler + combat actions 1-4
   describe('isCombatSkillUsageEnabled()', () =>

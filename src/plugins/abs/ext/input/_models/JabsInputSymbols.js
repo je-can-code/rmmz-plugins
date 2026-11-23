@@ -33,6 +33,12 @@ class JabsInputSymbols
   static DPadLeft = 'dpad-left';
   static DPadRight = 'dpad-right';
 
+  // for flicks of the right stick, each one a button of its own (the right stick moves nothing).
+  static RStickUp = 'rstick-up';
+  static RStickDown = 'rstick-down';
+  static RStickLeft = 'rstick-left';
+  static RStickRight = 'rstick-right';
+
   // for keyboards, these buttons are for direct combatskill usage.
   static CombatSkill1 = 'combat-skill-1';
   static CombatSkill2 = 'combat-skill-2';

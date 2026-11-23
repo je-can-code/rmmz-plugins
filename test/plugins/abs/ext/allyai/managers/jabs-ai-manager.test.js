@@ -18,13 +18,18 @@ describe('J-ABS-AllyAI JABS_AiManager (unit, all downstream dependencies stubbed
 
   // the real tracker rather than a double: it is a dependency-free value object, and stubbing it
   // would let the manager's give-up gate pass on a fake that never accumulates anything.
-  let JABS_FormationStall;
+  let JABS_StanceStall;
+
+  // the real stance model, for the same reason: its zone geometry is what the spot math hands off to.
+  let JABS_Stance;
 
   beforeAll(async () =>
   {
     vi.resetModules();
 
-    ({ default: JABS_FormationStall } = await import('../../../../../../src/plugins/abs/ext/allyai/_models/JABS_FormationStall.js'));
+    String.empty = '';
+    ({ default: JABS_StanceStall } = await import('../../../../../../src/plugins/abs/ext/allyai/_models/JABS_StanceStall.js'));
+    ({ default: JABS_Stance } = await import('../../../../../../src/plugins/abs/ext/allyai/_models/JABS_Stance.js'));
 
     globalThis.J = {
       ABS: {
@@ -32,13 +37,10 @@ describe('J-ABS-AllyAI JABS_AiManager (unit, all downstream dependencies stubbed
           ALLYAI: {
             Aliased: { JABS_AiManager: new Map() },
             Metadata: {
-              FormationTypes: [
-                { key: 'default', formation: [ [ 0, 1 ], [ 1, 1 ], [ -1, 1 ] ] },
-                { key: 'wedge', formation: [ [ 0, 1 ], [ 1, 2 ] ] },
-              ],
-              FormationTolerance: 0.5,
-              FormationProgressEpsilon: 0.05,
-              FormationStallFrames: 60,
+              StanceTolerance: 0.5,
+              StanceProgressEpsilon: 0.05,
+              StanceStallFrames: 60,
+              StanceSpotDrift: 0.5,
             },
           },
         },
@@ -95,17 +97,23 @@ describe('J-ABS-AllyAI JABS_AiManager (unit, all downstream dependencies stubbed
 
     // likewise one tracker per battler, so repeated calls against the same battler accumulate the
     // way they do in play instead of starting over on every frame.
-    const formationStall = new JABS_FormationStall();
+    const stanceStall = new JABS_StanceStall();
 
     return {
       // the same three seams the real JABS_Battler exposes, over a real tracker, so the manager's
       // give-up is exercised rather than stubbed into always-false.
-      getFormationStall: () => formationStall,
-      observeFormationApproach: (distance, slotX, slotY) =>
-        formationStall.observe(distance, slotX, slotY, globalThis.J.ABS.EXT.ALLYAI.Metadata.FormationProgressEpsilon),
-      hasGivenUpOnFormationSlot: () =>
-        formationStall.isStalled(globalThis.J.ABS.EXT.ALLYAI.Metadata.FormationStallFrames),
-      clearFormationApproach: () => formationStall.reset(),
+      getStanceStall: () => stanceStall,
+      observeStanceApproach: (distance, spotX, spotY) =>
+      {
+        const { StanceProgressEpsilon, StanceSpotDrift } = globalThis.J.ABS.EXT.ALLYAI.Metadata;
+        stanceStall.observe(distance, spotX, spotY, StanceProgressEpsilon, StanceSpotDrift);
+      },
+      hasGivenUpOnStanceSpot: () =>
+        stanceStall.isStalled(globalThis.J.ABS.EXT.ALLYAI.Metadata.StanceStallFrames),
+      clearStanceApproach: () => stanceStall.reset(),
+      observeLeaderFacing: vi.fn(),
+      getStanceFacing: () => 2,
+      updateStanceCatchUp: vi.fn(),
       isActor: () => true,
       isEnemy: () => false,
       getCharacter: () => buildCharacter(),
@@ -173,7 +181,9 @@ describe('J-ABS-AllyAI JABS_AiManager (unit, all downstream dependencies stubbed
         data: () => [],
       }),
     };
-    globalThis.$gameParty = { getPartyFormation: () => 'default' };
+    globalThis.$gameParty = {
+      getPartyStanceType: () => new JABS_Stance('safe-support', 'Safe Support', 'Behind.', 'behind', false),
+    };
     globalThis.$gameMap = { distance: (x1, y1, x2, y2) => Math.abs(x2 - x1) + Math.abs(y2 - y1) };
   });
 
@@ -428,14 +438,25 @@ describe('J-ABS-AllyAI JABS_AiManager (unit, all downstream dependencies stubbed
       moveSpy.mockRestore();
     });
 
-    it('computes the formation target and moves toward it when eligible', () =>
+    it('turns the stance with the leader, sizes up the sprint, and moves toward the stance spot', () =>
     {
-      const battler = buildBattler();
+      // Arrange - the leader at 10,10 facing left; the ally two tiles in front of them, so safe support
+      // wants it behind, pulled half a tile inside the zone: at 11.5,10, a distance of 3.5 from where it stands.
+      const leaderCharacter = buildCharacter({ x: 10, y: 10, _realX: 10, _realY: 10, direction: () => 4 });
+      globalThis.$jabsEngine.getPlayer1 = () => buildBattler({ getCharacter: () => leaderCharacter });
+      const battler = buildBattler({
+        getCharacter: () => buildCharacter({ x: 8, y: 10, _realX: 8, _realY: 10 }),
+        getStanceFacing: () => 4,
+      });
       const moveSpy = vi.spyOn(globalThis.JABS_AiManager, 'moveTowardSlotIfNeeded').mockImplementation(() => {});
 
+      // Act
       globalThis.JABS_AiManager.allyFollowLeader(battler);
 
-      expect(moveSpy).toHaveBeenCalled();
+      // Assert
+      expect(battler.observeLeaderFacing).toHaveBeenCalledWith(4);
+      expect(battler.updateStanceCatchUp).toHaveBeenCalledWith(3.5);
+      expect(moveSpy).toHaveBeenCalledWith(battler, 11.5, 10);
       moveSpy.mockRestore();
     });
   });
@@ -526,38 +547,106 @@ describe('J-ABS-AllyAI JABS_AiManager (unit, all downstream dependencies stubbed
     });
   });
 
-  describe('computeFormationTarget()/getFormationOffsets()/calculateFormationSlotCoordinates()', () =>
+  describe('findStanceSpot()', () =>
   {
-    it('resolves a known formation type by key', () =>
+    it('keeps an ally that is not a follower in the middle lane', () =>
     {
-      expect(globalThis.JABS_AiManager.getFormationOffsets('wedge')).toEqual([ [ 0, 1 ], [ 1, 2 ] ]);
+      // Arrange - no follower index at all; the leader at 10,10 facing down, the ally ten tiles in front.
+      const leader = buildBattler({ getCharacter: () => buildCharacter({ x: 10, y: 10 }) });
+      const battler = buildBattler({ getCharacter: () => buildCharacter({ x: 10, y: 20 }) });
+
+      // Act
+      const spot = globalThis.JABS_AiManager.findStanceSpot(battler, leader);
+
+      // Assert - safe support, a tile and a half behind, in the middle lane.
+      expect(spot).toEqual([ 10, 8.5 ]);
     });
 
-    it('falls back to the first formation type for an unknown key', () =>
+    it('spreads a later follower into its own lane', () =>
     {
-      expect(globalThis.JABS_AiManager.getFormationOffsets('unknown')).toEqual([ [ 0, 1 ], [ 1, 1 ], [ -1, 1 ] ]);
+      // Arrange - the second follower, which keeps the lane on the negative side.
+      const character = buildCharacter({ isFollower: () => true, x: 10, y: 5 });
+      globalThis.$gamePlayer.followers = () => ({ data: () => [ {}, character ] });
+      const leader = buildBattler({ getCharacter: () => buildCharacter({ x: 10, y: 10 }) });
+      const battler = buildBattler({ getCharacter: () => character });
+
+      // Act
+      const spot = globalThis.JABS_AiManager.findStanceSpot(battler, leader);
+
+      // Assert - two and a half tiles behind, one lane over.
+      expect(spot).toEqual([ 9, 7.5 ]);
     });
 
-    it('computes the absolute slot coordinate for a follower index', () =>
+    it('lays the stance out from the ally\'s stance facing', () =>
     {
-      const leader = buildBattler({ getX: () => 10, getY: () => 10, getCharacter: () => buildCharacter({ direction: () => 2 }) });
+      // Arrange - the leader faces up, so behind them is below.
+      const leader = buildBattler({ getCharacter: () => buildCharacter({ x: 10, y: 10 }) });
+      const battler = buildBattler({ getCharacter: () => buildCharacter({ x: 10, y: 5 }), getStanceFacing: () => 8 });
 
-      expect(globalThis.JABS_AiManager.computeFormationTarget(leader, 0, 'default')).toEqual([ 10, 11 ]);
+      // Act
+      const spot = globalThis.JABS_AiManager.findStanceSpot(battler, leader);
+
+      // Assert
+      expect(spot).toEqual([ 10, 11.5 ]);
+    });
+  });
+
+  describe('computeStanceSpot()', () =>
+  {
+    it('answers the ally\'s own position when it already stands inside the zone', () =>
+    {
+      // Arrange - two tiles in front of a leader facing right, which a front stance is happy with.
+      const stance = new JABS_Stance('meat-shield', 'Meat Shield', 'Front.', 'front', true);
+      const leader = buildBattler({ getCharacter: () => buildCharacter({ x: 3.5, y: 7.25 }) });
+      const battler = buildBattler({ getCharacter: () => buildCharacter({ x: 5.5, y: 7.25 }) });
+
+      // Act
+      const spot = globalThis.JABS_AiManager.computeStanceSpot(battler, leader, stance, 6, 0);
+
+      // Assert
+      expect(spot).toEqual([ 5.5, 7.25 ]);
     });
 
-    it('clamps a negative follower index to the first formation slot', () =>
+    it('turns an ally behind the leader into a spot in front of them', () =>
     {
-      const leader = buildBattler({ getX: () => 10, getY: () => 10, getCharacter: () => buildCharacter({ direction: () => 2 }) });
+      // Arrange - behind a leader facing left is to their right.
+      const stance = new JABS_Stance('meat-shield', 'Meat Shield', 'Front.', 'front', true);
+      const leader = buildBattler({ getCharacter: () => buildCharacter({ x: 10, y: 10 }) });
+      const battler = buildBattler({ getCharacter: () => buildCharacter({ x: 12, y: 10 }) });
 
-      expect(globalThis.JABS_AiManager.computeFormationTarget(leader, -1, 'default')).toEqual([ 10, 11 ]);
+      // Act
+      const spot = globalThis.JABS_AiManager.computeStanceSpot(battler, leader, stance, 4, 0);
+
+      // Assert - a tile and a half in front, pulled inside the zone: to their left.
+      expect(spot).toEqual([ 8.5, 10 ]);
+    });
+  });
+
+  describe('unrotateOffsetForFacing()', () =>
+  {
+    it('applies identity transform when facing down', () =>
+    {
+      expect(globalThis.JABS_AiManager.unrotateOffsetForFacing(1, 2, 2)).toEqual([ 1, 2 ]);
     });
 
-    it('cycles the follower index through the available slots', () =>
+    it('undoes the left rotation', () =>
     {
-      const leader = buildBattler({ getX: () => 0, getY: () => 0, getCharacter: () => buildCharacter({ direction: () => 2 }) });
+      expect(globalThis.JABS_AiManager.unrotateOffsetForFacing(-2, 1, 4)).toEqual([ 1, 2 ]);
+    });
 
-      // "wedge" has 2 slots; index 2 should wrap to slot 0.
-      expect(globalThis.JABS_AiManager.computeFormationTarget(leader, 2, 'wedge')).toEqual([ 0, 1 ]);
+    it('undoes the right rotation', () =>
+    {
+      expect(globalThis.JABS_AiManager.unrotateOffsetForFacing(2, -1, 6)).toEqual([ 1, 2 ]);
+    });
+
+    it('undoes the upward rotation', () =>
+    {
+      expect(globalThis.JABS_AiManager.unrotateOffsetForFacing(-1, -2, 8)).toEqual([ 1, 2 ]);
+    });
+
+    it('defaults to identity for an unsupported direction', () =>
+    {
+      expect(globalThis.JABS_AiManager.unrotateOffsetForFacing(1, 2, 99)).toEqual([ 1, 2 ]);
     });
   });
 

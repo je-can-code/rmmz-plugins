@@ -1,6 +1,6 @@
 //region Scene_JabsAllyAi
 import Window_AllyAiSelect from './../windows/Window_AllyAiSelect.js';
-import Window_Formations from './../windows/Window_Formations.js';
+import Window_Stances from './../windows/Window_Stances.js';
 
 /**
  * The scene for deciding how the party's allies behave in combat.
@@ -79,7 +79,7 @@ class Scene_JabsAllyAi
 
     // build the two things that can occupy the column beside it.
     this.createPresetListWindow();
-    this.createFormationListWindow();
+    this.createStanceListWindow();
 
     // the party is where every path through this scene begins.
     this.focusPartyList();
@@ -99,11 +99,8 @@ class Scene_JabsAllyAi
     // choosing an ally moves attention to that ally's presets.
     window.setHandler('party-member', this.commandSelectMemberAi.bind(this));
 
-    // the party-wide stance is toggled in place rather than opening anything.
-    window.setHandler('aggro-passive-toggle', this.commandAggroPassiveToggle.bind(this));
-
-    // formations concern the whole party, so they occupy the detail column too.
-    window.setHandler('ally-formations', this.commandAllyFormations.bind(this));
+    // the stance concerns the whole party, so its choices occupy the detail column too.
+    window.setHandler('ally-stances', this.commandAllyStances.bind(this));
 
     // the help window explains whatever is highlighted.
     window.setHelpWindow(this.helpWindow());
@@ -117,7 +114,7 @@ class Scene_JabsAllyAi
    */
   createPresetListWindow()
   {
-    // build the window against the detail column it shares with the formation list.
+    // build the window against the detail column it shares with the stance list.
     const window = new Window_AllyAiSelect(this.detailRect(), Window_AllyAiSelect.Types.SelectAi);
 
     // backing out returns to the party rather than leaving the scene.
@@ -140,25 +137,25 @@ class Scene_JabsAllyAi
   }
 
   /**
-   * Creates the list of party formations.
+   * Creates the list of stances the party can take.
    */
-  createFormationListWindow()
+  createStanceListWindow()
   {
     // build the window against the same detail column the preset list uses.
-    const window = new Window_Formations(this.detailRect());
+    const window = new Window_Stances(this.detailRect());
 
     // backing out returns to the party rather than leaving the scene.
     window.setHandler('cancel', this.focusPartyList.bind(this));
 
-    // choosing a formation applies it immediately.
-    window.setHandler('select-formation', this.commandSelectAllyFormation.bind(this));
+    // choosing a stance applies it immediately.
+    window.setHandler('select-stance', this.commandSelectAllyStance.bind(this));
 
     window.setHelpWindow(this.helpWindow());
 
-    this.setFormationListWindow(window);
+    this.setStanceListWindow(window);
     this.addWindow(window);
 
-    // hidden until formations are asked for.
+    // hidden until stances are asked for.
     window.hide();
     window.deactivate();
   }
@@ -169,7 +166,7 @@ class Scene_JabsAllyAi
    * The share of the content area given to the party column.
    *
    * The party gets the smaller half because its rows are names, while the column beside it carries
-   * presets and formations that each explain themselves across a second line.
+   * presets and stances that each explain themselves across a second line.
    * @returns {number}
    */
   partyColumnRatio()
@@ -193,7 +190,7 @@ class Scene_JabsAllyAi
   }
 
   /**
-   * The shape of the column beside the party, shared by the presets and the formations.
+   * The shape of the column beside the party, shared by the presets and the stances.
    *
    * Defined as the remainder rather than its own fraction, so the two columns cannot drift apart or
    * leave a seam between them however the ratio is tuned.
@@ -241,9 +238,9 @@ class Scene_JabsAllyAi
       .hide();
     this.presetListWindow()
       .deactivate();
-    this.formationListWindow()
+    this.stanceListWindow()
       .hide();
-    this.formationListWindow()
+    this.stanceListWindow()
       .deactivate();
 
     // hand the cursor back to the party.
@@ -295,32 +292,6 @@ class Scene_JabsAllyAi
   }
 
   /**
-   * Toggles the party-wide aggro/passive stance.
-   *
-   * Passive confines allies to the leader's current target; aggro gives them their full sight range and
-   * lets them pick fights of their own.
-   */
-  commandAggroPassiveToggle()
-  {
-    // play a fun sound when changing party aggro mode.
-    SoundManager.playRecovery();
-
-    // toggle the party aggro mode.
-    $gameParty.isAggro()
-      ? $gameParty.becomePassive()
-      : $gameParty.becomeAggro();
-
-    // refresh the window to pick up the new state.
-    this.partyListWindow()
-      .refresh();
-
-    // processOk deactivates before dispatching, so the cursor must be handed back deliberately-
-    // this command applies in place rather than opening anything, so focus never moved.
-    this.partyListWindow()
-      .activate();
-  }
-
-  /**
    * Applies the chosen preset to the chosen ally.
    */
   commandEquipMemberAi()
@@ -366,31 +337,35 @@ class Scene_JabsAllyAi
   }
 
   /**
-   * Shows the party's available formations.
+   * Shows the stances the party can take.
    */
-  commandAllyFormations()
+  commandAllyStances()
   {
-    this.focusDetail(this.formationListWindow());
+    this.focusDetail(this.stanceListWindow());
   }
 
   /**
-   * Applies the chosen formation to the party.
+   * Applies the chosen stance to the party.
    */
-  commandSelectAllyFormation()
+  commandSelectAllyStance()
   {
-    // the formation list hangs the whole formation off the command.
-    /** @type {JABS_Formation} */
-    const selectedFormation = this.formationListWindow()
+    // the stance list hangs the whole stance off the command.
+    /** @type {JABS_Stance} */
+    const selectedStance = this.stanceListWindow()
       .currentExt();
 
-    $gameParty.setPartyFormation(selectedFormation.key);
+    $gameParty.setPartyStance(selectedStance.key);
 
-    // redraw so the newly-chosen formation shows as chosen.
-    this.formationListWindow()
+    // redraw so the newly-chosen stance shows as chosen.
+    this.stanceListWindow()
       .refresh();
 
-    // formations apply in place like the presets do, so the cursor stays on this list.
-    this.formationListWindow()
+    // the party list names the current stance beneath its command, so it redraws too.
+    this.partyListWindow()
+      .refresh();
+
+    // stances apply in place like the presets do, so the cursor stays on this list.
+    this.stanceListWindow()
       .activate();
   }
   //endregion commands
@@ -433,21 +408,21 @@ class Scene_JabsAllyAi
   }
 
   /**
-   * Gets the formation list.
-   * @returns {Window_Formations}
+   * Gets the stance list.
+   * @returns {Window_Stances}
    */
-  formationListWindow()
+  stanceListWindow()
   {
-    return this._formationListWindow;
+    return this._stanceListWindow;
   }
 
   /**
-   * Sets the formation list.
-   * @param {Window_Formations} window The window to track.
+   * Sets the stance list.
+   * @param {Window_Stances} window The window to track.
    */
-  setFormationListWindow(window)
+  setStanceListWindow(window)
   {
-    this._formationListWindow = window;
+    this._stanceListWindow = window;
   }
   //endregion properties
 }

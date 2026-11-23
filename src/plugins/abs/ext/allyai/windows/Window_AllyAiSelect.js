@@ -21,7 +21,7 @@ class Window_AllyAiSelect
    */
   static Types = {
     /**
-     * The list of party members whose AI may be configured, plus the party-wide toggles.
+     * The list of party members whose AI may be configured, plus the party's stance.
      */
     PartyList: 'ai-party-list',
 
@@ -126,9 +126,8 @@ class Window_AllyAiSelect
     switch (this.menuType())
     {
       case Window_AllyAiSelect.Types.PartyList:
-        this.addAggroPassiveToggleCommand();
         this.makeAllyList();
-        this.addAllyFormationCommand();
+        this.addAllyStanceCommand();
         break;
       case Window_AllyAiSelect.Types.SelectAi:
         this.makeAllyAiDoNothingToggle();
@@ -160,56 +159,30 @@ class Window_AllyAiSelect
   }
 
   /**
-   * Injects the aggro-passive toggle command into the menu.
+   * Injects the party stance command into the menu, naming the stance the party currently takes.
    */
-  addAggroPassiveToggleCommand()
+  addAllyStanceCommand()
   {
-    // define the icons for passive/aggressive ally AI aggro settings.
-    const aggroPassiveCommandName = $gameParty.isAggro()
-      ? J.ABS.EXT.ALLYAI.Metadata.PartyAiAggressiveText
-      : J.ABS.EXT.ALLYAI.Metadata.PartyAiPassiveText;
-    const aggroPassiveCommandIcon = $gameParty.isAggro()
-      ? J.ABS.EXT.ALLYAI.Metadata.PartyAiAggressiveIconIndex
-      : J.ABS.EXT.ALLYAI.Metadata.PartyAiPassiveIconIndex;
+    // the stance the party currently takes, shown beneath the command so it can be read at a glance.
+    const currentStance = $gameParty.getPartyStanceType();
+    const currentStanceText = `Currently: ${currentStance.name}`;
 
-    const description = $gameParty.isAggro()
-      ? "The party is currently 'aggro'.\nAllies will engage in any enemy that comes within their range."
-      : "The party is currently 'passive'.\nAllies will not engage until the leader strikes or is struck.";
-
-    const textColor = $gameParty.isAggro()
-      ? 2
-      : 3;
-
-    // build the command for toggling ally AI aggro.
-    const command = new WindowCommandBuilder(aggroPassiveCommandName).setSymbol("aggro-passive-toggle")
-      .setTextLines(description.split(/[\r\n]/i))
+    // build the command for choosing the party's stance.
+    const allyStanceCommand = new WindowCommandBuilder(J.ABS.EXT.ALLYAI.Metadata.AllyStanceCommandName)
+      .setSymbol('ally-stances')
+      .setTextLines([ currentStanceText ])
       .flagAsSubText()
-      .setColorIndex(textColor)
-      .setIconIndex(aggroPassiveCommandIcon)
-      .build();
-
-    // add the aggro toggle command.
-    this.addBuiltCommand(command);
-  }
-
-  /**
-   * Injects the party formations command into the menu.
-   */
-  addAllyFormationCommand()
-  {
-    const allyFormationsCommand = new WindowCommandBuilder(J.ABS.EXT.ALLYAI.Metadata.AllyFormationsCommandName)
-      .setSymbol('ally-formations')
-      .setIconIndex(J.ABS.EXT.ALLYAI.Metadata.AllyFormationsCommandIconIndex)
+      .setIconIndex(J.ABS.EXT.ALLYAI.Metadata.AllyStanceCommandIconIndex)
       .setColorIndex(23)
       .build();
 
-    // add the formations command.
-    this.addBuiltCommand(allyFormationsCommand);
+    // add the stance command.
+    this.addBuiltCommand(allyStanceCommand);
   }
 
   /**
    * Adds a do-nothing toggle command at the top of the ally AI selection window.
-   * Mirrors the aggro/passive toggle pattern from the party list window.
+   * The toggle renders its own state, so it reads correctly whichever way it is set.
    */
   makeAllyAiDoNothingToggle()
   {
@@ -232,8 +205,8 @@ class Window_AllyAiSelect
       : 2;
 
     const iconIndex = isDoNothing
-      ? J.ABS.EXT.ALLYAI.Metadata.PartyAiPassiveIconIndex
-      : J.ABS.EXT.ALLYAI.Metadata.PartyAiAggressiveIconIndex;
+      ? J.ABS.EXT.ALLYAI.Metadata.DoNothingOnIconIndex
+      : J.ABS.EXT.ALLYAI.Metadata.DoNothingOffIconIndex;
 
     // construct command for the next step in this routine.
     const command = new WindowCommandBuilder(commandName).setSymbol('do-nothing-toggle')
