@@ -13,8 +13,8 @@ after five seconds; the Tool input (Tab or Triangle) clears the selected action'
 applies the new bindings, resets them to the defaults, undoes the changes made in the scene, or exits without saving.
 
 With `J-ABS-AllyAI` installed, an Ally Commands group lists the four ally orders as well: Ally Charge, Ally Pull Back,
-Stance: Safer and Stance: Bolder, on the right stick's four flicks by default. Without that plugin there is nobody to
-command, so the group is left out.
+Stance: Safer and Stance: Bolder, on the right stick's four flicks by default, and on W, S, A and D for a keyboard.
+Without that plugin there is nobody to command, so the group is left out.
 
 ## How to call the scene
 

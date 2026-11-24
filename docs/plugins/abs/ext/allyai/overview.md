@@ -85,21 +85,22 @@ Several allies share a stance by taking lanes: the first keeps the middle, and t
 ### Every stance answers the leader
 
 Whatever its stance, an ally joins the fight when the leader lands a hit on something that fights back, and when the
-leader is struck. Either one rallies the ally toward that foe, and it engages once something is in sight. An ally that is
-struck itself fights back too. Smashing a crate rallies nobody.
+leader is struck. Either one rallies the ally toward that foe, and it engages once something is in sight. An ally that
+is struck itself fights back too. Smashing a crate rallies nobody.
 
 ## Ally commands
 
-Four orders reach every ally at once, from the buttons J-ABS-InputManager binds to the right stick's flicks:
+Four orders reach every ally at once, from the buttons J-ABS-InputManager binds to the right stick's flicks, and to
+WASD on a keyboard:
 
-- **Charge** (up) sends each ally after whatever the leader is fighting, or failing that the nearest foe in sight,
+- **Charge** (up, or W) sends each ally after whatever the leader is fighting, or failing that the nearest foe in sight,
   whatever its stance would have it wait for.
-- **Pull back** (down) drops each ally out of its fight and keeps it out of every fight for three seconds, during which
-  it can be neither rallied nor alerted.
-- **Stance: Safer** (left) and **Stance: Bolder** (right) step the party's stance one rung along the ladder the menu
-  lists them in, from Safe Support to Meat Shield. The ladder does not wrap: a step past either end plays the buzzer
-  and changes nothing. A step that lands plays a cursor sound and, with J-Log installed, writes the new stance to the
-  map's action log.
+- **Pull back** (down, or S) drops each ally out of its fight and keeps it out of every fight for three seconds, during
+  which it can be neither rallied nor alerted.
+- **Stance: Safer** (left, or A) and **Stance: Bolder** (right, or D) step the party's stance one rung along the ladder
+  the menu lists them in, from Safe Support to Meat Shield. The ladder does not wrap: a step past either end plays
+  the buzzer and changes nothing. A step that lands plays a cursor sound and, with J-Log installed, writes the new
+  stance to the map's action log.
 
 ## Caveats to note
 

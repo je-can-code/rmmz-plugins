@@ -269,6 +269,13 @@ IconManager.registerJabsInputTexts = function()
   this.registerJabsInputIcon(J.ABS.EXT.INPUT.Symbols.DirRight, 2459);
   this.registerJabsInputIcon(J.ABS.EXT.INPUT.Symbols.DirUp, 2460);
   this.registerJabsInputIcon(J.ABS.EXT.INPUT.Symbols.DirDown, 2461);
+
+  // the right stick's four flicks, which carry the ally orders. The sheet has no glyphs for them yet, so
+  // each is named in words for the pad, and by the wasd key that stands in for it on the keyboard.
+  this.registerJabsInputText(J.ABS.EXT.INPUT.Symbols.RStickUp, 'R-Stick Up', 'W');
+  this.registerJabsInputText(J.ABS.EXT.INPUT.Symbols.RStickDown, 'R-Stick Down', 'S');
+  this.registerJabsInputText(J.ABS.EXT.INPUT.Symbols.RStickLeft, 'R-Stick Left', 'A');
+  this.registerJabsInputText(J.ABS.EXT.INPUT.Symbols.RStickRight, 'R-Stick Right', 'D');
 };
 //endregion jabs text registry
 //endregion IconManager

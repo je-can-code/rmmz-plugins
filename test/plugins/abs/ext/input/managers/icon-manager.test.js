@@ -7,7 +7,22 @@ describe('J-ABS-Input IconManager (unit, all downstream dependencies mocked)', (
   {
     vi.resetModules();
 
-    globalThis.J = { ABS: { EXT: { INPUT: { Symbols: { Mainhand: 'ok', Offhand: 'cancel' } } } } };
+    globalThis.J = {
+      ABS: {
+        EXT: {
+          INPUT: {
+            Symbols: {
+              Mainhand: 'ok',
+              Offhand: 'cancel',
+              RStickUp: 'rstick-up',
+              RStickDown: 'rstick-down',
+              RStickLeft: 'rstick-left',
+              RStickRight: 'rstick-right',
+            },
+          },
+        },
+      },
+    };
     globalThis.Input = { labelForSymbol: vi.fn(() => null) };
     globalThis.IconManager = {};
 
@@ -173,6 +188,35 @@ describe('J-ABS-Input IconManager (unit, all downstream dependencies mocked)', (
 
       // Assert.
       expect(globalThis.IconManager.jabsInputTextForSymbol('ok')).toContain('2448');
+    });
+
+    it('names each right stick flick by its wasd key for a keyboard player', () =>
+    {
+      // Arrange: the fixture already defaults the player to a keyboard.
+
+      // Act.
+      globalThis.IconManager.registerJabsInputTexts();
+
+      // Assert: every direction gets its own key, so no two flicks read the same.
+      expect(globalThis.IconManager.jabsInputTextForSymbol('rstick-up')).toBe('W');
+      expect(globalThis.IconManager.jabsInputTextForSymbol('rstick-down')).toBe('S');
+      expect(globalThis.IconManager.jabsInputTextForSymbol('rstick-left')).toBe('A');
+      expect(globalThis.IconManager.jabsInputTextForSymbol('rstick-right')).toBe('D');
+    });
+
+    it('names each right stick flick in words for a gamepad player', () =>
+    {
+      // Arrange: put the player on a pad.
+      globalThis.InputDeviceTracker.isGamepad.mockReturnValue(true);
+
+      // Act.
+      globalThis.IconManager.registerJabsInputTexts();
+
+      // Assert.
+      expect(globalThis.IconManager.jabsInputTextForSymbol('rstick-up')).toBe('R-Stick Up');
+      expect(globalThis.IconManager.jabsInputTextForSymbol('rstick-down')).toBe('R-Stick Down');
+      expect(globalThis.IconManager.jabsInputTextForSymbol('rstick-left')).toBe('R-Stick Left');
+      expect(globalThis.IconManager.jabsInputTextForSymbol('rstick-right')).toBe('R-Stick Right');
     });
   });
 });

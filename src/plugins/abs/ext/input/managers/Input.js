@@ -61,6 +61,17 @@ Input.keyMapper = {
   51: JabsInputSymbols.CombatSkill3,
   // 4 = L1 + triangle.
   52: JabsInputSymbols.CombatSkill4,
+
+  // keyboard alternative for the right stick's four flicks: wasd, under the hand that isn't steering.
+  // vanilla maps w to page-down as well, but e already carries page-down here, so w is free for this.
+  // w = flick up.
+  87: JabsInputSymbols.RStickUp,
+  // s = flick down.
+  83: JabsInputSymbols.RStickDown,
+  // a = flick left.
+  65: JabsInputSymbols.RStickLeft,
+  // d = flick right.
+  68: JabsInputSymbols.RStickRight,
 };
 
 /**
@@ -319,6 +330,18 @@ Input.registerSymbolLabel = function(symbol, label)
 };
 
 /**
+ * Whether a physical input symbol has been given a friendly label yet.<br/>
+ * {@link Input.labelForSymbol} answers with the symbol itself when it has none, so that answer alone
+ * cannot tell a named symbol from an unnamed one.
+ * @param {string} symbol The physical symbol.
+ * @returns {boolean}
+ */
+Input.hasSymbolLabel = function(symbol)
+{
+  return Object.prototype.hasOwnProperty.call(Input._jRegistries.symbolLabels, String(symbol));
+};
+
+/**
  * Resolves a friendly label for a physical input symbol.
  * @param {string} symbol The physical symbol.
  * @returns {string}
@@ -463,9 +486,15 @@ Input.bootstrapAllKeyboardKeysForCapture = function()
       const s = Input.keyMapper[code];
       if (s && reserved.has(s) === false)
       {
-        // register this existing non-engine symbol for the prompt & label.
+        // register this existing non-engine symbol for the prompt.
         Input.registerRemapCaptureSymbol(s);
-        Input.registerSymbolLabel(s, Input._keycodeLabelFor(code, s));
+
+        // name it after its key, unless it already has a name: a symbol a key shares with a gamepad
+        // input, like the right stick's flicks on wasd, keeps the name it was given for the pad.
+        if (Input.hasSymbolLabel(s) === false)
+        {
+          Input.registerSymbolLabel(s, Input._keycodeLabelFor(code, s));
+        }
       }
       continue;
     }
@@ -647,6 +676,15 @@ Input._axisThreshold = 0.5;
 Input._flickThreshold = 0.7;
 
 /**
+ * Which right stick directions each pad was flicked the frame before, by the pad's index.
+ *
+ * The four flicks share their symbols with keys on the keyboard, so the stick may only write them when one
+ * changes. Writing them every frame would have a stick at rest release a key the player is still holding.
+ * @type {Object<number, Object<string, boolean>>}
+ */
+Input._rightStickStamps = {};
+
+/**
  * Sets the analog stick threshold.
  * @param {number} v The new threshold (0.05–0.90 recommended).
  */
@@ -806,13 +844,39 @@ Input._normalizeRightStickFlicks = function(gamepad, s, padState)
   // work out which direction, if any, the right stick is flicked this frame.
   const flicks = Input._resolveRightStickFlicks(gamepad);
 
-  // write each direction into both state bags.
   Object.keys(flicks)
     .forEach(symbol =>
     {
-      s[symbol] = flicks[symbol];
+      // the per-pad snapshot always mirrors the stick, for edge/trigger bookkeeping.
       padState[symbol] = flicks[symbol];
+
+      // the merged state only hears about a change, the way the engine writes a pad's own buttons, so a stick
+      // at rest never releases the keys that share these symbols: wasd, held on the keyboard beside a pad.
+      const wasFlicked = Input._wasRightStickFlicked(gamepad.index, symbol);
+      if (wasFlicked === flicks[symbol]) return;
+
+      s[symbol] = flicks[symbol];
     });
+
+  // remember this frame's flicks, to tell the next frame's changes apart.
+  Input._rightStickStamps[gamepad.index] = flicks;
+};
+
+/**
+ * Whether a right stick direction was flicked on a pad the frame before.<br/>
+ * A pad that has not been polled yet was at rest.
+ * @param {number} padIndex The index of the pad, as the Gamepad API numbers them.
+ * @param {string} symbol The symbol of the direction.
+ * @returns {boolean}
+ */
+Input._wasRightStickFlicked = function(padIndex, symbol)
+{
+  const stamp = Input._rightStickStamps[padIndex];
+
+  // a pad seen for the first time had nothing flicked before it.
+  if (stamp === undefined) return false;
+
+  return stamp[symbol] === true;
 };
 
 /**

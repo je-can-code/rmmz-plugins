@@ -50,6 +50,7 @@ describe('J-ABS-Input Input (unit, real pure siblings, engine surface stubbed)',
       defaults: Object.create(null),
       bootstrapped: false,
     };
+    globalThis.Input._rightStickStamps = {};
     originalUpdateGamepadState.mockReset();
     globalThis.Input.isTriggered.mockReset().mockReturnValue(false);
     globalThis.Input.isPressed.mockReset().mockReturnValue(false);
@@ -66,6 +67,17 @@ describe('J-ABS-Input Input (unit, real pure siblings, engine surface stubbed)',
     it('maps the mainhand gamepad button index to the ok symbol', () =>
     {
       expect(globalThis.Input.gamepadMapper[0]).toEqual('ok');
+    });
+
+    it('maps wasd onto the right stick\'s four flicks', () =>
+    {
+      // Arrange/Act: the mapping is built at import.
+
+      // Assert: w up, s down, a left, d right; w no longer pages down.
+      expect(globalThis.Input.keyMapper[87]).toEqual('rstick-up');
+      expect(globalThis.Input.keyMapper[83]).toEqual('rstick-down');
+      expect(globalThis.Input.keyMapper[65]).toEqual('rstick-left');
+      expect(globalThis.Input.keyMapper[68]).toEqual('rstick-right');
     });
   });
   //endregion static maps
@@ -268,6 +280,33 @@ describe('J-ABS-Input Input (unit, real pure siblings, engine surface stubbed)',
     });
   });
 
+  describe('hasSymbolLabel()', () =>
+  {
+    it('answers true for a symbol that has been given a label', () =>
+    {
+      // Arrange
+      globalThis.Input.registerSymbolLabel('rstick-up', 'R-Stick Up');
+
+      // Act
+      const named = globalThis.Input.hasSymbolLabel('rstick-up');
+
+      // Assert
+      expect(named).toEqual(true);
+    });
+
+    it('answers false for a symbol that has never been given one', () =>
+    {
+      // Arrange: a near-miss sibling is named, so "anything is named" cannot pass this.
+      globalThis.Input.registerSymbolLabel('rstick-up', 'R-Stick Up');
+
+      // Act
+      const named = globalThis.Input.hasSymbolLabel('rstick-down');
+
+      // Assert
+      expect(named).toEqual(false);
+    });
+  });
+
   describe('registerRemapCaptureSymbol()/getRemapCaptureSymbols()', () =>
   {
     it('registers and lists capture-eligible symbols', () =>
@@ -346,6 +385,23 @@ describe('J-ABS-Input Input (unit, real pure siblings, engine surface stubbed)',
       globalThis.Input.bootstrapAllKeyboardKeysForCapture();
 
       expect(globalThis.Input.getRemapCaptureSymbols()).toContain('jabs-custom');
+      expect(globalThis.Input.labelForSymbol('jabs-custom')).toEqual('[ {');
+
+      delete globalThis.Input.keyMapper[219];
+    });
+
+    it('keeps the label a shared symbol was already given, rather than naming it after its key', () =>
+    {
+      // Arrange: the symbol already has a name, the way the right stick's flicks are named for the pad.
+      globalThis.Input.registerSymbolLabel('jabs-custom', 'Custom Stick');
+      globalThis.Input.keyMapper[219] = 'jabs-custom';
+
+      // Act
+      globalThis.Input.bootstrapAllKeyboardKeysForCapture();
+
+      // Assert: still capturable, still called what it was called.
+      expect(globalThis.Input.getRemapCaptureSymbols()).toContain('jabs-custom');
+      expect(globalThis.Input.labelForSymbol('jabs-custom')).toEqual('Custom Stick');
 
       delete globalThis.Input.keyMapper[219];
     });
@@ -762,20 +818,93 @@ describe('J-ABS-Input Input (unit, real pure siblings, engine surface stubbed)',
 
   describe('_normalizeRightStickFlicks()', () =>
   {
-    it('writes every right stick direction into both state bags', () =>
+    it('writes a change into both state bags: the old flick off, the new one on', () =>
     {
-      // Arrange - a flick right, so one direction is on and three are off in both bags.
+      // Arrange - the pad was flicked left last frame, and is flicked right now.
       globalThis.Input._flickThreshold = 0.7;
+      globalThis.Input._rightStickStamps[0] = {
+        'rstick-up': false, 'rstick-down': false, 'rstick-left': true, 'rstick-right': false,
+      };
       const s = { 'rstick-left': true };
       const padState = {};
 
       // Act
-      globalThis.Input._normalizeRightStickFlicks({ axes: [ 0, 0, 1, 0 ] }, s, padState);
+      globalThis.Input._normalizeRightStickFlicks({ index: 0, axes: [ 0, 0, 1, 0 ] }, s, padState);
 
-      // Assert - a direction left on from the frame before is switched off.
-      const expected = { 'rstick-up': false, 'rstick-down': false, 'rstick-left': false, 'rstick-right': true };
-      expect(s).toEqual(expected);
-      expect(padState).toEqual(expected);
+      // Assert - the snapshot mirrors the stick, and the merged state hears both changes.
+      expect(padState).toEqual({ 'rstick-up': false, 'rstick-down': false, 'rstick-left': false, 'rstick-right': true });
+      expect(s).toEqual({ 'rstick-left': false, 'rstick-right': true });
+    });
+
+    it('leaves the merged state alone while the stick rests, so a key held beside the pad stays held', () =>
+    {
+      // Arrange - w is held on the keyboard, and the pad's stick was already at rest last frame.
+      globalThis.Input._flickThreshold = 0.7;
+      globalThis.Input._rightStickStamps[0] = {
+        'rstick-up': false, 'rstick-down': false, 'rstick-left': false, 'rstick-right': false,
+      };
+      const s = { 'rstick-up': true };
+      const padState = {};
+
+      // Act
+      globalThis.Input._normalizeRightStickFlicks({ index: 0, axes: [ 0, 0, 0, 0 ] }, s, padState);
+
+      // Assert - the held key survives the poll; the snapshot still records the stick at rest.
+      expect(s).toEqual({ 'rstick-up': true });
+      expect(padState['rstick-up']).toEqual(false);
+    });
+
+    it('remembers this frame\'s flicks for the pad, to compare the next frame against', () =>
+    {
+      // Arrange
+      globalThis.Input._flickThreshold = 0.7;
+
+      // Act - a flick up on the second pad.
+      globalThis.Input._normalizeRightStickFlicks({ index: 1, axes: [ 0, 0, 0, -1 ] }, {}, {});
+
+      // Assert
+      expect(globalThis.Input._rightStickStamps[1]).toEqual({
+        'rstick-up': true, 'rstick-down': false, 'rstick-left': false, 'rstick-right': false,
+      });
+    });
+  });
+
+  describe('_wasRightStickFlicked()', () =>
+  {
+    it('answers false for a pad that has not been polled yet', () =>
+    {
+      // Arrange - another pad has a stamp with this direction flicked, which must not leak across pads.
+      globalThis.Input._rightStickStamps[0] = { 'rstick-up': true };
+
+      // Act
+      const flicked = globalThis.Input._wasRightStickFlicked(1, 'rstick-up');
+
+      // Assert
+      expect(flicked).toEqual(false);
+    });
+
+    it('answers true for a direction the pad was flicked in last frame', () =>
+    {
+      // Arrange
+      globalThis.Input._rightStickStamps[0] = { 'rstick-up': true, 'rstick-down': false };
+
+      // Act
+      const flicked = globalThis.Input._wasRightStickFlicked(0, 'rstick-up');
+
+      // Assert
+      expect(flicked).toEqual(true);
+    });
+
+    it('answers false for a direction the pad was not flicked in, even while another was', () =>
+    {
+      // Arrange
+      globalThis.Input._rightStickStamps[0] = { 'rstick-up': true, 'rstick-down': false };
+
+      // Act
+      const flicked = globalThis.Input._wasRightStickFlicked(0, 'rstick-down');
+
+      // Assert
+      expect(flicked).toEqual(false);
     });
   });
 

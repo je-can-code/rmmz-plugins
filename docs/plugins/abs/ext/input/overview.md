@@ -28,12 +28,16 @@ exposed function on `Game_System` that will reset all input mapping back to defa
 ### Ally commands
 
 With `J-ABS-AllyAI` installed, the controller also gives four orders to the party's allies, one per flick of the right
-stick by default:
+stick by default, with WASD standing in for the stick on a keyboard:
 
-- **Up**, Ally Charge: sends the allies charging in.
-- **Down**, Ally Pull Back: drops them out of the fight for a few seconds.
-- **Left**, Stance: Safer: steps the party's stance one rung toward hanging back.
-- **Right**, Stance: Bolder: steps it one rung toward leading the charge.
+- **Up** (W), Ally Charge: sends the allies charging in.
+- **Down** (S), Ally Pull Back: drops them out of the fight for a few seconds.
+- **Left** (A), Stance: Safer: steps the party's stance one rung toward hanging back.
+- **Right** (D), Stance: Bolder: steps it one rung toward leading the charge.
+
+Each key feeds the same input as its flick, so rebinding an order moves the key and the flick together. W takes the
+place of vanilla's spare page-down key; E carries page-down in JABS, so guarding and paging through menus are
+unaffected.
 
 Nothing else reads the right stick, so each of its four directions is a button of its own. A flick has to push the
 stick 70% of the way out, firmer than walking with the left stick, so a thumb resting on it gives no orders, and only
