@@ -11,6 +11,21 @@ All the versioning and history of changes live here.
 
 ## The Actual Changelog
 
+### 4.0.0
+  - Formations are now three stances. Safe Support (the default) keeps an ally 1-3 tiles behind the leader, Bloody
+    Wanker at the leader's side, and Meat Shield 1-3 tiles ahead. Each is a zone rather than a single slot, so an ally
+    anywhere inside it stays put, and one that strays walks back to the nearest edge, sprinting if it has strayed far.
+    The zone turns with the leader once they have held a new facing for half a second, and several allies share a
+    stance by taking lanes.
+  - Every stance answers the leader: an ally joins the fight when the leader lands a hit on something that fights
+    back, or is struck, and an ally that is struck itself fights back too. Smashing a crate rallies nobody.
+  - Four orders reach every ally at once through J-ABS-InputManager, on the right stick's flicks and WASD: Charge sends
+    them after whatever the leader is fighting, Pull Back keeps them out of every fight for three seconds, and Stance:
+    Safer and Stance: Bolder step the party's stance one rung along the menu's ladder without wrapping.
+  - The formation parameters are now stance parameters (Stance Command Text, Stance Command Icon and the ALLY STANCE
+    DETAILS group), the party-wide aggressive/passive toggle and its parameters are gone because stances cover it, and
+    the do-nothing toggle's two icons are parameters of their own (Do-Nothing On Icon, Do-Nothing Off Icon). A project
+    that set the formation parameters sets them again under the new names.
 ### 3.2.0
   - Allies give up on a formation slot they cannot reach rather than chasing it forever. Progress toward the slot is
     measured rather than time spent, so a long walk around a wall still completes while a genuinely blocked approach

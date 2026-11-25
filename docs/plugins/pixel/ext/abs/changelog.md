@@ -11,6 +11,9 @@ All the versioning and history of changes live here.
 
 ## The Actual Changelog
 
+### 1.3.0
+  - Steers allies to J-ABS-AllyAI's stances instead of its formation slots, reading the stance tolerance and give-up
+    tracking it now supplies, so it needs J-ABS-AllyAI 4.0.0. The two slot helpers nothing called any longer are gone.
 ### 1.2.0
   - An ally that has stopped getting closer to its formation slot now stands still instead of stepping back and forth
     across the same half tile.
