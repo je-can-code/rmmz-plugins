@@ -56,12 +56,14 @@ describe('Game_Actor ext/sdp augments (direct src import)', () =>
 
   /**
    * Builds a panel ranking shaped like the real one, for direct injection into an actor's rank list.
-   * Bypasses getOrCreateSdpRankByKey so each test controls rank and unlock state precisely.
+   * Bypasses getOrCreateSdpRankByKey so each test controls rank and unlock state precisely. It starts unlocked,
+   * because in a game a panel only gains ranks through the SDP scene, which lists unlocked panels alone; a test about
+   * lock state says `_isUnlocked: false` out loud.
    */
   const makeRanking = (key, overrides = {}) => ({
     key,
     currentRank: 0,
-    _isUnlocked: false,
+    _isUnlocked: true,
     maxed: false,
     isUnlocked()
     {
@@ -410,18 +412,35 @@ describe('Game_Actor ext/sdp augments (direct src import)', () =>
 
   describe('getContributingSdpRankings', () =>
   {
-    it('hands back the stored rankings while the panels are on', () =>
+    it('hands back every unlocked ranking while the panels are on', () =>
     {
       // Arrange
       const actor = makeActor();
-      actor._j._sdp._ranks.push(makeRanking('a', { currentRank: 3 }), makeRanking('b', { currentRank: 5 }));
+      const first = makeRanking('a', { currentRank: 3 });
+      const second = makeRanking('b', { currentRank: 5 });
+      actor._j._sdp._ranks.push(first, second);
 
       // Act
       const result = actor.getContributingSdpRankings();
 
       // Assert
-      expect(result).toBe(actor._j._sdp._ranks);
-      expect(result).toHaveLength(2);
+      expect(result).toEqual([ first, second ]);
+    });
+
+    it('leaves a locked panel out, keeping its unlocked sibling and both panels\' ranks', () =>
+    {
+      // Arrange- the sibling shares everything but the lock, so only the lock can tell them apart.
+      const actor = makeActor();
+      const unlocked = makeRanking('a', { currentRank: 3 });
+      const locked = makeRanking('b', { currentRank: 5, _isUnlocked: false });
+      actor._j._sdp._ranks.push(unlocked, locked);
+
+      // Act
+      const result = actor.getContributingSdpRankings();
+
+      // Assert
+      expect(result).toEqual([ unlocked ]);
+      expect(actor._j._sdp._ranks.map(ranking => ranking.currentRank)).toEqual([ 3, 5 ]);
     });
 
     it('hands back nothing while blacked out, and leaves the stored ranks alone', () =>
@@ -508,7 +527,7 @@ describe('Game_Actor ext/sdp augments (direct src import)', () =>
       // Arrange
       const actor = makeActor();
       const unlocked = makeRanking('a', { _isUnlocked: true });
-      actor._j._sdp._ranks.push(unlocked, makeRanking('b'));
+      actor._j._sdp._ranks.push(unlocked, makeRanking('b', { _isUnlocked: false }));
 
       // Act
       const result = actor.getAllUnlockedSdps();
@@ -524,7 +543,7 @@ describe('Game_Actor ext/sdp augments (direct src import)', () =>
     {
       // Arrange
       const actor = makeActor();
-      const ranking = makeRanking('a');
+      const ranking = makeRanking('a', { _isUnlocked: false });
       actor._j._sdp._ranks.push(ranking);
 
       // Act
@@ -570,7 +589,7 @@ describe('Game_Actor ext/sdp augments (direct src import)', () =>
     {
       // Arrange
       const actor = makeActor();
-      actor._j._sdp._ranks.push(makeRanking('a'));
+      actor._j._sdp._ranks.push(makeRanking('a', { _isUnlocked: false }));
 
       // Act
       const result = actor.hasAnyUnlockedSdps();

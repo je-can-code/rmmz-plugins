@@ -228,6 +228,53 @@ describe('J-SDP Game_Actor.param (ATK) and Game_Party SDP helpers (direct src im
     });
   });
 
+  describe('lockSdp over the real chain', () =>
+  {
+    /**
+     * Builds a party of one ranked actor holding both ATK panels at rank 1, unlocked through the party the way the
+     * plugin command does it, so a lock travels the same Game_Party -> Game_Actor -> PanelRanking path a game would.
+     * @returns {{ actor: object, party: object }}
+     */
+    const rankedParty = () =>
+    {
+      const actor = makeActor(1);
+      globalThis.$gameActors._byId[1] = actor;
+      const party = new globalThis.Game_Party();
+      party.initialize();
+      party.unlockSdp('vitest_atk_flat');
+      party.unlockSdp('vitest_atk_pct');
+      actor.rankUpPanel('vitest_atk_flat');
+      actor.rankUpPanel('vitest_atk_pct');
+      return { actor, party };
+    };
+
+    it('stops a locked panel granting its ATK while an unlocked sibling keeps granting', () =>
+    {
+      // Arrange- both panels feed ATK, so only the locked one's share may leave.
+      const { actor, party } = rankedParty();
+
+      // Act
+      party.lockSdp('vitest_atk_pct');
+
+      // Assert
+      expect(actor.param(ATK_PARAM_ID)).toBe(104);
+    });
+
+    it('keeps a locked panel\'s ranks, and grants them again once it is unlocked', () =>
+    {
+      // Arrange
+      const { actor, party } = rankedParty();
+      party.lockSdp('vitest_atk_pct');
+
+      // Act
+      party.unlockSdp('vitest_atk_pct');
+
+      // Assert
+      expect(actor.param(ATK_PARAM_ID)).toBe(114);
+      expect(actor.getSdpByKey('vitest_atk_pct').currentRank).toBe(1);
+    });
+  });
+
   describe('Game_Party SDP helpers', () =>
   {
     it('getSdpRankByActorAndKey returns the current rank for a known actor', () =>

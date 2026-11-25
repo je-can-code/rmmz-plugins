@@ -149,10 +149,10 @@ Game_Actor.prototype.onBattlerDataChange = function()
 };
 
 /**
- * The rankings whose panels are granting their bonuses right now: every ranking this actor has, or none at all while
- * the panels are blacked out.<br/>
- * Every panel bonus reads from here, while storage, menus and masteries read {@link #getAllSdpRankings}, so a
- * blackout never costs a rank.
+ * The rankings whose panels are granting their bonuses right now: every unlocked ranking this actor has, or none at
+ * all while the panels are blacked out.<br/>
+ * Every panel bonus reads from here, while storage, menus and masteries read {@link #getAllSdpRankings}, so neither a
+ * lock nor a blackout ever costs a rank: a locked panel simply grants nothing until it is unlocked again.
  * @returns {PanelRanking[]}
  */
 Game_Actor.prototype.getContributingSdpRankings = function()
@@ -165,7 +165,8 @@ Game_Actor.prototype.getContributingSdpRankings = function()
   // a blackout switches every panel off at once; the stored ranks themselves are never touched.
   if (this.isSdpBlackedOut() === true) return [];
 
-  return rankings;
+  // a locked panel grants nothing, and keeps its ranks for the day it is unlocked again.
+  return rankings.filter(panelRanking => panelRanking.isUnlocked() === true);
 };
 
 /**
