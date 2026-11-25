@@ -8,7 +8,7 @@ tags: [abs-allyai, scene, menu]
 # Scene_JabsAllyAi
 
 The `Scene_JabsAllyAi` is the scene for deciding how the party's allies behave in combat: each ally's preset and
-do-nothing toggle, the party-wide aggro/passive toggle, and the party's formation.
+do-nothing toggle, and the party's stance.
 
 ## How to call the scene
 

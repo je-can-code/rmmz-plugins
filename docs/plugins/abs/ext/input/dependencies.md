@@ -40,7 +40,10 @@ All plugins in this ecosystem require the base plugin.
 
 ## J-ABS-AllyAI
 
-Nothing in this plugin uses it; it is declared only so this plugin loads after it.
+Carries out the ally orders. The controller hands its four orders to the `JABS_InputAdapter.performAllyCharge`,
+`performAllyPullBack`, `performAllyStanceSafer` and `performAllyStanceBolder` methods that `J-ABS-AllyAI` adds, and the
+orders are only listened for, and only listed in the remap scene, while `J-ABS-AllyAI` is installed. It is optional:
+without it, every other input works as usual. It is also declared so this plugin loads after it.
 
 ## J-Base-Save
 

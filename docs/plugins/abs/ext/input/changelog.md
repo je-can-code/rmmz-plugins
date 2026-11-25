@@ -11,6 +11,18 @@ All the versioning and history of changes live here.
 
 ## The Actual Changelog
 
+### 2.5.0
+  - Four ally orders, carried out by J-ABS-AllyAI when it is installed: Ally Charge, Ally Pull Back, Stance: Safer and
+    Stance: Bolder. They sit on the right stick's four flicks by default, and on W, S, A and D for a keyboard; each key
+    feeds the same input as its flick, so rebinding an order moves both. The remap scene lists them in an Ally Commands
+    group, which is left out without J-ABS-AllyAI.
+  - Each of the right stick's four directions is a button of its own. A flick has to push the stick 70% of the way
+    out, so a thumb resting on it gives no orders, and only the axis pushed harder counts, so a diagonal flick gives one
+    order rather than two.
+  - W takes the place of vanilla's spare page-down key. E already carries page-down in J-ABS, so guarding and paging
+    through menus are unaffected.
+  - Stored bindings are laid over the defaults rather than replacing them. An input added after a configuration was
+    saved arrives at its default, while every binding the player set, an unbound one included, is kept as they left it.
 ### 2.4.0
   - Keybinds are now installation scope rather than slot scope, when J-Base-Save is installed. They lived inside each
     savefile only because vanilla ConfigManager had no room for an eighth field, which meant rebinding a key applied to

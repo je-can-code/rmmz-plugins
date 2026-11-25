@@ -3,7 +3,7 @@ type: overview
 title: The Plugin Overview
 description: The general overview for what this plugin is about along with the when and how you might use it.
 tags: [abs-allyai, overview]
-version: "3.2.0"
+version: "4.0.0"
 ---
 
 # Overview
@@ -63,10 +63,44 @@ Allies accumulate battle memories as they fight. A memory records which skills p
 Careful and balanced allies use these memories to inform skill selection; reckless allies use them only as a secondary
 signal when picking the strongest skill.
 
-## Aggro/passive toggle
+## Stances
 
-A party-wide toggle controls engagement behavior. When Passive, allies only fight when the leader attacks or when struck
-directly. When Aggressive, allies engage any enemy that enters their sight range.
+The party picks one stance for its allies. A stance decides where an ally keeps itself around the leader while there is
+nothing to fight, and whether it goes into a fight before the leader does. How it fights once it is in one is still its
+preset's business.
+
+| Stance | Where the ally keeps itself | Goes in first |
+|---|---|---|
+| `safe-support` (default) | 1-3 tiles behind the leader | no |
+| `bloody-wanker` | at the leader's side, on whichever side it is already nearer | yes |
+| `meat-shield` | 1-3 tiles ahead of the leader | yes |
+
+Each stance is a zone rather than a single tile, so an ally anywhere inside it stays put. One that strays walks back to
+the nearest edge, and sprints if it has strayed far, which is what lets an ally kept ahead of the leader get back in
+front after a turn. The zone turns with the leader, but only once they have held a new facing for half a second, so a
+glance at a sign does not send anyone running laps.
+
+Several allies share a stance by taking lanes: the first keeps the middle, and the rest spread out to either side of it.
+
+### Every stance answers the leader
+
+Whatever its stance, an ally joins the fight when the leader lands a hit on something that fights back, and when the
+leader is struck. Either one rallies the ally toward that foe, and it engages once something is in sight. An ally that
+is struck itself fights back too. Smashing a crate rallies nobody.
+
+## Ally commands
+
+Four orders reach every ally at once, from the buttons J-ABS-InputManager binds to the right stick's flicks, and to
+WASD on a keyboard:
+
+- **Charge** (up, or W) sends each ally after whatever the leader is fighting, or failing that the nearest foe in sight,
+  whatever its stance would have it wait for.
+- **Pull back** (down, or S) drops each ally out of its fight and keeps it out of every fight for three seconds, during
+  which it can be neither rallied nor alerted.
+- **Stance: Safer** (left, or A) and **Stance: Bolder** (right, or D) step the party's stance one rung along the ladder
+  the menu lists them in, from Safe Support to Meat Shield. The ladder does not wrap: a step past either end plays
+  the buzzer and changes nothing. A step that lands plays a cursor sound and, with J-Log installed, writes the new
+  stance to the map's action log.
 
 ## Caveats to note
 

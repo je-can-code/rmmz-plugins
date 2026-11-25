@@ -1,5 +1,5 @@
 //region plugins/abs/ext/input/_models/jabs-button.test.js
-import { beforeAll, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 
 describe('J-ABS-Input JABS_Button (unit, pure class, no downstream dependencies)', () =>
 {
@@ -28,6 +28,15 @@ describe('J-ABS-Input JABS_Button (unit, pure class, no downstream dependencies)
     {
       expect(JABS_Button.allButtons()).toContain(JABS_Button.Select);
     });
+
+    it('includes all four ally orders', () =>
+    {
+      // Arrange/Act
+      const all = JABS_Button.allButtons();
+
+      // Assert
+      expect(all).toEqual(expect.arrayContaining([ 'AllyCharge', 'AllyPullBack', 'AllyStanceSafer', 'AllyStanceBolder' ]));
+    });
   });
 
   describe('assignableInputs', () =>
@@ -51,6 +60,48 @@ describe('J-ABS-Input JABS_Button (unit, pure class, no downstream dependencies)
     it('includes Select, since it is both in allButtons and the okInputs allowlist', () =>
     {
       expect(JABS_Button.assignableInputs()).toContain(JABS_Button.Select);
+    });
+
+    it('includes all four ally orders, so the player can rebind them', () =>
+    {
+      // Arrange/Act
+      const assignable = JABS_Button.assignableInputs();
+
+      // Assert
+      expect(assignable).toEqual(expect.arrayContaining([ 'AllyCharge', 'AllyPullBack', 'AllyStanceSafer', 'AllyStanceBolder' ]));
+    });
+  });
+
+  describe('isAllyCommandAvailable', () =>
+  {
+    afterEach(() =>
+    {
+      // the namespace is a bare global, so each test's version of it is removed by hand.
+      delete globalThis.J;
+    });
+
+    it('is available when J-ABS-AllyAI has stamped its namespace', () =>
+    {
+      // Arrange
+      globalThis.J = { ABS: { EXT: { INPUT: {}, ALLYAI: {} } } };
+
+      // Act
+      const available = JABS_Button.isAllyCommandAvailable();
+
+      // Assert
+      expect(available).toBe(true);
+    });
+
+    it('is unavailable when J-ABS-AllyAI is absent, even beside other extensions', () =>
+    {
+      // Arrange- a sibling extension's namespace must not be mistaken for J-ABS-AllyAI's.
+      globalThis.J = { ABS: { EXT: { INPUT: {}, FOOD: {} } } };
+
+      // Act
+      const available = JABS_Button.isAllyCommandAvailable();
+
+      // Assert
+      expect(available).toBe(false);
     });
   });
 

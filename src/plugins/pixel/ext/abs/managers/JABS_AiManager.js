@@ -68,15 +68,15 @@ JABS_AiManager.rubberbandAlly = function(allyBattler)
 /**
  * Extends {@link #moveTowardSlotIfNeeded}.<br/>
  * Replaces movement with PIXEL-aware hysteresis and near-target throttling to prevent sliding.
- * This implementation does NOT call the original; it fully handles formation movement.
+ * This implementation does NOT call the original; it fully handles stance movement.
  * @param {JABS_Battler} allyBattler The ally battler.
- * @param {number} desiredX The desired slot x (fractional center).
- * @param {number} desiredY The desired slot y (fractional center).
+ * @param {number} desiredX The x coordinate of the ally's stance spot.
+ * @param {number} desiredY The y coordinate of the ally's stance spot.
  */
 J.PIXEL.EXT.ABS.Aliased.JABS_AiManager.set("moveTowardSlotIfNeeded", JABS_AiManager.moveTowardSlotIfNeeded);
 JABS_AiManager.moveTowardSlotIfNeeded = function(allyBattler, desiredX, desiredY)
 {
-  // dodge pipeline owns the ally sprite until endDodge; skip formation pull during forced dodge.
+  // dodge pipeline owns the ally sprite until endDodge; skip the stance pull during forced dodge.
   if (allyBattler.isDodging())
   {
     return;
@@ -90,9 +90,9 @@ JABS_AiManager.moveTowardSlotIfNeeded = function(allyBattler, desiredX, desiredY
   // acquire the character once.
   const chr = allyBattler.getCharacter();
 
-  // how close to the slot counts as arrived; Ally AI is a hard dependency of this plugin, so
-  // its configured formation tolerance is always available to read.
-  const tolerance = J.ABS.EXT.ALLYAI.Metadata.FormationTolerance;
+  // how close to the spot counts as arrived; Ally AI is a hard dependency of this plugin, so
+  // its configured stance tolerance is always available to read.
+  const tolerance = J.ABS.EXT.ALLYAI.Metadata.StanceTolerance;
 
   // extra ring outside tolerance for gentle throttling near target.
   const hysteresis = 0.25;
@@ -109,23 +109,23 @@ JABS_AiManager.moveTowardSlotIfNeeded = function(allyBattler, desiredX, desiredY
     chr.stopPixelMoving();
 
     // arriving spends the attempt, so being knocked out of position later starts a fresh one.
-    allyBattler.clearFormationApproach();
+    allyBattler.clearStanceApproach();
 
     // do not issue a move when already within tolerance.
     return;
   }
 
   // measure this frame's approach before deciding whether another step is worth issuing.
-  allyBattler.observeFormationApproach(dist, desiredX, desiredY);
+  allyBattler.observeStanceApproach(dist, desiredX, desiredY);
 
   // an ally that has stopped getting closer stops trying.
   //
-  // A slot can sit a hair outside tolerance and still be unreachable - blocked on one axis by a
+  // A spot can sit a hair outside tolerance and still be unreachable - blocked on one axis by a
   // wall while perfectly placed on the other, which lands the ally permanently inside the near ring
   // below. Throttling turns that into a nudge every other frame rather than every frame, but it is
   // still forever, and an ally stepping back and forth across the same half tile reads as a
-  // malfunction. Standing still is the honest answer to a slot that cannot be occupied.
-  if (allyBattler.hasGivenUpOnFormationSlot())
+  // malfunction. Standing still is the honest answer to a spot that cannot be occupied.
+  if (allyBattler.hasGivenUpOnStanceSpot())
   {
     // settle rather than shuffle; a queued pixel step would carry on without a new command.
     chr.stopPixelMoving();
@@ -166,45 +166,5 @@ JABS_AiManager.moveTowardSlotIfNeeded = function(allyBattler, desiredX, desiredY
     // execute the smart step toward the target slot.
     allyBattler.smartMoveTowardCoordinates(desiredX, desiredY);
   }
-};
-
-/**
- * Overwrites {@link #calculateFormationSlotCoordinates}.<br/>
- * Calculates considering the tile center.
- * @param {number} lx The leader's x coordinate.
- * @param {number} rx The rotated x.
- * @param {number} ly The leader's y coordinate.
- * @param {number} ry The rotated y.
- * @returns {[number, number]}
- */
-JABS_AiManager.calculateFormationSlotCoordinates = function(lx, rx, ly, ry)
-{
-  // compute absolute slot tile by applying the rotated offset and target the tile center.
-  const sx = lx + rx + 0.5;
-  const sy = ly + ry + 0.5;
-
-  // return slot coords (fractional center).
-  return [ sx, sy ];
-};
-
-/**
- * Overwrites {@link #isWithinTolerance}.<br/>
- * Checks if a battler is within a Euclidean tolerance of the target point.
- * @param {JABS_Battler} allyBattler The ally battler.
- * @param {number} targetX The target x (fractional center).
- * @param {number} targetY The target y (fractional center).
- * @param {number} tolerance The allowed range before moving.
- * @returns {boolean} True if within tolerance, false otherwise.
- */
-JABS_AiManager.isWithinTolerance = function(allyBattler, targetX, targetY, tolerance)
-{
-  // compute Euclidean distance to the target using fractional coords.
-  const chr = allyBattler.getCharacter();
-  const dx = chr.x - targetX;
-  const dy = chr.y - targetY;
-  const dist = Math.sqrt(dx * dx + dy * dy);
-
-  // return whether or not we are close enough.
-  return dist <= tolerance;
 };
 //endregion JABS_AiManager

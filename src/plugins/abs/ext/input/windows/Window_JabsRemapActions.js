@@ -11,6 +11,9 @@ const JABS_REMAP_HEADER_HELP = {
   'Functional Actions':
     'Functional shortcuts unrelated to attacks: open the JABS menu, cycle party leader.\n'
     + 'Useful for management between encounters or to swap leaders on the fly.',
+  'Ally Commands':
+    'Orders for your allies, given mid-fight: send them charging in, call them back,\n'
+    + 'or step their stance safer or bolder without opening a menu.',
 };
 
 /**
@@ -36,6 +39,10 @@ function jabsRemapActionLookupMaps()
   labels[JABS_Button.Guard] = 'Guard';
   labels[JABS_Button.Menu] = 'Menu';
   labels[JABS_Button.Select] = 'Party Cycle';
+  labels[JABS_Button.AllyCharge] = 'Ally Charge';
+  labels[JABS_Button.AllyPullBack] = 'Ally Pull Back';
+  labels[JABS_Button.AllyStanceSafer] = 'Stance: Safer';
+  labels[JABS_Button.AllyStanceBolder] = 'Stance: Bolder';
 
   // derive the combat skill labels from their compositions rather than spelling them out. writing
   // them by hand is how "Skill Trigger + Dodge" survived long after the dodge input was folded into
@@ -69,6 +76,10 @@ function jabsRemapActionLookupMaps()
   help[JABS_Button.CombatSkill2] = 'Trigger Combat Skill 2.\nUsed with the Skill Trigger modifier.';
   help[JABS_Button.CombatSkill3] = 'Trigger Combat Skill 3.\nUsed with the Skill Trigger modifier.';
   help[JABS_Button.CombatSkill4] = 'Trigger Combat Skill 4.\nUsed with the Skill Trigger modifier.';
+  help[JABS_Button.AllyCharge] = 'Send your allies charging in.\nThey go after whatever you are fighting.';
+  help[JABS_Button.AllyPullBack] = 'Call your allies back out of the fight.\nThey stay out of it for a few seconds.';
+  help[JABS_Button.AllyStanceSafer] = 'Step your allies\' stance one rung safer.\nToward hanging back behind you.';
+  help[JABS_Button.AllyStanceBolder] = 'Step your allies\' stance one rung bolder.\nToward leading the charge ahead of you.';
 
   jabsRemapActionLookupMaps._cached = { labels, help };
   return jabsRemapActionLookupMaps._cached;
@@ -268,7 +279,8 @@ class Window_JabsRemapActions
    */
   _builtinSectionSpecs()
   {
-    return [
+    // the sections every installation of this plugin has.
+    const specs = [
       {
         title: 'Primary Actions',
         buttons: [
@@ -294,6 +306,23 @@ class Window_JabsRemapActions
         ],
       },
     ];
+
+    // orders for allies only have anyone to obey them when J-ABS-AllyAI is installed.
+    if (JABS_Button.isAllyCommandAvailable())
+    {
+      specs.push({
+        title: 'Ally Commands',
+        buttons: [
+          JABS_Button.AllyCharge,
+          JABS_Button.AllyPullBack,
+          JABS_Button.AllyStanceSafer,
+          JABS_Button.AllyStanceBolder,
+        ],
+      });
+    }
+
+    // return every section this installation offers.
+    return specs;
   }
 
   /**

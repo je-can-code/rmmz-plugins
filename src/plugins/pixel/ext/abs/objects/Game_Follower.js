@@ -1,11 +1,11 @@
 //region Game_Follower
 /**
  * Overwrites {@link Game_Follower.isPixelTrainSuspended}.<br/>
- * An ally with a JABS battler is steered by formation movement, which this same plugin implements
+ * An ally with a JABS battler is steered by stance movement, which this same plugin implements
  * over in its {@link JABS_AiManager} augments. The player's breadcrumb train must therefore keep
  * its hands off: two systems writing a position to the same sprite every frame make it stutter
- * between the trail and the formation slot instead of settling on either.
- * @returns {boolean} True if formation movement owns this follower, false otherwise.
+ * between the trail and the stance spot instead of settling on either.
+ * @returns {boolean} True if stance movement owns this follower, false otherwise.
  */
 Game_Follower.prototype.isPixelTrainSuspended = function()
 {
@@ -16,13 +16,13 @@ Game_Follower.prototype.isPixelTrainSuspended = function()
 
 /**
  * Extends {@link Game_Follower.chaseCharacter}.<br/>
- * Suppresses vanilla chasing for an AI-controlled ally, so formation movement owns where it goes.
+ * Suppresses vanilla chasing for an AI-controlled ally, so stance movement owns where it goes.
  * @param {Game_Character} character The character to chase (usually the preceding character).
  */
 J.PIXEL.EXT.ABS.Aliased.Game_Follower.set("chaseCharacter", Game_Follower.prototype.chaseCharacter);
 Game_Follower.prototype.chaseCharacter = function(character)
 {
-  // formation movement already decides where this ally belongs.
+  // stance movement already decides where this ally belongs.
   if (this.isPixelTrainSuspended()) return;
 
   // perform original logic.
@@ -32,10 +32,10 @@ Game_Follower.prototype.chaseCharacter = function(character)
 
 /**
  * Extends {@link Game_Follower.update}.<br/>
- * Clamps residual movement state on an idle AI-controlled ally. Formation movement issues its
+ * Clamps residual movement state on an idle AI-controlled ally. Stance movement issues its
  * steps deliberately rather than continuously, so an ally that took no pixel step this frame must
  * be told it is stationary- otherwise the engine keeps interpolating toward a destination nothing
- * intends to reach, and the ally drifts away from its slot.
+ * intends to reach, and the ally drifts away from its spot.
  */
 J.PIXEL.EXT.ABS.Aliased.Game_Follower.set("update", Game_Follower.prototype.update);
 Game_Follower.prototype.update = function()
@@ -60,12 +60,12 @@ Game_Follower.prototype.update = function()
 
 /**
  * Determines whether generic movement should be blocked for an idle AI-controlled ally.
- * While an ally is neither engaged nor alerted it is in its formation phase, where the only
- * legitimate movement is the pixel step formation itself issued this frame. Anything else
- * reaching this point is a stray vanilla-cadence move that would fight the formation pull.
+ * While an ally is neither engaged nor alerted it is keeping to its stance, where the only
+ * legitimate movement is the pixel step the stance itself issued this frame. Anything else
+ * reaching this point is a stray vanilla-cadence move that would fight the stance pull.
  * @returns {boolean} True if the movement should be blocked, false otherwise.
  */
-Game_Follower.prototype.isIdleFormationMoveBlocked = function()
+Game_Follower.prototype.isIdleStanceMoveBlocked = function()
 {
   // ordinary followers move freely.
   if (this.isPixelTrainSuspended() === false) return false;
@@ -73,10 +73,10 @@ Game_Follower.prototype.isIdleFormationMoveBlocked = function()
   // acquire the battler carrying the engagement and alert state.
   const jabsBattler = this.getJabsBattler();
 
-  // an ally in combat moves on its combat AI's terms, not formation's.
+  // an ally in combat moves on its combat AI's terms, not its stance's.
   if (jabsBattler.isEngaged() || jabsBattler.isAlerted()) return false;
 
-  // during formation phase, only a step issued this frame is legitimate.
+  // while keeping to its stance, only a step issued this frame is legitimate.
   return this.isMovePressed() === false;
 };
 
@@ -88,8 +88,8 @@ Game_Follower.prototype.isIdleFormationMoveBlocked = function()
 J.PIXEL.EXT.ABS.Aliased.Game_Follower.set("moveStraight", Game_Follower.prototype.moveStraight);
 Game_Follower.prototype.moveStraight = function(direction)
 {
-  // do not let a stray move fight the formation pull.
-  if (this.isIdleFormationMoveBlocked()) return;
+  // do not let a stray move fight the stance pull.
+  if (this.isIdleStanceMoveBlocked()) return;
 
   // perform original logic.
   J.PIXEL.EXT.ABS.Aliased.Game_Follower.get("moveStraight")
@@ -105,8 +105,8 @@ Game_Follower.prototype.moveStraight = function(direction)
 J.PIXEL.EXT.ABS.Aliased.Game_Follower.set("moveDiagonally", Game_Follower.prototype.moveDiagonally);
 Game_Follower.prototype.moveDiagonally = function(horz, vert)
 {
-  // do not let a stray move fight the formation pull.
-  if (this.isIdleFormationMoveBlocked()) return;
+  // do not let a stray move fight the stance pull.
+  if (this.isIdleStanceMoveBlocked()) return;
 
   // perform original logic.
   J.PIXEL.EXT.ABS.Aliased.Game_Follower.get("moveDiagonally")

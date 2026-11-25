@@ -61,6 +61,17 @@ Input.keyMapper = {
   51: JabsInputSymbols.CombatSkill3,
   // 4 = L1 + triangle.
   52: JabsInputSymbols.CombatSkill4,
+
+  // keyboard alternative for the right stick's four flicks: wasd, under the hand that isn't steering.
+  // vanilla maps w to page-down as well, but e already carries page-down here, so w is free for this.
+  // w = flick up.
+  87: JabsInputSymbols.RStickUp,
+  // s = flick down.
+  83: JabsInputSymbols.RStickDown,
+  // a = flick left.
+  65: JabsInputSymbols.RStickLeft,
+  // d = flick right.
+  68: JabsInputSymbols.RStickRight,
 };
 
 /**
@@ -319,6 +330,18 @@ Input.registerSymbolLabel = function(symbol, label)
 };
 
 /**
+ * Whether a physical input symbol has been given a friendly label yet.<br/>
+ * {@link Input.labelForSymbol} answers with the symbol itself when it has none, so that answer alone
+ * cannot tell a named symbol from an unnamed one.
+ * @param {string} symbol The physical symbol.
+ * @returns {boolean}
+ */
+Input.hasSymbolLabel = function(symbol)
+{
+  return Object.prototype.hasOwnProperty.call(Input._jRegistries.symbolLabels, String(symbol));
+};
+
+/**
  * Resolves a friendly label for a physical input symbol.
  * @param {string} symbol The physical symbol.
  * @returns {string}
@@ -387,6 +410,12 @@ Input.ensureRemapBootstrapped = function()
   d[JABS_Button.CombatSkill3] = [ JabsInputSymbols.CombatSkill3 ];
   d[JABS_Button.CombatSkill4] = [ JabsInputSymbols.CombatSkill4 ];
 
+  // orders for allies, on flicks of the right stick.
+  d[JABS_Button.AllyCharge] = [ JabsInputSymbols.RStickUp ];
+  d[JABS_Button.AllyPullBack] = [ JabsInputSymbols.RStickDown ];
+  d[JABS_Button.AllyStanceSafer] = [ JabsInputSymbols.RStickLeft ];
+  d[JABS_Button.AllyStanceBolder] = [ JabsInputSymbols.RStickRight ];
+
   // register the defaults and ensure live bindings are initialized.
   Input.seedDefaultBindings('JABS', d);
   Input.getAllBindings('JABS');
@@ -401,6 +430,10 @@ Input.ensureRemapBootstrapped = function()
   Input.registerSymbolLabel(JabsInputSymbols.DPadDown, 'D-Pad Down');
   Input.registerSymbolLabel(JabsInputSymbols.DPadLeft, 'D-Pad Left');
   Input.registerSymbolLabel(JabsInputSymbols.DPadRight, 'D-Pad Right');
+  Input.registerSymbolLabel(JabsInputSymbols.RStickUp, 'R-Stick Up');
+  Input.registerSymbolLabel(JabsInputSymbols.RStickDown, 'R-Stick Down');
+  Input.registerSymbolLabel(JabsInputSymbols.RStickLeft, 'R-Stick Left');
+  Input.registerSymbolLabel(JabsInputSymbols.RStickRight, 'R-Stick Right');
 
   // allow these symbols to be captured in the prompt if desired.
   Input.registerRemapCaptureSymbol(JabsInputSymbols.L3);
@@ -409,6 +442,10 @@ Input.ensureRemapBootstrapped = function()
   Input.registerRemapCaptureSymbol(JabsInputSymbols.DPadDown);
   Input.registerRemapCaptureSymbol(JabsInputSymbols.DPadLeft);
   Input.registerRemapCaptureSymbol(JabsInputSymbols.DPadRight);
+  Input.registerRemapCaptureSymbol(JabsInputSymbols.RStickUp);
+  Input.registerRemapCaptureSymbol(JabsInputSymbols.RStickDown);
+  Input.registerRemapCaptureSymbol(JabsInputSymbols.RStickLeft);
+  Input.registerRemapCaptureSymbol(JabsInputSymbols.RStickRight);
 
   // expose all non-engine keyboard keys for capture/binding.
   Input.bootstrapAllKeyboardKeysForCapture();
@@ -449,9 +486,15 @@ Input.bootstrapAllKeyboardKeysForCapture = function()
       const s = Input.keyMapper[code];
       if (s && reserved.has(s) === false)
       {
-        // register this existing non-engine symbol for the prompt & label.
+        // register this existing non-engine symbol for the prompt.
         Input.registerRemapCaptureSymbol(s);
-        Input.registerSymbolLabel(s, Input._keycodeLabelFor(code, s));
+
+        // name it after its key, unless it already has a name: a symbol a key shares with a gamepad
+        // input, like the right stick's flicks on wasd, keeps the name it was given for the pad.
+        if (Input.hasSymbolLabel(s) === false)
+        {
+          Input.registerSymbolLabel(s, Input._keycodeLabelFor(code, s));
+        }
       }
       continue;
     }
@@ -623,6 +666,25 @@ Input._keycodeLabelFor = function(code, fallback)
 Input._axisThreshold = 0.5;
 
 /**
+ * How far the right stick must be pushed for the push to count as a flick, from 0 to 1.
+ *
+ * Firmer than the left stick's threshold on purpose. The left stick walks, so a light touch should move
+ * the player; a right stick flick gives an order, and a thumb resting on the stick must not give one by
+ * accident.
+ * @type {number}
+ */
+Input._flickThreshold = 0.7;
+
+/**
+ * Which right stick directions each pad was flicked the frame before, by the pad's index.
+ *
+ * The four flicks share their symbols with keys on the keyboard, so the stick may only write them when one
+ * changes. Writing them every frame would have a stick at rest release a key the player is still holding.
+ * @type {Object<number, Object<string, boolean>>}
+ */
+Input._rightStickStamps = {};
+
+/**
  * Sets the analog stick threshold.
  * @param {number} v The new threshold (0.05–0.90 recommended).
  */
@@ -679,6 +741,9 @@ Input._updateGamepadState = function(gamepad)
   {
     return;
   }
+
+  // 1b) Turn flicks of the right stick into buttons of their own.
+  Input._normalizeRightStickFlicks(gamepad, s, padState);
 
   // 2) Capture the merged snapshot BEFORE axis processing (for keyboard approx).
   const s0 = Input._snapshotMergedDirections(s);
@@ -762,6 +827,90 @@ Input._normalizeDpadFromButtons = function(gamepad, s, padState)
   padState['dpad-down'] = dpd;
   padState['dpad-left'] = dpl;
   padState['dpad-right'] = dpr;
+};
+
+/**
+ * Turns the right stick into four buttons, one per direction it can be flicked, and writes them into both
+ * the merged current state and the per-pad snapshot, the same way the D-pad's buttons are written.
+ *
+ * Nothing in the game reads the right stick as a stick: the player walks with the left one. That leaves its
+ * four directions free to be buttons, which the remap screen can bind like any other.
+ * @param {Gamepad} gamepad The polled gamepad.
+ * @param {object} s The merged current state bag.
+ * @param {object} padState The per-pad snapshot for this device.
+ */
+Input._normalizeRightStickFlicks = function(gamepad, s, padState)
+{
+  // work out which direction, if any, the right stick is flicked this frame.
+  const flicks = Input._resolveRightStickFlicks(gamepad);
+
+  Object.keys(flicks)
+    .forEach(symbol =>
+    {
+      // the per-pad snapshot always mirrors the stick, for edge/trigger bookkeeping.
+      padState[symbol] = flicks[symbol];
+
+      // the merged state only hears about a change, the way the engine writes a pad's own buttons, so a stick
+      // at rest never releases the keys that share these symbols: wasd, held on the keyboard beside a pad.
+      const wasFlicked = Input._wasRightStickFlicked(gamepad.index, symbol);
+      if (wasFlicked === flicks[symbol]) return;
+
+      s[symbol] = flicks[symbol];
+    });
+
+  // remember this frame's flicks, to tell the next frame's changes apart.
+  Input._rightStickStamps[gamepad.index] = flicks;
+};
+
+/**
+ * Whether a right stick direction was flicked on a pad the frame before.<br/>
+ * A pad that has not been polled yet was at rest.
+ * @param {number} padIndex The index of the pad, as the Gamepad API numbers them.
+ * @param {string} symbol The symbol of the direction.
+ * @returns {boolean}
+ */
+Input._wasRightStickFlicked = function(padIndex, symbol)
+{
+  const stamp = Input._rightStickStamps[padIndex];
+
+  // a pad seen for the first time had nothing flicked before it.
+  if (stamp === undefined) return false;
+
+  return stamp[symbol] === true;
+};
+
+/**
+ * Works out which direction the right stick is flicked this frame.
+ *
+ * Only the axis pushed harder counts, so a flick that drifts off the straight line gives exactly one order
+ * rather than two. A pad reporting fewer than four axes has no right stick, and is never flicked.
+ * @param {Gamepad} gamepad The polled gamepad.
+ * @returns {Object<string, boolean>} Whether each right stick direction is flicked, by its symbol.
+ */
+Input._resolveRightStickFlicks = function(gamepad)
+{
+  // the right stick is the standard mapping's third and fourth axes.
+  const hasRightStick = gamepad.axes.length > 3;
+  const rightX = hasRightStick
+    ? gamepad.axes[2]
+    : 0;
+  const rightY = hasRightStick
+    ? gamepad.axes[3]
+    : 0;
+
+  // only the axis pushed harder counts.
+  const isHorizontal = Math.abs(rightX) >= Math.abs(rightY);
+
+  // a flick is a push past the firm threshold, along the axis that counts.
+  const threshold = Input._flickThreshold;
+  const flicks = {};
+  flicks[JabsInputSymbols.RStickUp] = !isHorizontal && rightY <= -threshold;
+  flicks[JabsInputSymbols.RStickDown] = !isHorizontal && rightY >= threshold;
+  flicks[JabsInputSymbols.RStickLeft] = isHorizontal && rightX <= -threshold;
+  flicks[JabsInputSymbols.RStickRight] = isHorizontal && rightX >= threshold;
+
+  // hand back every direction.
+  return flicks;
 };
 
 /**
@@ -910,6 +1059,32 @@ Input._rebuildMergedDirections = function(s, kbdApprox, axesNow)
 };
 
 /**
+ * Copies a single namespace's binding map, so the copy can be changed without touching the original.
+ * Every value is copied as an array of its own; anything that is not an array is copied as unbound.
+ * @param {Object<string, string[]>} map The binding map to copy.
+ * @returns {Object<string, string[]>}
+ */
+Input._cloneBindingMap = function(map)
+{
+  // the copy mirrors the registry's own prototype-free maps.
+  const clone = Object.create(null);
+
+  // copy each binding into an array of its own.
+  const keys = Object.keys(map);
+  for (let k = 0; k < keys.length; k++)
+  {
+    const key = keys[k];
+    const arr = map[key];
+    clone[key] = Array.isArray(arr)
+      ? arr.slice(0)
+      : [];
+  }
+
+  // return the independent copy.
+  return clone;
+};
+
+/**
  * Exports a deep-cloned snapshot of all live namespace bindings for save.
  * Shape: { [ns: string]: { [key: string]: string[] } }
  * @returns {Object<string, Object<string, string[]>>}
@@ -927,17 +1102,7 @@ Input.exportAllBindingsForSave = function()
     // clone each namespace mapping.
     const ns = namespaces[i];
     const map = b[ns] || Object.create(null);
-    const clone = Object.create(null);
-    const keys = Object.keys(map);
-    for (let k = 0; k < keys.length; k++)
-    {
-      const key = keys[k];
-      const arr = map[key];
-      clone[key] = Array.isArray(arr)
-        ? arr.slice(0)
-        : [];
-    }
-    out[ns] = clone;
+    out[ns] = Input._cloneBindingMap(map);
   }
 
   // return the cloned snapshot.
@@ -947,6 +1112,15 @@ Input.exportAllBindingsForSave = function()
 /**
  * Imports all namespace bindings from a saved snapshot into the live registry.
  * Any namespaces absent from the snapshot retain their current (bootstrapped) values.
+ *
+ * Within a namespace, the saved keys are laid over the live ones rather than replacing the whole
+ * namespace. The live bindings are the bootstrapped defaults by the time this runs, and a snapshot is
+ * only ever as new as the build that wrote it- so an action added to a namespace after the player's
+ * snapshot was taken is simply absent from it. Replacing the namespace wholesale would erase that
+ * action's default and leave it bound to nothing, with no way for the player to tell why. Laying the
+ * snapshot over the defaults keeps every choice the player actually made, a deliberate unbind
+ * included, while anything they never had the chance to choose arrives at its default. It is the same
+ * principle the save system follows when it seeds defaults before decoding (see docs/save-system.md).
  * @param {Object<string, Object<string, string[]>>} saved The snapshot to import.
  */
 Input.importAllBindingsFromSave = function(saved)
@@ -962,20 +1136,14 @@ Input.importAllBindingsFromSave = function(saved)
     const ns = namespaces[i];
     const map = saved[ns] || Object.create(null);
 
-    // build a safe clone of the map for assignment.
-    const clone = Object.create(null);
-    const keys = Object.keys(map);
-    for (let k = 0; k < keys.length; k++)
-    {
-      const key = keys[k];
-      const arr = map[key];
-      clone[key] = Array.isArray(arr)
-        ? arr.slice(0)
-        : [];
-    }
+    // start from a copy of whatever the namespace holds live, so nothing the save omits is lost.
+    const live = Input._cloneBindingMap(b[ns] || Object.create(null));
 
-    // replace the live namespace mapping with the cloned one.
-    b[ns] = clone;
+    // copy the saved bindings too, so the registry never shares an array with the snapshot.
+    const chosen = Input._cloneBindingMap(map);
+
+    // lay the saved bindings over the live ones, since what the player chose always wins.
+    b[ns] = Object.assign(live, chosen);
   }
 };
 

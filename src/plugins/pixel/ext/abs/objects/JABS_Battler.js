@@ -491,7 +491,7 @@ JABS_Battler.prototype.smartMoveAwayFromTarget = function()
  */
 JABS_Battler.prototype.smartMoveTowardCoordinates = function(targetX, targetY)
 {
-  // ally ai + formations issue this every frame; while dodging it fights executeDodgeMovement and stacks dodge speed.
+  // ally ai stances issue this every frame; while dodging it fights executeDodgeMovement and stacks dodge speed.
   if (this.isDodging())
   {
     return;

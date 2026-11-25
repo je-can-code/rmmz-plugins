@@ -273,7 +273,7 @@ describe('J-ABS-Pixelistics remaining branch coverage (direct src import)', () =
         setPixelMoveCooldown: vi.fn(),
       }, characterOverrides);
 
-      // the formation give-up seams Ally AI hangs on every battler. Counted rather than tracked,
+      // the stance give-up seams Ally AI hangs on every battler. Counted rather than tracked,
       // because these tests are about the pixel mover's own branches: what matters here is that it
       // asks, and the stall behaviour itself is proven against the real tracker in Ally AI's tests.
       let observations = 0;
@@ -284,9 +284,9 @@ describe('J-ABS-Pixelistics remaining branch coverage (direct src import)', () =
         guarding: () => false,
         canBattlerMove: () => true,
         smartMoveTowardCoordinates: vi.fn(),
-        observeFormationApproach: vi.fn(() => { observations += 1; }),
-        hasGivenUpOnFormationSlot: () => observations > 3,
-        clearFormationApproach: vi.fn(),
+        observeStanceApproach: vi.fn(() => { observations += 1; }),
+        hasGivenUpOnStanceSpot: () => observations > 3,
+        clearStanceApproach: vi.fn(),
       }, overrides);
 
       return { ally, character };
@@ -294,7 +294,7 @@ describe('J-ABS-Pixelistics remaining branch coverage (direct src import)', () =
 
     it('yields to the dodge pipeline while dodging', () =>
     {
-      // Arrange- the dodge owns the sprite until it ends; pulling toward formation would fight it.
+      // Arrange- the dodge owns the sprite until it ends; pulling toward the stance would fight it.
       const { ally } = buildAlly(10, 10, { isDodging: () => true });
 
       // Act
@@ -392,12 +392,12 @@ describe('J-ABS-Pixelistics remaining branch coverage (direct src import)', () =
       expect(ally.smartMoveTowardCoordinates).not.toHaveBeenCalled();
     });
 
-    it('uses the ally AI formation tolerance when that extension is present', () =>
+    it('uses the ally AI stance tolerance when that extension is present', () =>
     {
       // Arrange- with a wide configured tolerance, a distance that would normally trigger a step now
       // counts as "in position", which is how the configured value proves it was actually read.
       const previousAllyAi = globalThis.J.ABS.EXT.ALLYAI;
-      globalThis.J.ABS.EXT.ALLYAI = { Metadata: { FormationTolerance: 3 } };
+      globalThis.J.ABS.EXT.ALLYAI = { Metadata: { StanceTolerance: 3 } };
       const { ally, character } = buildAlly(2, 0);
 
       // Act
@@ -419,7 +419,7 @@ describe('J-ABS-Pixelistics remaining branch coverage (direct src import)', () =
       aiManager.moveTowardSlotIfNeeded(ally, 0, 0);
 
       // Assert
-      expect(ally.observeFormationApproach).toHaveBeenCalledWith(Math.sqrt(50), 0, 0);
+      expect(ally.observeStanceApproach).toHaveBeenCalledWith(Math.sqrt(50), 0, 0);
     });
 
     it('settles instead of stepping once the ally has given up on the slot', () =>
@@ -450,45 +450,8 @@ describe('J-ABS-Pixelistics remaining branch coverage (direct src import)', () =
       aiManager.moveTowardSlotIfNeeded(ally, 0, 0);
 
       // Assert
-      expect(ally.clearFormationApproach).toHaveBeenCalledTimes(1);
-      expect(ally.observeFormationApproach).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('JABS_AiManager formation geometry', () =>
-  {
-    it('targets the centre of the slot tile rather than its corner', () =>
-    {
-      // Arrange & Act- the half-tile offset is what stops allies standing on tile seams.
-      const [ sx, sy ] = aiManager.calculateFormationSlotCoordinates(10, 2, 20, -1);
-
-      // Assert
-      expect(sx).toBe(12.5);
-      expect(sy).toBe(19.5);
-    });
-
-    it('reports an ally inside the tolerance ring as in position', () =>
-    {
-      // Arrange
-      const ally = { getCharacter: () => ({ x: 0.3, y: 0.4 }) };
-
-      // Act- the distance here is exactly 0.5.
-      const result = aiManager.isWithinTolerance(ally, 0, 0, 0.5);
-
-      // Assert- the comparison is inclusive, so sitting exactly on the ring counts as arrived.
-      expect(result).toBe(true);
-    });
-
-    it('reports an ally outside the tolerance ring as out of position', () =>
-    {
-      // Arrange
-      const ally = { getCharacter: () => ({ x: 3, y: 4 }) };
-
-      // Act
-      const result = aiManager.isWithinTolerance(ally, 0, 0, 0.5);
-
-      // Assert
-      expect(result).toBe(false);
+      expect(ally.clearStanceApproach).toHaveBeenCalledTimes(1);
+      expect(ally.observeStanceApproach).not.toHaveBeenCalled();
     });
   });
 

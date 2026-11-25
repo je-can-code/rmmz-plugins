@@ -4,7 +4,7 @@
 // PLUGIN_VERSION → the header's @plugindesc and __PLUGIN_VERSION__ in the ship; the book's overview stamps it too.
 // PLUGIN_DESC_TAG and PLUGIN_DESCRIPTION → the rest of the header's @plugindesc.
 export const PLUGIN_NAME = 'J-Pixel-ABS';
-export const PLUGIN_VERSION = '1.2.0';
+export const PLUGIN_VERSION = '1.3.0';
 export const PLUGIN_DESC_TAG = 'PIXEL-ABS';
 export const PLUGIN_DESCRIPTION = 'Bridges J-Pixelistics with J-ABS for combat-aware pixel movement.';
 //endregion ship-meta

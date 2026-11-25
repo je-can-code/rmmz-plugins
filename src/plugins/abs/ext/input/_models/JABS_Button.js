@@ -126,6 +126,54 @@ class JABS_Button
 
   //endregion  L1 + buttons
 
+  //region ally commands
+  /**
+   * The "ally charge" order, a flick of the right stick up by default.
+   * Sends the party's allies charging in, whatever their stance would have them wait for.
+   * @type {string}
+   */
+  static AllyCharge = 'AllyCharge';
+
+  /**
+   * The "ally pull back" order, a flick of the right stick down by default.
+   * Drops the party's allies out of the fight and keeps them out of it for a while.
+   * @type {string}
+   */
+  static AllyPullBack = 'AllyPullBack';
+
+  /**
+   * The "stance: safer" order, a flick of the right stick left by default.
+   * Steps the party's stance one rung toward hanging back behind the leader.
+   * @type {string}
+   */
+  static AllyStanceSafer = 'AllyStanceSafer';
+
+  /**
+   * The "stance: bolder" order, a flick of the right stick right by default.
+   * Steps the party's stance one rung toward leading the charge ahead of the leader.
+   * @type {string}
+   */
+  static AllyStanceBolder = 'AllyStanceBolder';
+  //endregion ally commands
+
+  /**
+   * Whether the ally orders have anyone to carry them out.
+   *
+   * The ally order inputs only give orders- charge in, pull back, step the stance- and the allies who
+   * follow them are J-ABS-AllyAI's to direct. This plugin works without that one, and when it is absent
+   * there is nobody listening, so the inputs are ignored and their remap rows are left out rather than
+   * offering the player buttons that do nothing.
+   *
+   * One answer serves both the controller and the remap screen, so the two can never disagree about
+   * whether the orders exist. True when J-ABS-AllyAI is installed to carry the orders out.
+   * @returns {boolean}
+   */
+  static isAllyCommandAvailable()
+  {
+    // J-ABS-AllyAI is optional for this plugin, so its namespace is the one honest place to ask.
+    return J.ABS.EXT.ALLYAI !== undefined;
+  }
+
   /**
    * Gets the logical buttons that combine to produce each combat skill input.
    *
@@ -182,6 +230,9 @@ class JABS_Button
 
       // functionality
       this.Menu, this.Select,
+
+      // ally commands
+      this.AllyCharge, this.AllyPullBack, this.AllyStanceSafer, this.AllyStanceBolder,
     ];
 
     // a filter function for ensuring only the correct inputs are accepted.
@@ -211,6 +262,9 @@ class JABS_Button
 
       // functionality
       this.Menu, this.Select,
+
+      // ally commands
+      this.AllyCharge, this.AllyPullBack, this.AllyStanceSafer, this.AllyStanceBolder,
     ];
   }
 }

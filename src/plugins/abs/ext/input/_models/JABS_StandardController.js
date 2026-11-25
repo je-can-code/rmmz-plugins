@@ -97,6 +97,12 @@ class JABS_StandardController
     this.inputMapping.set(JABS_Button.CombatSkill2, [ J.ABS.EXT.INPUT.Symbols.CombatSkill2 ]);
     this.inputMapping.set(JABS_Button.CombatSkill3, [ J.ABS.EXT.INPUT.Symbols.CombatSkill3 ]);
     this.inputMapping.set(JABS_Button.CombatSkill4, [ J.ABS.EXT.INPUT.Symbols.CombatSkill4 ]);
+
+    // seed the ally orders onto flicks of the right stick, which nothing else uses.
+    this.inputMapping.set(JABS_Button.AllyCharge, [ J.ABS.EXT.INPUT.Symbols.RStickUp ]);
+    this.inputMapping.set(JABS_Button.AllyPullBack, [ J.ABS.EXT.INPUT.Symbols.RStickDown ]);
+    this.inputMapping.set(JABS_Button.AllyStanceSafer, [ J.ABS.EXT.INPUT.Symbols.RStickLeft ]);
+    this.inputMapping.set(JABS_Button.AllyStanceBolder, [ J.ABS.EXT.INPUT.Symbols.RStickRight ]);
   }
 
   /**
@@ -132,6 +138,12 @@ class JABS_StandardController
     defaults[JABS_Button.CombatSkill2] = [ J.ABS.EXT.INPUT.Symbols.CombatSkill2 ];
     defaults[JABS_Button.CombatSkill3] = [ J.ABS.EXT.INPUT.Symbols.CombatSkill3 ];
     defaults[JABS_Button.CombatSkill4] = [ J.ABS.EXT.INPUT.Symbols.CombatSkill4 ];
+
+    // seed the ally orders onto flicks of the right stick, which nothing else uses.
+    defaults[JABS_Button.AllyCharge] = [ J.ABS.EXT.INPUT.Symbols.RStickUp ];
+    defaults[JABS_Button.AllyPullBack] = [ J.ABS.EXT.INPUT.Symbols.RStickDown ];
+    defaults[JABS_Button.AllyStanceSafer] = [ J.ABS.EXT.INPUT.Symbols.RStickLeft ];
+    defaults[JABS_Button.AllyStanceBolder] = [ J.ABS.EXT.INPUT.Symbols.RStickRight ];
 
     // return the assembled defaults.
     return defaults;
@@ -329,6 +341,9 @@ class JABS_StandardController
     this.updateCombatAction2();
     this.updateCombatAction3();
     this.updateCombatAction4();
+
+    // update input for the orders given to allies.
+    this.updateAllyOrders();
 
     // update input for the pressed(held down)-button actions.
     this.updateGuardCommand();
@@ -926,6 +941,47 @@ class JABS_StandardController
 
   //endregion combat action 4
   //endregion combat actions
+
+  //region ally orders
+  /**
+   * Monitors and takes action based on player input regarding the orders given to allies.
+   * These are flicks of the right stick by default: up to charge, down to pull back, and left and right to
+   * step the party's stance safer or bolder.
+   *
+   * The orders are only listened for while there are allies to obey them, which takes J-ABS-AllyAI. Each
+   * order is its own button, so a flick that somehow triggered two of them on one frame carries out both.
+   */
+  updateAllyOrders()
+  {
+    // without J-ABS-AllyAI there is nobody to give orders to, so the inputs are ignored entirely.
+    if (!JABS_Button.isAllyCommandAvailable()) return;
+
+    // send the allies charging in.
+    if (this.isActionTriggered(JABS_Button.AllyCharge))
+    {
+      JABS_InputAdapter.performAllyCharge();
+    }
+
+    // call the allies back out of the fight.
+    if (this.isActionTriggered(JABS_Button.AllyPullBack))
+    {
+      JABS_InputAdapter.performAllyPullBack();
+    }
+
+    // step the party's stance one rung toward hanging back.
+    if (this.isActionTriggered(JABS_Button.AllyStanceSafer))
+    {
+      JABS_InputAdapter.performAllyStanceSafer();
+    }
+
+    // step the party's stance one rung toward leading the charge.
+    if (this.isActionTriggered(JABS_Button.AllyStanceBolder))
+    {
+      JABS_InputAdapter.performAllyStanceBolder();
+    }
+  }
+
+  //endregion ally orders
 
   //region strafe
   /**

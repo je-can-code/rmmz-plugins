@@ -26,7 +26,7 @@ Characters move in fractional tile units each frame (e.g. 0.15 tiles). A subcell
 Collision is resolved by checking subcell edge crossings in the direction of travel, using directional passability codes
 derived from the tileset.
 
-JABS integration (ally AI formation, smart battler movement, action distance scaling, etc.) is handled by the separate
+JABS integration (ally AI stances, smart battler movement, action distance scaling, etc.) is handled by the separate
 [`J-ABS-Pixelistics`](../ext/abs/overview.md) extension, which must be loaded after this plugin.
 
 ## Layering

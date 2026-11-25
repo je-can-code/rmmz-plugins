@@ -3,14 +3,14 @@ type: overview
 title: The Plugin Overview
 description: The general overview for what this plugin is about along with the when and how you might use it.
 tags: [pixel-abs, overview]
-version: "1.2.0"
+version: "1.3.0"
 ---
 
 # Overview
 
 This plugin is `J-ABS-Pixelistics`: the JABS integration layer for [`J-Pixelistics`](../../core/overview.md).
 
-It adapts JABS-specific behavior (ally AI formation movement, JABS battler hitbox queries, action/projectile pixel
+It adapts JABS-specific behavior (ally AI stance movement, JABS battler hitbox queries, action/projectile pixel
 distance scaling, and the dodge step-count multiplier) to work with the fractional-coordinate system provided by
 `J-Pixelistics`.
 

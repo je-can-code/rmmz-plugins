@@ -222,6 +222,40 @@ describe('J-ABS-Input Game_System (unit, all downstream dependencies mocked)', (
 
       expect(controller.setAllInputs).toHaveBeenCalledWith({ Main: [ 'ok' ] });
     });
+
+    it('gives a button the stored mapping predates its default', () =>
+    {
+      // Arrange- the controller has a button the stored mapping was written before.
+      const system = buildSystem();
+      system.initJabsInputConfigMembers();
+      system.setJabsInputConfig('player1', { Main: [ 'space' ] });
+      const controller = buildController({
+        buildDefaultMapping: () => ({ Main: [ 'ok' ], AllyCharge: [ 'rstick-up' ] }),
+      });
+
+      // Act
+      system.applyJabsInputConfigToController('player1', controller);
+
+      // Assert
+      expect(controller.setAllInputs).toHaveBeenCalledWith({ Main: [ 'space' ], AllyCharge: [ 'rstick-up' ] });
+    });
+
+    it('keeps a deliberate unbind from the stored mapping rather than restoring the default', () =>
+    {
+      // Arrange
+      const system = buildSystem();
+      system.initJabsInputConfigMembers();
+      system.setJabsInputConfig('player1', { Main: [ 'ok' ], AllyCharge: [] });
+      const controller = buildController({
+        buildDefaultMapping: () => ({ Main: [ 'ok' ], AllyCharge: [ 'rstick-up' ] }),
+      });
+
+      // Act
+      system.applyJabsInputConfigToController('player1', controller);
+
+      // Assert
+      expect(controller.setAllInputs).toHaveBeenCalledWith({ Main: [ 'ok' ], AllyCharge: [] });
+    });
   });
 
   describe('saveAllJabsInputConfigs()', () =>

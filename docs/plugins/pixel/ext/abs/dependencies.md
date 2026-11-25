@@ -34,8 +34,8 @@ instead of tile steps.
 
 ## J-ABS-AllyAI
 
-Supplies the ally formation movement that this plugin replaces with fractional-coordinate steps, along with the
-formation tolerance and give-up tracking it reads.
+Supplies the ally stance movement that this plugin replaces with fractional-coordinate steps, along with the
+stance tolerance and give-up tracking it reads.
 
 ## J-Pixelistics
 

@@ -8,6 +8,7 @@ describe('J-ABS-AllyAI JABS_Engine (unit, all downstream dependencies mocked)', 
   let originalContinuedPrimaryBattleEffects;
   let originalPostPartyCycling;
   let originalCanBeAlerted;
+  let originalProcessOnHitEffects;
 
   beforeAll(async () =>
   {
@@ -36,11 +37,13 @@ describe('J-ABS-AllyAI JABS_Engine (unit, all downstream dependencies mocked)', 
     originalContinuedPrimaryBattleEffects = vi.fn();
     originalPostPartyCycling = vi.fn();
     originalCanBeAlerted = vi.fn(() => true);
+    originalProcessOnHitEffects = vi.fn();
     JABS_Engine.prototype.prePartyCycling = originalPrePartyCycling;
     JABS_Engine.prototype.handlePartyCycleMemberChanges = originalHandlePartyCycleMemberChanges;
     JABS_Engine.prototype.continuedPrimaryBattleEffects = originalContinuedPrimaryBattleEffects;
     JABS_Engine.prototype.postPartyCycling = originalPostPartyCycling;
     JABS_Engine.prototype.canBeAlerted = originalCanBeAlerted;
+    JABS_Engine.prototype.processOnHitEffects = originalProcessOnHitEffects;
     globalThis.JABS_Engine = JABS_Engine;
 
     await import('../../../../../../src/plugins/abs/ext/allyai/managers/JABS_Engine.js');
@@ -53,6 +56,7 @@ describe('J-ABS-AllyAI JABS_Engine (unit, all downstream dependencies mocked)', 
     originalContinuedPrimaryBattleEffects.mockReset();
     originalPostPartyCycling.mockReset();
     originalCanBeAlerted.mockReset().mockReturnValue(true);
+    originalProcessOnHitEffects.mockReset();
     globalThis.JABS_AiManager.removeBattler.mockReset();
     globalThis.JABS_AiManager.convertFollowersToBattlers.mockReset();
     globalThis.JABS_AiManager.addOrUpdateBattlers.mockReset();
@@ -227,7 +231,7 @@ describe('J-ABS-AllyAI JABS_Engine (unit, all downstream dependencies mocked)', 
     {
       originalCanBeAlerted.mockReturnValue(false);
       const engine = buildEngine();
-      const battler = { isActor: () => true, getAllyAiMode: () => ({ isDoNothing: () => false }) };
+      const battler = { isActor: () => true, getAllyAiMode: () => ({ isDoNothing: () => false }), isPullingBack: () => false };
 
       expect(engine.canBeAlerted({}, battler)).toBe(false);
     });
@@ -235,7 +239,15 @@ describe('J-ABS-AllyAI JABS_Engine (unit, all downstream dependencies mocked)', 
     it('is false for a do-nothing actor ally, even when the original logic allows it', () =>
     {
       const engine = buildEngine();
-      const battler = { isActor: () => true, getAllyAiMode: () => ({ isDoNothing: () => true }) };
+      const battler = { isActor: () => true, getAllyAiMode: () => ({ isDoNothing: () => true }), isPullingBack: () => false };
+
+      expect(engine.canBeAlerted({}, battler)).toBe(false);
+    });
+
+    it('is false for an actor ally pulling back, even when the original logic allows it', () =>
+    {
+      const engine = buildEngine();
+      const battler = { isActor: () => true, getAllyAiMode: () => ({ isDoNothing: () => false }), isPullingBack: () => true };
 
       expect(engine.canBeAlerted({}, battler)).toBe(false);
     });
@@ -243,7 +255,7 @@ describe('J-ABS-AllyAI JABS_Engine (unit, all downstream dependencies mocked)', 
     it('is true for a normal actor ally', () =>
     {
       const engine = buildEngine();
-      const battler = { isActor: () => true, getAllyAiMode: () => ({ isDoNothing: () => false }) };
+      const battler = { isActor: () => true, getAllyAiMode: () => ({ isDoNothing: () => false }), isPullingBack: () => false };
 
       expect(engine.canBeAlerted({}, battler)).toBe(true);
     });
@@ -254,6 +266,132 @@ describe('J-ABS-AllyAI JABS_Engine (unit, all downstream dependencies mocked)', 
       const battler = { isActor: () => false };
 
       expect(engine.canBeAlerted({}, battler)).toBe(true);
+    });
+  });
+
+  describe('processOnHitEffects', () =>
+  {
+    it('performs the original logic, then rallies the allies for whoever cast the hit', () =>
+    {
+      // Arrange
+      const engine = buildEngine({ rallyAlliesForLeaderHit: vi.fn() });
+      const caster = { id: 'caster' };
+      const action = { getCaster: () => caster };
+      const target = { id: 'target' };
+
+      // Act
+      engine.processOnHitEffects(action, target);
+
+      // Assert
+      expect(originalProcessOnHitEffects).toHaveBeenCalledWith(action, target);
+      expect(engine.rallyAlliesForLeaderHit).toHaveBeenCalledWith(caster, target);
+    });
+  });
+
+  describe('rallyAlliesForLeaderHit', () =>
+  {
+    const leader = { id: 'leader' };
+    const slime = { id: 'slime' };
+
+    it('rallies toward whatever the leader struck', () =>
+    {
+      // Arrange
+      const engine = buildEngine({ getPlayer1: () => leader, rallyAlliesToward: vi.fn() });
+
+      // Act
+      engine.rallyAlliesForLeaderHit(leader, slime);
+
+      // Assert
+      expect(engine.rallyAlliesToward).toHaveBeenCalledTimes(1);
+      expect(engine.rallyAlliesToward).toHaveBeenCalledWith(slime);
+    });
+
+    it('rallies toward whoever struck the leader', () =>
+    {
+      // Arrange
+      const engine = buildEngine({ getPlayer1: () => leader, rallyAlliesToward: vi.fn() });
+
+      // Act
+      engine.rallyAlliesForLeaderHit(slime, leader);
+
+      // Assert
+      expect(engine.rallyAlliesToward).toHaveBeenCalledTimes(1);
+      expect(engine.rallyAlliesToward).toHaveBeenCalledWith(slime);
+    });
+
+    it('rallies nobody for a hit the leader was no part of', () =>
+    {
+      // Arrange
+      const engine = buildEngine({ getPlayer1: () => leader, rallyAlliesToward: vi.fn() });
+
+      // Act
+      engine.rallyAlliesForLeaderHit(slime, { id: 'rupert' });
+
+      // Assert
+      expect(engine.rallyAlliesToward).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('rallyAlliesToward', () =>
+  {
+    it('rallies every ally on the field toward the foe', () =>
+    {
+      // Arrange
+      const allies = [ { id: 'jerald' }, { id: 'rupert' } ];
+      globalThis.$gameMap = { getFollowerBattlers: () => allies };
+      const engine = buildEngine({ rallyAllyToward: vi.fn() });
+      const foe = { id: 'slime' };
+
+      // Act
+      engine.rallyAlliesToward(foe);
+
+      // Assert
+      expect(engine.rallyAllyToward).toHaveBeenCalledTimes(2);
+      expect(engine.rallyAllyToward).toHaveBeenNthCalledWith(1, allies[0], foe);
+      expect(engine.rallyAllyToward).toHaveBeenNthCalledWith(2, allies[1], foe);
+    });
+  });
+
+  describe('rallyAllyToward', () =>
+  {
+    /**
+     * An ally that records how it was alerted.
+     * @returns {object}
+     */
+    const buildAlly = () => ({
+      getAlertDuration: () => 240,
+      setAlertedCoordinates: vi.fn(),
+      setAlertedCounter: vi.fn(),
+    });
+
+    it('leaves alone an ally the foe could not alert', () =>
+    {
+      // Arrange
+      const engine = buildEngine({ canBeAlerted: vi.fn(() => false) });
+      const ally = buildAlly();
+      const foe = { getX: () => 3, getY: () => 4 };
+
+      // Act
+      engine.rallyAllyToward(ally, foe);
+
+      // Assert
+      expect(engine.canBeAlerted).toHaveBeenCalledWith(foe, ally);
+      expect(ally.setAlertedCounter).not.toHaveBeenCalled();
+    });
+
+    it('points the ally at where the foe stands, for a whole alert', () =>
+    {
+      // Arrange
+      const engine = buildEngine({ canBeAlerted: () => true });
+      const ally = buildAlly();
+      const foe = { getX: () => 3, getY: () => 4 };
+
+      // Act
+      engine.rallyAllyToward(ally, foe);
+
+      // Assert
+      expect(ally.setAlertedCoordinates).toHaveBeenCalledWith(3, 4);
+      expect(ally.setAlertedCounter).toHaveBeenCalledWith(240);
     });
   });
 });

@@ -154,6 +154,15 @@ Game_System.prototype.setInputBindingsSnapshot = function(snapshot)
 
 /**
  * Applies a stored mapping (if present) to the given controller.
+ *
+ * The stored mapping is laid over the controller's own defaults rather than handed over alone, because
+ * applying a mapping replaces everything the controller had. A stored mapping is only ever as new as the
+ * build that wrote it, so a button added to the controller after the player's configuration was saved is
+ * simply absent from it- and on its own, that absence would leave the new button bound to nothing, with
+ * no way for the player to tell why. Starting from the defaults keeps every choice the player actually
+ * made, a deliberate unbind included, while anything they never had the chance to choose arrives at its
+ * default. It is the same principle the save system follows when it seeds defaults before decoding
+ * (see docs/save-system.md).
  * @param {string} controllerKey The key used to look up the mapping.
  * @param {JABS_StandardController} controller The input controller to apply to.
  */
@@ -165,8 +174,14 @@ Game_System.prototype.applyJabsInputConfigToController = function(controllerKey,
   // if nothing was found, there is nothing to apply.
   if (!mapping) return;
 
+  // begin from the defaults, so a button the stored mapping predates still arrives bound.
+  const defaults = controller.buildDefaultMapping();
+
+  // lay the stored mapping over the defaults, since what the player chose always wins.
+  const merged = { ...defaults, ...mapping };
+
   // push the full mapping to the controller in one call.
-  controller.setAllInputs(mapping);
+  controller.setAllInputs(merged);
 };
 
 /**

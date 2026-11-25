@@ -70,4 +70,43 @@ Game_Follower.prototype.jumpToPlayer = function()
   this.jump(sx, sy);
 };
 
+/**
+ * Extends {@link #realMoveSpeed}.<br/>
+ * Also lets an ally sprint back into the party's stance when it has strayed far from it.
+ *
+ * A follower copies the player's speed every frame, so an ally is never faster than its leader on its own.
+ * That leaves an ally kept in front of the leader stranded behind them after a turn, for as long as they
+ * keep walking. The sprint is what lets it get back in front.
+ * @returns {number}
+ */
+J.ABS.EXT.ALLYAI.Aliased.Game_Follower.set('realMoveSpeed', Game_Follower.prototype.realMoveSpeed);
+Game_Follower.prototype.realMoveSpeed = function()
+{
+  // perform original logic.
+  const originalSpeed = J.ABS.EXT.ALLYAI.Aliased.Game_Follower.get('realMoveSpeed')
+    .call(this);
+
+  // a follower not racing back into its stance moves at the party's pace.
+  if (!this.isCatchingUpToStance()) return originalSpeed;
+
+  // a follower racing back into its stance gets a burst of speed.
+  return originalSpeed + J.ABS.EXT.ALLYAI.Metadata.StanceCatchUpSpeedBoost;
+};
+
+/**
+ * Whether this follower is sprinting back into the party's stance right now.
+ * @returns {boolean} True if it is sprinting, false otherwise.
+ */
+Game_Follower.prototype.isCatchingUpToStance = function()
+{
+  // grab the follower's battler.
+  const battler = this.getJabsBattler();
+
+  // a follower without a battler has no stance to keep.
+  if (!battler) return false;
+
+  // the battler knows whether it is sprinting.
+  return battler.isStanceCatchingUp();
+};
+
 //endregion Game_Follower

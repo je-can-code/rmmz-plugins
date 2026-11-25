@@ -27,14 +27,12 @@ describe('J-ABS-AllyAI metadata (direct src import)', () =>
       'jabsMenuAllyAiCommandName': 'Ally AI',
       'jabsMenuAllyAiCommandIconIndex': '2564',
       'jabsMenuAllyAiCommandSwitchId': '21',
-      'partyWidePassiveText': 'Passive',
-      'partyWidePassiveIconIndex': '73',
-      'partyWideAggressiveText': 'Aggressive',
-      'partyWideAggressiveIconIndex': '74',
+      'doNothingOnIconIndex': '73',
+      'doNothingOffIconIndex': '74',
       'aiModeEquipped': '91',
       'aiModeNotEquipped': '92',
-      'allyFormationsCommandName': 'Formations',
-      'allyFormationsCommandIconIndex': '75',
+      'allyStanceCommandName': 'Stance',
+      'allyStanceCommandIconIndex': '75',
     });
 
     setPluginContextToJabsAllyAi();
@@ -116,14 +114,14 @@ describe('J-ABS-AllyAI metadata (direct src import)', () =>
       expect(Metadata.AllyAiCommandSwitchId).toBe(21);
     });
 
-    it('keeps the passive and aggressive party-wide labels distinct', () =>
+    it('parses the do-nothing on and off icons into distinct numbers', () =>
     {
       // Arrange & Act
       const { Metadata } = globalThis.J.ABS.EXT.ALLYAI;
 
       // Assert
-      expect(Metadata.PartyAiPassiveText).toBe("Passive");
-      expect(Metadata.PartyAiAggressiveText).toBe("Aggressive");
+      expect(Metadata.DoNothingOnIconIndex).toBe(73);
+      expect(Metadata.DoNothingOffIconIndex).toBe(74);
     });
 
     it('parses the equipped-mode icon index into a number', () =>
@@ -133,6 +131,55 @@ describe('J-ABS-AllyAI metadata (direct src import)', () =>
 
       // Assert
       expect(Metadata.AiModeEquippedIconIndex).toBe(91);
+    });
+
+    it('carries the configured stance command name and icon across', () =>
+    {
+      // Arrange & Act
+      const { Metadata } = globalThis.J.ABS.EXT.ALLYAI;
+
+      // Assert
+      expect(Metadata.AllyStanceCommandName).toBe('Stance');
+      expect(Metadata.AllyStanceCommandIconIndex).toBe(75);
+    });
+  });
+
+  describe('stances', () =>
+  {
+    it('offers the three stances in menu order', () =>
+    {
+      // Arrange & Act
+      const { StanceTypes } = globalThis.J.ABS.EXT.ALLYAI.Metadata;
+
+      // Assert
+      expect(StanceTypes.map(stance => stance.key)).toEqual([ 'safe-support', 'bloody-wanker', 'meat-shield' ]);
+    });
+
+    it('keeps each stance where its name says', () =>
+    {
+      // Arrange & Act
+      const { StanceTypes } = globalThis.J.ABS.EXT.ALLYAI.Metadata;
+
+      // Assert
+      expect(StanceTypes.map(stance => stance.placement)).toEqual([ 'behind', 'side', 'front' ]);
+    });
+
+    it('sends only the side and front stances in first', () =>
+    {
+      // Arrange & Act
+      const { StanceTypes } = globalThis.J.ABS.EXT.ALLYAI.Metadata;
+
+      // Assert
+      expect(StanceTypes.map(stance => stance.engagesFirst)).toEqual([ false, true, true ]);
+    });
+
+    it('defaults the party to safe support', () =>
+    {
+      // Arrange & Act
+      const { DefaultStanceType } = globalThis.J.ABS.EXT.ALLYAI.Metadata;
+
+      // Assert
+      expect(DefaultStanceType).toBe('safe-support');
     });
   });
 
@@ -193,8 +240,8 @@ describe('unconfigured parameters', () =>
       globalThis.PluginManager = previous;
 
       // Assert
-      expect(metadata.AllyFormationsCommandName).toEqual('Ally Formations');
-      expect(metadata.AllyFormationsCommandIconIndex).toEqual(289);
+      expect(metadata.AllyStanceCommandName).toEqual('Ally Stance');
+      expect(metadata.AllyStanceCommandIconIndex).toEqual(289);
     });
   });
 });
