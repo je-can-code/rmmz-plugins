@@ -16,3 +16,6 @@ command:
 # `Lock SDP`
 
 Locks a SDP by its key. Locked panels do not appear in the list nor affect the player's parameters.
+
+A lock keeps every rank already invested in the panel. Unlocking it again brings the panel back into the list with
+those ranks, and their bonuses back into effect.

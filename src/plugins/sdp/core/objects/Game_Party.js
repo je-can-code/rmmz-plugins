@@ -83,12 +83,13 @@ Game_Party.prototype.isSdpUnlocked = function(key)
 };
 
 /**
- * Locks a panel for all party members.
- * @param {string} key The key of the panel unlock.
+ * Locks a panel for all party members: it leaves the SDP list and stops granting its bonuses, while every rank
+ * invested in it is kept for the day it is unlocked again.
+ * @param {string} key The key of the panel to lock.
  */
 Game_Party.prototype.lockSdp = function(key)
 {
-  // validate the panel exists before unlocking.
+  // validate the panel exists before locking.
   if (J.SDP.Metadata.panelsMap.has(key) === false)
   {
     // stop processing.
