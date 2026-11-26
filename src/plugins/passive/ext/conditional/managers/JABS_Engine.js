@@ -52,7 +52,9 @@ JABS_Engine.prototype.checkKnockback = function(action, target)
 
 /**
  * Extends {@link JABS_Engine#postExecuteSkillEffects}.<br/>
- * Fires {@code onDamageDealt} rules on the caster after landing damage on an opposing battler.
+ * Fires {@code onDamageDealt} rules on the caster after landing damage on an opposing battler, and
+ * {@code onWeaponHit} rules too when the hit counts as a weapon hit. Both hand the rules the battler that was
+ * hit, so a direct payload one of them fires lands on whoever was struck.
  * Reuses the same result-field check {@link JABS_Engine#applyAggroEffects} already performs here.
  */
 J.PASSIVE.EXT.CONDITIONAL.Aliased.JABS_Engine.set(
@@ -82,18 +84,35 @@ JABS_Engine.prototype.postExecuteSkillEffects = function(action, target)
 
   if (!casterBattler) return;
 
-  AutoApplyStateManager.scheduleDamageDealtTriggers(casterBattler);
-  AutoExecuteSkillManager.scheduleDamageDealtTriggers(casterBattler);
+  // every damaging hit fires onDamageDealt, aimed at the battler it landed on.
+  AutoApplyStateManager.scheduleDamageDealtTriggers(casterBattler, target);
+  AutoExecuteSkillManager.scheduleDamageDealtTriggers(casterBattler, target);
 
-  // onWeaponHit is narrower than onDamageDealt — only the mainhand/offhand slot qualifies, so an
-  // arbitrary skill cast (e.g. a nuke hitting the whole map) never triggers a "weapon" follow-up.
+  // onWeaponHit is narrower than onDamageDealt- only what counts as a weapon hit fires it.
+  if (this.isWeaponHitAction(action) === false) return;
+
+  // a weapon hit fires onWeaponHit as well, aimed at the same battler.
+  AutoApplyStateManager.scheduleWeaponHitTriggers(casterBattler, target);
+  AutoExecuteSkillManager.scheduleWeaponHitTriggers(casterBattler, target);
+};
+
+/**
+ * Whether a hit from this action counts as a weapon hit, for {@code onWeaponHit} rules.<br/>
+ * Anything fired from the Mainhand or Offhand slot does: the basic attack and its combo chain. A skill cast from
+ * any other slot counts only when it carries {@code <countsAsWeaponHit>}, the way a blade flurry would, so an
+ * arbitrary skill (e.g. a nuke hitting the whole map) never sets off a "weapon" follow-up. A forced payload
+ * carries the global cooldown key rather than a slot, so the follow-up a weapon hit fires never counts as one
+ * itself, and can never fire itself again.
+ * @param {JABS_Action} action The action whose hit just landed.
+ * @returns {boolean}
+ */
+JABS_Engine.prototype.isWeaponHitAction = function(action)
+{
+  // the basic attack and its combo chain are bound to the two weapon slots.
   const cooldownType = action.getCooldownType();
-  const isWeaponSlot = cooldownType === JABS_Button.Mainhand || cooldownType === JABS_Button.Offhand;
+  if (cooldownType === JABS_Button.Mainhand || cooldownType === JABS_Button.Offhand) return true;
 
-  if (isWeaponSlot)
-  {
-    AutoApplyStateManager.scheduleWeaponHitTriggers(casterBattler);
-    AutoExecuteSkillManager.scheduleWeaponHitTriggers(casterBattler);
-  }
+  // a skill cast from anywhere else counts only when it was authored to.
+  return action.getBaseSkill().countsAsWeaponHit;
 };
 //endregion JABS_Engine

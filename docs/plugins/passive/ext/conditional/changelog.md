@@ -11,6 +11,12 @@ All the versioning and history of changes live here.
 
 ## The Actual Changelog
 
+### 1.6.0
+  - Added `<countsAsWeaponHit>` for skills. Every hit such a skill lands fires its caster's `onWeaponHit` rules, as a
+    basic attack's hit does, though it is cast from a combat-skill slot.
+  - An `<autoExecuteSkill>` fired by a hit (`onDamageDealt`, `onWeaponHit`) now lands a `<direct>` payload on the
+    battler that was struck, rather than hitting around its bearer. One with a cast time keeps that aim through its
+    windup. Every other payload still fires from its bearer.
 ### 1.5.0
   - An `<autoExecuteSkill>` payload with a `<castTime>` now winds up, telegraph and all, before it fires.
   - Such a payload is skipped while its bearer is already deciding or casting something.

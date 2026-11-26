@@ -98,6 +98,24 @@ Object.defineProperty(RPG_BaseItem.prototype, 'autoExecuteSkillRules', {
 });
 
 /**
+ * Whether this skill's hits count as weapon hits for {@code onWeaponHit} rules, per
+ * {@link J.PASSIVE.EXT.CONDITIONAL.RegExp.CountsAsWeaponHit}.<br/>
+ * Only ever asked of the skill whose hit just landed, by {@link JABS_Engine#isWeaponHitAction}, so on any other
+ * kind of row it is simply never read.
+ * @type {boolean}
+ */
+Object.defineProperty(RPG_BaseItem.prototype, 'countsAsWeaponHit', {
+  get()
+  {
+    // look for the opt-in tag in this row's notes.
+    return RPGManager.checkForBooleanFromNoteByRegex(
+      this,
+      J.PASSIVE.EXT.CONDITIONAL.RegExp.CountsAsWeaponHit
+    );
+  },
+});
+
+/**
  * Parsed {@link J.PASSIVE.EXT.CONDITIONAL.RegExp.AutoModifyCooldowns} tuples from this row.<br/>
  * Each tuple schedules a signed cooldown modification via {@link AutoModifyCooldownManager} against
  * one or more of the bearer's own active skill-slot cooldowns.

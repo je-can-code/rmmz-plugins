@@ -169,6 +169,31 @@ J.PASSIVE.EXT.CONDITIONAL.RegExp.AutoApplyStateOnNearby = /<autoApplyStateOnNear
 J.PASSIVE.EXT.CONDITIONAL.RegExp.AutoExecuteSkill = /<autoExecuteSkill:[ ]?(\[[^\]]+])>/gi;
 
 /**
+ * Marks a skill whose hits count as weapon hits for {@code onWeaponHit} rules, though it is cast from a
+ * combat-skill slot rather than the Mainhand or Offhand slot.<br/>
+ * Read by {@link RPGManager.checkForBooleanFromNoteByRegex} off the skill whose hit just landed, in
+ * {@link JABS_Engine#isWeaponHitAction}.
+ * <p>
+ * Meant for a skill that is a weapon technique in all but its slot- a blade flurry, a whip whirl- so that
+ * whatever a swing sets off (an enchant's follow-up, a per-swing buff) goes off on its hits as well. A payload
+ * that a weapon-hit rule fires must never carry it: that follow-up would count as a weapon hit itself, and fire
+ * again off every hit it lands.
+ * </p>
+ * <pre>
+ * Structure:
+ *  <countsAsWeaponHit>
+ *
+ * Example:
+ *  <countsAsWeaponHit>
+ *
+ * Translation:
+ *  every hit this skill lands fires its caster's onWeaponHit rules, as a basic attack's hit would.
+ * </pre>
+ * @type {RegExp}
+ */
+J.PASSIVE.EXT.CONDITIONAL.RegExp.CountsAsWeaponHit = /<countsAsWeaponHit>/i;
+
+/**
  * Captures {@code autoModifyCooldowns} bracket tuples from database notes.<br/>
  * Parsed by {@link RPGManager.getArraysFromNotesByRegex} (Path 1: outer tag + inner bracket capture).<br/>
  * Each match schedules a signed cooldown modification via {@link AutoModifyCooldownManager} against

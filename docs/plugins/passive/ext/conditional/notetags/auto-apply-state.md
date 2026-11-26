@@ -30,8 +30,8 @@ PARAM is minimum FRAMES between applies (per source+state+condition):
 - `onAllyHeal` — when a battler within proximity of THIS battler is healed (any resource)
 - `onKill` — when this battler defeats an enemy (`JABS_Engine#handleDefeatedEnemy`)
 - `onDamageDealt` — when this battler lands damage on an opposing battler (`JABS_Engine#postExecuteSkillEffects`)
-- `onWeaponHit` — narrower `onDamageDealt`: only Mainhand/Offhand-slot hits qualify (basic attack or its combo chain);
-  skills fired from any other slot do not trigger this condition
+- `onWeaponHit` — narrower `onDamageDealt`: only Mainhand/Offhand-slot hits qualify (basic attack or its combo chain),
+  along with skills carrying [`<countsAsWeaponHit>`](counts-as-weapon-hit.md); no other skill triggers this condition
 - `move` — PARAM = whole TILES per apply (Pixelistics `updatePixelStepping`; requires `J-Pixelistics`)
 - `stand` — PARAM = frames between applies while standing still on the map
 - `enemiesNearby` / `alliesNearby` / `enemiesNearbyBelow` / `alliesNearbyBelow` — 4/5-value proximity tuples, same

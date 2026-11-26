@@ -478,6 +478,24 @@ describe('J-Passive-Conditional (direct src import)', () =>
       // Act & Assert
       expect(row.autoApplyStateOnNearbyRules.length).toBe(1);
     });
+
+    it('reads <countsAsWeaponHit> off the row that carries it, and only that row', () =>
+    {
+      // Arrange- an untagged sibling with otherwise identical notes has to read false, or a getter that answers
+      // true for every row would pass.
+      const tagged = new globalThis.RPG_BaseItem({
+        id: 504, meta: {}, name: 'Mince', note: '<ogcd>\n<countsAsWeaponHit>', description: String.empty, iconIndex: 0,
+      }, 504);
+      const untagged = new globalThis.RPG_BaseItem({
+        id: 505, meta: {}, name: 'Not Mince', note: '<ogcd>', description: String.empty, iconIndex: 0,
+      }, 505);
+
+      // Act
+      const results = [ tagged.countsAsWeaponHit, untagged.countsAsWeaponHit ];
+
+      // Assert
+      expect(results).toEqual([ true, false ]);
+    });
   });
 
   describe('momentum toolkit (move / stand / removeOnSkillExecution)', () =>
@@ -1151,10 +1169,13 @@ describe('J-Passive-Conditional (direct src import)', () =>
       globalThis.$jabsEngine = {
         absEnabled: true,
         canExecuteMapActions: () => true,
-        forceMapAction(jabsBattler, skillId)
+        forceMapAction(jabsBattler, skillId, _isRetaliation, targetX, targetY)
         {
           globalThis.__forcedSkills = globalThis.__forcedSkills || [];
           globalThis.__forcedSkills.push(skillId);
+
+          // where each firing was aimed, so a payload landing on its target can be told from one that did not.
+          globalThis.__forcedAims.push([ targetX, targetY ]);
 
           if (globalThis.__forceMapActionHook)
           {
@@ -1164,6 +1185,7 @@ describe('J-Passive-Conditional (direct src import)', () =>
       };
 
       globalThis.__forcedSkills = [];
+      globalThis.__forcedAims = [];
       globalThis.__opposingBattlers = [];
       globalThis.__lastOpposingProximity = null;
       globalThis.__forceMapActionHook = null;
@@ -1216,6 +1238,87 @@ describe('J-Passive-Conditional (direct src import)', () =>
 
       // Assert
       expect(globalThis.__forcedSkills).toEqual([ 500 ]);
+    });
+
+    describe('aiming at the battler a hit landed on', () =>
+    {
+      /** @type {{ getX: function(): number, getY: function(): number }} */
+      let struck;
+
+      beforeEach(() =>
+      {
+        // the foe the swing just hit, standing somewhere other than the bearer.
+        struck = { getX: () => 14, getY: () => 9 };
+        globalThis.$dataSkills = [];
+        globalThis.$dataSkills[267] = { id: 267, stypeId: 1 };
+      });
+
+      /**
+       * Builds a bearer carrying one rule that fires skill 267, whose payload is direct or not.
+       * @param {string} condition The condition the rule fires on.
+       * @param {boolean} isDirect Whether the payload is a direct action.
+       * @returns {object}
+       */
+      function buildBearer(condition, isDirect)
+      {
+        const actor = buildMomentumToolkitActor([ `<autoExecuteSkill:[267, ${condition}, 0]>` ]);
+        actor.getUuid = () => 'enchanted-actor';
+        mockJabsBattler.getBattler = () => actor;
+        mockJabsBattler.createJabsActionFromSkill = () => [ { getCastTime: () => 0, isDirectAction: () => isDirect } ];
+        return actor;
+      }
+
+      it('lands a direct payload on the battler a weapon hit struck', () =>
+      {
+        // Arrange
+        const actor = buildBearer('onWeaponHit', true);
+
+        // Act
+        globalThis.AutoExecuteSkillManager.scheduleWeaponHitTriggers(actor, struck);
+
+        // Assert
+        expect(globalThis.__forcedSkills).toEqual([ 267 ]);
+        expect(globalThis.__forcedAims).toEqual([ [ 14, 9 ] ]);
+      });
+
+      it('lands a direct payload on the battler damage was dealt to', () =>
+      {
+        // Arrange
+        const actor = buildBearer('onDamageDealt', true);
+
+        // Act
+        globalThis.AutoExecuteSkillManager.scheduleDamageDealtTriggers(actor, struck);
+
+        // Assert
+        expect(globalThis.__forcedSkills).toEqual([ 267 ]);
+        expect(globalThis.__forcedAims).toEqual([ [ 14, 9 ] ]);
+      });
+
+      it('fires a non-direct payload from its bearer, even when a hit fired it', () =>
+      {
+        // Arrange- the same hit and the same struck battler; only the payload's direct flag differs.
+        const actor = buildBearer('onWeaponHit', false);
+
+        // Act
+        globalThis.AutoExecuteSkillManager.scheduleWeaponHitTriggers(actor, struck);
+
+        // Assert
+        expect(globalThis.__forcedSkills).toEqual([ 267 ]);
+        expect(globalThis.__forcedAims).toEqual([ [ null, null ] ]);
+      });
+
+      it('fires a direct payload from its bearer when no hit fired the rule', () =>
+      {
+        // Arrange- a direct payload on a timer: there is no struck battler to aim at.
+        const actor = buildBearer('time', true);
+
+        // Act
+        globalThis.AutoExecuteSkillManager.processTimeRules(actor);
+
+        // Assert
+        expect(globalThis.__forcedSkills).toEqual([ 267 ]);
+        expect(globalThis.__forcedAims).toEqual([ [ null, null ] ]);
+      });
     });
 
     it('fires again after the cooldown window elapses', () =>
@@ -1656,11 +1759,33 @@ describe('J-Passive-Conditional (direct src import)', () =>
 
         // Assert- once, the way an instant payload fires, never the AI's road with its costs and cooldowns.
         expect(globalThis.__forcedSkills).toEqual([ 511 ]);
+        expect(globalThis.__forcedAims).toEqual([ [ null, null ] ]);
         expect(globalThis.$jabsEngine.executeMapAction).not.toHaveBeenCalled();
         expect(globalThis.$jabsEngine.executeMapActions).not.toHaveBeenCalled();
         expect(mockJabsBattler.processQueuedActions).not.toHaveBeenCalled();
         expect(mockJabsBattler.cleared).toBe(1);
         expect(mockJabsBattler.decided).toBeNull();
+      });
+
+      it('lands a windup on the tile it was aimed at when it was wound up', () =>
+      {
+        // Arrange- a direct volley fired by a hit. The struck battler walks off while it winds up, and the payload
+        // still lands where it was aimed, the way a telegraphed strike does.
+        volley.forEach(action =>
+        {
+          action.isDirectAction = () => true;
+        });
+        const struck = { x: 14, y: 9, getX() { return this.x; }, getY() { return this.y; } };
+        globalThis.AutoExecuteSkillManager.dispatch(actor, 511, [ 511, 'onWeaponHit', 0 ], struck);
+        struck.x = 20;
+        castComplete = true;
+
+        // Act
+        globalThis.AutoExecuteSkillManager.landWindup(mockJabsBattler);
+
+        // Assert
+        expect(globalThis.__forcedSkills).toEqual([ 511 ]);
+        expect(globalThis.__forcedAims).toEqual([ [ 14, 9 ] ]);
       });
 
       it('keeps the depth guard up while a finished windup fires', () =>
@@ -2314,6 +2439,21 @@ describe('J-Passive-Conditional (direct src import)', () =>
       return { getBattler: () => gameBattler, getTeam: () => team };
     }
 
+    /**
+     * Builds the action whose hit just landed: its caster, the slot it was fired from, and the skill behind it.
+     * @param {object} casterWrapper The caster's JABS wrapper.
+     * @param {string} cooldownType The slot the action was fired from.
+     * @returns {object}
+     */
+    function buildAction(casterWrapper, cooldownType)
+    {
+      return {
+        getCaster: () => casterWrapper,
+        getCooldownType: () => cooldownType,
+        getBaseSkill: () => ({ countsAsWeaponHit: false }),
+      };
+    }
+
     it('scheduleDamageDealtTriggers fires onDamageDealt rules on the dealing battler', () =>
     {
       // Arrange
@@ -2337,7 +2477,7 @@ describe('J-Passive-Conditional (direct src import)', () =>
       caster.isStateAddable = () => true;
       caster.addState = (stateId) => applied.push(stateId);
       const targetBattler = { result: () => ({ hpDamage: 50, mpDamage: 0, tpDamage: 0 }) };
-      const action = { getCaster: () => buildJabsWrapper(caster, 0), getCooldownType: () => 'CombatSkill1' };
+      const action = buildAction(buildJabsWrapper(caster, 0), 'CombatSkill1');
       const target = buildJabsWrapper(targetBattler, 1);
       const engine = new globalThis.JABS_Engine();
 
@@ -2356,7 +2496,7 @@ describe('J-Passive-Conditional (direct src import)', () =>
       caster.isStateAddable = () => true;
       caster.addState = (stateId) => applied.push(stateId);
       const targetBattler = { result: () => ({ hpDamage: 0, mpDamage: 12, tpDamage: 0 }) };
-      const action = { getCaster: () => buildJabsWrapper(caster, 0), getCooldownType: () => 'CombatSkill1' };
+      const action = buildAction(buildJabsWrapper(caster, 0), 'CombatSkill1');
       const target = buildJabsWrapper(targetBattler, 1);
       const engine = new globalThis.JABS_Engine();
 
@@ -2375,7 +2515,7 @@ describe('J-Passive-Conditional (direct src import)', () =>
       caster.isStateAddable = () => true;
       caster.addState = (stateId) => applied.push(stateId);
       const targetBattler = { result: () => ({ hpDamage: 0, mpDamage: 0, tpDamage: 5 }) };
-      const action = { getCaster: () => buildJabsWrapper(caster, 0), getCooldownType: () => 'CombatSkill1' };
+      const action = buildAction(buildJabsWrapper(caster, 0), 'CombatSkill1');
       const target = buildJabsWrapper(targetBattler, 1);
       const engine = new globalThis.JABS_Engine();
 
@@ -2393,7 +2533,7 @@ describe('J-Passive-Conditional (direct src import)', () =>
       caster.isStateAddable = () => true;
       caster.addState = vi.fn();
       const targetBattler = { result: () => ({ hpDamage: 50, mpDamage: 0, tpDamage: 0 }) };
-      const action = { getCaster: () => buildJabsWrapper(caster, 0), getCooldownType: () => 'CombatSkill1' };
+      const action = buildAction(buildJabsWrapper(caster, 0), 'CombatSkill1');
       const target = buildJabsWrapper(targetBattler, 0);
       const engine = new globalThis.JABS_Engine();
 
@@ -2411,7 +2551,7 @@ describe('J-Passive-Conditional (direct src import)', () =>
       caster.isStateAddable = () => true;
       caster.addState = vi.fn();
       const targetBattler = { result: () => ({ hpDamage: 0, mpDamage: 0, tpDamage: 0 }) };
-      const action = { getCaster: () => buildJabsWrapper(caster, 0), getCooldownType: () => 'CombatSkill1' };
+      const action = buildAction(buildJabsWrapper(caster, 0), 'CombatSkill1');
       const target = buildJabsWrapper(targetBattler, 1);
       const engine = new globalThis.JABS_Engine();
 
@@ -2436,6 +2576,22 @@ describe('J-Passive-Conditional (direct src import)', () =>
       return { getBattler: () => gameBattler, getTeam: () => team };
     }
 
+    /**
+     * Builds the action whose hit just landed: its caster, the slot it was fired from, and the skill behind it.
+     * @param {object} casterWrapper The caster's JABS wrapper.
+     * @param {string} cooldownType The slot the action was fired from.
+     * @param {boolean} [countsAsWeaponHit=false] Whether the skill behind it carries <countsAsWeaponHit>.
+     * @returns {object}
+     */
+    function buildAction(casterWrapper, cooldownType, countsAsWeaponHit = false)
+    {
+      return {
+        getCaster: () => casterWrapper,
+        getCooldownType: () => cooldownType,
+        getBaseSkill: () => ({ countsAsWeaponHit }),
+      };
+    }
+
     it('fires onWeaponHit when damage lands from the Mainhand slot', () =>
     {
       // Arrange
@@ -2444,7 +2600,7 @@ describe('J-Passive-Conditional (direct src import)', () =>
       caster.isStateAddable = () => true;
       caster.addState = (stateId) => applied.push(stateId);
       const targetBattler = { result: () => ({ hpDamage: 50, mpDamage: 0, tpDamage: 0 }) };
-      const action = { getCaster: () => buildJabsWrapper(caster, 0), getCooldownType: () => 'Main' };
+      const action = buildAction(buildJabsWrapper(caster, 0), 'Main');
       const target = buildJabsWrapper(targetBattler, 1);
       const engine = new globalThis.JABS_Engine();
 
@@ -2463,7 +2619,7 @@ describe('J-Passive-Conditional (direct src import)', () =>
       caster.isStateAddable = () => true;
       caster.addState = (stateId) => applied.push(stateId);
       const targetBattler = { result: () => ({ hpDamage: 50, mpDamage: 0, tpDamage: 0 }) };
-      const action = { getCaster: () => buildJabsWrapper(caster, 0), getCooldownType: () => 'Offhand' };
+      const action = buildAction(buildJabsWrapper(caster, 0), 'Offhand');
       const target = buildJabsWrapper(targetBattler, 1);
       const engine = new globalThis.JABS_Engine();
 
@@ -2481,7 +2637,7 @@ describe('J-Passive-Conditional (direct src import)', () =>
       caster.isStateAddable = () => true;
       caster.addState = vi.fn();
       const targetBattler = { result: () => ({ hpDamage: 50, mpDamage: 0, tpDamage: 0 }) };
-      const action = { getCaster: () => buildJabsWrapper(caster, 0), getCooldownType: () => 'CombatSkill1' };
+      const action = buildAction(buildJabsWrapper(caster, 0), 'CombatSkill1');
       const target = buildJabsWrapper(targetBattler, 1);
       const engine = new globalThis.JABS_Engine();
 
@@ -2492,11 +2648,53 @@ describe('J-Passive-Conditional (direct src import)', () =>
       expect(caster.addState).not.toHaveBeenCalled();
     });
 
+    it('fires onWeaponHit when a skill from a non-weapon slot carries <countsAsWeaponHit>', () =>
+    {
+      // Arrange- the same combat slot as the case above; only the skill's tag differs.
+      const caster = buildMomentumToolkitActor([ '<autoApplyState:[99, onWeaponHit, 0]>' ]);
+      const applied = [];
+      caster.isStateAddable = () => true;
+      caster.addState = (stateId) => applied.push(stateId);
+      const targetBattler = { result: () => ({ hpDamage: 50, mpDamage: 0, tpDamage: 0 }) };
+      const action = buildAction(buildJabsWrapper(caster, 0), 'CombatSkill1', true);
+      const target = buildJabsWrapper(targetBattler, 1);
+      const engine = new globalThis.JABS_Engine();
+
+      // Act
+      engine.postExecuteSkillEffects(action, target);
+
+      // Assert
+      expect(applied).toEqual([ 99 ]);
+    });
+
+    it('hands the battler that was hit to the damage-dealt and weapon-hit rules', () =>
+    {
+      // Arrange- a weapon hit fires both conditions, and each has to know who was struck to aim at them.
+      const caster = buildMomentumToolkitActor();
+      const targetBattler = { result: () => ({ hpDamage: 50, mpDamage: 0, tpDamage: 0 }) };
+      const action = buildAction(buildJabsWrapper(caster, 0), 'Main');
+      const target = buildJabsWrapper(targetBattler, 1);
+      const engine = new globalThis.JABS_Engine();
+      const damageSpy = vi.spyOn(globalThis.AutoExecuteSkillManager, 'scheduleDamageDealtTriggers');
+      const weaponSpy = vi.spyOn(globalThis.AutoExecuteSkillManager, 'scheduleWeaponHitTriggers');
+
+      // Act
+      engine.postExecuteSkillEffects(action, target);
+
+      // Assert
+      expect(damageSpy).toHaveBeenCalledWith(caster, target);
+      expect(weaponSpy).toHaveBeenCalledWith(caster, target);
+
+      // spies on bare-global plugin statics leak into later tests in this file, so restore by hand.
+      damageSpy.mockRestore();
+      weaponSpy.mockRestore();
+    });
+
     it('does not schedule damage-dealt or weapon-hit triggers when the caster has no underlying Game_Battler', () =>
     {
       // Arrange- both schedulers guard their own null battler, so watch the calls themselves.
       const targetBattler = { result: () => ({ hpDamage: 50, mpDamage: 0, tpDamage: 0 }) };
-      const action = { getCaster: () => buildJabsWrapper(null, 0), getCooldownType: () => 'Main' };
+      const action = buildAction(buildJabsWrapper(null, 0), 'Main');
       const target = buildJabsWrapper(targetBattler, 1);
       const engine = new globalThis.JABS_Engine();
       const damageSpy = vi.spyOn(globalThis.AutoApplyStateManager, 'scheduleDamageDealtTriggers');

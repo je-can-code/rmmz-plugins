@@ -3,7 +3,7 @@ type: overview
 title: The Plugin Overview
 description: The general overview for what this plugin is about along with the when and how you might use it.
 tags: [passive-conditional, overview]
-version: "1.5.0"
+version: "1.6.0"
 ---
 
 # Overview
@@ -21,7 +21,10 @@ Tag families on database rows (skills, states, equip, class, actor, enemy, etc.)
 - [`autoApplyState`](notetags/auto-apply-state.md) — applies a real combat state on a timer or combat event
 - [`autoApplyStateOnNearby`](notetags/auto-apply-state-on-nearby.md) — same as `autoApplyState`, but aura-style onto
   nearby battlers instead of the bearer
-- [`autoExecuteSkill`](notetags/auto-execute-skill.md) — executes a map skill on a timer or combat event
+- [`autoExecuteSkill`](notetags/auto-execute-skill.md) — executes a map skill on a timer or combat event, landing a
+  direct one on the battler a hit struck
+- [`countsAsWeaponHit`](notetags/counts-as-weapon-hit.md) — lets a skill's hits fire `onWeaponHit` rules as a basic
+  attack's do
 - [`autoModifyCooldowns`](notetags/auto-modify-cooldowns.md) — modifies one or more of the bearer's own active
   skill-slot cooldowns on a timer or combat event
 - [`autoInflictState`](notetags/auto-inflict-state.md) — applies a real combat state onto whoever this battler just

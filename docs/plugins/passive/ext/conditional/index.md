@@ -13,6 +13,7 @@
 * [Auto-Apply State](notetags/auto-apply-state.md) - The tag applying a real combat state to its bearer on a timer or a combat event.
 * [Auto-Apply State On Nearby](notetags/auto-apply-state-on-nearby.md) - The tag applying a real combat state, aura-style, to every enemy or ally in proximity of its bearer.
 * [Auto-Execute Skill](notetags/auto-execute-skill.md) - The tag firing a map skill from its bearer on a timer or a combat event, with no cost or cooldown.
+* [Counts As Weapon Hit](notetags/counts-as-weapon-hit.md) - The tag letting a skill's hits count as weapon hits, so they fire its caster's onWeaponHit rules as a swing does.
 * [Auto-Modify Cooldowns](notetags/auto-modify-cooldowns.md) - The tag shortening or lengthening its bearer's own active skill-slot cooldowns on a combat event.
 * [Auto-Inflict State](notetags/auto-inflict-state.md) - The tag applying a real combat state onto whoever its bearer just inflicted a state upon or knocked back.
 * [Remove On Skill Execution](notetags/remove-on-skill-execution.md) - The tag giving a state a chance to lose a stack whenever its bearer executes a map skill.

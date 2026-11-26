@@ -19,10 +19,18 @@ counts the windup down exactly as for any cast, and it fires the moment the wind
 cooldown. A bearer already deciding or casting something keeps it and skips that firing; a timed or proximity rule
 tries again on the next frame, while an event-driven one (a hit, a kill) lets that event pass.
 
+### Aim
+
+A rule fired by a hit (`onDamageDealt`, `onWeaponHit`) knows the battler that was struck, and a `<direct>` payload lands
+on that battler's tile: an enchant's follow-up hits the foe the swing hit, not whatever stands around the one swinging.
+A payload with a cast time keeps that aim through its windup, and lands where it was aimed even if the foe moves. Every
+other payload fires from its bearer, as does every payload on any other condition.
+
 ### Conditions
 
 PARAM meaning matches [`autoApplyState` CONDITIONS](auto-apply-state.md), plus the four- or five-value tuple
-`enemiesNearby` / `alliesNearby` / `enemiesNearbyBelow` / `alliesNearbyBelow` take (see TAG FORMAT).
+`enemiesNearby` / `alliesNearby` / `enemiesNearbyBelow` / `alliesNearbyBelow` take (see TAG FORMAT). A skill carrying
+[`<countsAsWeaponHit>`](counts-as-weapon-hit.md) fires `onWeaponHit` rules as a basic attack does.
 
 ## NOTE ABOUT THE PAYLOAD SKILL
 
@@ -63,9 +71,10 @@ for the gate only.
 Casts skill 1025 every 60 frames while no enemy is within 1 tile.
 
 `<autoExecuteSkill:[1026, onWeaponHit, 0]>`
-Magic-knight style: every basic-attack (or combo) hit also fires skill 1026 on the target.
+Magic-knight style: every basic-attack (or combo) hit also fires skill 1026 on the target, landing on that foe when
+1026 is `<direct>`.
 
 `<autoExecuteSkill:[1027, whenGlanced, 0]>`
 Retaliate on a glancing blow: every time this battler is grazed, fires skill 1027 as a real map action from this
 battler's own position. No auto-aim at the attacker- the payload skill's own hitbox/range decides who it reaches
-(self-centered radial or facing-cone reads as "retaliation").
+(self-centered radial or facing-cone reads as "retaliation"). Only the hit-driven conditions aim.

@@ -1064,8 +1064,9 @@ state is added to this battler),
 `onKill` (this battler defeats an enemy),
 `onDamageDealt` (this battler lands damage on an opposing battler),
 `onWeaponHit` (narrower than `onDamageDealt` — only fires when the damage came from this battler's
-Mainhand/Offhand slot, i.e. the basic attack or its combo chain; a skill fired from any other slot
-does not qualify, so an AoE nuke won't also proc a "swing" follow-up on the whole map),
+Mainhand/Offhand slot, i.e. the basic attack or its combo chain, or from a skill carrying
+`<countsAsWeaponHit>`; any other skill does not qualify, so an AoE nuke won't also proc a "swing"
+follow-up on the whole map),
 `move` (PARAM = whole tiles moved per apply; requires J-Pixelistics),
 `stand` (PARAM = frames standing still on the map before applying),
 `enemiesNearby`/`alliesNearby`/`enemiesNearbyBelow`/`alliesNearbyBelow` — 4/5-value proximity
@@ -1137,6 +1138,11 @@ Victims may parry and retaliate normally. The payload skill owns its own radius,
 formula. Do not tag the payload skill itself with `<autoExecuteSkill>` (depth-guarded, but still —
 don't).
 
+A rule fired by a hit (`onDamageDealt`, `onWeaponHit`) knows the battler that was struck, and a
+`<direct>` payload lands on that battler's tile: an enchant's follow-up hits the foe the swing hit,
+not whatever stands around the one swinging. A payload with a `<castTime>` keeps that aim through its
+windup. Every other payload, and every payload on any other condition, fires from its bearer.
+
 A payload with a `<castTime>` winds up first. It takes its bearer's cast slot, so the map paints its
 telegraph and counts the windup down exactly as for any cast, and it fires the moment the windup ends,
 still with no cost and no cooldown. A bearer already deciding or casting something keeps it and skips
@@ -1147,15 +1153,43 @@ a kill) lets that event pass.
 <autoExecuteSkill:[1022, enemiesNearby, 1, 60]>
 <autoExecuteSkill:[1023, enemiesNearbyBelow, 1, 60, 1]>
 <autoExecuteSkill:[1024, whenGlanced, 0]>
+<autoExecuteSkill:[1025, onWeaponHit, 0]>
 ```
 The second casts skill 1023 every 60 frames while no enemy is within 1 tile. The third: "retaliate
 on a glancing blow" — every time this battler is grazed, no throttle, fires skill 1024 as a real
 map action from this battler's own position. There's no auto-aim at whoever landed the glance — the
-payload skill's own hitbox/range decides who it reaches, same as every other `<autoExecuteSkill>`
-condition, so a self-centered radial or facing-cone hitbox is what actually makes this read as a
-"retaliation" against the attacker.
+payload skill's own hitbox/range decides who it reaches, as on every condition but the two hit-driven
+ones, so a self-centered radial or facing-cone hitbox is what actually makes this read as a
+"retaliation" against the attacker. The fourth is an enchant: every weapon hit fires skill 1025, and
+if 1025 is `<direct>`, it lands on the foe that hit struck.
 
-**See also:** `<autoApplyState>`, `<autoInflictState>`
+**See also:** `<autoApplyState>`, `<autoInflictState>`, `<countsAsWeaponHit>`
+
+---
+
+### `<countsAsWeaponHit>`
+
+**Applies to:**
+Skills
+
+**When:**
+each hit the skill lands on an opposing battler
+
+**Effect:**
+the skill's hits count as weapon hits, so they fire the caster's `onWeaponHit` rules
+(`<autoApplyState>`, `<autoExecuteSkill>`) exactly as a basic attack's hits do, though the skill is
+cast from a combat-skill slot rather than the Mainhand or Offhand. Meant for a weapon technique in all
+but its slot, a blade flurry or a whip whirl, so whatever a swing sets off (an enchant's follow-up, a
+per-swing buff) goes off on its hits too. Never put it on a payload a weapon-hit rule fires: that
+follow-up would then count as a weapon hit itself and fire again off every hit it lands.
+
+```
+<countsAsWeaponHit>
+```
+On a whirling blade skill: while its caster's enchant carries
+`<autoExecuteSkill:[267, onWeaponHit, 0]>`, every enemy each whirl hits also takes skill 267.
+
+**See also:** `<autoExecuteSkill>`, `<autoApplyState>`
 
 ---
 
