@@ -29,10 +29,12 @@ Tag families on database rows (skills, states, equip, class, actor, enemy, etc.)
   skill-slot cooldowns on a timer or combat event
 - [`autoInflictState`](notetags/auto-inflict-state.md) — applies a real combat state onto whoever this battler just
   inflicted a state upon
-- [`removeOnSkillExecution`](notetags/remove-on-skill-execution.md) — chance to strip a stack from this state when the
-  bearer executes a map skill
+- [`removeOnSkillExecution`](notetags/remove-on-skill-execution.md) — chance to strip a stack from this state once the
+  bearer has paid for a map skill it is executing
 - [`removeOnSkillResolution`](notetags/remove-on-skill-resolution.md) — chance to strip a stack from this state when
   the bearer's fired action expires
+- [`toggleStateOnSkillExecution`](notetags/toggle-state-on-skill-execution.md) — arms a state on one hardcast of a
+  skill type and spends it on the next, a Red Mage's Dualcast
 - [`removeStateOnMove`](notetags/remove-state-on-move.md) — strips this state the instant the bearer moves (pairs with
   `autoApplyState`'s "stand")
 

@@ -328,17 +328,19 @@ J.PASSIVE.EXT.CONDITIONAL.RegExp.AutoModifyCooldowns = /<autoModifyCooldowns:[ ]
 *   <li>{@code [1071, 'negaStateInflicted', 0]} — every time this battler inflicts any negative state</li>
 *   <li>{@code [1072, 'posiStateInflicted', 60]} — on inflicting a positive state, at most once per 60 frames</li>
 *   <li>{@code [1073, 'anyStateInflicted', 0]} — every time this battler inflicts any state at all</li>
-*   <li>{@code [1074, 'onKnockback', 0]} — every time this battler knocks an enemy back</li>
+*   <li>{@code [1074, 'onKnockback', 0]} — every time one of this battler's hits moves an enemy, pushed or pulled</li>
 * </ul>
 * @type {RegExp}
 */
 J.PASSIVE.EXT.CONDITIONAL.RegExp.AutoInflictState = /<autoInflictState:[ ]?(\[[^\]]+])>/gi;
 /**
 * Captures {@code removeOnSkillExecution} bracket tuples from <strong>state</strong> notes only.<br/>
-* On skill execution, rolls chance and may peel stacks via {@link Game_Battler#decrementStateStacks}.
+* Once the bearer has paid for a map skill it is executing, rolls chance and may peel stacks via
+* {@link Game_Battler#decrementStateStacks}- after the cost, so a state these rules strip still has its say in what
+* that skill costs.
 * <p>
 * Author shape: {@code <removeOnSkillExecution:[stypeId, chance]>}.<br/>
-* {@code stypeId} 0 matches any skill type. {@code chance} is 1–100 for {@link RPGManager.chanceIn100}.
+* {@code stypeId} 0 matches any skill type. {@code chance} is 1–100 for {@link RPGManager.fateOf100}.
 * </p>
 * @type {RegExp}
 */
@@ -350,11 +352,33 @@ J.PASSIVE.EXT.CONDITIONAL.RegExp.RemoveOnSkillExecution = /<removeOnSkillExecuti
 * state traits are still active during damage calculation.
 * <p>
 * Author shape: {@code <removeOnSkillResolution:[stypeId, chance]>}.<br/>
-* {@code stypeId} 0 matches any skill type. {@code chance} is 1–100 for {@link RPGManager.chanceIn100}.
+* {@code stypeId} 0 matches any skill type. {@code chance} is 1–100 for {@link RPGManager.fateOf100}.
 * </p>
 * @type {RegExp}
 */
 J.PASSIVE.EXT.CONDITIONAL.RegExp.RemoveOnSkillResolution = /<removeOnSkillResolution:[ ]?(\[[^\]]+])>/gi;
+/**
+* Captures {@code toggleStateOnSkillExecution} bracket tuples from <strong>state</strong> notes only.<br/>
+* Read by {@link SkillExecutionStateToggleManager} once the bearer has paid for a skill it is executing. Each tuple
+* names a state and a skill type: a hardcast of that type, meaning any skill of it that costs MP, executed while the
+* bearer lacks the state applies it, and one executed while the bearer carries it removes it, after that cast's cast
+* time and cost were both read with the state still on. A skill type of 0 matches every skill type. A skill that
+* costs no MP does neither.
+*
+* <pre>
+* Structure:
+*  <toggleStateOnSkillExecution:[STATE_ID, STYPE_ID]>
+*
+* Example:
+*  <toggleStateOnSkillExecution:[143, 4]>
+*
+* Translation:
+*  a type-4 skill that costs MP, executed without state 143, applies state 143;
+*  a type-4 skill that costs MP, executed with state 143, removes it once its cost is paid.
+* </pre>
+* @type {RegExp}
+*/
+J.PASSIVE.EXT.CONDITIONAL.RegExp.ToggleStateOnSkillExecution = /<toggleStateOnSkillExecution:[ ]?(\[[^\]]+])>/gi;
 /**
 * Captures {@code removeStateOnMove} bracket tuples from <strong>state</strong> notes only.<br/>
 * When the owning battler moves, strips the target state via {@link Game_Battler#decrementStateStacks}.
@@ -544,6 +568,15 @@ Object.defineProperty(RPG_State.prototype, "removeOnSkillExecutionRules", { get(
 */
 Object.defineProperty(RPG_State.prototype, "removeOnSkillResolutionRules", { get() {
 	return RPGManager.getArraysFromNotesByRegex(this, J.PASSIVE.EXT.CONDITIONAL.RegExp.RemoveOnSkillResolution);
+} });
+/**
+* Parsed {@link J.PASSIVE.EXT.CONDITIONAL.RegExp.ToggleStateOnSkillExecution} tuples from this state row.<br/>
+* Each tuple is {@code [stateId, stypeId]}: the state a skill of that type costing MP arms or spends;
+* {@code stypeId} 0 matches any skill type.
+* @type {Array<[number, number]>}
+*/
+Object.defineProperty(RPG_State.prototype, "toggleStateOnSkillExecutionRules", { get() {
+	return RPGManager.getArraysFromNotesByRegex(this, J.PASSIVE.EXT.CONDITIONAL.RegExp.ToggleStateOnSkillExecution);
 } });
 /**
 * Parsed {@link J.PASSIVE.EXT.CONDITIONAL.RegExp.RemoveStateOnMove} tuples from this state row.<br/>
@@ -826,6 +859,28 @@ var PassiveRuleJabsAccess = class {
 			case "skill4": return JABS_Button.CombatSkill4;
 			default: return String(slotParam);
 		}
+	}
+};
+
+//#endregion
+//#region src/plugins/passive/ext/conditional/helpers/DistinctStates.js
+/**
+* Reads the states a battler carries with each one listed once, however many stacks of it are applied.<br/>
+* J-ABS hands {@link Game_Battler#states} back with one copy of a stacked state per stack, which is what lets every
+* stack's traits add up. A rule written on a state speaks for that state once, though: a manager reading its rules
+* off each copy would roll a five-stack state's removal chance five times over, from a single execution, and could
+* strip every stack where its rule promised one.
+*/
+var DistinctStates = class {
+	/**
+	* The states the given battler carries, each listed once.
+	* @param {Game_Actor|Game_Enemy} battler The battler whose states are being read.
+	* @returns {RPG_State[]}
+	*/
+	static of(battler) {
+		const statesById = new Map();
+		battler.states().forEach((state) => statesById.set(state.id, state));
+		return [...statesById.values()];
 	}
 };
 
@@ -1665,12 +1720,14 @@ var AutoInflictStateManager = class AutoInflictStateManager extends AutoRuleMana
 //#endregion
 //#region src/plugins/passive/ext/conditional/managers/SkillExecutionStateRemovalManager.js
 /**
-* Processes {@link RPG_State#removeOnSkillExecutionRules} when a map battler executes a skill.<br/>
+* Processes {@link RPG_State#removeOnSkillExecutionRules} once a map battler has paid for a skill it is executing,
+* from {@link JABS_Engine#paySkillCosts}, so a state these rules strip still shapes that cost.<br/>
 * Peels stacks via {@link Game_Battler#decrementStateStacks} using {@code loseAllStacksAtOnce} policy.
 */
 var SkillExecutionStateRemovalManager = class {
 	/**
-	* Rolls removal rules on every combat state this battler currently carries.
+	* Rolls removal rules on every combat state this battler currently carries, once per state however many
+	* stacks of it are applied.
 	* @param {Game_Actor|Game_Enemy} battler The battler that executed the skill.
 	* @param {number} skillId The database skill id that was executed.
 	*/
@@ -1679,9 +1736,8 @@ var SkillExecutionStateRemovalManager = class {
 		const skill = $dataSkills[skillId];
 		if (!skill) return;
 		const executedStype = skill.stypeId;
-		const activeStates = battler.states();
+		const activeStates = DistinctStates.of(battler);
 		for (const state of activeStates) {
-			if (!state) continue;
 			const rules = state.removeOnSkillExecutionRules;
 			for (const tuple of rules) {
 				const stypeId = Number(tuple[0]);
@@ -1724,7 +1780,8 @@ var SkillExecutionStateRemovalManager = class {
 */
 var SkillResolutionStateRemovalManager = class {
 	/**
-	* Rolls removal rules on every combat state this battler currently carries.
+	* Rolls removal rules on every combat state this battler currently carries, once per state however many
+	* stacks of it are applied.
 	* @param {Game_Actor|Game_Enemy} battler - The battler whose action just resolved.
 	* @param {number} skillId - The database skill id that resolved against the target.
 	*/
@@ -1733,9 +1790,8 @@ var SkillResolutionStateRemovalManager = class {
 		const skill = $dataSkills[skillId];
 		if (!skill) return;
 		const executedStype = skill.stypeId;
-		const activeStates = battler.states();
+		const activeStates = DistinctStates.of(battler);
 		for (const state of activeStates) {
-			if (!state) continue;
 			const rules = state.removeOnSkillResolutionRules;
 			for (const tuple of rules) {
 				const stypeId = Number(tuple[0]);
@@ -1764,6 +1820,76 @@ var SkillResolutionStateRemovalManager = class {
 			return tracked.stackCount;
 		}
 		return 1;
+	}
+};
+
+//#endregion
+//#region src/plugins/passive/ext/conditional/managers/SkillExecutionStateToggleManager.js
+/**
+* Processes {@link RPG_State#toggleStateOnSkillExecutionRules} each time a map battler pays for a skill it is
+* executing, from {@link JABS_Engine#paySkillCosts}.<br/>
+* Each rule names a state and a skill type. A hardcast of that type- any skill of it that costs MP- executed while the
+* battler lacks the state arms it, and one executed while the battler carries it spends it, so those casts alternate:
+* a plain cast, then one the armed state shapes, then a plain one again. That is a Red Mage's Dualcast, when the
+* armed state makes a cast instant and free: a cheap spell arms it, and the big one after it fires free.
+* <p>
+* Running once the cost is paid is what lets the spending cast be the one the state shapes: its cast time was read
+* with the state on when the skill was decided, and its cost a moment ago. Arming and spending both come from a
+* single look at the battler, so the cast that spends a state can never arm it again.
+* </p>
+*/
+var SkillExecutionStateToggleManager = class {
+	/**
+	* Arms or spends every state the battler's own states toggle for the skill it just paid for.
+	* @param {Game_Actor|Game_Enemy} battler The battler that just paid for the skill.
+	* @param {RPG_Skill} skill The skill being executed.
+	*/
+	static process(battler, skill) {
+		if (this.isHardcast(skill) === false) return;
+		const stateIds = this.stateIdsToggledBy(battler, skill.stypeId);
+		stateIds.forEach((stateId) => this.toggle(battler, stateId, skill));
+	}
+	/**
+	* Whether the given skill counts as a hardcast, which is what lets it arm or spend a toggled state.<br/>
+	* A skill that costs MP is a hardcast, however long or short its cast: a mover that costs MP arms the charge as
+	* surely as a slow nuke does. A skill that costs nothing- a weapon swing, a free spell- never touches it, so no
+	* cast of the rule's type can ride an armed state for free without spending it. The cost is read as the database
+	* row writes it, before any cost rate applies, so the cast the armed state made free still counts as the hardcast
+	* it is.
+	* @param {RPG_Skill} skill The skill being executed.
+	* @returns {boolean}
+	*/
+	static isHardcast(skill) {
+		return skill.mpCost > 0;
+	}
+	/**
+	* The ids of the states this battler's own states toggle when it executes a skill of the given type, each listed
+	* once.<br/>
+	* A state named by two sources, or handed over once per stack of a stacked state, would otherwise be armed and then
+	* spent again by the very same execution.
+	* @param {Game_Actor|Game_Enemy} battler The battler executing the skill.
+	* @param {number} skillTypeId The type of the skill being executed.
+	* @returns {number[]}
+	*/
+	static stateIdsToggledBy(battler, skillTypeId) {
+		const rules = battler.allStates().flatMap((state) => state.toggleStateOnSkillExecutionRules);
+		const stateIds = rules.filter(([, ruleSkillTypeId]) => ruleSkillTypeId === 0 || ruleSkillTypeId === skillTypeId).map(([stateId]) => stateId);
+		return [...new Set(stateIds)];
+	}
+	/**
+	* Spends the given state when the battler carries it, or arms it when the battler does not.<br/>
+	* Spending removes the state outright, every stack of it. Arming applies it with the battler as its source, so
+	* the state's own duration runs its timer and lets an unused charge lapse.
+	* @param {Game_Actor|Game_Enemy} battler The battler executing the skill.
+	* @param {number} stateId The state being toggled.
+	* @param {RPG_Skill} skill The skill being executed, credited as the source of a state it arms.
+	*/
+	static toggle(battler, stateId, skill) {
+		if (battler.isStateAffected(stateId)) {
+			battler.removeState(stateId);
+			return;
+		}
+		battler.addState(stateId, battler, skill);
 	}
 };
 
@@ -2766,7 +2892,6 @@ JABS_Battler.prototype.setLastUsedSkillId = function(skillId) {
 	const battler = this.getBattler();
 	if (!battler) return;
 	battler.stampPassiveRuleAttackedFrame();
-	SkillExecutionStateRemovalManager.process(battler, skillId);
 };
 /**
 * Delegates throttled passive rule reconciliation to the underlying battler.<br/>
@@ -2828,16 +2953,18 @@ JABS_Engine.prototype.handleDefeatedEnemy = function(defeatedTarget, caster) {
 	AutoModifyCooldownManager.scheduleKillTriggers(casterBattler);
 };
 /**
-* Extends {@link JABS_Engine#checkKnockback}.<br/>
-* Fires {@code onKnockback} autoInflictState rules on the battler that knocked the target back,
-* applying the configured payload state onto the knocked-back target.
+* Extends {@link JABS_Engine#onKnockback}.<br/>
+* Fires {@code onKnockback} autoInflictState rules on the battler whose hit knocked the target back,
+* applying the configured payload state onto the knocked-back target. J-ABS calls this only for a hit
+* that actually moved its target, pushed away or pulled in, so a hit that moved nothing fires nothing.
+* @param {JABS_Action} action The action whose hit moved the target.
+* @param {JABS_Battler} target The map battler that was moved.
 */
-J.PASSIVE.EXT.CONDITIONAL.Aliased.JABS_Engine.set("checkKnockback", JABS_Engine.prototype.checkKnockback);
-JABS_Engine.prototype.checkKnockback = function(action, target) {
-	J.PASSIVE.EXT.CONDITIONAL.Aliased.JABS_Engine.get("checkKnockback").call(this, action, target);
+J.PASSIVE.EXT.CONDITIONAL.Aliased.JABS_Engine.set("onKnockback", JABS_Engine.prototype.onKnockback);
+JABS_Engine.prototype.onKnockback = function(action, target) {
+	J.PASSIVE.EXT.CONDITIONAL.Aliased.JABS_Engine.get("onKnockback").call(this, action, target);
 	const casterBattler = action.getCaster().getBattler();
 	const targetBattler = target.getBattler();
-	if (!casterBattler || !targetBattler) return;
 	AutoInflictStateManager.scheduleKnockbackTriggers(casterBattler, targetBattler);
 };
 /**
@@ -2877,6 +3004,29 @@ JABS_Engine.prototype.isWeaponHitAction = function(action) {
 	const cooldownType = action.getCooldownType();
 	if (cooldownType === JABS_Button.Mainhand || cooldownType === JABS_Button.Offhand) return true;
 	return action.getBaseSkill().countsAsWeaponHit;
+};
+/**
+* Extends {@link JABS_Engine#paySkillCosts}.<br/>
+* Once an executing skill's cost is paid, settles its caster's states that answer to that execution: a state a
+* {@code toggleStateOnSkillExecution} rule names is armed or spent, then a state a {@code removeOnSkillExecution}
+* rule strips is peeled.
+* <p>
+* Every paid execution makes this call exactly once- a decided cast, a dodge, a channel's vessel- and no forced
+* payload ever makes it, so a retaliation, a channel's tick and an auto-executed skill never reach these rules. It
+* is also the last moment a state can still shape the execution that ends it: the cast time was read when the skill
+* was decided, and the cost has just been paid. Toggling runs first so that a state both toggled and peeled by the
+* same execution ends up stripped, rather than armed again forever.
+* </p>
+* @param {JABS_Battler} caster The battler executing the skill.
+* @param {JABS_Action} action The action whose skill was just paid for.
+*/
+J.PASSIVE.EXT.CONDITIONAL.Aliased.JABS_Engine.set("paySkillCosts", JABS_Engine.prototype.paySkillCosts);
+JABS_Engine.prototype.paySkillCosts = function(caster, action) {
+	J.PASSIVE.EXT.CONDITIONAL.Aliased.JABS_Engine.get("paySkillCosts").call(this, caster, action);
+	const battler = caster.getBattler();
+	const skill = action.getBaseSkill();
+	SkillExecutionStateToggleManager.process(battler, skill);
+	SkillExecutionStateRemovalManager.process(battler, skill.id);
 };
 
 //#endregion
@@ -3291,7 +3441,8 @@ var ConditionalNotetagDescriptions = class {
 	}
 	/**
 	* Every tag this plugin describes, each paired with its describer, in the order their lines are listed: what gates
-	* the passives first, then what fires on its own, then what takes stacks away.
+	* the passives first, then what fires on its own, then what one type of skill arms and spends by turns, then what
+	* takes stacks away.
 	* @returns {Array<[RegExp, function(RegExpExecArray): NotetagLine[]]>}
 	*/
 	static describedTags() {
@@ -3305,6 +3456,7 @@ var ConditionalNotetagDescriptions = class {
 			[tags.AutoExecuteSkill, (match) => this.skillTriggerLines(match)],
 			[tags.AutoInflictState, (match) => this.selfTriggerLines(match, "autoInflictState")],
 			[tags.AutoModifyCooldowns, (match) => this.cooldownLines(match)],
+			[tags.ToggleStateOnSkillExecution, (match) => this.toggleLines(match)],
 			[tags.RemoveOnSkillExecution, (match) => this.removalLines(match, "removeOnSkillExecution")],
 			[tags.RemoveOnSkillResolution, (match) => this.removalLines(match, "removeOnSkillResolution")],
 			[tags.RemoveStateOnMove, (match) => this.moveRemovalLines(match)]
@@ -3494,6 +3646,25 @@ var ConditionalNotetagDescriptions = class {
 		const size = Math.abs(amount);
 		if (unit === "percent") return ConditionPhrases.quantity(`${size}%`);
 		return ConditionPhrases.seconds(size);
+	}
+	/**
+	* The line describing a state its holder arms and spends by turns with one type of hardcast skill, in the sentence
+	* the game's config keeps under `toggleStateOnSkillExecution`, or under its `.any` variant when any skill at all
+	* will do. The sentence may name `{state}` and `{skillType}`.
+	* @param {RegExpExecArray} match The tag as its regex matched it; the first capture is the state and skill type.
+	* @returns {NotetagLine[]}
+	*/
+	static toggleLines(match) {
+		const [stateId, skillTypeId] = this.tupleOf(match);
+		const key = skillTypeId === 0 ? "toggleStateOnSkillExecution.any" : "toggleStateOnSkillExecution";
+		const tokens = {
+			state: this.stateToken(stateId),
+			skillType: {
+				text: `\\skillType[${skillTypeId}]`,
+				kind: NotetagDescriber.TokenKinds.CODE
+			}
+		};
+		return NotetagDescriber.line(key, { tokens });
 	}
 	/**
 	* The line describing a chance to lose a stack of the carrying state when its holder uses a skill, in the

@@ -16,8 +16,9 @@
 * [Counts As Weapon Hit](notetags/counts-as-weapon-hit.md) - The tag letting a skill's hits count as weapon hits, so they fire its caster's onWeaponHit rules as a swing does.
 * [Auto-Modify Cooldowns](notetags/auto-modify-cooldowns.md) - The tag shortening or lengthening its bearer's own active skill-slot cooldowns on a combat event.
 * [Auto-Inflict State](notetags/auto-inflict-state.md) - The tag applying a real combat state onto whoever its bearer just inflicted a state upon or knocked back.
-* [Remove On Skill Execution](notetags/remove-on-skill-execution.md) - The tag giving a state a chance to lose a stack whenever its bearer executes a map skill.
+* [Remove On Skill Execution](notetags/remove-on-skill-execution.md) - The tag giving a state a chance to lose a stack whenever its bearer pays for a map skill it is executing.
 * [Remove On Skill Resolution](notetags/remove-on-skill-resolution.md) - The tag giving a state a chance to lose a stack whenever an action its bearer fired expires.
+* [Toggle State On Skill Execution](notetags/toggle-state-on-skill-execution.md) - The tag arming a state on one hardcast of a skill type and spending it on the next, a Red Mage's Dualcast.
 * [Remove State On Move](notetags/remove-state-on-move.md) - The tag stripping a state's stacks the instant its bearer moves, the pair to a stand-built stack.
 
 # plugin-parameter

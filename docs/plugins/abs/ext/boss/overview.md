@@ -152,7 +152,8 @@ attempt held back, and nothing waiting on one fires before it has arrived and fa
 ### Standing ground
 
 Every participant is immune to knockback for as long as its fight runs, whatever it otherwise resists, and a summoned
-one from the moment it arrives. A boss that can be shoved around its own arena can be wedged into a doorway or pinned
+one from the moment it arrives. That includes a pull, which is knockback aimed back toward the caster: a participant
+resists both in full. A boss that can be shoved or dragged around its own arena can be wedged into a doorway or pinned
 in a corner, and the fight turns into one against the walls of the room. Only being moved is refused: every state a hit
 carries, a stun among them, still lands. What a fight spawns for itself with `spawn` is no participant, and moves like
 anything else.

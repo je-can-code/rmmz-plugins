@@ -20,7 +20,9 @@ The bearer's own state tracking credits the bearer as the inflictor of STATE_ID,
   (`isNegativeType`) state on someone
 - `posiStateInflicted` — this battler inflicts a non-negative state on someone
 - `anyStateInflicted` — this battler inflicts any state on someone
-- `onKnockback` — this battler knocks an enemy back (`JABS_Engine#checkKnockback`)
+- `onKnockback` — one of this battler's hits actually moves an enemy, knocked back or pulled in by
+  `<pullForward>` (`JABS_Engine#onKnockback`). A hit that leaves the enemy where it stood fires nothing, a hop in place
+  included
 
 ## NOTE ABOUT THE DEPTH GUARD
 

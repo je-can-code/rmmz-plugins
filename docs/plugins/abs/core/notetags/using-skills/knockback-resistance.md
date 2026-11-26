@@ -11,7 +11,8 @@ tags: [abs, tag, knockback, resistance]
 
 Reduces how far a battler is knocked back by incoming hits, as a percent of the knockback. Tags from everything the
 battler carries are summed, and a total of 100 or more makes the battler immune to knockback: it does not even hop in
-place.
+place. A pull from J-ABS-Tools' `<pullForward>` is knockback aimed back toward the caster, so the same resistance
+shortens it, and refuses it outright at 100 or more.
 
 ## TAG USAGE
 
@@ -33,4 +34,4 @@ Where VAL is the percent of incoming knockback to cancel.
 This battler is knocked back half as far by incoming hits.
 
 `<knockbackResist:100>`
-This battler is immune to knockback, and does not even hop in place.
+This battler is immune to knockback and to pulls, and does not even hop in place.

@@ -1200,9 +1200,10 @@ same as `<autoApplyState>`
 
 **When:**
 `negaStateInflicted`/`posiStateInflicted`/`anyStateInflicted` (this battler inflicts a
-negative-tagged / non-negative / any state onto someone else), `onKnockback` (this battler knocks an
-enemy back). COOLDOWN_FRAMES is the minimum frames between dispatches for this rule; 0 means every
-time.
+negative-tagged / non-negative / any state onto someone else), `onKnockback` (one of this battler's
+hits actually moves an enemy, knocked back or pulled in by `<pullForward>`; a hit that leaves it where
+it stood, a hop in place included, fires nothing). COOLDOWN_FRAMES is the minimum frames between
+dispatches for this rule; 0 means every time.
 
 **Effect:**
 unlike `<autoApplyState>` (targets the rule bearer) and `<autoApplyStateOnNearby>` (targets
@@ -1281,19 +1282,51 @@ mainhand/offhand/tool/dodge/combat-skill cooldown, on the inflictor.
 States only — tag lives on the state that may be removed, not on skills/equip
 
 **When:**
-this battler executes a map skill
+this battler pays for a map skill it is executing: a decided cast, a dodge, or a channel's vessel.
+A forced payload (an auto-executed skill, a retaliation, a channel's tick) never pays, so never
+reaches it
 
 **Effect:**
-rolls CHANCE (1–100). STYPE_ID 0 matches any skill type. On success, peels a stack via
-`decrementStateStacks` (respects `loseAllStacksAtOnce` on this state row). Fires at the moment of
-execution — before damage resolves.
+rolls CHANCE (1–100) once for the state, however many stacks it has. STYPE_ID 0 matches any skill
+type. On success, peels a stack via `decrementStateStacks` (respects `loseAllStacksAtOnce` on this
+state row). Fires once the skill's cost is paid, so a state it strips still shapes that cost (a
+"next cast is free" buff really is free), and before damage resolves.
 
 ```
 <removeOnSkillExecution:[7, 100]>
 ```
 Guaranteed stack peel whenever this battler executes any skill of type 7.
 
-**See also:** `<removeOnSkillResolution>` (fires later, at action expiry, not execution)
+**See also:** `<removeOnSkillResolution>` (fires later, at action expiry, not execution),
+`<toggleStateOnSkillExecution>`
+
+---
+
+### `<toggleStateOnSkillExecution:[STATE_ID, STYPE_ID]>`
+
+**Applies to:**
+States only — usually a passive state, the rule's holder, naming the state it arms and spends
+
+**When:**
+this battler pays for a hardcast of type STYPE_ID that it is executing: any skill of that type that
+costs MP, however long or short its cast. STYPE_ID 0 matches any skill type. A skill that costs no
+MP, and a skill of another type, leave the named state alone
+
+**Effect:**
+arms STATE_ID when the battler lacks it, and spends it (removes it outright) when the battler
+carries it, so those casts alternate: a plain cast, then one the armed state shapes, then a plain
+one again. It runs once the cost is paid, so the spending cast's cast time was read with the state
+on, and its cost was just paid with the state on, before the state goes. The spending cast never
+arms it again. An armed state lapses on its own `<stateDuration>` if no cast spends it.
+
+```
+<toggleStateOnSkillExecution:[143, 4]>
+```
+A Red Mage's Dualcast, when state 143 carries `<castSpeedRate:[-300]>` and an MP-cost-rate of 0:
+a Magecraft spell that costs MP arms 143, the next one is instant and free and spends it, and the
+one after that arms it again. A cheap mover arms it, so the big nuke after it fires free.
+
+**See also:** `<removeOnSkillExecution>`, `<onCastSelfState>`
 
 ---
 
@@ -5971,8 +6004,9 @@ Always applies state 19 to the caster the moment this skill lands a hit.
 ```
 Placed on a passive state's note instead: 20% chance to apply state 42 to the caster on every
 skill they cast, for as long as the passive state is active. This is the pattern for "cast a
-spell, chance to grant a buff" mechanics (e.g. a Red-Mage-style dualcast passive) — author the
-tag on the passive state, not on individual skills.
+spell, chance to grant a buff" mechanics — author the tag on the passive state, not on individual
+skills. It reapplies on every cast, the one that would consume the buff included, so a Red-Mage-
+style dualcast (a buff each cast either grants or spends) is `<toggleStateOnSkillExecution>`'s job.
 
 **See also:** `<onCastSelfStateIfAfflicted>`, `<applyState>`
 

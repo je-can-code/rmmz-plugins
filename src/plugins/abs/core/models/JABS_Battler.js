@@ -4015,7 +4015,8 @@ class JABS_Battler
     // re-arm before firing, so a skill that ends the stance cannot leave a stale cadence.
     intervalTimer.reset();
 
-    // fire the guard skill again as an ordinary action, so it pays its costs like any other.
+    // fire the guard skill again as a forced action: it costs nothing and sets no cooldown, the stance's own
+    // cadence above being the only thing that paces it.
     $jabsEngine.forceMapAction(this, this.getGuardSkillId(), false);
   };
 

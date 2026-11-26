@@ -3,6 +3,8 @@ import AutoApplyStateManager from './AutoApplyStateManager.js';
 import AutoExecuteSkillManager from './AutoExecuteSkillManager.js';
 import AutoModifyCooldownManager from './AutoModifyCooldownManager.js';
 import AutoInflictStateManager from './AutoInflictStateManager.js';
+import SkillExecutionStateRemovalManager from './SkillExecutionStateRemovalManager.js';
+import SkillExecutionStateToggleManager from './SkillExecutionStateToggleManager.js';
 
 /**
  * Extends {@link JABS_Engine#handleDefeatedEnemy}.<br/>
@@ -29,15 +31,18 @@ JABS_Engine.prototype.handleDefeatedEnemy = function(defeatedTarget, caster)
 };
 
 /**
- * Extends {@link JABS_Engine#checkKnockback}.<br/>
- * Fires {@code onKnockback} autoInflictState rules on the battler that knocked the target back,
- * applying the configured payload state onto the knocked-back target.
+ * Extends {@link JABS_Engine#onKnockback}.<br/>
+ * Fires {@code onKnockback} autoInflictState rules on the battler whose hit knocked the target back,
+ * applying the configured payload state onto the knocked-back target. J-ABS calls this only for a hit
+ * that actually moved its target, pushed away or pulled in, so a hit that moved nothing fires nothing.
+ * @param {JABS_Action} action The action whose hit moved the target.
+ * @param {JABS_Battler} target The map battler that was moved.
  */
-J.PASSIVE.EXT.CONDITIONAL.Aliased.JABS_Engine.set('checkKnockback', JABS_Engine.prototype.checkKnockback);
-JABS_Engine.prototype.checkKnockback = function(action, target)
+J.PASSIVE.EXT.CONDITIONAL.Aliased.JABS_Engine.set('onKnockback', JABS_Engine.prototype.onKnockback);
+JABS_Engine.prototype.onKnockback = function(action, target)
 {
-  // perform original logic (resistance checks, direction/distance math, actually moving the target).
-  J.PASSIVE.EXT.CONDITIONAL.Aliased.JABS_Engine.get('checkKnockback')
+  // perform original logic.
+  J.PASSIVE.EXT.CONDITIONAL.Aliased.JABS_Engine.get('onKnockback')
     .call(this, action, target);
 
   // unwrap both sides to their underlying Game_Battlers for rule evaluation.
@@ -45,8 +50,7 @@ JABS_Engine.prototype.checkKnockback = function(action, target)
     .getBattler();
   const targetBattler = target.getBattler();
 
-  if (!casterBattler || !targetBattler) return;
-
+  // the caster's onKnockback rules land their payload on the battler that was moved.
   AutoInflictStateManager.scheduleKnockbackTriggers(casterBattler, targetBattler);
 };
 
@@ -114,5 +118,38 @@ JABS_Engine.prototype.isWeaponHitAction = function(action)
 
   // a skill cast from anywhere else counts only when it was authored to.
   return action.getBaseSkill().countsAsWeaponHit;
+};
+
+/**
+ * Extends {@link JABS_Engine#paySkillCosts}.<br/>
+ * Once an executing skill's cost is paid, settles its caster's states that answer to that execution: a state a
+ * {@code toggleStateOnSkillExecution} rule names is armed or spent, then a state a {@code removeOnSkillExecution}
+ * rule strips is peeled.
+ * <p>
+ * Every paid execution makes this call exactly once- a decided cast, a dodge, a channel's vessel- and no forced
+ * payload ever makes it, so a retaliation, a channel's tick and an auto-executed skill never reach these rules. It
+ * is also the last moment a state can still shape the execution that ends it: the cast time was read when the skill
+ * was decided, and the cost has just been paid. Toggling runs first so that a state both toggled and peeled by the
+ * same execution ends up stripped, rather than armed again forever.
+ * </p>
+ * @param {JABS_Battler} caster The battler executing the skill.
+ * @param {JABS_Action} action The action whose skill was just paid for.
+ */
+J.PASSIVE.EXT.CONDITIONAL.Aliased.JABS_Engine.set('paySkillCosts', JABS_Engine.prototype.paySkillCosts);
+JABS_Engine.prototype.paySkillCosts = function(caster, action)
+{
+  // perform original logic.
+  J.PASSIVE.EXT.CONDITIONAL.Aliased.JABS_Engine.get('paySkillCosts')
+    .call(this, caster, action);
+
+  // the rules live on the states of the battler underneath the map battler.
+  const battler = caster.getBattler();
+  const skill = action.getBaseSkill();
+
+  // arm or spend what this execution toggles, now that the cost those states had a say in is settled.
+  SkillExecutionStateToggleManager.process(battler, skill);
+
+  // then peel what this execution consumes.
+  SkillExecutionStateRemovalManager.process(battler, skill.id);
 };
 //endregion JABS_Engine

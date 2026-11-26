@@ -47,6 +47,8 @@ describe('ConditionalNotetagDescriptions (direct src import)', () =>
     [ 'autoModifyCooldowns.reduce.flat', 'Cooldowns recover {amount} {trigger}.' ],
     [ 'autoModifyCooldowns.increase.percent.single', 'Your {slot} cooldown grows {amount} {trigger}.' ],
     [ 'autoModifyCooldowns.reduce.percent.combat', 'Your {slot} cooldowns recover {amount} {trigger}.' ],
+    [ 'toggleStateOnSkillExecution', 'Each {skillType} skill that costs MP grants {state}, or spends it if active.' ],
+    [ 'toggleStateOnSkillExecution.any', 'Each skill that costs MP grants {state}, or spends it if active.' ],
     [ 'removeOnSkillExecution', 'Using a {skillType} skill has a {chance} chance to remove a stack.' ],
     [ 'removeOnSkillResolution.any', 'Landing any skill has a {chance} chance to remove a stack.' ],
     [ 'removeStateOnMove', 'Moving removes {state}.' ],
@@ -119,7 +121,7 @@ describe('ConditionalNotetagDescriptions (direct src import)', () =>
       .toThrow('This is a static class.');
   });
 
-  it('lists its tags gates first, then what fires on its own, then what takes stacks away, and describes each', () =>
+  it('lists gates, then what fires on its own, then what arms by turns, then what takes stacks, describing each', () =>
   {
     // Arrange
     const { RegExp: tags } = globalThis.J.PASSIVE.EXT.CONDITIONAL;
@@ -138,12 +140,29 @@ describe('ConditionalNotetagDescriptions (direct src import)', () =>
         tags.AutoExecuteSkill,
         tags.AutoInflictState,
         tags.AutoModifyCooldowns,
+        tags.ToggleStateOnSkillExecution,
         tags.RemoveOnSkillExecution,
         tags.RemoveOnSkillResolution,
         tags.RemoveStateOnMove,
       ]);
     expect(globalThis.NotetagDescriber.describers().size)
-      .toBe(11);
+      .toBe(12);
+  });
+
+  it('writes the state one type of costly skill arms and spends by turns, or any in that case\'s own sentence', () =>
+  {
+    // Arrange
+    const note = '<toggleStateOnSkillExecution:[143, 4]>\n<toggleStateOnSkillExecution:[146, 0]>';
+
+    // Act
+    const lines = linesOf(note);
+
+    // Assert- arming and spending cut both ways, so the line names no side.
+    expect(lines)
+      .toEqual([
+        [ 0, 'Each \\skillType[4] skill that costs MP grants \\state[143], or spends it if active.', '', 0 ],
+        [ 0, 'Each skill that costs MP grants \\state[146], or spends it if active.', '', 0 ],
+      ]);
   });
 
   it('writes the gates and the stack count, each in its own sentence', () =>

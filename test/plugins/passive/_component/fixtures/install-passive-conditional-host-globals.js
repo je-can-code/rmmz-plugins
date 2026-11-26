@@ -79,11 +79,19 @@ export function installPassiveConditionalHostGlobals(sandbox = globalThis, plugi
   sandbox.JABS_Engine.prototype.handleDefeatedEnemy = function()
   {
   };
-  sandbox.JABS_Engine.prototype.checkKnockback = function()
+  sandbox.JABS_Engine.prototype.onKnockback = function()
   {
   };
   sandbox.JABS_Engine.prototype.postExecuteSkillEffects = function()
   {
+  };
+
+  // conditional aliases paySkillCosts- seed J-ABS's own body, so the alias runs right after a cost is really paid.
+  sandbox.JABS_Engine.prototype.paySkillCosts = function(caster, action)
+  {
+    const battler = caster.getBattler();
+    const skill = action.getBaseSkill();
+    battler.paySkillCost(skill);
   };
 
   sandbox.JABS_TeamRules = {

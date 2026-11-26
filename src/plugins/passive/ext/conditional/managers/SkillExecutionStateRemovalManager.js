@@ -1,12 +1,16 @@
 //region SkillExecutionStateRemovalManager
+import DistinctStates from '../helpers/DistinctStates.js';
+
 /**
- * Processes {@link RPG_State#removeOnSkillExecutionRules} when a map battler executes a skill.<br/>
+ * Processes {@link RPG_State#removeOnSkillExecutionRules} once a map battler has paid for a skill it is executing,
+ * from {@link JABS_Engine#paySkillCosts}, so a state these rules strip still shapes that cost.<br/>
  * Peels stacks via {@link Game_Battler#decrementStateStacks} using {@code loseAllStacksAtOnce} policy.
  */
 class SkillExecutionStateRemovalManager
 {
   /**
-   * Rolls removal rules on every combat state this battler currently carries.
+   * Rolls removal rules on every combat state this battler currently carries, once per state however many
+   * stacks of it are applied.
    * @param {Game_Actor|Game_Enemy} battler The battler that executed the skill.
    * @param {number} skillId The database skill id that was executed.
    */
@@ -19,13 +23,13 @@ class SkillExecutionStateRemovalManager
     if (!skill) return;
 
     const executedStype = skill.stypeId;
-    const activeStates = battler.states();
+
+    // a rule speaks for its state once, so a stacked state rolls once rather than once per stack.
+    const activeStates = DistinctStates.of(battler);
 
     // only states presently on the battler can declare removal rules on their own row.
     for (const state of activeStates)
     {
-      if (!state) continue;
-
       const rules = state.removeOnSkillExecutionRules;
 
       for (const tuple of rules)

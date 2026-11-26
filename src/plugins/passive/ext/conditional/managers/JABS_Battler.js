@@ -3,7 +3,6 @@ import AutoApplyStateManager from './AutoApplyStateManager.js';
 import AutoApplyStateOnNearbyManager from './AutoApplyStateOnNearbyManager.js';
 import AutoExecuteSkillManager from './AutoExecuteSkillManager.js';
 import MoveStateRemovalManager from './MoveStateRemovalManager.js';
-import SkillExecutionStateRemovalManager from './SkillExecutionStateRemovalManager.js';
 
 /**
  * Extends {@link JABS_Battler#update}.<br/>
@@ -46,8 +45,6 @@ JABS_Battler.prototype.setLastUsedSkillId = function(skillId)
 
   // real skill execution — not queued action polling — drives attackedWithin/sinceLastAttacked.
   battler.stampPassiveRuleAttackedFrame();
-
-  SkillExecutionStateRemovalManager.process(battler, skillId);
 };
 
 /**

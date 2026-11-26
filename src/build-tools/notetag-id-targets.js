@@ -222,6 +222,10 @@ export const NotetagIdTargets = {
   removeOnSkillExecution: [ { position: 0, table: 'SkillTypes', allowZero: true } ],
   removeOnSkillResolution: [ { position: 0, table: 'SkillTypes', allowZero: true } ],
   removeStateOnMove: [ { position: 0, table: 'States' } ],
+  toggleStateOnSkillExecution: [
+    { position: 0, table: 'States' },
+    { position: 1, table: 'SkillTypes', allowZero: true },
+  ],
 
   // J-Passive-OTIB.
   otib: [ { position: 'each', table: 'States' } ],

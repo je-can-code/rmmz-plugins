@@ -159,6 +159,7 @@ describe('J-Passive-Conditional (direct src import)', () =>
     ({ default: globalThis.AutoModifyCooldownManager } = await import('../../../../src/plugins/passive/ext/conditional/managers/AutoModifyCooldownManager.js'));
     ({ default: globalThis.SkillExecutionStateRemovalManager } = await import('../../../../src/plugins/passive/ext/conditional/managers/SkillExecutionStateRemovalManager.js'));
     ({ default: globalThis.SkillResolutionStateRemovalManager } = await import('../../../../src/plugins/passive/ext/conditional/managers/SkillResolutionStateRemovalManager.js'));
+    ({ default: globalThis.SkillExecutionStateToggleManager } = await import('../../../../src/plugins/passive/ext/conditional/managers/SkillExecutionStateToggleManager.js'));
     ({ default: globalThis.MoveStateRemovalManager } = await import('../../../../src/plugins/passive/ext/conditional/managers/MoveStateRemovalManager.js'));
     await import('../../../../src/plugins/passive/ext/conditional/managers/PassiveGateEvaluator.js');
     await import('../../../../src/plugins/passive/ext/conditional/managers/PassiveStackCountEvaluator.js');
@@ -718,19 +719,29 @@ describe('J-Passive-Conditional (direct src import)', () =>
         expect(actor.decrementStateStacks).not.toHaveBeenCalled();
       });
 
-      it('skips a null entry in the active states array', () =>
+      it('rolls a stacked state\'s rule once, however many stack copies J-ABS lists it as', () =>
       {
-        // Arrange
-        globalThis.$jabsEngine = { absEnabled: true };
+        // Arrange- J-ABS lists a three-stack state three times over. the rule never opted into collapsing
+        // at once and every roll wins, so rolling once per copy would peel all three stacks.
+        const stateId = 52;
+        const row = stubMomentumStateRow(stateId, '<removeOnSkillExecution:[0, 100]>');
+        globalThis.$jabsEngine = { absEnabled: true, getJabsStateByUuidAndStateId: () => ({ stackCount: 3 }) };
         const actor = buildMomentumToolkitActor([]);
-        actor.states = () => [ null ];
-        actor.decrementStateStacks = vi.fn();
+        actor.states = () => [ row, row, row ];
+        actor.getUuid = () => 'test-actor';
+        const decrements = [];
+        actor.decrementStateStacks = (id, count) => decrements.push({ id, count });
         globalThis.$dataSkills = [];
-        globalThis.$dataSkills[70] = { id: 70, stypeId: 1 };
+        globalThis.$dataSkills[13] = { id: 13, stypeId: 1 };
+        const prevChance = globalThis.RPGManager.chanceIn100;
+        globalThis.RPGManager.chanceIn100 = () => true;
 
-        // Act & Assert
-        expect(() => globalThis.SkillExecutionStateRemovalManager.process(actor, 70)).not.toThrow();
-        expect(actor.decrementStateStacks).not.toHaveBeenCalled();
+        // Act
+        globalThis.SkillExecutionStateRemovalManager.process(actor, 13);
+
+        // Assert
+        expect(decrements).toEqual([ { id: stateId, count: 1 } ]);
+        globalThis.RPGManager.chanceIn100 = prevChance;
       });
 
       it('skips removal when the chance/param is non-positive', () =>
@@ -942,19 +953,29 @@ describe('J-Passive-Conditional (direct src import)', () =>
         expect(actor.decrementStateStacks).not.toHaveBeenCalled();
       });
 
-      it('skips a null entry in the active states array', () =>
+      it('rolls a stacked state\'s rule once, however many stack copies J-ABS lists it as', () =>
       {
-        // Arrange
+        // Arrange- J-ABS lists a three-stack state three times over. the rule never opted into collapsing
+        // at once and every roll wins, so rolling once per copy would peel all three stacks.
+        const stateId = 57;
+        const row = stubMomentumStateRow(stateId, '<removeOnSkillResolution:[0, 100]>');
+        globalThis.$jabsEngine = { absEnabled: true, getJabsStateByUuidAndStateId: () => ({ stackCount: 3 }) };
         const actor = buildMomentumToolkitActor([]);
-        actor._states = [];
-        actor.states = () => [ null ];
-        actor.decrementStateStacks = vi.fn();
+        actor.states = () => [ row, row, row ];
+        actor.getUuid = () => 'test-actor';
+        const decrements = [];
+        actor.decrementStateStacks = (id, count) => decrements.push({ id, count });
         globalThis.$dataSkills = [];
-        globalThis.$dataSkills[60] = { id: 60, stypeId: 1 };
+        globalThis.$dataSkills[62] = { id: 62, stypeId: 1 };
+        const prevChance = globalThis.RPGManager.chanceIn100;
+        globalThis.RPGManager.chanceIn100 = () => true;
 
-        // Act & Assert
-        expect(() => globalThis.SkillResolutionStateRemovalManager.process(actor, 60)).not.toThrow();
-        expect(actor.decrementStateStacks).not.toHaveBeenCalled();
+        // Act
+        globalThis.SkillResolutionStateRemovalManager.process(actor, 62);
+
+        // Assert
+        expect(decrements).toEqual([ { id: stateId, count: 1 } ]);
+        globalThis.RPGManager.chanceIn100 = prevChance;
       });
 
       it('decrements stacks when the executed skill stype matches', () =>
@@ -2386,43 +2407,121 @@ describe('J-Passive-Conditional (direct src import)', () =>
     });
   });
 
-  describe('JABS_Engine#checkKnockback hook', () =>
+  describe('JABS_Engine#onKnockback hook', () =>
   {
-    it('fires onKnockback autoInflictState rules on the caster, targeting the knocked-back battler', () =>
+    it('runs the original hook, then lands only the caster\'s onKnockback payload on the knocked-back battler', () =>
     {
-      // Arrange
+      // Arrange- a sibling rule on another trigger must stay silent; and a spy stands in for the original the
+      // alias wraps, put back afterward because the alias map is shared by every later test in this file.
       globalThis.Graphics.frameCount = 1000;
       globalThis.$jabsEngine = { absEnabled: true };
-      const caster = buildMomentumToolkitActor([ '<autoInflictState:[74, onKnockback, 0]>' ]);
+      const caster = buildMomentumToolkitActor([
+        '<autoInflictState:[74, onKnockback, 0]>',
+        '<autoInflictState:[75, negaStateInflicted, 0]>',
+      ]);
       const knockedBack = { isStateAddable: () => true, addState: vi.fn() };
       const action = { getCaster: () => ({ getBattler: () => caster }) };
       const targetJabsBattler = { getBattler: () => knockedBack };
       const engine = new globalThis.JABS_Engine();
+      const aliased = globalThis.J.PASSIVE.EXT.CONDITIONAL.Aliased.JABS_Engine;
+      const originalHook = aliased.get('onKnockback');
+      const originalSpy = vi.fn();
+      aliased.set('onKnockback', originalSpy);
 
-      // Act
-      engine.checkKnockback(action, targetJabsBattler);
+      try
+      {
+        // Act
+        engine.onKnockback(action, targetJabsBattler);
 
-      // Assert
-      expect(knockedBack.addState).toHaveBeenCalledWith(74, caster);
+        // Assert
+        expect(originalSpy).toHaveBeenCalledWith(action, targetJabsBattler);
+        expect(knockedBack.addState).toHaveBeenCalledTimes(1);
+        expect(knockedBack.addState).toHaveBeenCalledWith(74, caster);
+      }
+      finally
+      {
+        // Cleanup
+        aliased.set('onKnockback', originalHook);
+      }
+    });
+  });
+
+  describe('JABS_Engine#paySkillCosts hook', () =>
+  {
+    it('pays the cost first, then arms or spends what the skill toggles, then peels what it consumes', () =>
+    {
+      // Arrange- every step records itself, so the order the extension runs them in is the assertion.
+      const steps = [];
+      const battler = buildMomentumToolkitActor([]);
+      battler.paySkillCost = vi.fn(() => steps.push('pay'));
+      const skill = { id: 524, stypeId: 4, mpCost: 100 };
+      const caster = { getBattler: () => battler };
+      const action = { getBaseSkill: () => skill };
+      const toggleSpy = vi.spyOn(globalThis.SkillExecutionStateToggleManager, 'process')
+        .mockImplementation(() => steps.push('toggle'));
+      const removalSpy = vi.spyOn(globalThis.SkillExecutionStateRemovalManager, 'process')
+        .mockImplementation(() => steps.push('remove'));
+      const engine = new globalThis.JABS_Engine();
+
+      try
+      {
+        // Act
+        engine.paySkillCosts(caster, action);
+
+        // Assert
+        expect(steps).toEqual([ 'pay', 'toggle', 'remove' ]);
+        expect(battler.paySkillCost).toHaveBeenCalledWith(skill);
+        expect(toggleSpy).toHaveBeenCalledWith(battler, skill);
+        expect(removalSpy).toHaveBeenCalledWith(battler, 524);
+      }
+      finally
+      {
+        // Cleanup- spies on bare-global plugin statics leak into later tests in this file, so restore by hand.
+        toggleSpy.mockRestore();
+        removalSpy.mockRestore();
+      }
     });
 
-    it('does not schedule knockback triggers when either side has no underlying Game_Battler', () =>
+    it('arms on a hardcast, spends on the next, and arms again, while free and other-typed skills pass it by', () =>
     {
-      // Arrange- the scheduler guards its own applier/target pair, so the only way to prove this
-      // hook bailed is to watch whether it was called at all.
-      const action = { getCaster: () => ({ getBattler: () => null }) };
-      const targetJabsBattler = { getBattler: () => null };
+      // Arrange- the bearer carries Time Collapse's rule as a passive, and Instant Cast Ready is a plain state.
+      const timeCollapse = stubMomentumStateRow(142, '<toggleStateOnSkillExecution:[143, 4]>');
+      stubMomentumStateRow(143, '<stateDuration:600>');
+      const battler = buildMomentumToolkitActor([]);
+      battler.paySkillCost = vi.fn();
+      const carried = new Set();
+      battler.allStates = () => [ timeCollapse ];
+      battler.isStateAffected = stateId => carried.has(stateId);
+      battler.addState = vi.fn(stateId => carried.add(stateId));
+      battler.removeState = vi.fn(stateId => carried.delete(stateId));
+      const caster = { getBattler: () => battler };
+      const cast = skill => ({ getBaseSkill: () => skill });
+      const converge = { id: 521, stypeId: 4, mpCost: 15 };
+      const meteor = { id: 524, stypeId: 4, mpCost: 100 };
+      const compression = { id: 523, stypeId: 4, mpCost: 40 };
+      const freeSpell = { id: 475, stypeId: 4, mpCost: 0 };
+      const dodge = { id: 474, stypeId: 9, mpCost: 15 };
+      globalThis.$dataSkills = [];
       const engine = new globalThis.JABS_Engine();
-      const knockbackSpy = vi.spyOn(globalThis.AutoInflictStateManager, 'scheduleKnockbackTriggers');
 
-      // Act
-      engine.checkKnockback(action, targetJabsBattler);
+      // Act and Assert- one execution at a time, reading the charge after each. a cheap instant mover arms it.
+      engine.paySkillCosts(caster, cast(converge));
+      expect(carried.has(143)).toBe(true);
 
-      // Assert
-      expect(knockbackSpy).not.toHaveBeenCalled();
+      // a free Magecraft spell and a costly skill of another type both leave the armed charge alone.
+      engine.paySkillCosts(caster, cast(freeSpell));
+      expect(carried.has(143)).toBe(true);
+      engine.paySkillCosts(caster, cast(dodge));
+      expect(carried.has(143)).toBe(true);
 
-      // spies on bare-global plugin statics leak into later tests in this file, so restore by hand.
-      knockbackSpy.mockRestore();
+      // the next Magecraft hardcast spends it, and does not arm it again.
+      engine.paySkillCosts(caster, cast(meteor));
+      expect(carried.has(143)).toBe(false);
+
+      // and the one after that arms it once more.
+      engine.paySkillCosts(caster, cast(compression));
+      expect(carried.has(143)).toBe(true);
+      expect(battler.paySkillCost).toHaveBeenCalledTimes(5);
     });
   });
 
@@ -3528,7 +3627,7 @@ describe('J-Passive-Conditional (direct src import)', () =>
         expect(() => jabsBattler.setLastUsedSkillId(1)).not.toThrow();
       });
 
-      it('stamps the attacked frame and processes skill-execution removal rules', () =>
+      it('stamps the attacked frame, leaving skill-execution removal to the moment the cost is paid', () =>
       {
         // Arrange
         const battler = buildMomentumToolkitActor([]);
@@ -3542,7 +3641,9 @@ describe('J-Passive-Conditional (direct src import)', () =>
 
         // Assert
         expect(battler.getPassiveRuleLastAttackedFrame()).toBe(5000);
-        expect(processSpy).toHaveBeenCalledWith(battler, 3);
+
+        // the removal runs from the paySkillCosts extension instead, so a state it strips still shapes the cost.
+        expect(processSpy).not.toHaveBeenCalled();
 
         // Cleanup
         processSpy.mockRestore();

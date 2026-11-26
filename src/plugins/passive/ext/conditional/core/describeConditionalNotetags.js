@@ -24,7 +24,8 @@ class ConditionalNotetagDescriptions
 
   /**
    * Every tag this plugin describes, each paired with its describer, in the order their lines are listed: what gates
-   * the passives first, then what fires on its own, then what takes stacks away.
+   * the passives first, then what fires on its own, then what one type of skill arms and spends by turns, then what
+   * takes stacks away.
    * @returns {Array<[RegExp, function(RegExpExecArray): NotetagLine[]]>}
    */
   static describedTags()
@@ -40,6 +41,7 @@ class ConditionalNotetagDescriptions
       [ tags.AutoExecuteSkill, match => this.skillTriggerLines(match) ],
       [ tags.AutoInflictState, match => this.selfTriggerLines(match, 'autoInflictState') ],
       [ tags.AutoModifyCooldowns, match => this.cooldownLines(match) ],
+      [ tags.ToggleStateOnSkillExecution, match => this.toggleLines(match) ],
       [ tags.RemoveOnSkillExecution, match => this.removalLines(match, 'removeOnSkillExecution') ],
       [ tags.RemoveOnSkillResolution, match => this.removalLines(match, 'removeOnSkillResolution') ],
       [ tags.RemoveStateOnMove, match => this.moveRemovalLines(match) ],
@@ -268,6 +270,33 @@ class ConditionalNotetagDescriptions
     return ConditionPhrases.seconds(size);
   }
   //endregion automatic rules
+
+  //region toggles
+  /**
+   * The line describing a state its holder arms and spends by turns with one type of hardcast skill, in the sentence
+   * the game's config keeps under `toggleStateOnSkillExecution`, or under its `.any` variant when any skill at all
+   * will do. The sentence may name `{state}` and `{skillType}`.
+   * @param {RegExpExecArray} match The tag as its regex matched it; the first capture is the state and skill type.
+   * @returns {NotetagLine[]}
+   */
+  static toggleLines(match)
+  {
+    const [ stateId, skillTypeId ] = this.tupleOf(match);
+
+    // a skill type of zero means any skill at all, which says itself differently.
+    const key = skillTypeId === 0
+      ? 'toggleStateOnSkillExecution.any'
+      : 'toggleStateOnSkillExecution';
+
+    // the state armed and spent, and the kind of skill that does it.
+    const tokens = {
+      state: this.stateToken(stateId),
+      skillType: { text: `\\skillType[${skillTypeId}]`, kind: NotetagDescriber.TokenKinds.CODE },
+    };
+
+    return NotetagDescriber.line(key, { tokens });
+  }
+  //endregion toggles
 
   //region removals
   /**
