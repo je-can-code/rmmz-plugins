@@ -38,6 +38,7 @@ J.EXTEND.Aliased.Game_Action = new Map();
 J.EXTEND.Aliased.Game_Actor = new Map();
 J.EXTEND.Aliased.Game_Enemy = new Map();
 J.EXTEND.Aliased.Game_Item = new Map();
+J.EXTEND.Aliased.JABS_Engine = new Map();
 J.EXTEND.Aliased.JABS_SkillSlotManager = new Map();
 
 /**
@@ -249,6 +250,12 @@ J.EXTEND.RegExp.OnCastRemoveState = /<onCastRemoveState:[ ]?(\[\d+,[ ]?\d+])>/i;
  * of the on-cast family — not per target hit. Repeatable: a skill may carry several of these tags,
  * each rolled and dispatched independently, so one cast can chain into multiple follow-up skills.
  *
+ * CHANCE rolls once per tag with the caster's own fate alone: its lucky and cursed rolls, joined by
+ * the cast skill's own {@code <thisLuckyRolls>} and {@code <thisCursedRolls>}, weigh on any CHANCE
+ * under 100, and no resistance or other battler's fate does. {@code <veryLucky>} executes the
+ * payload every time, even at 0%, and {@code <veryCursed>} never does, even at 100%. A payload whose
+ * roll lands executes once; Accumulate Mode and Encore never repeat it.
+ *
  * <pre>
  * Structure:
  *  <onCastExecuteSkill:[SKILL_ID, CHANCE]>
@@ -258,8 +265,8 @@ J.EXTEND.RegExp.OnCastRemoveState = /<onCastRemoveState:[ ]?(\[\d+,[ ]?\d+])>/i;
  *  <onCastExecuteSkill:[1027, 50]>
  *
  * Translation:
- *  On cast, always force-execute skill id 1026, and separately roll a 50% chance to also
- *  force-execute skill id 1027.
+ *  On cast, force-execute skill id 1026 at 100%, which only a very cursed caster misses, and
+ *  separately roll a 50% chance with the caster's own fate to also force-execute skill id 1027.
  * </pre>
  * @type {RegExp}
  */
@@ -269,6 +276,8 @@ J.EXTEND.RegExp.OnCastExecuteSkill = /<onCastExecuteSkill:[ ]?(\[\d+,[ ]?\d+])>/
  * The structure of a conditional on-cast force-execute-skill tag.
  * Force-executes a payload skill only if the caster already has a required state active — the
  * <onCastSelfStateIfAfflicted> gate pattern, applied to <onCastExecuteSkill> instead of a self-state.
+ * A payload that passes the gate rolls CHANCE exactly as {@link J.EXTEND.RegExp.OnCastExecuteSkill}
+ * does, with the caster's own fate alone, and executes once when it lands.
  *
  * <pre>
  * Structure:

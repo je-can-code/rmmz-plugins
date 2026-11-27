@@ -25,7 +25,8 @@ Damage path (positive results):
 
 - Element rate (from the parent skill)
 - Critical (on-hit packets only, mirrors the parent action’s crit)
-- Physical/Magical damage rate (based on parent skill’s phys/mag type)
+- Physical/Magical damage rate (based on parent skill’s phys/mag type), which the caster's
+  `<pierceDamageRateIfStateType>` pierces exactly as it does for a direct hit
 - Native guard
 - Variance
 - JABS guard/parry reductions
@@ -37,7 +38,7 @@ Damage path (positive results):
 Healing path (negative results turned positive internally):
 
 - Element rate
-- Physical/Magical damage rate (treats as the parent’s type)
+- Physical/Magical damage rate (treats as the parent’s type; never pierced)
 - Variance
 - REC (recovery) on the recipient, and HAR (healing rate) on the caster
 

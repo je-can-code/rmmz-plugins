@@ -1,6 +1,7 @@
 //region plugins/regions/ext/states/objects/_component/game-character.test.js
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { buildFateBattlerStub } from '../../../../../_base/core/_component/fixtures/install-jabs-fate.js';
 import {
   installRegionsStatesStackHostGlobals,
   setPluginContextToJBase,
@@ -13,8 +14,8 @@ import {
  *
  * The sibling skills pack does the same job for skills and its tests read almost identically; the two
  * differ in exactly the places worth checking. This one gates on visibility as well as vehicles, and
- * it re-checks affected status per success so a second proc within one roll deepens an existing state
- * instead of re-adding a fresh one.
+ * every landing goes through the walker's own add, whether or not it already carries the state, so J-ABS
+ * reapplies a carried state by its own rule rather than the region resetting it by hand.
  */
 describe('J-Regions-States Game_Character', () =>
 {
@@ -31,12 +32,12 @@ describe('J-Regions-States Game_Character', () =>
   let stateCalls;
 
   /**
-   * Builds the battler standing on the region.
+   * Builds the battler standing on the region. Everything J-ABS's shared state roll reads from it stays at its
+   * neutral answer, so the count each test hands back is the only thing deciding what lands.
    * @param {object=} overrides Which answers to change.
    * @returns {object} The battler stand-in.
    */
-  const buildBattler = (overrides = {}) => ({
-    stateRate: () => 1,
+  const buildBattler = (overrides = {}) => buildFateBattlerStub({
     isStateAffected: stateId => stateCalls.added.some(entry => entry.stateId === stateId),
     addState: (stateId, attacker) => stateCalls.added.push({
       stateId,
@@ -46,8 +47,6 @@ describe('J-Regions-States Game_Character', () =>
       stateId,
       attacker,
     }),
-    getPositiveRollsForSkill: () => 0,
-    getNegativeRollsForSkill: () => 0,
     ...overrides,
   });
 
@@ -125,10 +124,8 @@ describe('J-Regions-States Game_Character', () =>
       reset: [],
     };
 
-    globalThis.$dataStates = [ null, { id: 1 }, { id: 2 }, { id: 3 } ];
-
-    // the proc roll itself belongs to J-Base and is covered there; what matters here is that this
-    // file asks for a count and then honors it exactly.
+    // the roll itself is J-ABS's shared state roll ending in J-Base's dice, each covered where it lives;
+    // what matters here is that this file asks for a count and then honors it exactly.
     globalThis.RPGManager.resolveProcCount = () => procCount;
 
     globalThis.$gameMap = { getRegionStatesByRegionId: () => [] };
@@ -371,22 +368,27 @@ describe('J-Regions-States Game_Character', () =>
         .toBe(0);
     });
 
-    it('deepens an already-affected state instead of re-adding it fresh', () =>
+    it('adds the state on every landing, even to a walker that already carries it', () =>
     {
-      // Arrange: two successes within one roll should stack, and adding fresh would instead restart
-      // the duration each time - a state that can never actually build up.
+      // Arrange: two landings within one roll, on a walker already carrying the state. J-ABS reapplies a state it
+      // already tracks by that state's own rule, and checks the walker's immunities as it does, so every landing has
+      // to reach the add- a bare count reset would skip both.
       tagRegionWithState();
       procCount = 2;
-      const character = buildCharacter();
+      const battler = buildBattler({ isStateAffected: () => true });
+      const character = buildCharacter({ getJabsBattler: () => ({ getBattler: () => battler }) });
 
       // Act
       character.applyRegionStates();
 
       // Assert
-      expect(stateCalls.added.length)
-        .toBe(1);
-      expect(stateCalls.reset.length)
-        .toBe(1);
+      expect(stateCalls.added)
+        .toEqual([
+          { stateId: 3, attacker: battler },
+          { stateId: 3, attacker: battler },
+        ]);
+      expect(stateCalls.reset)
+        .toEqual([]);
     });
 
     it('plays the animation the tag named', () =>

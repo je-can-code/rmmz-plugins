@@ -56,10 +56,8 @@ JABS_Engine.prototype.onKnockback = function(action, target)
 
 /**
  * Extends {@link JABS_Engine#postExecuteSkillEffects}.<br/>
- * Fires {@code onDamageDealt} rules on the caster after landing damage on an opposing battler, and
- * {@code onWeaponHit} rules too when the hit counts as a weapon hit. Both hand the rules the battler that was
- * hit, so a direct payload one of them fires lands on whoever was struck.
- * Reuses the same result-field check {@link JABS_Engine#applyAggroEffects} already performs here.
+ * Hands the landed action to the caster's rules that answer for it: damage on an opposing battler to its
+ * damage-dealt rules, and anything restored on a battler of its own side to its heal-dealt rules.
  */
 J.PASSIVE.EXT.CONDITIONAL.Aliased.JABS_Engine.set(
   'postExecuteSkillEffects',
@@ -71,6 +69,23 @@ JABS_Engine.prototype.postExecuteSkillEffects = function(action, target)
   J.PASSIVE.EXT.CONDITIONAL.Aliased.JABS_Engine.get('postExecuteSkillEffects')
     .call(this, action, target);
 
+  // damage landed on an enemy answers to the caster's damage-dealt rules.
+  this.scheduleDamageDealtRules(action, target);
+
+  // anything restored on a friend answers to the caster's heal-dealt rules.
+  this.scheduleHealDealtRules(action, target);
+};
+
+/**
+ * Fires {@code onDamageDealt} rules on the caster after landing damage on an opposing battler, and
+ * {@code onWeaponHit} rules too when the hit counts as a weapon hit. Both hand the rules the battler that was
+ * hit, so a direct payload one of them fires lands on whoever was struck.
+ * Reuses the same result-field check {@link JABS_Engine#applyAggroEffects} already performs here.
+ * @param {JABS_Action} action The action whose hit just landed.
+ * @param {JABS_Battler} target The map battler the hit landed on.
+ */
+JABS_Engine.prototype.scheduleDamageDealtRules = function(action, target)
+{
   // only opposing hits count as "dealing damage to an enemy"- friendly fire doesn't qualify.
   const caster = action.getCaster();
 
@@ -98,6 +113,39 @@ JABS_Engine.prototype.postExecuteSkillEffects = function(action, target)
   // a weapon hit fires onWeaponHit as well, aimed at the same battler.
   AutoApplyStateManager.scheduleWeaponHitTriggers(casterBattler, target);
   AutoExecuteSkillManager.scheduleWeaponHitTriggers(casterBattler, target);
+};
+
+/**
+ * Fires {@code onHealDealt} rules on the caster after its action restores HP, MP or TP on a battler of its own side,
+ * the caster itself included. The rules are handed the battler that was mended, so a direct payload lands on it.
+ * <p>
+ * Only an action that lands reaches this point, so natural regeneration, lifesteal and the heal cascades that answer
+ * to other heals never fire these rules. That is what sets it apart from {@code onAllyHeal}, which hears every
+ * restoration near its bearer, regeneration ticks included.
+ * </p>
+ * @param {JABS_Action} action The action that just landed.
+ * @param {JABS_Battler} target The map battler the action landed on.
+ */
+JABS_Engine.prototype.scheduleHealDealtRules = function(action, target)
+{
+  // only a battler on the caster's own side counts as one it mended, the caster included.
+  const caster = action.getCaster();
+  if (JABS_TeamRules.isFriendly(caster.getTeam(), target.getTeam()) === false) return;
+
+  // the result is fully populated by this point- gameAction.apply already ran.
+  const result = target.getBattler()
+    .result();
+
+  // a restored pool shows on the result as negative damage to it.
+  const dealtHealing = result.hpDamage < 0 || result.mpDamage < 0 || result.tpDamage < 0;
+  if (dealtHealing === false) return;
+
+  // unwrap to the underlying Game_Battler for rule evaluation.
+  const casterBattler = caster.getBattler();
+
+  // every heal fires onHealDealt, aimed at the battler it mended.
+  AutoApplyStateManager.scheduleHealDealtTriggers(casterBattler, target);
+  AutoExecuteSkillManager.scheduleHealDealtTriggers(casterBattler, target);
 };
 
 /**

@@ -157,8 +157,9 @@ class RPGManager
     // default fail.
     let success = false;
 
-    // keep rolling for positive while we have positive rolls and aren't already successful.
-    while (rollForPositive && !success)
+    // keep rolling for positive while we have positive rolls and aren't already successful. a count at or below zero
+    // is no chance at all, never a license to keep rolling until the dice happen to agree.
+    while (rollForPositive > 0 && !success)
     {
       // roll for effect!
       const chance = Math.randomInt(100) + 1;
@@ -175,32 +176,30 @@ class RPGManager
       rollForPositive--;
     }
 
-    // if successful and we have negative rerolls, lets get fight RNG for success!
-    if (success && rollForNegative)
+    // if successful and we have negative rerolls, lets get fight RNG for success! keep rolling while we have negative
+    // rerolls and are still successful. a count at or below zero is no reroll at all; read as truthy, it would
+    // reroll a sure thing forever.
+    while (rollForNegative > 0 && success)
     {
-      // keep rolling for negative while we have negative rerolls and are still successful.
-      while (rollForNegative && success)
+      // roll for effect!
+      const chance = Math.randomInt(100) + 1;
+
+      // check if the roll meets the chance criteria.
+      if (chance <= percentOfSuccess)
       {
-        // roll for effect!
-        const chance = Math.randomInt(100) + 1;
-
-        // check if the roll meets the chance criteria.
-        if (chance <= percentOfSuccess)
-        {
-          // we keep our flag! (this time...)
-          success = true;
-        }
-        // we didn't meet the chance criteria this time.
-        else
-        {
-          // undo our success and stop rolling :(
-          return false;
-        }
-
-        // decrement the negative reroll counter.
-        // eslint-disable-next-line no-param-reassign
-        rollForNegative--;
+        // we keep our flag! (this time...)
+        success = true;
       }
+      // we didn't meet the chance criteria this time.
+      else
+      {
+        // undo our success and stop rolling :(
+        return false;
+      }
+
+      // decrement the negative reroll counter.
+      // eslint-disable-next-line no-param-reassign
+      rollForNegative--;
     }
 
     // return our successes (or failure).
@@ -248,8 +247,9 @@ class RPGManager
     let successCount = 0;
     let attemptsRemaining = rollForPositive;
 
-    // unlike chanceIn100, every attempt is rolled- none are skipped after an earlier success.
-    while (attemptsRemaining)
+    // unlike chanceIn100, every attempt is rolled- none are skipped after an earlier success. a count at or below
+    // zero is no attempt at all; counting down from below zero would never reach it.
+    while (attemptsRemaining > 0)
     {
       const chance = Math.randomInt(100) + 1;
 
@@ -1464,13 +1464,14 @@ class RPGManager
     const mapper = data =>
     {
       // extract the data points from the array found.
-      const [ skillId, chance, hitTypeString ] = data;
+      const [ skillId, chance, filterString ] = data;
 
-      // resolve the optional hit type string to its numeric constant.
-      const hitType = RPGManager.resolveHitTypeString(hitTypeString);
+      // the optional filter names either the hit types it fires on, or how the hit must have landed.
+      const hitType = RPGManager.resolveHitTypeString(filterString);
+      const outcome = RPGManager.resolveHitOutcomeString(filterString);
 
       // return the built on-chance effect with the given data.
-      return new JABS_OnChanceEffect(skillId, chance ?? 100, key, hitType);
+      return new JABS_OnChanceEffect(skillId, chance ?? 100, key, hitType, outcome);
     };
 
     // map all the found on-chance effects.
@@ -1498,6 +1499,26 @@ class RPGManager
       case 'certain':  return Game_Action.HITTYPE_CERTAIN;
       default:         return null;
     }
+  }
+
+  /**
+   * Resolves an optional outcome string from a notetag: how the incoming hit must have landed for the effect to
+   * fire. Accepts "glancing" or "critical" (case-insensitive), handed back lowercased.
+   * Returns null when the string is absent or names no outcome, meaning a hit landing any way matches. A hit type
+   * string is one of those, since the same slot names either a hit type or an outcome.
+   * @param {string|undefined} str The raw string from the parsed notetag array.
+   * @returns {string|null}
+   */
+  static resolveHitOutcomeString(str)
+  {
+    // no filter written at all names no outcome.
+    if (!str) return null;
+
+    // only the two outcomes a hit can land with are names here; anything else is not an outcome.
+    const outcome = str.toLowerCase();
+    if (outcome === 'glancing' || outcome === 'critical') return outcome;
+
+    return null;
   }
 
   /**

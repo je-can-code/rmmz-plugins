@@ -11,6 +11,7 @@ import {
   setPluginContextToJPassiveConditional,
 } from './fixtures/install-passive-conditional-host-globals.js';
 import { installPluginManagerWithParams } from '../../../setup/install-plugin-manager-with-params.js';
+import { buildFateBattlerStub } from '../../_base/core/_component/fixtures/install-jabs-fate.js';
 
 /**
  * Builds a test actor whose skill notes carry passive grants and rule tags.
@@ -1830,16 +1831,52 @@ describe('J-Passive-Conditional (direct src import)', () =>
 
   describe('autoInflictState scheduler', () =>
   {
+    /** @type {Function} */
+    let originalRandomInt;
+
     beforeEach(() =>
     {
       globalThis.Graphics.frameCount = 1000;
       globalThis.$jabsEngine = { absEnabled: true };
       globalThis.$dataStates = [];
+      originalRandomInt = Math.randomInt;
+    });
+
+    afterEach(() =>
+    {
+      Math.randomInt = originalRandomInt;
     });
 
     function stubPolarityState(stateId, isNegative)
     {
       globalThis.$dataStates[stateId] = { id: stateId, isNegativeType: () => isNegative };
+    }
+
+    /**
+     * Builds the battler a payload is aimed at: a stand-in that takes any state and answers the shared roll neutrally
+     * unless told otherwise- no resistance, no luck gap against a fixture battler, no curse, every state read as help-
+     * so an unresisted payload rolled at its full strength always lands.
+     * @param {object} [overrides] Members to replace on the stand-in.
+     * @returns {object}
+     */
+    function buildPayloadTarget(overrides = {})
+    {
+      return buildFateBattlerStub({ isStateAddable: () => true, addState: vi.fn(), ...overrides });
+    }
+
+    /**
+     * Pins the dice to the given faces, in order; each face is what one roll reads, from 1 to 100. A roll past the last
+     * pinned face throws, so a test can never quietly roll more dice than it accounted for.
+     * @param {number[]} faces The faces to land on.
+     */
+    function rollDice(faces)
+    {
+      const remaining = [ ...faces ];
+      Math.randomInt = () =>
+      {
+        if (remaining.length === 0) throw new Error('rolled more dice than the test pinned');
+        return remaining.shift() - 1;
+      };
     }
 
     it('parses autoInflictState tuples on item rows', () =>
@@ -1881,7 +1918,7 @@ describe('J-Passive-Conditional (direct src import)', () =>
       const applier = buildMomentumToolkitActor([ '<autoInflictState:[70, negaStateInflicted, 0]>' ]);
       const targetApplied = [];
       const applierApplied = [];
-      const target = { isStateAddable: () => true, addState: (stateId) => targetApplied.push(stateId) };
+      const target = buildPayloadTarget({ addState: (stateId) => targetApplied.push(stateId) });
       applier.addState = (stateId) => applierApplied.push(stateId);
 
       // Act
@@ -1898,7 +1935,7 @@ describe('J-Passive-Conditional (direct src import)', () =>
       stubPolarityState(10, true);
       const applier = buildMomentumToolkitActor([ '<autoInflictState:[70, negaStateInflicted, 0]>' ]);
       const sources = [];
-      const target = { isStateAddable: () => true, addState: (stateId, source) => sources.push(source) };
+      const target = buildPayloadTarget({ addState: (stateId, source) => sources.push(source) });
 
       // Act
       globalThis.AutoInflictStateManager.scheduleInflictedStateTriggers(applier, target, 10);
@@ -1909,10 +1946,10 @@ describe('J-Passive-Conditional (direct src import)', () =>
 
     it('only fires negaStateInflicted rules when the inflicted state is negative', () =>
     {
-      // Arrange
+      // Arrange- an unresisted payload always lands once rolled for, so the rule's kind is all that stands in its way.
       stubPolarityState(10, false);
       const applier = buildMomentumToolkitActor([ '<autoInflictState:[70, negaStateInflicted, 0]>' ]);
-      const target = { isStateAddable: () => true, addState: vi.fn() };
+      const target = buildPayloadTarget();
 
       // Act
       globalThis.AutoInflictStateManager.scheduleInflictedStateTriggers(applier, target, 10);
@@ -1926,7 +1963,7 @@ describe('J-Passive-Conditional (direct src import)', () =>
       // Arrange
       stubPolarityState(10, false);
       const applier = buildMomentumToolkitActor([ '<autoInflictState:[70, posiStateInflicted, 0]>' ]);
-      const target = { isStateAddable: () => true, addState: vi.fn() };
+      const target = buildPayloadTarget();
 
       // Act
       globalThis.AutoInflictStateManager.scheduleInflictedStateTriggers(applier, target, 10);
@@ -1943,12 +1980,12 @@ describe('J-Passive-Conditional (direct src import)', () =>
       const applier = buildMomentumToolkitActor([ '<autoInflictState:[70, anyStateInflicted, 0]>' ]);
       const negativeApplies = [];
       const positiveApplies = [];
+      const negativeTarget = buildPayloadTarget({ addState: (id) => negativeApplies.push(id) });
+      const positiveTarget = buildPayloadTarget({ addState: (id) => positiveApplies.push(id) });
 
       // Act
-      globalThis.AutoInflictStateManager.scheduleInflictedStateTriggers(
-        applier, { isStateAddable: () => true, addState: (id) => negativeApplies.push(id) }, 10);
-      globalThis.AutoInflictStateManager.scheduleInflictedStateTriggers(
-        applier, { isStateAddable: () => true, addState: (id) => positiveApplies.push(id) }, 11);
+      globalThis.AutoInflictStateManager.scheduleInflictedStateTriggers(applier, negativeTarget, 10);
+      globalThis.AutoInflictStateManager.scheduleInflictedStateTriggers(applier, positiveTarget, 11);
 
       // Assert
       expect(negativeApplies).toEqual([ 70 ]);
@@ -1961,7 +1998,7 @@ describe('J-Passive-Conditional (direct src import)', () =>
       stubPolarityState(10, true);
       const applier = buildMomentumToolkitActor([ '<autoInflictState:[70, negaStateInflicted, 60]>' ]);
       const applied = [];
-      const target = { isStateAddable: () => true, addState: (id) => applied.push(id) };
+      const target = buildPayloadTarget({ addState: (id) => applied.push(id) });
       globalThis.AutoInflictStateManager.scheduleInflictedStateTriggers(applier, target, 10);
 
       // Act- still within the 60-frame cooldown window: should not fire again.
@@ -1978,7 +2015,7 @@ describe('J-Passive-Conditional (direct src import)', () =>
       stubPolarityState(10, true);
       const applier = buildMomentumToolkitActor([ '<autoInflictState:[70, negaStateInflicted, 60]>' ]);
       const applied = [];
-      const target = { isStateAddable: () => true, addState: (id) => applied.push(id) };
+      const target = buildPayloadTarget({ addState: (id) => applied.push(id) });
       globalThis.AutoInflictStateManager.scheduleInflictedStateTriggers(applier, target, 10);
       globalThis.Graphics.frameCount += 30;
       globalThis.AutoInflictStateManager.scheduleInflictedStateTriggers(applier, target, 10);
@@ -1993,19 +2030,132 @@ describe('J-Passive-Conditional (direct src import)', () =>
 
     it('does not dispatch when the target rejects the state as unaddable', () =>
     {
-      // Arrange
+      // Arrange- the target is otherwise neutral, so a payload rolled for anyway would land.
       stubPolarityState(10, true);
       const applier = buildMomentumToolkitActor([ '<autoInflictState:[70, negaStateInflicted, 0]>' ]);
-      const target = { isStateAddable: () => false, addState: vi.fn() };
+      const target = buildPayloadTarget({ isStateAddable: () => false });
       const stampSpy = vi.spyOn(applier, 'setAutoRuleLastFrame');
+      const procSpy = vi.spyOn(globalThis.RPGManager, 'resolveProcCount');
 
       // Act
       globalThis.AutoInflictStateManager.scheduleInflictedStateTriggers(applier, target, 10);
 
-      // Assert- a refused dispatch must leave the cooldown unstamped, or the rule would sit out
-      // its window having never actually fired.
+      // Assert- a payload the target cannot take is never rolled for, so the cooldown stays unstamped, or the rule
+      // would sit out its window having never actually fired.
+      expect(procSpy).not.toHaveBeenCalled();
       expect(target.addState).not.toHaveBeenCalled();
       expect(stampSpy).not.toHaveBeenCalled();
+
+      // spies on the bare-global RPGManager leak into later tests in this file, so restore by hand.
+      procSpy.mockRestore();
+    });
+
+    it('spends the rule\'s cooldown on a payload that was rolled for and missed', () =>
+    {
+      // Arrange- the target resists by half through State Rate, so the payload's full strength leaves 50; the first
+      // die lands one past it, and the next would land.
+      stubPolarityState(10, true);
+      const applier = buildMomentumToolkitActor([ '<autoInflictState:[70, negaStateInflicted, 60]>' ]);
+      const target = buildPayloadTarget({ stateRate: () => 0.5 });
+      rollDice([ 51, 1 ]);
+      globalThis.AutoInflictStateManager.scheduleInflictedStateTriggers(applier, target, 10);
+
+      // Act- thirty frames on, still inside the sixty-frame window.
+      globalThis.Graphics.frameCount += 30;
+      globalThis.AutoInflictStateManager.scheduleInflictedStateTriggers(applier, target, 10);
+
+      // Assert- the miss started the cooldown, so the second event is never rolled for and the landing die goes unused.
+      expect(target.addState).not.toHaveBeenCalled();
+    });
+
+    it('rolls the payload at its full strength against the target\'s resistances, with the applier rolling', () =>
+    {
+      // Arrange- the target resists by half through State Rate and by a quarter through its type, and trails the
+      // applier's 110 LUK by 60: the payload is harm, so its full 100% becomes 100 x 0.5 x 0.75 x 1.06 = 39.75, rolled
+      // as 40. The applier's skill-scoped rolls differ from its battler-wide ones, and only the battler-wide pair may
+      // be read.
+      stubPolarityState(10, true);
+      const applier = buildMomentumToolkitActor([ '<autoInflictState:[70, negaStateInflicted, 0]>' ]);
+      applier.luk = 110;
+      applier.getPositiveRollsForSkill = () => 7;
+      applier.getNegativeRollsForSkill = () => 8;
+      const target = buildPayloadTarget({
+        luk: 50,
+        stateRate: () => 0.5,
+        stateTypeResistRate: () => 0.75,
+        state: stateId => ({ id: stateId, isNegativeType: () => stateId === 70 }),
+      });
+      const procSpy = vi.spyOn(globalThis.RPGManager, 'resolveProcCount');
+
+      // Act
+      globalThis.AutoInflictStateManager.scheduleInflictedStateTriggers(applier, target, 10);
+
+      // Assert
+      expect(procSpy).toHaveBeenCalledWith(applier, 40, 1, 0);
+
+      // spies on the bare-global RPGManager leak into later tests in this file, so restore by hand.
+      procSpy.mockRestore();
+    });
+
+    it('applies the payload once for every landing an Accumulating applier rolls, each crediting the applier', () =>
+    {
+      // Arrange- an Accumulating applier with two lucky rolls rolls all three of its chances against the 50 a target's
+      // half State Rate leaves, and two of the three dice land.
+      stubPolarityState(10, true);
+      const applier = buildMomentumToolkitActor([ '<autoInflictState:[70, negaStateInflicted, 0]>' ]);
+      applier.isAccumulating = () => true;
+      applier.getPositiveRolls = () => 2;
+      const target = buildPayloadTarget({ stateRate: () => 0.5 });
+      rollDice([ 10, 90, 50 ]);
+
+      // Act
+      globalThis.AutoInflictStateManager.scheduleInflictedStateTriggers(applier, target, 10);
+
+      // Assert
+      expect(target.addState.mock.calls).toEqual([ [ 70, applier ], [ 70, applier ] ]);
+    });
+
+    it('counts the target\'s curse as more hurdles when the payload is help, though a negative state set it off', () =>
+    {
+      // Arrange- the target reads payload 70 as help and payload 71 as harm, and the state that triggered the rule is
+      // negative; only the payload's own polarity may decide where the target's two curses weigh.
+      stubPolarityState(10, true);
+      const applier = buildMomentumToolkitActor([ '<autoInflictState:[70, negaStateInflicted, 0]>' ]);
+      const target = buildPayloadTarget({
+        getNegativeRolls: () => 2,
+        state: stateId => ({ id: stateId, isNegativeType: () => stateId === 71 }),
+      });
+      const procSpy = vi.spyOn(globalThis.RPGManager, 'resolveProcCount');
+
+      // Act
+      globalThis.AutoInflictStateManager.scheduleInflictedStateTriggers(applier, target, 10);
+
+      // Assert
+      expect(procSpy).toHaveBeenCalledWith(applier, 100, 1, 2);
+
+      // spies on the bare-global RPGManager leak into later tests in this file, so restore by hand.
+      procSpy.mockRestore();
+    });
+
+    it('counts the target\'s curse as more chances when the payload is harm, though a positive state set it off', () =>
+    {
+      // Arrange- the same target reads payload 71 as harm, and the state that triggered the rule is positive.
+      stubPolarityState(10, false);
+      const applier = buildMomentumToolkitActor([ '<autoInflictState:[71, posiStateInflicted, 0]>' ]);
+      const target = buildPayloadTarget({
+        getNegativeRolls: () => 2,
+        state: stateId => ({ id: stateId, isNegativeType: () => stateId === 71 }),
+      });
+      const procSpy = vi.spyOn(globalThis.RPGManager, 'resolveProcCount');
+
+      // Act
+      globalThis.AutoInflictStateManager.scheduleInflictedStateTriggers(applier, target, 10);
+
+      // Assert
+      expect(procSpy).toHaveBeenCalledWith(applier, 100, 3, 0);
+
+      // spies on the bare-global RPGManager leak into later tests in this file, so restore by hand.
+      procSpy.mockRestore();
     });
 
     it('fires a rule that has never dispatched even while fewer frames have elapsed than its cooldown', () =>
@@ -2016,7 +2166,7 @@ describe('J-Passive-Conditional (direct src import)', () =>
       globalThis.Graphics.frameCount = 300;
       const applier = buildMomentumToolkitActor([ '<autoInflictState:[70, negaStateInflicted, 9000]>' ]);
       const applied = [];
-      const target = { isStateAddable: () => true, addState: (id) => applied.push(id) };
+      const target = buildPayloadTarget({ addState: (id) => applied.push(id) });
 
       // Act
       globalThis.AutoInflictStateManager.scheduleInflictedStateTriggers(applier, target, 10);
@@ -2031,7 +2181,7 @@ describe('J-Passive-Conditional (direct src import)', () =>
       stubPolarityState(10, true);
       globalThis.$jabsEngine.absEnabled = false;
       const applier = buildMomentumToolkitActor([ '<autoInflictState:[70, negaStateInflicted, 0]>' ]);
-      const target = { isStateAddable: () => true, addState: vi.fn() };
+      const target = buildPayloadTarget();
 
       // Act
       globalThis.AutoInflictStateManager.scheduleInflictedStateTriggers(applier, target, 10);
@@ -2040,26 +2190,32 @@ describe('J-Passive-Conditional (direct src import)', () =>
       expect(target.addState).not.toHaveBeenCalled();
     });
 
-    it('depth-guards dispatch against synchronous re-entry from the applied state', () =>
+    it('depth-guards every landing against synchronous re-entry from the applied state', () =>
     {
-      // Arrange
+      // Arrange- one Encore repeat lands the payload twice off a single roll, and each landing tries to re-enter.
       const applier = buildMomentumToolkitActor([]);
+      applier.getEncoreRepeats = () => 1;
       const dispatchCalls = [];
-      const target = {
-        isStateAddable: () => true,
+      const target = buildPayloadTarget({
         addState()
         {
           dispatchCalls.push('dispatched');
           // simulate the newly-applied state itself re-triggering this same manager.
           globalThis.AutoInflictStateManager.dispatch(target, 70, applier);
         },
-      };
+      });
+      const procSpy = vi.spyOn(globalThis.RPGManager, 'resolveProcCount');
 
       // Act
       globalThis.AutoInflictStateManager.dispatch(target, 70, applier);
 
-      // Assert- default max depth is 1: the outer call dispatches, the nested re-entrant call does not.
-      expect(dispatchCalls).toEqual([ 'dispatched' ]);
+      // Assert- default max depth is 1: both landings of the outer call go through, and both re-entrant calls are
+      // refused before they ever roll.
+      expect(dispatchCalls).toEqual([ 'dispatched', 'dispatched' ]);
+      expect(procSpy).toHaveBeenCalledTimes(1);
+
+      // spies on the bare-global RPGManager leak into later tests in this file, so restore by hand.
+      procSpy.mockRestore();
     });
 
     it('permits one nested dispatch when the configured max depth is two', () =>
@@ -2068,15 +2224,14 @@ describe('J-Passive-Conditional (direct src import)', () =>
       // two must let exactly one re-entrant application through before the third is refused.
       const applier = buildMomentumToolkitActor([]);
       const dispatchCalls = [];
-      const target = {
-        isStateAddable: () => true,
+      const target = buildPayloadTarget({
         addState()
         {
           dispatchCalls.push('dispatched');
           // simulate the newly-applied state itself re-triggering this same manager.
           globalThis.AutoInflictStateManager.dispatch(target, 70, applier);
         },
-      };
+      });
       const savedDepth = globalThis.J.PASSIVE.EXT.CONDITIONAL.Metadata.autoInflictStateMaxDepth;
       globalThis.J.PASSIVE.EXT.CONDITIONAL.Metadata.autoInflictStateMaxDepth = 2;
 
@@ -2096,10 +2251,9 @@ describe('J-Passive-Conditional (direct src import)', () =>
       const applier = buildMomentumToolkitActor([ '<autoInflictState:[73, onKnockback, 0]>' ]);
       const applied = [];
       const sources = [];
-      const target = {
-        isStateAddable: () => true,
+      const target = buildPayloadTarget({
         addState: (stateId, source) => { applied.push(stateId); sources.push(source); },
-      };
+      });
 
       // Act
       globalThis.AutoInflictStateManager.scheduleKnockbackTriggers(applier, target);
@@ -2119,12 +2273,12 @@ describe('J-Passive-Conditional (direct src import)', () =>
       ]);
       const knockbackApplies = [];
       const inflictApplies = [];
+      const knockedBackTarget = buildPayloadTarget({ addState: (id) => knockbackApplies.push(id) });
+      const afflictedTarget = buildPayloadTarget({ addState: (id) => inflictApplies.push(id) });
 
       // Act
-      globalThis.AutoInflictStateManager.scheduleKnockbackTriggers(
-        applier, { isStateAddable: () => true, addState: (id) => knockbackApplies.push(id) });
-      globalThis.AutoInflictStateManager.scheduleInflictedStateTriggers(
-        applier, { isStateAddable: () => true, addState: (id) => inflictApplies.push(id) }, 10);
+      globalThis.AutoInflictStateManager.scheduleKnockbackTriggers(applier, knockedBackTarget);
+      globalThis.AutoInflictStateManager.scheduleInflictedStateTriggers(applier, afflictedTarget, 10);
 
       // Assert
       expect(knockbackApplies).toEqual([ 73 ]);
@@ -2143,8 +2297,10 @@ describe('J-Passive-Conditional (direct src import)', () =>
 
     it('fires both autoInflictState (onto the target) and autoModifyCooldowns (onto the applier) from one real state-inflicted event', () =>
     {
-      // Arrange
+      // Arrange- the payload's own row sits beside the inflicted state's, since the target reads the payload's
+      // polarity through its state accessor when the payload is rolled for.
       globalThis.$dataStates[10] = { id: 10, isNegativeType: () => true };
+      globalThis.$dataStates[70] = { id: 70, isNegativeType: () => true };
       const applier = buildMomentumToolkitActor([
         '<autoInflictState:[70, negaStateInflicted, 0]>',
         '<autoModifyCooldowns:[-60, negaStateInflicted, 0, flat, all]>',
@@ -2247,18 +2403,19 @@ describe('J-Passive-Conditional (direct src import)', () =>
 
     it('falls back to a max depth of 1 when the metadata value is falsy', () =>
     {
-      // Arrange
-      const target = buildMomentumToolkitActor([]);
-      target.isStateAddable = () => true;
-      target.addState = vi.fn();
+      // Arrange- an unresisted payload from a neutral inflictor always lands once rolled for, so a depth of zero taken
+      // at its word is the only thing that could refuse it.
+      const target = buildFateBattlerStub({ isStateAddable: () => true, addState: vi.fn() });
+      const inflictor = buildFateBattlerStub();
       const savedDepth = globalThis.J.PASSIVE.EXT.CONDITIONAL.Metadata.autoInflictStateMaxDepth;
       globalThis.J.PASSIVE.EXT.CONDITIONAL.Metadata.autoInflictStateMaxDepth = 0;
 
       // Act
-      const result = globalThis.AutoInflictStateManager.dispatch(target, 71, {});
+      const result = globalThis.AutoInflictStateManager.dispatch(target, 71, inflictor);
 
       // Assert
       expect(result).toBe(true);
+      expect(target.addState).toHaveBeenCalledWith(71, inflictor);
 
       // Cleanup
       globalThis.J.PASSIVE.EXT.CONDITIONAL.Metadata.autoInflictStateMaxDepth = savedDepth;
@@ -2419,7 +2576,7 @@ describe('J-Passive-Conditional (direct src import)', () =>
         '<autoInflictState:[74, onKnockback, 0]>',
         '<autoInflictState:[75, negaStateInflicted, 0]>',
       ]);
-      const knockedBack = { isStateAddable: () => true, addState: vi.fn() };
+      const knockedBack = buildFateBattlerStub({ isStateAddable: () => true, addState: vi.fn() });
       const action = { getCaster: () => ({ getBattler: () => caster }) };
       const targetJabsBattler = { getBattler: () => knockedBack };
       const engine = new globalThis.JABS_Engine();
@@ -2809,6 +2966,159 @@ describe('J-Passive-Conditional (direct src import)', () =>
       // spies on bare-global plugin statics leak into later tests in this file, so restore by hand.
       damageSpy.mockRestore();
       weaponSpy.mockRestore();
+    });
+  });
+
+  describe('onHealDealt scheduler', () =>
+  {
+    beforeEach(() =>
+    {
+      globalThis.Graphics.frameCount = 1000;
+      globalThis.$jabsEngine = { absEnabled: true };
+    });
+
+    function buildJabsWrapper(gameBattler, team)
+    {
+      return { getBattler: () => gameBattler, getTeam: () => team };
+    }
+
+    /**
+     * Builds the action that just landed: its caster, the slot it was fired from, and the skill behind it.
+     * @param {object} casterWrapper The caster's JABS wrapper.
+     * @returns {object}
+     */
+    function buildAction(casterWrapper)
+    {
+      return {
+        getCaster: () => casterWrapper,
+        getCooldownType: () => 'CombatSkill1',
+        getBaseSkill: () => ({ countsAsWeaponHit: false }),
+      };
+    }
+
+    /**
+     * Builds a caster carrying an onHealDealt rule beside an onDamageDealt one, recording each state either applies.
+     * The onDamageDealt rule is the near miss: a heal must never fire it.
+     * @param {number[]} applied Collects every state id the caster's rules apply, in order.
+     * @returns {object}
+     */
+    function buildHealer(applied)
+    {
+      const healer = buildMomentumToolkitActor([
+        '<autoApplyState:[70, onDamageDealt, 0]>',
+        '<autoApplyState:[71, onHealDealt, 0]>',
+      ]);
+      healer.isStateAddable = () => true;
+      healer.addState = (stateId) => applied.push(stateId);
+      return healer;
+    }
+
+    it('fires onHealDealt when hp was restored on a battler of the caster\'s own side', () =>
+    {
+      // Arrange
+      const applied = [];
+      const healer = buildHealer(applied);
+      const allyBattler = { result: () => ({ hpDamage: -50, mpDamage: 0, tpDamage: 0 }) };
+      const action = buildAction(buildJabsWrapper(healer, 0));
+      const ally = buildJabsWrapper(allyBattler, 0);
+      const engine = new globalThis.JABS_Engine();
+
+      // Act
+      engine.postExecuteSkillEffects(action, ally);
+
+      // Assert
+      expect(applied).toEqual([ 71 ]);
+    });
+
+    it('fires onHealDealt when only mp was restored', () =>
+    {
+      // Arrange- restoring magic is healing too; an action that never touched hp still mended its target.
+      const applied = [];
+      const healer = buildHealer(applied);
+      const allyBattler = { result: () => ({ hpDamage: 0, mpDamage: -12, tpDamage: 0 }) };
+      const action = buildAction(buildJabsWrapper(healer, 0));
+      const ally = buildJabsWrapper(allyBattler, 0);
+      const engine = new globalThis.JABS_Engine();
+
+      // Act
+      engine.postExecuteSkillEffects(action, ally);
+
+      // Assert
+      expect(applied).toEqual([ 71 ]);
+    });
+
+    it('fires onHealDealt when only tp was restored', () =>
+    {
+      // Arrange- same argument for tp: which pool was restored does not change that a heal landed.
+      const applied = [];
+      const healer = buildHealer(applied);
+      const allyBattler = { result: () => ({ hpDamage: 0, mpDamage: 0, tpDamage: -5 }) };
+      const action = buildAction(buildJabsWrapper(healer, 0));
+      const ally = buildJabsWrapper(allyBattler, 0);
+      const engine = new globalThis.JABS_Engine();
+
+      // Act
+      engine.postExecuteSkillEffects(action, ally);
+
+      // Assert
+      expect(applied).toEqual([ 71 ]);
+    });
+
+    it('does not fire onHealDealt when nothing was restored on the friendly battler', () =>
+    {
+      // Arrange- a zeroed result, like a miss or a buff that touched no pool, restored nothing.
+      const applied = [];
+      const healer = buildHealer(applied);
+      const allyBattler = { result: () => ({ hpDamage: 0, mpDamage: 0, tpDamage: 0 }) };
+      const action = buildAction(buildJabsWrapper(healer, 0));
+      const ally = buildJabsWrapper(allyBattler, 0);
+      const engine = new globalThis.JABS_Engine();
+
+      // Act
+      engine.postExecuteSkillEffects(action, ally);
+
+      // Assert
+      expect(applied).toEqual([]);
+    });
+
+    it('does not fire onHealDealt when the restored battler is on an opposing side', () =>
+    {
+      // Arrange- restoring an enemy, like a heal that splashed onto a foe, is not mending a friend.
+      const applied = [];
+      const healer = buildHealer(applied);
+      const foeBattler = { result: () => ({ hpDamage: -50, mpDamage: 0, tpDamage: 0 }) };
+      const action = buildAction(buildJabsWrapper(healer, 0));
+      const foe = buildJabsWrapper(foeBattler, 1);
+      const engine = new globalThis.JABS_Engine();
+
+      // Act
+      engine.postExecuteSkillEffects(action, foe);
+
+      // Assert
+      expect(applied).toEqual([]);
+    });
+
+    it('hands the battler that was mended to the heal-dealt rules of both schedulers', () =>
+    {
+      // Arrange- each scheduler has to know who was mended, so a payload aimed at them can land on them.
+      const healer = buildMomentumToolkitActor();
+      const allyBattler = { result: () => ({ hpDamage: -50, mpDamage: 0, tpDamage: 0 }) };
+      const action = buildAction(buildJabsWrapper(healer, 0));
+      const ally = buildJabsWrapper(allyBattler, 0);
+      const engine = new globalThis.JABS_Engine();
+      const applySpy = vi.spyOn(globalThis.AutoApplyStateManager, 'scheduleHealDealtTriggers');
+      const executeSpy = vi.spyOn(globalThis.AutoExecuteSkillManager, 'scheduleHealDealtTriggers');
+
+      // Act
+      engine.postExecuteSkillEffects(action, ally);
+
+      // Assert
+      expect(applySpy).toHaveBeenCalledWith(healer, ally);
+      expect(executeSpy).toHaveBeenCalledWith(healer, ally);
+
+      // spies on bare-global plugin statics leak into later tests in this file, so restore by hand.
+      applySpy.mockRestore();
+      executeSpy.mockRestore();
     });
   });
 

@@ -6369,12 +6369,12 @@ class JABS_Battler
   };
 
   /**
-   * Applies the effects of the tool against all opponents on the map.
+   * Applies the effects of the tool against one opponent: this battler's current target, or failing that, the last
+   * battler it hit.
    * @param {number} toolId The id of the tool/item being used.
    */
   applyToolForOneOpponent(toolId)
   {
-    const item = $dataItems[toolId];
     let jabsBattler = this.getTarget();
     if (!jabsBattler)
     {
@@ -6388,14 +6388,12 @@ class JABS_Battler
       return;
     }
 
-    // grab the battler being affected by this item.
-    const battler = jabsBattler.getBattler();
+    // this battler is the one using the tool, so the action is its own, carrying the tool.
+    const gameAction = new Game_Action(this.getBattler(), false);
+    gameAction.setItem(toolId);
 
-    // create the game action based on the data.
-    const gameAction = new Game_Action(battler, false);
-
-    // apply the effects against the battler.
-    gameAction.apply(battler);
+    // apply the effects against the battler it lands on.
+    gameAction.apply(jabsBattler.getBattler());
 
     // generate the text popup for the item usage on the target.
     this.onItemApplied(gameAction, toolId, jabsBattler);
@@ -6410,14 +6408,12 @@ class JABS_Battler
     const battlers = JABS_AiManager.getEnemyBattlers();
     battlers.forEach(jabsBattler =>
     {
-      // grab the battler being affected by this item.
-      const battler = jabsBattler.getBattler();
+      // this battler is the one using the tool, so each action is its own, carrying the tool.
+      const gameAction = new Game_Action(this.getBattler(), false);
+      gameAction.setItem(toolId);
 
-      // create the game action based on the data.
-      const gameAction = new Game_Action(battler, false);
-
-      // apply the effects against the battler.
-      gameAction.apply(battler);
+      // apply the effects against the battler it lands on.
+      gameAction.apply(jabsBattler.getBattler());
 
       // generate the text popup for the item usage on the target.
       this.onItemApplied(gameAction, toolId, jabsBattler);

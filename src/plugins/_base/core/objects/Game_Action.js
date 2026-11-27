@@ -128,22 +128,59 @@ Game_Action.registerFormulaContext('d', action => action.getTriggerHpDamage());
 Game_Action.registerFormulaContext('m', action => action.getTriggerMpDamage());
 Game_Action.registerFormulaContext('t', action => action.getTriggerTpDamage());
 
-//region HAR
+//region damage roll
 /**
- * Extends {@link #makeDamageValue}.<br/>
- * Applies the caster's HAR to the Damage-tab "HP/MP Recover" result, mirroring
- * vanilla's own `value *= target.rec` for the same negative-value (heal) branch.
- * A negative return value here always means a heal; guard/variance/critical all
- * preserve sign, so checking the final value is equivalent to checking baseValue.
+ * Overwrites {@link #makeDamageValue}.<br/>
+ * Identical to vanilla except for two things. The target's physical or magical damage rate is read
+ * through {@link #damageRateAgainst} rather than straight off the target: that rate is the one part of
+ * a hit's damage that belongs to how the target takes it rather than to what the action is, and routing
+ * it through a single method lets a plugin change how much of it an action respects without rewriting
+ * the whole roll. And a Damage-tab heal answers to the caster's HAR as well as the recipient's REC, the
+ * same pairing {@link #itemEffectRecoverHp} uses. Every extension of this method wraps the number this
+ * produces.
+ * @param {Game_Battler} target The target being hit.
+ * @param {boolean} critical Whether or not this hit is a critical hit.
+ * @returns {number}
  */
-J.BASE.Aliased.Game_Action.set('makeDamageValue', Game_Action.prototype.makeDamageValue);
 Game_Action.prototype.makeDamageValue = function(target, critical)
 {
-  // perform original logic, which already applies target.rec for the heal branch.
-  let value = J.BASE.Aliased.Game_Action.get('makeDamageValue')
-    .call(this, target, critical);
+  // the skill or item being used.
+  const item = this.item();
 
-  // a negative value here is a heal; apply the caster's HAR alongside the recipient's REC.
+  // evaluate the damage formula against the target.
+  const baseValue = this.evalDamageFormula(target);
+
+  // scale it by this action's elemental rate against the target.
+  let value = baseValue * this.calcElementRate(target);
+
+  // an absorbed element can turn a hit into a heal, so harm is judged after the elemental rate.
+  const isHarmful = value > 0;
+
+  // scale it by the rate the target takes this action's hit type at.
+  value *= this.damageRateAgainst(target, isHarmful);
+
+  // a heal answers to the target's recovery rate as well.
+  if (baseValue < 0)
+  {
+    value *= target.rec;
+  }
+
+  // a critical hit amplifies what it lands.
+  if (critical)
+  {
+    value = this.applyCritical(value);
+  }
+
+  // roll the variance, then let a guarding target take its share off.
+  value = this.applyVariance(value, item.damage.variance);
+  value = this.applyGuard(value, target);
+
+  // damage is dealt in whole numbers.
+  value = Math.round(value);
+
+  // a negative value is a heal, and it answers to the caster's HAR alongside the recipient's REC.
+  // guard, variance and critical all preserve the sign, so the final value tells a heal apart as
+  // surely as the formula did.
   if (value < 0)
   {
     value *= this.subject().har;
@@ -153,10 +190,34 @@ Game_Action.prototype.makeDamageValue = function(target, critical)
 };
 
 /**
+ * The rate the given target takes this action at, by the action's hit type.<br/>
+ * A physical hit meets the target's PDR and a magical hit its MDR, while a certain hit meets neither
+ * and lands at an even 1. Every place a target's damage rate reaches a number asks this, from
+ * {@link #makeDamageValue} to anything else that builds damage by hand, so a plugin changing how much
+ * of that rate an action respects extends this one method and every path agrees.
+ * @param {Game_Battler} target The target being hit.
+ * @param {boolean} _isHarmful Whether the value this rate scales is harm rather than a heal. The rate
+ * itself never depends on it; it is here for an extension that treats the two differently.
+ * @returns {number}
+ */
+Game_Action.prototype.damageRateAgainst = function(target, _isHarmful)
+{
+  // a physical hit is taken at the target's physical damage rate.
+  if (this.isPhysical()) return target.pdr;
+
+  // a magical hit is taken at the target's magical damage rate.
+  if (this.isMagical()) return target.mdr;
+
+  // a certain hit answers to neither.
+  return 1;
+};
+//endregion damage roll
+
+//region HAR
+/**
  * Overwrites {@link #itemEffectRecoverHp}.<br/>
- * Identical to vanilla except for the added `this.subject().har` multiplier;
- * the method mutates `target` directly rather than returning a value, so there's
- * no return value to post-multiply the way {@link #makeDamageValue} allows.
+ * Identical to vanilla except for the added `this.subject().har` multiplier, the caster's healing rate
+ * that {@link #makeDamageValue} applies to a Damage-tab heal as well.
  */
 Game_Action.prototype.itemEffectRecoverHp = function(target, effect)
 {
@@ -176,9 +237,8 @@ Game_Action.prototype.itemEffectRecoverHp = function(target, effect)
 
 /**
  * Overwrites {@link #itemEffectRecoverMp}.<br/>
- * Identical to vanilla except for the added `this.subject().har` multiplier;
- * the method mutates `target` directly rather than returning a value, so there's
- * no return value to post-multiply the way {@link #makeDamageValue} allows.
+ * Identical to vanilla except for the added `this.subject().har` multiplier, the caster's healing rate
+ * that {@link #makeDamageValue} applies to a Damage-tab heal as well.
  */
 Game_Action.prototype.itemEffectRecoverMp = function(target, effect)
 {

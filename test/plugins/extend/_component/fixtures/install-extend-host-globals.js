@@ -1,6 +1,7 @@
 //region plugins/extend/_component/fixtures/install-extend-host-globals.js
 import { installJBaseHostGlobals } from '../../../_base/core/_component/fixtures/install-j-base-host-globals.js';
 import { installJabsOnChanceEffectGlobalStub } from '../../../_base/core/_component/fixtures/install-jabs-onchance-stub.js';
+import { installJabsFateActionForwards } from '../../../_base/core/_component/fixtures/install-jabs-fate.js';
 import PluginMetadata from '../../../../../src/plugins/_base/core/models/PluginMetadata.js';
 
 const noop = function()
@@ -115,6 +116,10 @@ export function installExtendHostGlobals(sandbox = globalThis)
     return this._item.object();
   };
   sandbox.Game_Action = Game_Action;
+
+  // J-SkillExtend rolls its states through J-ABS's shared state roll and reads an action's fate from it, and this
+  // realm never loads J-ABS's own Game_Action.js- so lay down the real roll and the two entries J-ABS forwards to it.
+  installJabsFateActionForwards(sandbox);
 
   function JABS_SkillSlotManager()
   {

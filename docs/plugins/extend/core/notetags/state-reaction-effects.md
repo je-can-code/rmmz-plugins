@@ -14,11 +14,31 @@ a state stack from a target, or fully remove a state from a target as part of a 
 applying the appropriate tag to the skill(s) in question, you too can have battlers that react to casting or landing
 skills with state application and removal effects.
 
-## NOTE ABOUT STATE RESISTANCE
+## NOTE ABOUT CHANCE
 
-State resistance is not taken into account in regards to the CHANCE of the various self-state effects. It is assumed
-that the percent chance designated in the tag is fully representative of the chance that the state will be applied to
-the caster.
+The self-states (`<onCastSelfState>`, `<onHitSelfState>` and `<onCastSelfStateIfAfflicted>`) roll the way every chance a
+state has to land rolls, as
+[State-Application Immunity & Resistance](../../../abs/core/notetags/states/state-application-immunity-resistance.md)
+describes, with the caster as both the battler applying the state and the one receiving it. CHANCE meets the caster's
+own State Rate traits and `<stateTypeResist>`, the caster holds no luck over itself, and its fate counts once.
+[Accumulate Mode](../../../abs/core/notetags/skills/accumulate-mode.md) and
+[Encore Repeats](../../../abs/core/notetags/skills/encore-repeats-bonus-proc-executions.md) can land the state more than
+once, and the caster's immunities are checked on every landing.
+
+The lose, strip and remove effects meet no resistances. CHANCE rolls with the caster's fate against whoever loses the
+state, as
+[On-Chance Roll Manipulation](../../../abs/core/notetags/skills/on-chance-roll-manipulation-lucky-cursed-rolls.md)
+describes. A skill aimed at the caster's opponents strips and removes as harm, so every curse its target carries is one
+more chance for the removal to land; a skill aimed at anyone else strips and removes as help, so every curse its target
+carries is one more hurdle the removal has to clear. A caster losing its own state brings its fate once.
+
+`<onCastExecuteSkill>` and `<onCastExecuteSkillIfAfflicted>` roll CHANCE with the caster's own fate alone, once per
+tag, as [On-Chance Roll Manipulation](../../../abs/core/notetags/skills/on-chance-roll-manipulation-lucky-cursed-rolls.md)
+describes: the caster's lucky and cursed rolls, joined by the cast skill's own `<thisLuckyRolls>` and
+`<thisCursedRolls>`, weigh on any CHANCE under 100. Nothing is aimed at anyone yet, so no resistance and no other
+battler's fate weighs on it. A caster under `<veryLucky>` executes the payload every time, even at 0%, and one under
+`<veryCursed>` never does, even at 100%. A payload whose roll lands executes once: Accumulate Mode and Encore never
+repeat it.
 
 ## NOTE ABOUT MULTIPLE TRIGGERS
 
@@ -32,7 +52,9 @@ will not trigger.
 
 ## TAG USAGE
 
-- Skills only.
+- Skills.
+- States the caster carries, for every tag here except `<onCastExecuteSkill>` and `<onCastExecuteSkillIfAfflicted>`,
+  which read the executing skill's own note only.
 
 ## TAG FORMAT
 
@@ -53,15 +75,13 @@ Where CHANCE is the percent chance between 0 and 100 that it'll trigger.
 ## TAG EXAMPLES
 
 `<onCastSelfState:[3,40]>`
-The caster has a 40% chance of applying state w/ id of 3 to oneself. When using JABS, this applies as soon as the
-skill/action is executed. When using non-JABS, this applies in the same phase as you would gain TP from executing a
-skill.
+The caster has a 40% chance of applying state w/ id of 3 to oneself. This applies as soon as the skill/action is
+executed.
 
 `<onHitSelfState:[19,100]>`
-The caster has a 100% (always) chance of appling state id 19 to oneself. This processes when the action successfully
-hits the target. When using JABS, this applies as soon as the skill/action lands on a target. This will trigger multiple
-times if an action has multiple projectiles. When using non-JABS, this applies when a skill successfully hits a target.
-Misses, evades, and parries do not trigger this.
+The caster has a 100% chance of applying state id 19 to oneself. This processes when the action successfully
+hits the target, as soon as the skill/action lands on it. This will trigger multiple times if an action has multiple
+projectiles. Misses, evades, and parries do not trigger this.
 
 `<onCastSelfStateIfAfflicted:[42,100,19]>`
 On cast, if the caster currently has state id 19 (STATE_REQUIREMENT) active, apply state id 42 (STATE_TO_APPLY) to
@@ -91,14 +111,15 @@ The caster has a 40% chance of fully removing state id 11 from the target when t
 
 `<onCastExecuteSkill:[1026,100]>`
 `<onCastExecuteSkill:[1027,50]>`
-On cast, always force-execute skill id 1026, and separately roll a 50% chance to also force-execute skill id 1027.
-Fires once at press-time (same timing as `onCastSelfState`), through JABS `forceMapAction` — no MP/TP cost, no cooldown
-on the payload skills. Skill-scoped and repeatable: stack as many `<onCastExecuteSkill>` tags on one skill as you want,
-each rolls independently. A forced skill's own `<onCastExecuteSkill>` tag may chain one further hop before being cut off
-(depth-guarded against runaway loops).
+On cast, force-execute skill id 1026 at 100%, which only a caster under `<veryCursed>` misses, and separately roll a 50%
+chance, with the caster's own fate, to also force-execute skill id 1027. Fires once at press-time (same timing as
+`onCastSelfState`), through JABS `forceMapAction` — no MP/TP cost, no cooldown on the payload skills. Skill-scoped and
+repeatable: stack as many `<onCastExecuteSkill>` tags on one skill as you want, each rolls independently. A forced
+skill's own `<onCastExecuteSkill>` tag may chain one further hop before being cut off (depth-guarded against runaway
+loops).
 
 `<onCastExecuteSkillIfAfflicted:[267,100,134]>`
-On cast, if the caster currently has state id 134 active, force-execute skill id 267 at 100% chance. If the caster does
-not have state 134, this tag does nothing- no roll occurs at all, and nothing is force-executed. Same
-`<onCastExecuteSkill>` timing, JABS dispatch path, and depth guard; this is purely a gate on top of it. Skill-scoped and
-repeatable, same as its unconditional counterpart.
+On cast, if the caster currently has state id 134 active, force-execute skill id 267 at 100% chance, rolled exactly as
+`<onCastExecuteSkill>` rolls. If the caster does not have state 134, this tag does nothing- no roll occurs at all, and
+nothing is force-executed. Same `<onCastExecuteSkill>` timing, JABS dispatch path, and depth guard; this is purely a
+gate on top of it. Skill-scoped and repeatable, same as its unconditional counterpart.

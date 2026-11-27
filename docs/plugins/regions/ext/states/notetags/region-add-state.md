@@ -20,11 +20,32 @@ times.
 
 ## NOTE ABOUT STATE APPLICATIONS
 
-The CHANCE component of the tag as described below represents the "default" chance of application of a state against a
-battler. It is important to note that this chance does not include potential resistances or weaknesses to the state,
-meaning if a battler had a severe weakness (1000% chance) to a given stateId but the tag was less than 100%, the math
-may work out in such a way that the calculated chance of application is actually higher, potentially guaranteeing
-success of application despite putting less than 100% chance in the tag.
+The CHANCE component of the tag as described below is the authored chance of applying the state. A region's state is one
+the battler standing there gives itself, so that battler both rolls for the state and receives it, and the chance is
+built up the way every state application's chance is, as
+[State-Application Immunity & Resistance](../../../../abs/core/notetags/states/state-application-immunity-resistance.md)
+describes:
+
+```
+1. The CHANCE, as a percent.
+2. The battler's own State Rate traits for that state.
+3. The battler's own <stateTypeResist> for each type the state carries.
+```
+
+A battler holds no luck over itself, so LUK leaves the chance where it is. A weakness raises the chance just as a
+resistance lowers it: a battler with a State Rate of 1000% for a state can be certain to receive it from a tag under
+100%.
+
+The result is rounded to a whole percent and rolled with the battler's own fate, counted once, as
+[On-Chance Roll Manipulation](../../../../abs/core/notetags/skills/on-chance-roll-manipulation-lucky-cursed-rolls.md)
+describes: its battler-wide lucky and cursed rolls, since a region carries no skill, along with its `<veryLucky>`,
+`<veryCursed>`, Accumulate Mode and Encore.
+
+Every landing adds the state through `J-ABS`, exactly as any other application of it would, credited to the battler
+standing there. The battler's immunities are checked on every landing, and a battler that does not carry the state yet
+starts it fresh. A battler that already carries it, from an earlier landing or from anywhere else, has it reapplied by
+the state's own reapply strategy, refreshed, extended or stacked, as
+[Stack Type](../../../../abs/core/notetags/states/stack-type.md) describes.
 
 ## NOTE ABOUT ANIMATION IDS
 

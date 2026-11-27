@@ -775,8 +775,7 @@ describe('J-ABS-Formula Game_Action (unit, all downstream dependencies mocked)',
       const action = buildAction();
       action.calcElementRate = () => 1;
       action.applyCritical = (value) => value * 2;
-      action.isPhysical = () => false;
-      action.isMagical = () => false;
+      action.damageRateAgainst = () => 1;
       action.applyGuard = (value) => value;
       action.applyVariance = (value) => value;
       action.canHandleGuardEffects = () => false;
@@ -828,57 +827,21 @@ describe('J-ABS-Formula Game_Action (unit, all downstream dependencies mocked)',
       expect(result).toBe(10);
     });
 
-    it('applies the physical damage rate for physical actions', () =>
+    it('scales the magnitude by the damage rate the shared seam reports, telling it whether the packet harms', () =>
     {
       // Arrange
-      const action = buildPipelineAction({ isPhysical: () => true });
-      const target = { result: () => null, pdr: 0.5, mdr: 1 };
+      const action = buildPipelineAction({ damageRateAgainst: vi.fn(() => 0.5) });
+      const target = { result: () => null };
 
       // Act
-      const result = action.pipeFormulaThroughBattleCalculations(target, 10, { resource: 'hp' }, true);
+      const damageResult = action.pipeFormulaThroughBattleCalculations(target, 10, { resource: 'hp' }, true);
+      const healResult = action.pipeFormulaThroughBattleCalculations(target, 12, { resource: 'hp' }, false);
 
       // Assert
-      expect(result).toBe(5);
-    });
-
-    it('does not apply the physical damage rate for a non-physical action', () =>
-    {
-      // Arrange- the doubled element rate is the proof-of-execution anchor: a 20 can only come
-      // from a pipeline that actually ran, and a pdr applied on top of it would read 10.
-      const action = buildPipelineAction({ calcElementRate: () => 2 });
-      const target = { result: () => null, pdr: 0.5, mdr: 1 };
-
-      // Act
-      const result = action.pipeFormulaThroughBattleCalculations(target, 10, { resource: 'hp' }, true);
-
-      // Assert
-      expect(result).toBe(20);
-    });
-
-    it('applies the magical damage rate for magical actions', () =>
-    {
-      // Arrange
-      const action = buildPipelineAction({ isMagical: () => true });
-      const target = { result: () => null, pdr: 1, mdr: 0.25 };
-
-      // Act
-      const result = action.pipeFormulaThroughBattleCalculations(target, 10, { resource: 'hp' }, true);
-
-      // Assert- damage always rounds (2.5 -> 3) before the JABS guard-reduction check.
-      expect(result).toBe(3);
-    });
-
-    it('does not apply the magical damage rate for a non-magical action', () =>
-    {
-      // Arrange- the doubled element rate anchors execution; an mdr applied on top would read 5.
-      const action = buildPipelineAction({ calcElementRate: () => 2 });
-      const target = { result: () => null, pdr: 1, mdr: 0.25 };
-
-      // Act
-      const result = action.pipeFormulaThroughBattleCalculations(target, 10, { resource: 'hp' }, true);
-
-      // Assert
-      expect(result).toBe(20);
+      expect(damageResult).toBe(5);
+      expect(healResult).toBe(6);
+      expect(action.damageRateAgainst).toHaveBeenNthCalledWith(1, target, true);
+      expect(action.damageRateAgainst).toHaveBeenNthCalledWith(2, target, false);
     });
 
     it('applies guard only when this is damage', () =>

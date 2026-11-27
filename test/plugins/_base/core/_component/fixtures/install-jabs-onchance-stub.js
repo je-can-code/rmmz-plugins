@@ -12,12 +12,16 @@ export function installJabsOnChanceEffectGlobalStub(sandbox)
    * @param {number} skillId
    * @param {number} chance
    * @param {string} key
+   * @param {number|null} [hitType=null]
+   * @param {string|null} [outcome=null]
    */
-  function JABS_OnChanceEffect(skillId, chance, key)
+  function JABS_OnChanceEffect(skillId, chance, key, hitType = null, outcome = null)
   {
     this.skillId = skillId;
     this.chance = chance;
     this.key = key;
+    this.hitType = hitType;
+    this.outcome = outcome;
   }
 
   /**

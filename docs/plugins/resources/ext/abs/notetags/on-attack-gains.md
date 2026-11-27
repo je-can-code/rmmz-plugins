@@ -11,7 +11,8 @@ tags: [resources-abs, tag, skill, gain, on-attack]
 
 Have you ever wanted a skill that siphons a little bit of HP each time it connects, or a technique that refunds TP on
 every successful hit? Well now you can! By applying the appropriate tag(s) to a skill, the caster will receive HP, MP,
-or TP every time that skill lands.
+or TP every time that skill lands. A skill that hits five targets grants it five times, and a miss grants nothing; for
+a gain once per execution, hit or miss, see [On-Cast Gains](on-cast-gains.md).
 
 ## NOTE ABOUT REC SCALING
 
@@ -19,7 +20,13 @@ Gains are scaled by the caster's REC stat.
 
 ## TAG USAGE
 
-- Skills
+- Skills (only while that skill is the one landing the hit)
+- Actors
+- Classes
+- Weapons
+- Armor
+- Enemies
+- States
 
 ## TAG FORMAT
 

@@ -23,6 +23,26 @@ simply won't fire):
 - `enemiesNearbyBelow` — same target set as `enemiesNearby`, gate inverted (see below)
 - `alliesNearbyBelow` — same target set as `alliesNearby`, gate inverted (see below)
 
+## NOTE ABOUT THE APPLICATION ROLL
+
+Each pulse rolls for STATE_ID on every battler in range at a full 100% chance, through the same
+[application roll](../../../../abs/core/notetags/states/state-application-immunity-resistance.md) as any other state
+that lands by chance, with the bearer as the roller:
+
+- the chance is scaled by each target's State Rate traits and `<stateTypeResist>`, and, when STATE_ID is
+  `<type:negative>`, by the luck between the bearer and that target;
+- the bearer's
+  [lucky and cursed rolls](../../../../abs/core/notetags/skills/on-chance-roll-manipulation-lucky-cursed-rolls.md) go
+  into every roll, and a target's curse weighs on it by STATE_ID's own polarity: a `<type:negative>` state is harm, so
+  each curse is one more chance for it to land, and any other state is help, so each curse is one more hurdle for it to
+  clear;
+- the bearer's [Accumulate Mode](../../../../abs/core/notetags/skills/accumulate-mode.md) and
+  [Encore Repeats](../../../../abs/core/notetags/skills/encore-repeats-bonus-proc-executions.md) can land it on a target
+  more than once in a single pulse.
+
+A target that cannot take STATE_ID at all, through an immunity or because it holds STATE_ID as a passive, is never
+rolled for, and every landing checks the target's immunities on its own.
+
 ## TAG USAGE
 
 - Actors
@@ -36,15 +56,16 @@ simply won't fire):
 ## TAG FORMAT
 
 `<autoApplyStateOnNearby:[STATE_ID, KIND, MIN_COUNT, COOLDOWN_FRAMES, TRIGGER_TILES?]>`
-Where STATE_ID is the state applied to every battler currently in proximity,
+Where STATE_ID is the state rolled for on every battler currently in proximity,
 Where KIND is one of the four kinds above,
 Where MIN_COUNT is the count threshold that gates the pulse. For `enemiesNearby`/`alliesNearby` the pulse fires at
 MIN_COUNT or more in range; for the Below variants it fires strictly UNDER MIN_COUNT. Either way the pulse then hits
 everyone CURRENTLY in range, not just MIN_COUNT of them- so a Below rule with MIN_COUNT 1 (the "nothing nearby" case)
-can gate-pass while resolving zero targets, applying to nobody that tick. MIN_COUNT 2+ still lands on whatever
-stragglers remain under the threshold,
+can gate-pass while resolving zero targets, rolling for nobody that tick. MIN_COUNT 2+ reaches whatever stragglers
+remain under the threshold,
 Where COOLDOWN_FRAMES is tracked on the bearer, so the pulse cadence is consistent regardless of how many targets are
-currently in range,
+currently in range. It starts over on every pulse that rolls for at least one target, whether or not STATE_ID landed;
+a pulse that finds nobody able to take STATE_ID leaves it where it was,
 Where the optional fifth TRIGGER_TILES overrides the plugin's
 [default proximity radius](../parameters/default-proximity-tiles.md) for this rule's gate only.
 

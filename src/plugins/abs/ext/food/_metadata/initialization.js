@@ -46,6 +46,7 @@ J.ABS.EXT.FOOD.Aliased = {
   JABS_Battler: new Map(),
   JABS_Engine: new Map(),
   JABS_SkillSlotManager: new Map(),
+  JABS_State: new Map(),
   Game_Actor: new Map(),
   Input: new Map(),
   Scene_Boot: new Map(),

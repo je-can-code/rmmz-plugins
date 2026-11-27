@@ -1,5 +1,6 @@
 //region plugins/passive/_component/fixtures/install-passive-conditional-host-globals.js
 import { installPluginManagerWithParams } from '../../../../setup/install-plugin-manager-with-params.js';
+import { installJabsFate } from '../../../_base/core/_component/fixtures/install-jabs-fate.js';
 
 /**
  * Flips the bare `__PLUGIN_NAME__`/`__PLUGIN_VERSION__` globals to J-Passive-Conditional's own
@@ -99,10 +100,39 @@ export function installPassiveConditionalHostGlobals(sandbox = globalThis, plugi
     {
       return teamA !== teamB;
     },
+    isFriendly(teamA, teamB)
+    {
+      return teamA === teamB;
+    },
   };
 
   // onWeaponHit gating in postExecuteSkillEffects reads these slot-key constants directly.
   sandbox.JABS_Button = sandbox.JABS_Button || { Mainhand: 'Main', Offhand: 'Offhand' };
+
+  // auras and inflicted payloads roll through J-ABS's shared state roll, the real one, as a bare global.
+  installJabsFate(sandbox);
+
+  // that roll reads LUK, State Rate, and J-ABS's type resistance, Accumulate Mode and Encore off every battler it
+  // weighs. this realm models no params, no traits and no J-ABS battler, so every battler answers neutrally- no luck
+  // gap, no resistance, one landing per success- the way J-Passive's own fixture seeds the lucky and cursed rolls. a
+  // test that needs a battler to answer otherwise sets its own member, which shadows these.
+  sandbox.Game_Battler.prototype.luk = 0;
+  sandbox.Game_Battler.prototype.stateRate = function()
+  {
+    return 1;
+  };
+  sandbox.Game_Battler.prototype.stateTypeResistRate = function()
+  {
+    return 1;
+  };
+  sandbox.Game_Battler.prototype.isAccumulating = function()
+  {
+    return false;
+  };
+  sandbox.Game_Battler.prototype.getEncoreRepeats = function()
+  {
+    return 0;
+  };
 
   // conditional aliases updatePixelStepping- seed a noop when J-Pixelistics is not loaded.
   sandbox.Game_CharacterBase.prototype.updatePixelStepping = function()

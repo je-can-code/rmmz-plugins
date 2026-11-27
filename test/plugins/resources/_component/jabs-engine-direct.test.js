@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 vi.mock('../../../../src/plugins/resources/ext/abs/managers/ResourceHitManager.js', () => ({
   default: {
     applyOnAttackEffects: vi.fn(),
+    applyOnCastEffects: vi.fn(),
     applyWhenHitEffects: vi.fn(),
   },
 }));
@@ -15,19 +16,22 @@ describe('JABS_Engine.postPrimaryBattleEffects (resources ext/abs, direct src im
 {
   let ResourceHitManager;
   let basePostPrimaryBattleEffects;
+  let basePaySkillCosts;
 
   beforeEach(async () =>
   {
     vi.resetModules();
     vi.clearAllMocks();
 
-    // JABS_Engine is a bare host global; only postPrimaryBattleEffects is aliased here.
+    // JABS_Engine is a bare host global; only postPrimaryBattleEffects and paySkillCosts are aliased here.
     function JABS_Engine()
     {
     }
 
     basePostPrimaryBattleEffects = vi.fn();
+    basePaySkillCosts = vi.fn();
     JABS_Engine.prototype.postPrimaryBattleEffects = basePostPrimaryBattleEffects;
+    JABS_Engine.prototype.paySkillCosts = basePaySkillCosts;
     globalThis.JABS_Engine = JABS_Engine;
 
     globalThis.J = { RESOURCES: { EXT: { ABS: { Aliased: { JABS_Engine: new Map() } } } } };
@@ -87,6 +91,29 @@ describe('JABS_Engine.postPrimaryBattleEffects (resources ext/abs, direct src im
 
     expect(ResourceHitManager.applyOnAttackEffects).toHaveBeenCalledWith(action, target);
     expect(ResourceHitManager.applyWhenHitEffects).toHaveBeenCalledWith(action, target);
+  });
+
+  describe('paySkillCosts', () =>
+  {
+    it('pays the skill\'s own costs first, then applies on-cast gains once for that caster and action', () =>
+    {
+      // Arrange- record the order the two calls land in.
+      const order = [];
+      basePaySkillCosts.mockImplementation(() => order.push('costs'));
+      ResourceHitManager.applyOnCastEffects.mockImplementation(() => order.push('on-cast'));
+      const caster = {};
+      const action = {};
+      const engine = new globalThis.JABS_Engine();
+
+      // Act
+      engine.paySkillCosts(caster, action);
+
+      // Assert
+      expect(basePaySkillCosts).toHaveBeenCalledWith(caster, action);
+      expect(ResourceHitManager.applyOnCastEffects).toHaveBeenCalledTimes(1);
+      expect(ResourceHitManager.applyOnCastEffects).toHaveBeenCalledWith(caster, action);
+      expect(order).toEqual([ 'costs', 'on-cast' ]);
+    });
   });
 });
 //endregion plugins/resources/_component/jabs-engine-direct.test.js

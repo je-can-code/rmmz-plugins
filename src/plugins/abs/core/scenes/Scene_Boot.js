@@ -1,7 +1,10 @@
 //region Scene_Boot
+import AbsNotetagDescriptions from './../core/describeAbsNotetags.js';
+
 /**
  * Extends {@link #onDatabaseLoaded}.<br/>
- * Registers CDR and PER with the parameter catalog after vanilla seeding.
+ * Registers CDR and PER with the parameter catalog after vanilla seeding, then describes this plugin's tags once the
+ * database they are read from exists.
  */
 J.ABS.Aliased.Scene_Boot.set('onDatabaseLoaded', Scene_Boot.prototype.onDatabaseLoaded);
 Scene_Boot.prototype.onDatabaseLoaded = function()
@@ -37,5 +40,8 @@ Scene_Boot.prototype.onDatabaseLoaded = function()
     .build();
 
   ParameterRegistry.register(parryExtension);
+
+  // describe this plugin's tags, so anything listing what a row does can say what these ones do.
+  AbsNotetagDescriptions.registerAll();
 };
 //endregion Scene_Boot

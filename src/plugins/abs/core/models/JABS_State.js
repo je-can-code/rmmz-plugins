@@ -1,5 +1,6 @@
 //region JABS_State
 import JABS_AiManager from './../managers/JABS_AiManager.js';
+import JABS_Fate from './../managers/JABS_Fate.js';
 import JABS_StateBuilder from './JABS_StateBuilder.js';
 
 /**
@@ -423,15 +424,18 @@ class JABS_State
   }
 
   /**
-   * When this state has reached the end of its natural duration, checks for an
-   * {@link jabsApplyStateOnExpire} tag on the database state and rolls the
-   * configured percent chance to apply the follow-up state to the same battler.<br/>
+   * When this state has reached the end of its natural duration, checks for an {@link jabsApplyStateOnExpire} tag on
+   * the state, as the afflicted battler sees it, and lands its follow-up state onto the same battler.<br/>
+   * The state is read through the afflicted battler rather than straight off the database, so anything layered onto
+   * the battler's view of it decides which follow-up it names. How many times that follow-up lands is
+   * {@link #resolveExpiryLandingCount}, and each landing adds it once, inheriting this state's source and source
+   * skill.<br/>
    * This method does NOT run when a state is removed by force (dispel, script, KO).
    */
   handleApplyStateOnExpire()
   {
-    // grab the follow-up definition from the database state.
-    const expireData = $dataStates[this.stateId].jabsApplyStateOnExpire;
+    // grab the follow-up definition from the expiring state, as the afflicted battler sees it.
+    const expireData = this.battler.state(this.stateId).jabsApplyStateOnExpire;
 
     // if the state has no expiry-chain tag, there is nothing to do.
     if (expireData === null) return;
@@ -439,11 +443,35 @@ class JABS_State
     // unpack the configured follow-up state id and its application chance.
     const { stateId: nextStateId, chance } = expireData;
 
-    // roll the chance; if it doesn't pass, the follow-up does not fire.
-    if (!RPGManager.chanceIn100(chance)) return;
+    // how many times the follow-up lands on the afflicted battler; zero means it never did.
+    const landingCount = this.resolveExpiryLandingCount(nextStateId, chance);
 
-    // apply the follow-up state, inheriting the source and source skill of the expiring state.
-    this.battler.addState(nextStateId, this.source, this.sourceSkill);
+    // apply the follow-up once per landing, inheriting the source and source skill of the expiring state.
+    for (let i = 0; i < landingCount; i++)
+    {
+      this.battler.addState(nextStateId, this.source, this.sourceSkill);
+    }
+  }
+
+  /**
+   * Resolves how many times this state's expiry follow-up lands on the afflicted battler as this state expires.<br/>
+   * The follow-up is rolled the way every state applied by chance is rolled, through
+   * {@link JABS_Fate.resolveStateProcCount}: the battler that applied this state rolls the authored chance against the
+   * afflicted battler, with the skill it applied this state with when there was one. The afflicted battler's State Rate
+   * traits and `<stateTypeResist>` weigh on the chance, and the luck the source holds over it shapes what remains. With
+   * no action to aim it, the follow-up's own `<type:negative>` decides whether the afflicted battler's curse helps it
+   * land or stands in its way. A state its own bearer applied rolls as one the bearer gives itself: no luck edge, and
+   * its fate counted once. Accumulate Mode and Encore can land the follow-up more than once.<br/>
+   * This is the one place the count is decided, so an extension whose follow-ups land some other way aliases this.
+   * Nothing is added here; the caller adds the follow-up once per landing.
+   * @param {number} nextStateId The id of the follow-up state.
+   * @param {number} chance The follow-up's authored chance, as a percent from 0 to 100.
+   * @returns {number}
+   */
+  resolveExpiryLandingCount(nextStateId, chance)
+  {
+    // the source of the expiring state rolls the follow-up against the afflicted battler's resistances.
+    return JABS_Fate.resolveStateProcCount(this.source, this.battler, nextStateId, chance, this.sourceSkill);
   }
 
   /**
@@ -710,7 +738,13 @@ class JABS_State
   }
 
   /**
-   * Attempts to spread this state to nearby battlers when the state row defines a spread rule.
+   * Attempts to spread this state to nearby battlers when the state row defines a spread rule.<br/>
+   * Each candidate that could take the state is rolled for on its own, by the battler that first applied this state
+   * and with the skill it applied it with, through {@link JABS_Fate.resolveStateProcCount}: the candidate's State Rate
+   * traits and `<stateTypeResist>` weigh on the chance, and the luck the source holds over the candidate shapes what
+   * remains. With no action to aim it, the state's own `<type:negative>` decides whether the candidate's curse helps
+   * it land or stands in its way. A candidate the spread lands on takes the state once for every time it lands, and
+   * counts once toward the `<spreadPerTick>` cap however many times that was; a candidate it misses does not count.
    */
   handleSpreading()
   {
@@ -775,10 +809,25 @@ class JABS_State
 
       const targetBattler = jabsBattler.getBattler();
 
-      if (RPGManager.chanceIn100(chance) === false) continue;
+      // the original applier rolls the spread against this candidate's own resistances.
+      const procCount = JABS_Fate.resolveStateProcCount(
+        this.source,
+        targetBattler,
+        this.stateId,
+        chance,
+        this.sourceSkill
+      );
+
+      // a spread that never landed adds nothing, and leaves the cap to the candidates after it.
+      if (procCount === 0) continue;
 
       // always attribute spreads to the original applier and their skill, not the current carrier.
-      targetBattler.addState(this.stateId, this.source, this.sourceSkill);
+      for (let i = 0; i < procCount; i++)
+      {
+        targetBattler.addState(this.stateId, this.source, this.sourceSkill);
+      }
+
+      // a candidate counts once toward the cap, however many times the spread landed on it.
       successCount++;
     }
   }

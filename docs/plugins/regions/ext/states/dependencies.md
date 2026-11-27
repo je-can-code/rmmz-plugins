@@ -28,8 +28,9 @@ All plugins in this ecosystem require the base plugin.
 
 ## J-ABS
 
-Applies each region state to the standing battler through its state handling, rolls the chance through its lucky and
-cursed on-chance system, and plays the animation through its character animation request.
+Applies each region state to the standing battler through its state handling, rolls each chance through its shared
+state-application roll against that battler's own resistances and fate, and plays the animation through its character
+animation request.
 
 ## J-RegionEffects
 

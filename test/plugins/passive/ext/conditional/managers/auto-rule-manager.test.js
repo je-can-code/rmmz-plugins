@@ -174,6 +174,31 @@ describe('AutoRuleManager (direct src import)', () =>
       expect(seen[0]).toBe(struck);
     });
 
+    it('fires only onHealDealt rules for a heal, handing them the battler the heal landed on', () =>
+    {
+      // Arrange- the onDamageDealt rule on the same row has to stay put, which proves the kind and not just a count.
+      const seen = [];
+      const FakeHealCapturingManager = class extends AutoRuleManager
+      {
+        static get rulesProperty() { return 'fakeRules'; }
+
+        static dispatch(_battler, id, _tuple, hitTarget)
+        {
+          seen.push({ id, hitTarget });
+          return true;
+        }
+      };
+      const mended = { name: 'mended ally' };
+      const battler = makeBattler([ makeSource(1, [ [ 4, 'onDamageDealt', 0 ], [ 3, 'onHealDealt', 0 ] ]) ]);
+
+      // Act
+      FakeHealCapturingManager.scheduleHealDealtTriggers(battler, mended);
+
+      // Assert- the very battler that was mended, not a copy of it.
+      expect(seen).toEqual([ { id: 3, hitTarget: mended } ]);
+      expect(seen[0].hitTarget).toBe(mended);
+    });
+
     it('hands dispatch no hit target for a condition no hit fired', () =>
     {
       // Arrange- the dispatch running at all (one entry) is what makes its null target mean something.

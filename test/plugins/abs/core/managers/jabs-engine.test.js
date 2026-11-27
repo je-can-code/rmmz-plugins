@@ -2807,29 +2807,21 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
 
   describe('handleOnCastStateEffects', () =>
   {
-    it('applies all seven on-cast state effect hooks against the underlying Game_Action', () =>
+    it('does nothing on its own, never reaching into the action it is handed', () =>
     {
+      // Arrange- the hook is J-ABS's extension point, and J-ABS has no on-cast effects of its own. the only way to
+      // reach the action's effects is through its Game_Action, so a hook that applied anything would have to ask.
       const engine = new JABS_Engine();
-      const gameAction = {
-        applyOnCastSelfStates: vi.fn(),
-        applyOnCastSelfStatesIfAfflicted: vi.fn(),
-        applyOnCastLoseStates: vi.fn(),
-        applyToggleOnExecuteStates: vi.fn(),
-        applyToggleGroupOnExecuteStates: vi.fn(),
-        applyOnCastExecuteSkills: vi.fn(),
-        applyOnCastExecuteSkillsIfAfflicted: vi.fn(),
-      };
-      const action = { getAction: () => gameAction };
+      const caster = { getBattler: vi.fn() };
+      const action = { getAction: vi.fn() };
 
-      engine.handleOnCastStateEffects('caster', action);
+      // Act
+      const result = engine.handleOnCastStateEffects(caster, action);
 
-      expect(gameAction.applyOnCastSelfStates).toHaveBeenCalledTimes(1);
-      expect(gameAction.applyOnCastSelfStatesIfAfflicted).toHaveBeenCalledTimes(1);
-      expect(gameAction.applyOnCastLoseStates).toHaveBeenCalledTimes(1);
-      expect(gameAction.applyToggleOnExecuteStates).toHaveBeenCalledTimes(1);
-      expect(gameAction.applyToggleGroupOnExecuteStates).toHaveBeenCalledTimes(1);
-      expect(gameAction.applyOnCastExecuteSkills).toHaveBeenCalledWith('caster');
-      expect(gameAction.applyOnCastExecuteSkillsIfAfflicted).toHaveBeenCalledWith('caster');
+      // Assert
+      expect(action.getAction).not.toHaveBeenCalled();
+      expect(caster.getBattler).not.toHaveBeenCalled();
+      expect(result).toBeUndefined();
     });
   });
 
@@ -5916,7 +5908,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
   {
     function buildTarget(overrides = {})
     {
-      const targetBattler = { getPositiveRolls: () => 0 };
+      const targetBattler = { getPositiveRolls: () => 0, getNegativeRolls: () => 0 };
       return Object.assign({ getBattler: () => targetBattler }, overrides);
     }
 
@@ -5984,7 +5976,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
   {
     function buildTarget(overrides = {})
     {
-      const targetBattler = { getPositiveRolls: () => 0 };
+      const targetBattler = { getPositiveRolls: () => 0, getNegativeRolls: () => 0 };
       return Object.assign({ getBattler: () => targetBattler }, overrides);
     }
 
@@ -6684,6 +6676,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
     {
       return Object.assign({
         matchesHitType: () => true,
+        matchesOutcome: () => true,
         baseSkill: () => ({}),
         resolveProcCount: () => 1,
         skillId: 7,
@@ -6708,6 +6701,23 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
 
       engine.executeRetaliationSkills(retaliator, [ skillChance ], buildTriggeringAction());
 
+      expect(retaliator.createJabsActionFromSkill).not.toHaveBeenCalled();
+    });
+
+    it('skips a retaliation skill whose outcome filter does not match how the hit landed', () =>
+    {
+      // Arrange- the hit type matches, so only the outcome filter stands in the way.
+      const engine = new JABS_Engine();
+      engine.canExecuteMapActions = vi.fn(() => true);
+      engine.executeMapAction = vi.fn();
+      const retaliator = buildRetaliator([ buildRetaliationAction() ]);
+      const skillChance = buildSkillChance({ matchesOutcome: vi.fn(() => false) });
+
+      // Act
+      engine.executeRetaliationSkills(retaliator, [ skillChance ], buildTriggeringAction());
+
+      // Assert
+      expect(skillChance.matchesOutcome).toHaveBeenCalledWith(expect.objectContaining({ hpDamage: 1 }));
       expect(retaliator.createJabsActionFromSkill).not.toHaveBeenCalled();
     });
 

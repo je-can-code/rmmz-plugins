@@ -23,6 +23,7 @@ tries again on the next frame, while an event-driven one (a hit, a kill) lets th
 
 A rule fired by a hit (`onDamageDealt`, `onWeaponHit`) knows the battler that was struck, and a `<direct>` payload lands
 on that battler's tile: an enchant's follow-up hits the foe the swing hit, not whatever stands around the one swinging.
+A rule fired by a heal (`onHealDealt`) knows the battler that was mended the same way.
 A payload with a cast time keeps that aim through its windup, and lands where it was aimed even if the foe moves. Every
 other payload fires from its bearer, as does every payload on any other condition.
 
@@ -77,4 +78,4 @@ Magic-knight style: every basic-attack (or combo) hit also fires skill 1026 on t
 `<autoExecuteSkill:[1027, whenGlanced, 0]>`
 Retaliate on a glancing blow: every time this battler is grazed, fires skill 1027 as a real map action from this
 battler's own position. No auto-aim at the attacker- the payload skill's own hitbox/range decides who it reaches
-(self-centered radial or facing-cone reads as "retaliation"). Only the hit-driven conditions aim.
+(self-centered radial or facing-cone reads as "retaliation"). Only the conditions a hit or a heal fires aim.

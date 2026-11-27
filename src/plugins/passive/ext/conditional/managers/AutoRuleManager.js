@@ -54,7 +54,8 @@ class AutoRuleManager
    * living further down the tuple than the shared loop itself ever inspects).
    * @param {JABS_Battler|null} _hitTarget - The battler a hit-driven rule's hit landed on, for subclasses
    * that aim at it; null for every condition that has no hit behind it.
-   * @returns {boolean} - True when the effect was successfully dispatched.
+   * @returns {boolean} - True when the dispatch went ahead, which is what spends the rule's cooldown; each
+   * subclass says what going ahead means for its effect.
    */
   static dispatch(_battler, _id, _tuple, _hitTarget)
   {
@@ -283,6 +284,22 @@ class AutoRuleManager
 
     // delegate to the main dispatch loop with the onDamageDealt condition kind.
     this.tryDispatch(battler, 'onDamageDealt', hitTarget);
+  }
+
+  /**
+   * Fires {@code onHealDealt} rules on the battler whose action just restored HP, MP or TP on a battler of its own
+   * side, itself included.
+   *
+   * The healing counterpart of {@code onDamageDealt}, and narrower than {@code onAllyHeal}: only an action that
+   * lands reaches it, never regeneration or a heal that merely happened nearby.
+   * @param {Game_Actor|Game_Enemy} battler - The battler that did the healing.
+   * @param {JABS_Battler} hitTarget - The battler the heal landed on, handed to every rule this fires so a payload
+   * aimed at it can land on it.
+   */
+  static scheduleHealDealtTriggers(battler, hitTarget)
+  {
+    // delegate to the main dispatch loop with the onHealDealt condition kind.
+    this.tryDispatch(battler, 'onHealDealt', hitTarget);
   }
 
   /**
@@ -608,7 +625,7 @@ class AutoRuleManager
     // capture the current frame count as the reference point for cooldown evaluation.
     const now = Graphics.frameCount;
 
-    // read the frame this rule last successfully dispatched on this battler.
+    // read the frame this rule last dispatched on this battler.
     const lastFrame = battler.getAutoRuleLastFrame(ruleKey);
 
     // calculate how many frames have elapsed since the rule last fired.
@@ -620,7 +637,7 @@ class AutoRuleManager
     // attempt the terminal dispatch through the subclass implementation.
     const dispatched = this.dispatch(battler, id, tuple, hitTarget);
 
-    // only stamp the cooldown when the dispatch actually succeeded.
+    // only stamp the cooldown when the dispatch went ahead.
     if (dispatched === true)
     {
       battler.setAutoRuleLastFrame(ruleKey, now);

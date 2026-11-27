@@ -220,20 +220,28 @@ of the attacker's actions lands a crit. Requires J-ABS; silently ignored outside
 
 **Effect:**
 rolls CHANCE% (0–100, independently per tag) to apply STATE_ID. `Apply` variants target the battler
-that was crit; `Self` variants target the attacker who landed the crit.
+that was crit; `Self` variants target the attacker who landed the crit. Each tag rolls through J-ABS's
+state application roll (see `<stateTypeResist>`): CHANCE meets the recipient's State Rate and
+`<stateTypeResist>`, then, for a harmful state, the LUK between attacker and recipient, then both battlers' fate, with the
+skill that crit as the skill in hand. An `Apply` state is harm when that skill targets the attacker's
+opponents, so each curse the target carries is one more chance for it to land, and help otherwise, so
+each curse is one more hurdle. A `Self` state meets the attacker's own resistances, with no LUK edge
+and its fate counted once. Accumulate Mode and Encore can land a state more than once, and the
+recipient's immunities are checked on every landing.
 
 ```
 <thisCritApply:[5, 30]>
 ```
-This skill has a 30% chance to apply state 5 to the target when it crits.
+When this skill crits, it rolls a 30% chance to apply state 5 to the target.
 
 ```
 <onCritSelf:[20, 50]>
 ```
-Whenever this battler (carrier of the tag) lands any critical hit, 50% chance to apply state 20 to
-themselves — good fit for a passive mastery state granting a character-wide on-crit self-buff.
+Whenever this battler (carrier of the tag) lands any critical hit, it rolls a 50% chance to apply state
+20 to themselves — good fit for a passive mastery state granting a character-wide on-crit self-buff.
 
-**See also:** `<forceCritProcs>` (makes these rolls always succeed)
+**See also:** `<forceCritProcs>` (forces these rolls to succeed), J-ABS's `<stateTypeResist>`, J-ABS's
+`<luckyRolls>`
 
 ---
 
@@ -246,16 +254,25 @@ Actors, Classes, Skills, Weapons, Armors, Enemies, States
 always, once present on any of the attacker's note sources
 
 **Effect:**
-forces every `thisCritApply`/`thisCritSelf`/`onCritApply`/`onCritSelf` roll above to succeed, as if
-the attacker had rolled a guaranteed positive result — without touching the attacker's real
-`isVeryLucky()`/`isVeryCursed()` flags anywhere else, and without inflating crit chance itself.
-Accumulate Mode and Encore still read the attacker's real values and stack normally on top.
+on a critical hit, forces every chance roll the hit carries to succeed, as if the attacker had rolled a
+guaranteed positive result: the `thisCritApply`/`thisCritSelf`/`onCritApply`/`onCritSelf` rolls above,
+the skill's own Add State and Remove State effects on the battler it crit, and J-SkillExtend's on-hit
+`<applyState>`, `<thisApplyState>`, `<onHitSelfState>`, `<onHitLoseState>`, `<onHitStripState>` and
+`<onHitRemoveState>` (and `<onCastStripState>`/`<onCastRemoveState>` on that battler). A hit that does not
+crit is never forced. All of it happens without touching the attacker's real
+`isVeryLucky()`/`isVeryCursed()` flags anywhere else, and without inflating crit chance itself. A
+forced roll lands whatever its chance comes to, including a chance the recipient's State Rate and
+`<stateTypeResist>` bring down to 0%; each landing still adds the state the usual way, so the
+recipient's immunities are checked on every one. Accumulate Mode and Encore still read the attacker's
+real values: in Accumulate Mode a forced roll lands once for every chance it brings (its one chance,
+the attacker's lucky rolls, and the target's curses when the state is harm), and Encore repeats every
+landing.
 
 ```
 <forceCritProcs>
 ```
-A mastery capstone state with this tag turns `<onCritApply:[5, 25]>` (25% chance) into a guaranteed
-application on every crit.
+A mastery capstone state with this tag turns `<onCritApply:[5, 25]>` (25% chance), or a skill's 25% Add
+State effect, into an application on every crit against any target not immune to state 5.
 
 **See also:** the `onCrit`/`thisCrit` state-application family above
 
@@ -1067,6 +1084,9 @@ state is added to this battler),
 Mainhand/Offhand slot, i.e. the basic attack or its combo chain, or from a skill carrying
 `<countsAsWeaponHit>`; any other skill does not qualify, so an AoE nuke won't also proc a "swing"
 follow-up on the whole map),
+`onHealDealt` (this battler's action restores HP, MP or TP on a battler of its own side, itself
+included; only a landed action counts, so unlike `onAllyHeal` it never hears natural regeneration,
+lifesteal or a heal cascade),
 `move` (PARAM = whole tiles moved per apply; requires J-Pixelistics),
 `stand` (PARAM = frames standing still on the map before applying),
 `enemiesNearby`/`alliesNearby`/`enemiesNearbyBelow`/`alliesNearbyBelow` — 4/5-value proximity
@@ -1090,7 +1110,8 @@ The last example applies a self-buff every 30 frames while no enemy is within 1 
 same as `<autoApplyState>`
 
 **When:**
-pulse timer gated by COOLDOWN_FRAMES (tracked on the bearer) and a minimum nearby-battler count
+pulse timer gated by COOLDOWN_FRAMES (tracked on the bearer, and started over by every pulse that
+rolls for at least one target, whether or not STATE_ID landed) and a minimum nearby-battler count
 
 **Effect:**
 aura-style sibling of `<autoApplyState>` — instead of applying STATE_ID to the rule bearer, redirects
@@ -1101,10 +1122,19 @@ MIN_COUNT is the minimum number of battlers in range required for the pulse to f
 pulse then hits everyone currently in range, not just MIN_COUNT of them. Optional fifth TRIGGER_TILES
 overrides the plugin's default proximity radius for this rule's gate only.
 
+Each pulse rolls for STATE_ID on every battler in range at a full 100% chance, through J-ABS's state
+application roll (see `<stateTypeResist>`), with the bearer as the roller: each target's State Rate,
+`<stateTypeResist>` and, for a harmful STATE_ID, the LUK between bearer and target scale the chance, and
+the bearer's lucky and cursed rolls go into every roll. A target's curse weighs on it by STATE_ID's own polarity: a
+`<type:negative>` state is harm, so each curse is one more chance for it to land, and any other state
+is help, so each curse is one more hurdle. The bearer's Accumulate Mode and Encore can land it on a
+target more than once in a single pulse. A target that cannot take STATE_ID at all (immune, or holding
+it as a passive) is never rolled for, and every landing checks the target's immunities on its own.
+
 `enemiesNearbyBelow`/`alliesNearbyBelow` invert the gate — the pulse fires while UNDER MIN_COUNT
 instead of at or above it — but the target set is the same proximity list the gate counts. A
 MIN_COUNT of 1 (the "nothing nearby" case) can therefore gate-pass while resolving zero targets,
-in which case the pulse applies to nobody that tick. MIN_COUNT 2+ still lands on whatever stragglers
+in which case the pulse rolls for nobody that tick. MIN_COUNT 2+ still reaches whatever stragglers
 remain under the threshold.
 
 ```
@@ -1140,8 +1170,9 @@ don't).
 
 A rule fired by a hit (`onDamageDealt`, `onWeaponHit`) knows the battler that was struck, and a
 `<direct>` payload lands on that battler's tile: an enchant's follow-up hits the foe the swing hit,
-not whatever stands around the one swinging. A payload with a `<castTime>` keeps that aim through its
-windup. Every other payload, and every payload on any other condition, fires from its bearer.
+not whatever stands around the one swinging. A rule fired by a heal (`onHealDealt`) knows the battler
+that was mended the same way. A payload with a `<castTime>` keeps that aim through its windup. Every
+other payload, and every payload on any other condition, fires from its bearer.
 
 A payload with a `<castTime>` winds up first. It takes its bearer's cast slot, so the map paints its
 telegraph and counts the windup down exactly as for any cast, and it fires the moment the windup ends,
@@ -1203,7 +1234,8 @@ same as `<autoApplyState>`
 negative-tagged / non-negative / any state onto someone else), `onKnockback` (one of this battler's
 hits actually moves an enemy, knocked back or pulled in by `<pullForward>`; a hit that leaves it where
 it stood, a hop in place included, fires nothing). COOLDOWN_FRAMES is the minimum frames between
-dispatches for this rule; 0 means every time.
+rolls for this rule, started over every time STATE_ID is rolled for, whether or not it landed; 0 means
+every time.
 
 **Effect:**
 unlike `<autoApplyState>` (targets the rule bearer) and `<autoApplyStateOnNearby>` (targets
@@ -1211,7 +1243,16 @@ proximity), this fires from an event involving an EXTERNAL battler — the rule 
 to someone else — and applies STATE_ID onto that same someone else. The bearer's own state-tracking
 still credits the bearer as the inflictor of STATE_ID, matching who actually did it. Depth-guarded in
 case STATE_ID is itself negative-tagged and would otherwise re-trigger this same rule on its own
-application.
+application; the guard covers every landing of one roll, and a firing it refuses is never rolled for.
+
+STATE_ID is rolled for at a full 100% chance, through J-ABS's state application roll (see
+`<stateTypeResist>`), with the bearer as the roller: the target's State Rate, `<stateTypeResist>` and
+for a harmful STATE_ID the LUK between bearer and target scale the chance, and the bearer's lucky and
+cursed rolls go into the roll. The target's curse weighs on it by STATE_ID's own polarity, whatever set the rule off: a
+`<type:negative>` STATE_ID is harm, so each curse is one more chance for it to land, and any other is
+help, so each curse is one more hurdle. The bearer's Accumulate Mode and Encore can land it more than
+once. A target that cannot take STATE_ID at all (immune, or holding it as a passive) is never rolled
+for, and every landing checks the target's immunities on its own.
 
 ```
 <autoInflictState:[70, negaStateInflicted, 0]>
@@ -3140,8 +3181,9 @@ States, Skills, Items, Actors, Classes, Enemies, Weapons, Armors
 this battler is struck
 
 **Effect:**
-fires SKILL_ID immediately at CHANCE percent chance. Optional TYPE (`physical`/`magical`/
-`certain`) filters which incoming hit types trigger it; omitted = any type. The payload skill's
+fires SKILL_ID immediately at CHANCE percent chance. Optional TYPE filters what triggers it: a hit
+type (`physical`/`magical`/`certain`), or how the hit landed (`glancing` for a glancing blow that
+landed, `critical` for a critical hit); omitted = any hit, landed any way. The payload skill's
 damage formula gets three extra variables: `d`/`m`/`t` — the HP/MP/TP damage dealt by the
 triggering hit (all default 0 outside a retaliation context, so referencing them is always safe).
 
@@ -3188,10 +3230,19 @@ this battler evades an incoming attack
 inflicts STATE_ID on the evader itself (rewards dodging). `onEvadeExecute` fires SKILL_ID with
 the attacker seeded as the target (an AoE/self-scope skill ignores the seed).
 
+Both state tags roll CHANCE through the state application roll (see `<stateTypeResist>`), with the
+evader as the roller. An evasion is not a skill the evader uses, so only its battler-wide lucky and
+cursed rolls go in. `onEvadeApply` meets the attacker's State Rate, `<stateTypeResist>` and, for a
+harmful state, the LUK between evader and attacker; no action aims it, so the state decides how the attacker's curse weighs:
+a `<type:negative>` state gets one more chance to land per curse, and any other has to clear each of
+them. `onEvadeApplySelf` meets the evader's own State Rate and `<stateTypeResist>`, with no LUK edge
+and its fate counted once. Accumulate Mode and Encore can land either more than once, and the
+recipient's immunities are checked on every landing.
+
 ```
 <onEvadeApplySelf:[9, 100]>
 ```
-Successfully evading always grants this battler a self-buff state.
+Successfully evading rolls a 100% chance to grant this battler a self-buff state.
 
 ---
 
@@ -3202,22 +3253,33 @@ Successfully evading always grants this battler a self-buff state.
 `thisCursedRolls`: Skills, Items.
 
 **When:**
-any on-chance roll involving this battler (hit, crit, state application, procs)
+any on-chance roll involving this battler (hit, crit, state application and removal, parry, glance,
+procs)
 
 **Formula context:**
 `a` = the battler being evaluated, `b` = 0, `v` = `$gameVariables._data`.
 
 **Effect:**
-most JABS on-chance rolls are a "best of N" contest per side. These tags add extra rolls: lucky
-rolls help this battler succeed when it's the one rolling for success (landing hits, applying
-states, crits, procs); cursed rolls help this battler fail when it's on the defending end
-(incoming hits/states). The `this*` variants are skill-scoped, stacking on top of the
-battler-wide total.
+most JABS on-chance rolls are a "best of N": the roller succeeds if any of its chances lands, then
+has to pass every extra hurdle as well. These tags are a battler's fate. Lucky rolls are good fate:
+one more chance on each of this battler's own rolls (landing hits, applying states, crits, procs,
+parries). Cursed rolls are bad fate, from every side: one more hurdle on each of this battler's own
+rolls; one more chance for harm aimed at it to land (hits, crits, ailments, blessings stripped from
+it, and the parries and glances of anyone it swings at); and one more hurdle for help aimed at it
+(heals, buffs, cleanses). A battler aiming at itself counts its fate once. An action aimed at its
+user's opponents is harm, and anything else it aims is help; when no action aims the roll (an aura or
+inflicted payload, a spreading state, a state applied as another expires, a state an evasion applies),
+the state decides: one carrying `<type:negative>` is harm, and any other is help. The `this*`
+variants are skill-scoped, stacking on top of the battler-wide total while that skill is in use; a
+roll made with no skill in hand reads the battler-wide totals alone.
 
 ```
 <luckyRolls:[Math.floor(a.luk / 20)]>
+<cursedRolls:[2]>
 ```
-Grants one bonus positive roll per 20 points of this battler's own LUK.
+The first grants one more chance per 20 points of this battler's own LUK. The second, Court
+Disaster's curse, puts two more hurdles on everything its bearer tries, and gives every hit, crit
+and ailment aimed at it two more chances to land.
 
 **See also:** `<veryLucky>`, `<encoreRepeats>`, `<accumulate>`
 
@@ -3556,6 +3618,42 @@ different TYPEs contribute independently.
 
 ---
 
+### `<pierceDamageRateIfStateType:TYPE>`
+
+**Applies to:**
+Actors, Classes, Enemies, Weapons, Armors, States, Skills (any of the battler's own note sources; a
+skill counts while the battler knows it, on every hit)
+
+**When:**
+the caster's physical or magical hit lands on a target already carrying a state with a matching
+`<type:TYPE>` classifier
+
+**Effect:**
+the target takes the hit as though it resisted none of it: its PDR (against a physical hit) or MDR
+(against a magical one) counts as no lower than 100%. A rate below that, resistance or outright
+immunity, rises to 100%. A rate already at or above 100% is a vulnerability and stands, the same way
+`<pierceElement>` never touches a weakness, and a certain hit meets neither rate to begin with.
+Heals are never pierced. TYPE matches case-insensitively and, like `<bonusDamageIfStateType>`, this is
+a presence check: one matching state is enough, and several tags naming different types pierce on any
+one of them. It reaches every path a hit's damage takes, J-ABS-Formula packets included, but not
+`<noDamage>`, which is immunity rather than a damage rate. So an invulnerability window built from 0%
+rates opens to a pierced hit, while one built from `<noDamage>` stays shut.
+
+A hit's damage is rolled before its effects land, so the hit that inflicts the state isn't pierced by
+it. A J-ABS-Formula on-hit packet riding that same hit is, when the state comes from an Add State
+effect, since those packets fire after the hit's effects.
+
+```
+<pierceDamageRateIfStateType:cc>
+```
+On a passive state: while a target carries any `cc`-typed state, this battler's hits ignore its PDR and
+MDR resistance. A crab at 60% PDR takes full physical damage while it's crowd-controlled, and a
+softened foe at 125% still takes 125%.
+
+**See also:** `<bonusDamageIfStateType>`, `<pierceElement>`, `<noDamage>`
+
+---
+
 ### `<bonusDamageIfSelfState:[STATE_ID, PCT]>` / `<thisBonusDamageIfSelfState:[STATE_ID, PCT]>`
 
 **Applies to:**
@@ -3666,8 +3764,24 @@ call, KO, food-chain strip)
 
 **Effect:**
 applies STATE_ID to the same battler at CHANCE percent, inheriting the same source battler as the
-expiring state. This distinction (natural vs. forced) is intentional — removing a chain state
-early does not cascade the chain forward. Only the first tag per state is read.
+expiring state, and the skill that applied it. This distinction (natural vs. forced) is intentional —
+removing a chain state early does not cascade the chain forward. Only the first tag per state is read.
+
+The source rolls CHANCE against the afflicted battler through the state application roll (see
+`<stateTypeResist>`): the afflicted battler's State Rate, `<stateTypeResist>` and, for a harmful state,
+the LUK between them weigh on the chance, and the source brings its lucky and cursed rolls, joined by the skill's own when a
+skill applied the expiring state. No action aims the follow-up, so STATE_ID decides how the afflicted
+battler's curse weighs: a `<type:negative>` follow-up gets one more chance to land per curse, and any
+other has to clear each of them. A state the afflicted battler applied to itself rolls its follow-up
+against its own resistances, with no LUK edge and its fate counted once. Accumulate Mode and Encore can
+land the follow-up more than once, and the afflicted battler's immunities are checked on every landing.
+The tag is read off the expiring state as the afflicted battler sees it, so a J-Extend extension state
+layered onto it can change the follow-up it names.
+
+Food chains are exempt from RNG: with J-ABS-Food installed, a state carrying `<foodChain:TYPE>` lands
+STATE_ID exactly once as it expires, with no roll at all. CHANCE, resistances, LUK, lucky and cursed
+rolls, `<veryLucky>`, `<veryCursed>`, Accumulate Mode and Encore never weigh on it; only the afflicted
+battler's immunities can still refuse it.
 
 ```
 <applyStateOnExpire:[15, 50]>
@@ -3710,11 +3824,20 @@ on a spread pulse cadence, independent of slip/regen ticks
 **Effect:**
 tracked states can spread to nearby battlers (buffs and debuffs both qualify). CHANCE is rolled
 independently per candidate each pulse; RANGE is tile distance. Spread uses the original source
-battler from when the state was first applied. `viral` widens candidates to all battlers in range
-instead of just same-side allies. `spreadTick` sets frames between pulses (default from plugin
-param, usually 30). `spreadPerTick` caps successful spreads per pulse. `spreadPreferUnafflicted`
-tries unafflicted battlers first (closest-first); `spreadSkipAfflicted` never re-spreads to a
-battler that already has the state.
+battler from when the state was first applied, and the skill it applied the state with. `viral`
+widens candidates to all battlers in range instead of just same-side allies. `spreadTick` sets frames
+between pulses (default from plugin param, usually 30). `spreadPerTick` caps the battlers a pulse
+lands on: a battler counts once however many times the state lands on it, and one it misses does not
+count. `spreadPreferUnafflicted` tries unafflicted battlers first (closest-first);
+`spreadSkipAfflicted` never re-spreads to a battler that already has the state.
+
+The original source rolls CHANCE against each candidate through the state application roll (see
+`<stateTypeResist>`): the candidate's State Rate, `<stateTypeResist>` and, for a harmful state, the LUK
+between them weigh on the chance, and the source brings its lucky and cursed rolls, joined by the skill's own when a skill
+applied the state. No action aims a spread, so the state decides how the candidate's curse weighs: a
+`<type:negative>` state gets one more chance to land per curse, and any other has to clear each of
+them. Accumulate Mode and Encore can land the state on one candidate more than once. A battler the
+state cannot be added to, such as one immune to it, is never a candidate.
 
 ```
 <spread:[25, 3]>
@@ -4089,17 +4212,32 @@ state being applied)
 a state application is attempted against this battler
 
 **Effect:**
-checked in priority order in `Game_Battler#isStateAddable`, each fully blocking application
-before any chance roll: `immuneToAll` blocks everything including death; `immuneToStates` blocks
-everything except death; `immuneToNegatives` blocks any `<type:negative>`-tagged state;
-`stateTypeImmune:TYPE` blocks any state carrying a matching `<type:TYPE>`. `stateTypeResist` is
-different — it doesn't block outright, it adjusts the chance a matching-type state lands, folded
-into the normal per-id application roll: `rate = 1 - (PCT / 100)`, clamped at 0. PCT reads as
-"percent resisted," not "percent susceptible" — positive PCT shrinks the application chance
-(more resistant), negative PCT grows it (less resistant/more susceptible). This is the opposite
-sign convention from the native RMMZ state-rate trait, where a higher raw value means MORE
-susceptible directly — easy to trip over, so the two examples below spell out both directions.
-Multiple resist tags for the same TYPE stack additively.
+checked in priority order in `Game_Battler#isStateAddable`, each blocking the state outright every
+time it would land, however its chance roll went: `immuneToAll` blocks everything including death;
+`immuneToStates` blocks everything except death; `immuneToNegatives` blocks any
+`<type:negative>`-tagged state; `stateTypeImmune:TYPE` blocks any state carrying a matching
+`<type:TYPE>`. `stateTypeResist` is different — it doesn't block outright, it adjusts the chance a
+matching-type state lands, folded into the same application roll as the native per-id State Rate
+trait: `rate = 1 - (PCT / 100)`, clamped at 0. PCT reads as "percent resisted," not "percent
+susceptible" — positive PCT shrinks the application chance (more resistant), negative PCT grows it
+(less resistant/more susceptible). This is the opposite sign convention from the native RMMZ
+state-rate trait, where a higher raw value means MORE susceptible directly — easy to trip over, so
+the two examples below spell out both directions. Multiple resist tags for the same TYPE stack
+additively.
+
+Every chance a state has to land rolls the same way, whatever carries it: a skill's own Add State
+effect, the attack states a normal attack carries, an on-hit, on-cast or on-crit tag, an evasion, an
+aura or inflicted payload, a spreading state, a state applied as another expires, or a region. The
+chance is the authored percent × the target's State Rate for the state × its `stateTypeResist` rate
+(one rate, summed over every type the state carries), and, for a state carrying `<type:negative>`, × the
+LUK rate between the battler applying it and the target, `1 + (applier LUK - target LUK) × 0.001`, never
+below 0. Luck only weighs on harm: no LUK gap touches a state without `<type:negative>`. A battler
+applying a state to itself holds no LUK edge, so that rate is exactly 1, but its own State Rate and
+`stateTypeResist` still weigh in. The attack states a normal attack carries also answer to the attacker's own rate for each of
+them first. The result is rounded to a whole percent and rolled with both battlers' fate (see
+`<luckyRolls>`); Accumulate Mode and Encore can land it more than once, and the immunities above are
+checked on every landing. A Certain Hit skill cannot miss, and the states it carries take this same
+roll.
 
 ```
 <stateTypeResist:[cc, 50]>
@@ -4754,7 +4892,7 @@ This enemy never shows a danger indicator, even if the plugin default has it ena
 
 Adds food group chain states, a dedicated R2 food slot, and a JABS quick-menu Equip Food screen.
 Chain progression itself is authored via J-ABS core's `<applyStateOnExpire>`, not a tag from this
-plugin.
+plugin. Food chains are exempt from RNG: each phase lands the next with no roll (see `<foodChain>`).
 
 ### `<food:TYPE>`
 
@@ -4787,14 +4925,21 @@ always
 **Effect:**
 marks this state as belonging to food chain group TYPE — every phase state in one arc shares the
 same TYPE. The actual progression (which phase expires into which) is authored via J-ABS core's
-`<applyStateOnExpire>`, not this tag; this tag only identifies group membership for the HUD/logic
-that needs to know "is this a food-chain state, and which arc."
+`<applyStateOnExpire>`, not this tag; this tag identifies group membership for the HUD/logic that
+needs to know "is this a food-chain state, and which arc."
+
+It also exempts the state's expiry from RNG. A state carrying this tag lands the next phase its
+`<applyStateOnExpire>` names exactly once as it expires, with no roll at all: that tag's CHANCE, the
+bearer's State Rate and `<stateTypeResist>`, LUK, lucky and cursed rolls, `<veryLucky>`,
+`<veryCursed>`, Accumulate Mode and Encore never weigh on it. Immunity is not chance, so a bearer that
+cannot take the next phase at all still refuses it. A state without this tag rolls its follow-up the
+way J-ABS rolls any other.
 
 ```
 <foodChain:protein>
 <applyStateOnExpire:[90, 100]>
 ```
-"Well Fed (Protein)" — part of the protein arc, always expires into state 90 ("Pumped").
+"Well Fed (Protein)" — part of the protein arc, expires into state 90 ("Pumped") with no roll.
 
 **See also:** `<applyStateOnExpire>`, `<foodGroupColor>`
 
@@ -5776,9 +5921,11 @@ strings case-insensitively (e.g. J-ABS's type-based damage bonus tags).
 
 `negative` is a reserved classifier name: J-ABS's `RPG_State#isNegativeType` checks for it
 specifically to drive AI cleanse targeting, `<immuneToNegatives>`, `<perDebuffBuff>`,
-`<purgeStates>` polarity filtering, and the `negaStateAdded`/`posiStateAdded`/`negaStateInflicted`/
-`posiStateInflicted` conditional-passive triggers. Tag every ailment state with `<type:negative>`
-(alongside whatever other classifiers it already carries) to participate in all of those systems.
+`<purgeStates>` polarity filtering, the `negaStateAdded`/`posiStateAdded`/`negaStateInflicted`/
+`posiStateInflicted` conditional-passive triggers, and which side of a state's application roll its
+target's curse weighs on when no action aims the roll (an aura, a spread, an expiry chain, an
+evasion's state). Tag every ailment state with `<type:negative>` (alongside whatever other
+classifiers it already carries) to participate in all of those systems.
 
 ```
 <type:poison>
@@ -5987,17 +6134,20 @@ a target (misses/evades/parries never trigger it; multiple projectiles/repeats/J
 trigger it independently).
 
 **Effect:**
-CHANCE percent chance to apply STATE_ID to the caster. State resistance is NOT factored into
-CHANCE — the tag's percent is treated as the full, final chance. Both `onCast` and `onHit` variants
-read from `reactiveStateSources()` — the executing skill's own note PLUS every state currently
-active on the caster — so this tag is not skill-scoped. Placed on a passive state instead of a
-skill, it rolls on every skill that battler casts (or every skill that lands, for the `onHit`
+CHANCE percent chance to apply STATE_ID to the caster. CHANCE rolls through J-ABS's state
+application roll (see J-ABS's `<stateTypeResist>`) with the caster as both the battler applying the
+state and the one receiving it: it meets the caster's own State Rate and `<stateTypeResist>`, the
+caster holds no LUK edge over itself, and its fate counts once. Accumulate Mode and Encore can land
+it more than once, and the caster's immunities are checked on every landing. Both `onCast` and
+`onHit` variants read from `reactiveStateSources()` — the executing skill's own note PLUS every state
+currently active on the caster — so this tag is not skill-scoped. Placed on a passive state instead
+of a skill, it rolls on every skill that battler casts (or every skill that lands, for the `onHit`
 variant), regardless of which skill it is.
 
 ```
 <onHitSelfState:[19,100]>
 ```
-Always applies state 19 to the caster the moment this skill lands a hit.
+Rolls a 100% chance to apply state 19 to the caster the moment this skill lands a hit.
 
 ```
 <onCastSelfState:[42,20]>
@@ -6023,14 +6173,15 @@ the skill executes (press-time, no hit required). Like `<onCastSelfState>`, this
 
 **Effect:**
 conditional variant of `<onCastSelfState>` — only rolls CHANCE to apply STATE_TO_APPLY to the
-caster if the caster currently has STATE_REQUIREMENT active. If the requirement state is absent,
-this tag does nothing at all — not even a failed roll.
+caster if the caster currently has STATE_REQUIREMENT active, and rolls it the same way, against the
+caster's own resistances. If the requirement state is absent, this tag does nothing at all — not
+even a failed roll.
 
 ```
 <onCastSelfStateIfAfflicted:[42,100,19]>
 ```
-On cast, if the caster has state 19 active, always applies state 42 to themself. No effect if
-state 19 is absent.
+On cast, if the caster has state 19 active, rolls a 100% chance to apply state 42 to themself. No
+effect if state 19 is absent.
 
 **See also:** `<onCastSelfState>`
 
@@ -6046,7 +6197,8 @@ same timing as the SelfState pair above; also reads from `reactiveStateSources()
 a passive state's note as well as a skill's
 
 **Effect:**
-CHANCE percent chance the caster loses one stack of STATE_ID from themself.
+CHANCE percent chance the caster loses one stack of STATE_ID from themself. A removal meets no
+resistances: CHANCE rolls with the caster's own fate, counted once (see J-ABS's `<luckyRolls>`).
 
 ```
 <onCastLoseState:[6,100]>
@@ -6065,7 +6217,10 @@ same timing as the SelfState pair above, but against the TARGET; also reads from
 `reactiveStateSources()`, so it works on a passive state's note as well as a skill's
 
 **Effect:**
-CHANCE percent chance the target loses one stack of STATE_ID.
+CHANCE percent chance the target loses one stack of STATE_ID. A removal meets no resistances: CHANCE
+rolls with the caster's fate against the target (see J-ABS's `<luckyRolls>`). From a skill aimed at
+the caster's opponents it is harm, so each curse the target carries is one more chance for it to
+land; from any other skill it is help, so each curse is one more hurdle.
 
 ```
 <onHitStripState:[9,40]>
@@ -6084,7 +6239,9 @@ same timing as the SelfState pair above, but against the TARGET; also reads from
 `reactiveStateSources()`, so it works on a passive state's note as well as a skill's
 
 **Effect:**
-CHANCE percent chance to fully remove STATE_ID from the target (all stacks at once, not just one).
+CHANCE percent chance to fully remove STATE_ID from the target (all stacks at once, not just one). It
+rolls the way `<onCastStripState>` does: no resistances, and the caster's fate against the target, as
+harm from a skill aimed at the caster's opponents and as help from any other.
 
 ```
 <onCastRemoveState:[10,100]>
@@ -6104,7 +6261,7 @@ note is scanned, so placing it on a passive state's note has no effect.
 this skill is cast — fires once at press-time, same timing as `<onCastSelfState>`, not per target hit
 
 **Effect:**
-rolls CHANCE (1–100); on success, force-executes SKILL_ID through JABS `forceMapAction` — no MP/TP
+rolls CHANCE (0–100); on success, force-executes SKILL_ID through JABS `forceMapAction` — no MP/TP
 cost, no cooldown consumed on the payload skill. The payload owns its own hitbox, targeting, and
 formula, entirely independent of the triggering skill's target. Skill-scoped and repeatable: stack
 as many `<onCastExecuteSkill>` tags on one skill as you want — each is collected and rolled
@@ -6112,12 +6269,18 @@ independently, so a single cast can chain into several follow-up skills at once.
 own `<onCastExecuteSkill>` tag is allowed to chain one further hop before being depth-guarded off,
 so authoring a cyclic pair by accident can't loop forever.
 
+CHANCE rolls once per tag with the caster's own fate alone (see J-ABS's `<luckyRolls>`): its lucky
+and cursed rolls, joined by the cast skill's own `<thisLuckyRolls>` and `<thisCursedRolls>`, weigh on
+any CHANCE under 100, and no resistance or other battler's fate does. `<veryLucky>` executes the
+payload every time, even at 0; `<veryCursed>` never does, even at 100. A payload whose roll lands
+executes once — Accumulate Mode and Encore never repeat it.
+
 ```
 <onCastExecuteSkill:[1026,100]>
 <onCastExecuteSkill:[1027,50]>
 ```
-Magic-knight style: casting this skill always fires skill 1026, and separately rolls a 50% chance
-to also fire skill 1027.
+Magic-knight style: casting this skill fires skill 1026 at 100% (only a `<veryCursed>` caster
+misses it), and separately rolls a 50% chance to also fire skill 1027.
 
 **See also:** `<autoExecuteSkill>` (condition-driven, not skill-scoped), `<onCastSelfState>`
 
@@ -6136,8 +6299,9 @@ this skill is cast, gated on the **caster** carrying STATE_REQUIREMENT at that m
 the `<onCastSelfStateIfAfflicted>` gate pattern applied to `<onCastExecuteSkill>`. Tags whose required
 state is not currently active on the caster are dropped **before** anything is rolled — so a
 non-qualifying payload never rolls and never executes. Whatever survives the gate goes through the
-same force-execute path as the unconditional form: roll CHANCE (1–100), then `forceMapAction` with no
-MP/TP cost and no cooldown on the payload.
+same force-execute path as the unconditional form: roll CHANCE (0–100) with the caster's own fate,
+exactly as `<onCastExecuteSkill>` rolls it, then `forceMapAction` once with no MP/TP cost and no
+cooldown on the payload.
 
 Stackable like its sibling, and that is the point of it: several tags with different state
 requirements let one skill fire a different payload depending on which state the caster happens to be
@@ -6155,27 +6319,51 @@ payload)
 
 ---
 
-### `<thisApplyState:[STATE_ID, CHANCE, DURATION?, STACKS?]>`
+### `<applyState:[STATE_ID, CHANCE, DURATION?, STACKS?]>` / `<thisApplyState:[STATE_ID, CHANCE, DURATION?, STACKS?]>`
 
 **Applies to:**
-Skills
+`applyState`: Actors, Classes, Enemies, Weapons, Armors, States, Skills (the caster's own note sources; a skill
+counts while the battler knows it). `thisApplyState`: Skills (only while that skill is the one landing the hit)
 
 **When:**
-this specific skill lands a hit
+the caster lands a hit
 
 **Effect:**
-applies STATE_ID to the target with a custom DURATION (frames) and/or STACKS, overriding the
-state's own defaults for this application only. Both DURATION and STACKS are optional. DURATION
-carries two sentinels: omitted or `0` means no override — defer entirely to the state's own tags
-(including `<indefiniteState>`); `-1` forces this application indefinite regardless of the state's
-own tags. Any other DURATION value forces that exact finite duration, which wins over the state's
-own tags EVEN IF it carries `<indefiniteState>` — an explicit DURATION is always authoritative.
-Omitting STACKS falls back to the state's own default. Target state resistances still apply;
-CHANCE only rolls if the state could actually land. A skill may carry multiple tags to apply
-different states on one hit. If both `<thisApplyState>` and `<applyState>` target the same state
-id on the same hit, `<thisApplyState>` fires last and wins. A positive overridden DURATION replaces
-the state's base duration only — attacker duration-boost tags (`stateDurationFlat`/`Perc`/`Formula`)
-still layer on top (not applied when DURATION is `-1`, since there's no base duration to boost).
+applies STATE_ID to the target at CHANCE percent, with a custom DURATION (frames) and/or STACKS overriding the
+state's own defaults for this application only. Both DURATION and STACKS are optional. DURATION carries two
+sentinels: omitted or `0` means no override — defer entirely to the state's own tags (including
+`<indefiniteState>`); `-1` forces this application indefinite regardless of the state's own tags. Any other
+DURATION value forces that exact finite duration, which wins over the state's own tags EVEN IF it carries
+`<indefiniteState>` — an explicit DURATION is always authoritative. Omitting STACKS falls back to the state's own
+default. A source may carry multiple tags to apply different states on one hit. A positive overridden DURATION
+replaces the state's base duration only — attacker duration-boost tags (`stateDurationFlat`/`Perc`/`Formula`) still
+layer on top (not applied when DURATION is `-1`, since there's no base duration to boost).
+
+CHANCE rolls through J-ABS's state application roll (see J-ABS's `<stateTypeResist>`): it meets the target's State
+Rate and `<stateTypeResist>`, then the LUK between caster and target, then both battlers' fate. From a skill aimed at
+the caster's opponents the state is harm, so each curse the target carries is one more chance for it to land; from any
+other skill it is help, so each curse is one more hurdle. Accumulate Mode and Encore can land the state more than once
+on a single hit, every landing carrying the same DURATION and STACKS, and the target's immunities are checked on every
+landing.
+
+| Variant | Read from | Fires on |
+|---|---|---|
+| `<applyState>` | every note source the caster has | every hit the caster lands, with anything: a poisoned-blade state, a cursed accessory, or a known skill acting as a passive |
+| `<thisApplyState>` | the skill's own note | that skill's own hits |
+
+Caster-wide entries fire first and skill-scoped ones last, so when both name the same state on one hit,
+`<thisApplyState>` wins.
+
+```
+<applyState:[12, 30]>
+```
+Every hit this battler lands has a 30% chance to apply state 12 with its own default duration.
+
+```
+<applyState:[12, 30, -1]>
+```
+Every hit this battler lands has a 30% chance to apply state 12 forever, regardless of the state's own duration
+tags.
 
 ```
 <thisApplyState:[8, 50, 120, 2]>
@@ -6192,35 +6380,7 @@ still layer on top (not applied when DURATION is `-1`, since there's no base dur
 ```
 50% chance to apply state 8 forever, regardless of the state's own duration tags.
 
-**See also:** `<applyState>`, J-ABS's `<stateDurationFlat>`
-
----
-
-### `<applyState:[STATE_ID, CHANCE, DURATION?, STACKS?]>`
-
-**Applies to:**
-Skills, States, Weapons, Armors, Actors, Enemies, Classes
-
-**When:**
-the caster lands any hit (caster-wide, not scoped to one skill)
-
-**Effect:**
-same mechanics as `<thisApplyState>` above, but reads from ALL of the caster's note sources — a
-poisoned-blade state, a cursed accessory, a base actor trait — firing on every hit the battler
-lands rather than one specific skill.
-
-```
-<applyState:[12, 30]>
-```
-Every hit this battler lands has a 30% chance to apply state 12 with its own default duration.
-
-```
-<applyState:[12, 30, -1]>
-```
-Every hit this battler lands has a 30% chance to apply state 12 forever, regardless of the
-state's own duration tags.
-
-**See also:** `<thisApplyState>`
+**See also:** J-ABS's `<stateDurationFlat>`
 
 ---
 
@@ -7430,10 +7590,16 @@ standing on REGION_ID
 
 **Effect:**
 attempts to apply STATE_ID with CHANCE percent chance (default 100 if omitted), optionally
-playing ANIMATION_ID on success (default none if omitted). CHANCE is the tag's base roll only —
-it does not account for the target's own state resistances/weaknesses, which layer on top.
-Duplicate tags for the same region (even the same state id) stack as independent application
-attempts, not a combined roll.
+playing ANIMATION_ID on success (default none if omitted). A region's state is one the battler
+standing there gives itself, so it rolls CHANCE through J-ABS's state application roll (see J-ABS's
+`<stateTypeResist>`) as both the roller and the recipient: its own State Rate and `<stateTypeResist>`
+weigh on the chance (a weakness raises it just as a resistance lowers it), it holds no LUK edge over
+itself, and its fate counts once. A region carries no skill, so only its battler-wide lucky and
+cursed rolls go in, along with its `<veryLucky>`, `<veryCursed>`, Accumulate Mode and Encore. Every
+landing adds the state through J-ABS like any other application: the battler's immunities are
+checked on each one, and a state it already carries is reapplied by that state's own reapply
+strategy (refresh, extend or stack, see `<stackType>`). Duplicate tags for the same region (even the
+same state id) stack as independent application attempts, not a combined roll.
 
 ```
 <regionAddState:[12, 40]>
@@ -7585,30 +7751,57 @@ Costs 2 of item 12 to cast; refuses to fire without them in stock.
 
 ## J-Resources-ABS (`src/plugins/resources/ext/abs/`)
 
-Damage-linked HP/MP/TP resource effects for JABS: on-attack gains, when-hit gains, steal rates,
-and cross-battler heal-event cascades.
+Combat-linked HP/MP/TP resource effects for JABS: on-attack gains, on-cast gains, when-hit gains,
+steal rates, and cross-battler heal-event cascades.
 
 ### `<on-attack-hp-gain:VALUE>` / `<on-attack-mp-gain:VALUE>` / `<on-attack-tp-gain:VALUE>` (+ `%` and `[FORMULA]` variants)
 
 **Applies to:**
-Skills
+Skills (only the one landing the hit), Actors, Enemies, Classes, Weapons, Armors, States
 
 **Formula context:**
 `a` = the caster battler, `b` = the accumulated flat+percent base before the formula is applied.
 
 **When:**
-this skill lands a hit on the map
+a skill lands a hit on the map, once for every target it hits; a miss grants nothing
 
 **Effect:**
-grants HP/MP/TP to the caster every time the skill connects. Gains are scaled by the caster's REC
-stat.
+grants HP/MP/TP to the caster every time the skill connects, summed across the skill and every
+tagged source the caster carries. Gains are scaled by the caster's REC stat.
 
 ```
 <on-attack-tp-gain:[a.level / 10]>
 ```
 Restores TP equal to one-tenth the caster's level per hit.
 
-**See also:** `<when-hit-hp-gain>`, `<lst>`
+**See also:** `<on-cast-hp-gain>`, `<when-hit-hp-gain>`, `<lst>`
+
+---
+
+### `<on-cast-hp-gain:VALUE>` / `<on-cast-mp-gain:VALUE>` / `<on-cast-tp-gain:VALUE>` (+ `%` and `[FORMULA]` variants)
+
+**Applies to:**
+Skills (only the one being executed), Actors, Enemies, Classes, Weapons, Armors, States
+
+**Formula context:**
+`a` = the caster battler, `b` = the accumulated flat+percent base before the formula is applied.
+
+**When:**
+the caster executes a skill on the map, once per execution as its costs are paid, hit or miss;
+retaliations and other forced skills pay no costs and do not trigger it
+
+**Effect:**
+grants HP/MP/TP to the caster, or takes it away when negative, summed across the skill and every
+tagged source the caster carries. Gains are scaled by the caster's REC stat. A negative value on a
+state taxes every skill its bearer uses.
+
+```
+<on-cast-hp-gain:-10%>
+```
+On a curse state: every skill its bearer executes costs it 10% of its max HP, whether or not it
+lands.
+
+**See also:** `<on-attack-hp-gain>`, `<hp-cost>`
 
 ---
 

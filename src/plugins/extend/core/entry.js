@@ -10,3 +10,4 @@ import './objects/Game_Enemy.js';
 import './objects/Game_Item.js';
 import './objects/Game_Party.js';
 import './managers/JABS_SkillSlotManager.js';
+import './managers/JABS_Engine.js';

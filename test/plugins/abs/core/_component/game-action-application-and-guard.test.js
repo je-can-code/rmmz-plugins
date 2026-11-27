@@ -403,9 +403,9 @@ describe('J-ABS Game_Action application and guard-related damage modification (d
       const action = buildAction();
       action.itemHit = () => 0.9;
       action.itemEva = () => 0.1;
-      action.subject = () => ({ getPositiveRollsForSkill: () => 0 });
-      action.item = () => 'the-skill';
-      const target = { getNegativeRolls: () => 0 };
+      action.subject = () => ({});
+      const target = {};
+      action.fateRollsAgainst = () => [ 1, 0 ];
       const fateSpy = vi.spyOn(globalThis.RPGManager, 'fateOf100')
         .mockReturnValue(true);
 
@@ -423,9 +423,9 @@ describe('J-ABS Game_Action application and guard-related damage modification (d
       const action = buildAction();
       action.itemHit = () => 0.5;
       action.itemEva = () => 0.5;
-      action.subject = () => ({ getPositiveRollsForSkill: () => 0 });
-      action.item = () => 'the-skill';
-      const target = { getNegativeRolls: () => 0 };
+      action.subject = () => ({});
+      const target = {};
+      action.fateRollsAgainst = () => [ 1, 0 ];
       const fateSpy = vi.spyOn(globalThis.RPGManager, 'fateOf100')
         .mockReturnValue(false);
 
@@ -437,24 +437,24 @@ describe('J-ABS Game_Action application and guard-related damage modification (d
       fateSpy.mockRestore();
     });
 
-    it('forwards the attacker\'s positive rolls and the target\'s negative rolls to the fate roll', () =>
+    it('forwards the fate the action brings against its target to the fate roll', () =>
     {
       // Arrange
       const action = buildAction();
       action.itemHit = () => 0.9;
       action.itemEva = () => 0.1;
-      const subject = { getPositiveRollsForSkill: () => 2 };
+      const subject = {};
       action.subject = () => subject;
-      action.item = () => 'the-skill';
-      const target = { getNegativeRolls: () => 3 };
+      const target = {};
+      action.fateRollsAgainst = aimedAt => (aimedAt === target ? [ 4, 3 ] : [ 0, 0 ]);
       const fateSpy = vi.spyOn(globalThis.RPGManager, 'fateOf100')
         .mockReturnValue(true);
 
       // Act
       action.isHitEvaded(target);
 
-      // Assert- 1 + 2 positive, 3 negative.
-      expect(fateSpy).toHaveBeenCalledWith(subject, expect.any(Number), 3, 3);
+      // Assert
+      expect(fateSpy).toHaveBeenCalledWith(subject, expect.any(Number), 4, 3);
       fateSpy.mockRestore();
     });
   });
@@ -466,10 +466,10 @@ describe('J-ABS Game_Action application and guard-related damage modification (d
       // Arrange
       const action = buildAction();
       action.itemCri = () => 0.25;
-      const subject = { getPositiveRollsForSkill: () => 1 };
+      const subject = {};
       action.subject = () => subject;
-      action.item = () => 'the-skill';
-      const target = { getNegativeRolls: () => 0 };
+      const target = {};
+      action.fateRollsAgainst = aimedAt => (aimedAt === target ? [ 2, 0 ] : [ 0, 0 ]);
       const fateSpy = vi.spyOn(globalThis.RPGManager, 'fateOf100')
         .mockReturnValue(true);
 

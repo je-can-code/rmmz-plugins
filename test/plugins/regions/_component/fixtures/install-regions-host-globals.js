@@ -1,5 +1,6 @@
 //region plugins/regions/_component/fixtures/install-regions-host-globals.js
 import { installJBaseHostGlobals } from '../../../_base/core/_component/fixtures/install-j-base-host-globals.js';
+import { installJabsFate } from '../../../_base/core/_component/fixtures/install-jabs-fate.js';
 import PluginMetadata from '../../../../../src/plugins/_base/core/models/PluginMetadata.js';
 
 const noop = function()
@@ -353,6 +354,9 @@ export function installRegionsStatesStackHostGlobals(sandbox = globalThis)
   installRegionsCoreHostGlobals(sandbox);
   installJabsTimerStub(sandbox);
   installRegionsBaseGameCharacterPrototype(sandbox);
+
+  // region states roll through J-ABS's shared state roll, the real one, as a bare global.
+  installJabsFate(sandbox);
 }
 
 /**

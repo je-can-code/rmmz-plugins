@@ -340,23 +340,47 @@ describe('Accumulate Mode / Encore (direct src import)', () =>
       const action = Object.create(globalThis.Game_Action.prototype);
       action.subject = () => attacker;
       action.item = () => ({});
-      action.shouldTargetApplyResistances = () => false;
-      action.lukEffectRate = () => 1;
       action.makeSuccess = () => {};
+      action.isForOpponent = () => true;
       return action;
+    }
+
+    /**
+     * Builds an attacker with no LUK edge and no lucky or cursed rolls.
+     * @returns {object}
+     */
+    function buildAttacker()
+    {
+      return { luk: 0, getPositiveRollsForSkill: () => 0, getNegativeRollsForSkill: () => 0 };
+    }
+
+    /**
+     * Builds a target with no resistances and no curse, reading every state as a blessing, recording every state
+     * added to it.
+     * @returns {object}
+     */
+    function buildTarget()
+    {
+      return {
+        __calls: [],
+        luk: 0,
+        stateRate: () => 1,
+        stateTypeResistRate: () => 1,
+        state: () => ({ isNegativeType: () => false }),
+        getNegativeRolls: () => 0,
+        addState(stateId, attacker)
+        {
+          this.__calls.push({ stateId, attacker });
+        },
+      };
     }
 
     it('applies the state once per resolved proc count', () =>
     {
       // Arrange
       globalThis.RPGManager.resolveProcCount = () => 3;
-      const target = { __calls: [] };
-      target.addState = function(stateId, attacker)
-      {
-        this.__calls.push({ stateId, attacker });
-      };
-      target.getNegativeRolls = () => 0;
-      const attacker = { getPositiveRollsForSkill: () => 0 };
+      const target = buildTarget();
+      const attacker = buildAttacker();
       const action = buildAction(attacker);
 
       // Act
@@ -373,17 +397,21 @@ describe('Accumulate Mode / Encore (direct src import)', () =>
     it('does not apply the state at all when the proc count is 0', () =>
     {
       // Arrange
-      globalThis.RPGManager.resolveProcCount = () => 0;
-      const target = { addState: () => { throw new Error('should not be called'); } };
-      target.getNegativeRolls = () => 0;
-      const attacker = { getPositiveRollsForSkill: () => 0 };
-      const action = buildAction(attacker);
+      const rolledChances = [];
+      globalThis.RPGManager.resolveProcCount = (positiveRoller, percentOfSuccess) =>
+      {
+        rolledChances.push(percentOfSuccess);
+        return 0;
+      };
+      const target = buildTarget();
+      const action = buildAction(buildAttacker());
 
       // Act
-      const act = () => action.handleApplyState(target, 5, 1.0, false);
+      action.handleApplyState(target, 5, 1.0, false);
 
-      // Assert
-      expect(act).not.toThrow();
+      // Assert- the state was rolled for, at its full 100%, and never added.
+      expect(rolledChances).toEqual([ 100 ]);
+      expect(target.__calls).toEqual([]);
     });
   });
 });

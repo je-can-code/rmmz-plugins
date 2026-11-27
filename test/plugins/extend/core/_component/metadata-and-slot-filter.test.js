@@ -54,7 +54,15 @@ describe('J-Extend metadata and skill-slot filtering (direct src import)', () =>
       // Assert: the alias surface is declared after the version gate, so its presence is what
       // proves initialization ran all the way through rather than throwing partway.
       expect(Object.keys(globalThis.J.EXTEND.Aliased))
-        .toEqual([ 'DataManager', 'Game_Action', 'Game_Actor', 'Game_Enemy', 'Game_Item', 'JABS_SkillSlotManager' ]);
+        .toEqual([
+          'DataManager',
+          'Game_Action',
+          'Game_Actor',
+          'Game_Enemy',
+          'Game_Item',
+          'JABS_Engine',
+          'JABS_SkillSlotManager',
+        ]);
     });
 
     it('throws when J-Base is below the required version', async () =>

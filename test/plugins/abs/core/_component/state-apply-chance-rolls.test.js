@@ -8,36 +8,43 @@ import {
 } from '../../_component/fixtures/install-abs-host-globals.js';
 
 /**
- * Builds a minimal caster stand-in exposing only getPositiveRollsForSkill.
+ * Builds a minimal caster stand-in exposing only its LUK, its own rolls and the flags its count reads.
  * @param {number} positiveRolls
  * @returns {object}
  */
 function buildCaster(positiveRolls = 0)
 {
   return {
+    luk: 0,
     getPositiveRollsForSkill: () => positiveRolls,
+    getNegativeRollsForSkill: () => 0,
     isVeryLucky: () => false,
     isVeryCursed: () => false,
+    isAccumulating: () => false,
+    getEncoreRepeats: () => 0,
   };
 }
 
 /**
- * Builds a minimal target stand-in exposing only what these two effects touch.
+ * Builds a minimal target stand-in exposing only what these two effects touch. Every state reads as a blessing
+ * unless the overrides say harm.
  * @param {object} [overrides]
  * @returns {object}
  */
 function buildTarget(overrides = {})
 {
   return {
+    luk: 0,
     getNegativeRolls: () => overrides.negativeRolls ?? 0,
     stateRate: () => overrides.stateRate ?? 1,
     stateTypeResistRate: () => overrides.stateTypeResistRate ?? 1,
+    state: () => ({ isNegativeType: () => overrides.isHarm ?? false }),
     removeState: () => {},
   };
 }
 
 /**
- * Builds a minimal Game_Action stub, borrowing the real shouldApplyState/itemEffectRemoveState
+ * Builds a minimal Game_Action stub, borrowing the real resolveApplyStateProcCount/itemEffectRemoveState
  * straight off the real prototype.
  * @param {object} [overrides]
  * @returns {object}
@@ -45,12 +52,24 @@ function buildTarget(overrides = {})
 function buildAction(overrides = {})
 {
   const action = Object.create(globalThis.Game_Action.prototype);
-  action.subject = () => overrides.attacker ?? buildCaster();
+  const subject = overrides.attacker ?? buildCaster();
+  action.subject = () => subject;
   action.item = () => ({});
-  action.isCertainHit = () => overrides.isCertainHit ?? false;
-  action.lukEffectRate = () => overrides.lukEffectRate ?? 1;
   action.makeSuccess = () => {};
+  action.isForOpponent = () => true;
   return action;
+}
+
+/**
+ * Stubs the fate an action brings against one target, so a roll site can be seen forwarding it untouched.
+ * Any other target gets an empty pair, so a site asking about the wrong battler shows up as zeros.
+ * @param {object} action The action whose fate is stubbed.
+ * @param {object} aimedAt The only target the stubbed fate answers for.
+ * @param {number[]} rolls The positive and negative rolls to answer with.
+ */
+function stubFateRollsAgainst(action, aimedAt, rolls)
+{
+  action.fateRollsAgainst = target => (target === aimedAt ? rolls : [ 0, 0 ]);
 }
 
 /**
@@ -102,51 +121,54 @@ describe('J-ABS state application/removal roll threading (direct src import)', (
     globalThis.RPGManager.chanceIn100 = originalChanceIn100;
   });
 
-  describe('shouldApplyState', () =>
+  describe('resolveApplyStateProcCount', () =>
   {
-    it('feeds the caster\'s positive rolls (plus baseline 1) and the target\'s negative rolls', () =>
+    it('rolls with the fate the action brings against the target it is aimed at', () =>
     {
       // Arrange
       const calls = stubChanceIn100(true);
-      const action = buildAction({ attacker: buildCaster(2) });
+      const action = buildAction();
+      const target = buildTarget();
+      stubFateRollsAgainst(action, target, [ 5, 2 ]);
 
       // Act
-      action.shouldApplyState(buildTarget({ negativeRolls: 3 }), 5, 1.0, false);
+      action.resolveApplyStateProcCount(target, 5, 1.0, false);
 
       // Assert
-      expect(calls[0].rollForPositive).toBe(3);
-      expect(calls[0].rollForNegative).toBe(3);
+      expect(calls[0].rollForPositive).toBe(5);
+      expect(calls[0].rollForNegative).toBe(2);
     });
 
     it('rolls the computed d100 chance', () =>
     {
-      // Arrange- 1.0 base * 0.5 stateRate * 1 stateTypeResist * 1 luk = 0.5 -> d100 = 50.
+      // Arrange- 0.4 base, as 40%, x 0.5 stateRate x 1 stateTypeResist x 1 luk = 20.
       const calls = stubChanceIn100(true);
       const action = buildAction();
 
       // Act
-      action.shouldApplyState(buildTarget({ stateRate: 0.5 }), 5, 1.0, false);
+      action.resolveApplyStateProcCount(buildTarget({ stateRate: 0.5 }), 5, 0.4, false);
 
       // Assert
-      expect(calls[0].percent).toBe(50);
+      expect(calls[0].percent).toBe(20);
     });
   });
 
   describe('itemEffectRemoveState', () =>
   {
-    it('feeds the caster\'s positive rolls and the target\'s negative rolls- a cursed target can resist even a cleanse', () =>
+    it('rolls with the fate the action brings against the target it is aimed at', () =>
     {
       // Arrange
       const calls = stubChanceIn100(true);
-      const action = buildAction({ attacker: buildCaster(1) });
-      const target = buildTarget({ negativeRolls: 4 });
+      const action = buildAction();
+      const target = buildTarget();
+      stubFateRollsAgainst(action, target, [ 3, 6 ]);
 
       // Act
       action.itemEffectRemoveState(target, { value1: 1.0, dataId: 5 });
 
       // Assert
-      expect(calls[0].rollForPositive).toBe(2);
-      expect(calls[0].rollForNegative).toBe(4);
+      expect(calls[0].rollForPositive).toBe(3);
+      expect(calls[0].rollForNegative).toBe(6);
     });
 
     it('converts the fractional value1 into a d100 roll', () =>
@@ -161,6 +183,23 @@ describe('J-ABS state application/removal roll threading (direct src import)', (
 
       // Assert
       expect(calls[0].percent).toBe(75);
+    });
+
+    it('lets the roller chanceRollerAgainst names for the target settle the roll', () =>
+    {
+      // Arrange- a very lucky stand-in for this target only; with the dice failing, only its override can land it.
+      stubChanceIn100(false);
+      const action = buildAction();
+      const target = buildTarget();
+      target.removeState = vi.fn();
+      const standIn = { isVeryLucky: () => true, isVeryCursed: () => false };
+      action.chanceRollerAgainst = aimedAt => (aimedAt === target ? standIn : action.subject());
+
+      // Act
+      action.itemEffectRemoveState(target, { value1: 0.1, dataId: 5 });
+
+      // Assert
+      expect(target.removeState).toHaveBeenCalledWith(5);
     });
 
     it('removes the state only when the roll succeeds', () =>

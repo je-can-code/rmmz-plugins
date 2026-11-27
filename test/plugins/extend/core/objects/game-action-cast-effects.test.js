@@ -6,6 +6,7 @@ import {
   setPluginContextToJBase,
   setPluginContextToJExtend,
 } from '../../_component/fixtures/install-extend-host-globals.js';
+import { buildFateBattlerStub } from '../../../_base/core/_component/fixtures/install-jabs-fate.js';
 
 describe('Game_Action ext/extend cast effects (direct src import)', () =>
 {
@@ -39,13 +40,14 @@ describe('Game_Action ext/extend cast effects (direct src import)', () =>
   });
 
   /**
-   * Builds an action stand-in with a caster and an executing skill.
+   * Builds an action stand-in with a caster and an executing skill. The caster carries every primitive J-ABS's fate
+   * reads, each neutral, so a payload's roll is left to its chance alone unless a test says otherwise.
    * @param {object} [overrides] Members to replace.
    * @returns {object}
    */
   const buildAction = (overrides = {}) => Object.assign(Object.create(proto), {
     _item: { setObject: vi.fn(), object: () => null },
-    subject: () => ({ isStateAffected: () => false }),
+    subject: () => buildFateBattlerStub({ isStateAffected: () => false }),
     item: () => ({ note: '' }),
     reactiveStateSources: () => [],
   }, overrides);
@@ -198,6 +200,26 @@ describe('Game_Action ext/extend cast effects (direct src import)', () =>
       expect(applyStates).toHaveBeenCalledWith(expect.anything(), []);
     });
 
+    it('keeps only the self-states whose required affliction is active, out of several', () =>
+    {
+      // Arrange- two tags gated on different states, and only one of those states is active on the caster.
+      getArraysSpy.mockReturnValue([ [ 10, 40, 99 ], [ 11, 60, 98 ] ]);
+      const applyStates = vi.fn();
+      const action = buildAction({
+        subject: () => ({ isStateAffected: stateId => stateId === 99 }),
+        reactiveStateSources: () => [ { note: '' } ],
+        applyStates,
+      });
+
+      // Act
+      proto.applyOnCastSelfStatesIfAfflicted.call(action);
+
+      // Assert- only the tag whose gate holds survives, naming its own state and its percent chance as authored.
+      const [ [ , effects ] ] = applyStates.mock.calls;
+      const kept = effects.map(({ skillId, chance }) => [ skillId, chance ]);
+      expect(kept).toEqual([ [ 10, 40 ] ]);
+    });
+
     it('gathers tags from every reactive source, not just the skill', () =>
     {
       // Arrange- active states can contribute these tags too, which is what makes them reactive.
@@ -222,13 +244,15 @@ describe('Game_Action ext/extend cast effects (direct src import)', () =>
   describe('onCastExecuteSkill dispatch', () =>
   {
     let getArraysSpy;
-    let chanceSpy;
+    let fateSpy;
     let forceMapAction;
 
     beforeEach(() =>
     {
       getArraysSpy = vi.spyOn(globalThis.RPGManager, 'getArraysFromNotesByRegex');
-      chanceSpy = vi.spyOn(globalThis.RPGManager, 'chanceIn100').mockReturnValue(true);
+
+      // every payload's roll lands unless a test says otherwise; how the roll is made is covered further down.
+      fateSpy = vi.spyOn(globalThis.RPGManager, 'fateOf100').mockReturnValue(true);
 
       forceMapAction = vi.fn();
       globalThis.$jabsEngine = { forceMapAction };
@@ -237,7 +261,7 @@ describe('Game_Action ext/extend cast effects (direct src import)', () =>
     afterEach(() =>
     {
       getArraysSpy.mockRestore();
-      chanceSpy.mockRestore();
+      fateSpy.mockRestore();
       delete globalThis.$jabsEngine;
     });
 
@@ -286,7 +310,7 @@ describe('Game_Action ext/extend cast effects (direct src import)', () =>
     {
       // Arrange
       getArraysSpy.mockReturnValue([ [ 42, 5 ] ]);
-      chanceSpy.mockReturnValue(false);
+      fateSpy.mockReturnValue(false);
       const action = buildAction();
 
       // Act
@@ -300,7 +324,7 @@ describe('Game_Action ext/extend cast effects (direct src import)', () =>
     {
       // Arrange- the first tag fails its roll and the second succeeds.
       getArraysSpy.mockReturnValue([ [ 1, 50 ], [ 2, 50 ] ]);
-      chanceSpy.mockReturnValueOnce(false)
+      fateSpy.mockReturnValueOnce(false)
         .mockReturnValueOnce(true);
       const action = buildAction();
 
@@ -397,13 +421,15 @@ describe('Game_Action ext/extend cast effects (direct src import)', () =>
       // Arrange- this is what lets one button fire a different follow-up depending on the caster's
       // current state, without rolling the branches that do not apply.
       getArraysSpy.mockReturnValue([ [ 42, 100, 99 ] ]);
-      const action = buildAction({ subject: () => ({ isStateAffected: stateId => stateId === 99 }) });
+      const subject = buildFateBattlerStub({ isStateAffected: stateId => stateId === 99 });
+      const action = buildAction({ subject: () => subject });
       const caster = { id: 'caster' };
 
       // Act
       proto.applyOnCastExecuteSkillsIfAfflicted.call(action, caster);
 
-      // Assert- the requirement slot is dropped before dispatch.
+      // Assert- the requirement slot is dropped before dispatch, and the caster rolls the payload itself.
+      expect(fateSpy).toHaveBeenCalledWith(subject, 100, 1, 0);
       expect(forceMapAction).toHaveBeenCalledWith(caster, 42, false);
     });
 
@@ -411,12 +437,13 @@ describe('Game_Action ext/extend cast effects (direct src import)', () =>
     {
       // Arrange
       getArraysSpy.mockReturnValue([ [ 42, 100, 99 ] ]);
-      const action = buildAction({ subject: () => ({ isStateAffected: () => false }) });
+      const action = buildAction({ subject: () => buildFateBattlerStub({ isStateAffected: () => false }) });
 
       // Act
       proto.applyOnCastExecuteSkillsIfAfflicted.call(action, {});
 
       // Assert- no roll is even attempted for a branch that does not apply.
+      expect(fateSpy).not.toHaveBeenCalled();
       expect(forceMapAction).not.toHaveBeenCalled();
     });
 
@@ -424,7 +451,8 @@ describe('Game_Action ext/extend cast effects (direct src import)', () =>
     {
       // Arrange
       getArraysSpy.mockReturnValue([ [ 1, 100, 10 ], [ 2, 100, 20 ], [ 3, 100, 30 ] ]);
-      const action = buildAction({ subject: () => ({ isStateAffected: stateId => stateId === 20 }) });
+      const subject = buildFateBattlerStub({ isStateAffected: stateId => stateId === 20 });
+      const action = buildAction({ subject: () => subject });
 
       // Act
       proto.applyOnCastExecuteSkillsIfAfflicted.call(action, {});
@@ -432,6 +460,98 @@ describe('Game_Action ext/extend cast effects (direct src import)', () =>
       // Assert
       expect(forceMapAction).toHaveBeenCalledTimes(1);
       expect(forceMapAction).toHaveBeenCalledWith({}, 2, false);
+    });
+  });
+
+  describe('rollOnCastExecuteSkill', () =>
+  {
+    let getArraysSpy;
+    let fateSpy;
+    let forceMapAction;
+
+    beforeEach(() =>
+    {
+      getArraysSpy = vi.spyOn(globalThis.RPGManager, 'getArraysFromNotesByRegex');
+
+      // watch every roll without answering it, so the caster's real fate and the real dice decide.
+      fateSpy = vi.spyOn(globalThis.RPGManager, 'fateOf100');
+
+      forceMapAction = vi.fn();
+      globalThis.$jabsEngine = { forceMapAction };
+    });
+
+    afterEach(() =>
+    {
+      getArraysSpy.mockRestore();
+      fateSpy.mockRestore();
+      delete globalThis.$jabsEngine;
+    });
+
+    it('rolls a mid chance once, by the caster, with its own lucky and cursed rolls for the skill being cast', () =>
+    {
+      // Arrange- the caster carries 2 lucky rolls and 1 curse with this skill, 50 of each with any other, and 7 and 9
+      // battler-wide, so a roll reading the wrong skill or the battler-wide totals alone shows in the counts.
+      getArraysSpy.mockReturnValue([ [ 42, 40 ] ]);
+      fateSpy.mockReturnValue(false);
+      const skill = { id: 30, note: '' };
+      const caster = buildFateBattlerStub({
+        getPositiveRolls: () => 7,
+        getNegativeRolls: () => 9,
+        getPositiveRollsForSkill: rolledWith => (rolledWith === skill ? 2 : 50),
+        getNegativeRollsForSkill: rolledWith => (rolledWith === skill ? 1 : 50),
+      });
+      const action = buildAction({ subject: () => caster, item: () => skill });
+
+      // Act
+      proto.applyOnCastExecuteSkills.call(action, { id: 'caster' });
+
+      // Assert- the authored 40 as it stands, the caster's one chance plus its 2 lucky rolls, and its 1 curse.
+      expect(fateSpy.mock.calls).toEqual([ [ caster, 40, 3, 1 ] ]);
+      expect(forceMapAction).not.toHaveBeenCalled();
+    });
+
+    it('never executes a sure payload for a very cursed caster, while a sibling caster without the curse does', () =>
+    {
+      // Arrange- the same 100% payload cast by two casters; only <veryCursed> sets the first apart.
+      getArraysSpy.mockReturnValue([ [ 42, 100 ] ]);
+      const cursedCaster = buildFateBattlerStub({ isVeryCursed: () => true });
+      const openCaster = buildFateBattlerStub();
+      const cursedAction = buildAction({ subject: () => cursedCaster });
+      const openAction = buildAction({ subject: () => openCaster });
+      const cursedJabs = { id: 'cursed' };
+      const openJabs = { id: 'open' };
+
+      // Act
+      proto.applyOnCastExecuteSkills.call(cursedAction, cursedJabs);
+      proto.applyOnCastExecuteSkills.call(openAction, openJabs);
+
+      // Assert
+      expect(forceMapAction.mock.calls).toEqual([ [ openJabs, 42, false ] ]);
+    });
+
+    it('executes a payload no chance could land for a very lucky caster, once, whatever Accumulate and Encore say', () =>
+    {
+      // Arrange- a 0% payload cast by two casters; only <veryLucky> sets the first apart. It also rolls in Accumulate
+      // Mode with 3 lucky rolls and 2 Encore repeats, which would land a repeatable action 12 times.
+      getArraysSpy.mockReturnValue([ [ 42, 0 ] ]);
+      const luckyCaster = buildFateBattlerStub({
+        isVeryLucky: () => true,
+        isAccumulating: () => true,
+        getEncoreRepeats: () => 2,
+        getPositiveRollsForSkill: () => 3,
+      });
+      const plainCaster = buildFateBattlerStub();
+      const luckyAction = buildAction({ subject: () => luckyCaster });
+      const plainAction = buildAction({ subject: () => plainCaster });
+      const luckyJabs = { id: 'lucky' };
+      const plainJabs = { id: 'plain' };
+
+      // Act
+      proto.applyOnCastExecuteSkills.call(luckyAction, luckyJabs);
+      proto.applyOnCastExecuteSkills.call(plainAction, plainJabs);
+
+      // Assert- the lucky caster's payload executes exactly once, and the 0% chance alone stops the other.
+      expect(forceMapAction.mock.calls).toEqual([ [ luckyJabs, 42, false ] ]);
     });
   });
 
@@ -462,6 +582,23 @@ describe('Game_Action ext/extend cast effects (direct src import)', () =>
 
       // Assert
       expect(subject).not.toHaveBeenCalled();
+    });
+
+    it('does nothing when asked to apply an empty set of states, never resolving the caster or its skill', () =>
+    {
+      // Arrange- every on-hit and on-cast self-state family hands its note lookup straight here, empty or not.
+      const subject = vi.fn();
+      const item = vi.fn();
+      const target = { addState: vi.fn() };
+      const action = buildAction({ subject, item });
+
+      // Act
+      proto.applyStates.call(action, target, []);
+
+      // Assert
+      expect(subject).not.toHaveBeenCalled();
+      expect(item).not.toHaveBeenCalled();
+      expect(target.addState).not.toHaveBeenCalled();
     });
   });
 });

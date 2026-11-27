@@ -7765,37 +7765,49 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
   {
     beforeEach(() =>
     {
-      globalThis.$dataItems = { 5: {} };
-      globalThis.Game_Action = vi.fn(function() { this.apply = vi.fn(); });
+      globalThis.Game_Action = vi.fn(function() { this.setItem = vi.fn(); this.apply = vi.fn(); });
     });
 
     it('does nothing without a target or last-hit battler', () =>
     {
+      // Arrange
       const jabsBattler = buildBattler();
       jabsBattler.getTarget = () => null;
       jabsBattler.getBattlerLastHit = () => null;
       jabsBattler.onItemApplied = vi.fn();
 
+      // Act
       jabsBattler.applyToolForOneOpponent(5);
 
+      // Assert
+      expect(globalThis.Game_Action).not.toHaveBeenCalled();
       expect(jabsBattler.onItemApplied).not.toHaveBeenCalled();
     });
 
-    it('applies to the current target when present', () =>
+    it('uses the tool as this battler, landing it on the current target', () =>
     {
+      // Arrange
       const targetBattler = {};
       const target = { getBattler: () => targetBattler };
       const jabsBattler = buildBattler();
       jabsBattler.getTarget = () => target;
+      jabsBattler.getBattlerLastHit = () => ({ getBattler: () => ({}) });
       jabsBattler.onItemApplied = vi.fn();
 
+      // Act
       jabsBattler.applyToolForOneOpponent(5);
 
-      expect(jabsBattler.onItemApplied).toHaveBeenCalledWith(expect.anything(), 5, target);
+      // Assert- the user performs the action, the action carries the tool, and it lands on the target.
+      const [ action ] = globalThis.Game_Action.mock.instances;
+      expect(globalThis.Game_Action).toHaveBeenCalledWith(jabsBattler.getBattler(), false);
+      expect(action.setItem).toHaveBeenCalledWith(5);
+      expect(action.apply).toHaveBeenCalledWith(targetBattler);
+      expect(jabsBattler.onItemApplied).toHaveBeenCalledWith(action, 5, target);
     });
 
     it('falls back to the last-hit battler without a current target', () =>
     {
+      // Arrange
       const lastHitBattler = {};
       const lastHit = { getBattler: () => lastHitBattler };
       const jabsBattler = buildBattler();
@@ -7803,9 +7815,13 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       jabsBattler.getBattlerLastHit = () => lastHit;
       jabsBattler.onItemApplied = vi.fn();
 
+      // Act
       jabsBattler.applyToolForOneOpponent(5);
 
-      expect(jabsBattler.onItemApplied).toHaveBeenCalledWith(expect.anything(), 5, lastHit);
+      // Assert
+      const [ action ] = globalThis.Game_Action.mock.instances;
+      expect(action.apply).toHaveBeenCalledWith(lastHitBattler);
+      expect(jabsBattler.onItemApplied).toHaveBeenCalledWith(action, 5, lastHit);
     });
   });
 
@@ -7813,6 +7829,7 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
   {
     it('applies the tool to every enemy battler', async () =>
     {
+      // Arrange
       const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
       const enemy1Battler = {};
       const enemy2Battler = {};
@@ -7820,12 +7837,20 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       const enemy2 = { getBattler: () => enemy2Battler };
       JABS_AiManager.getEnemyBattlers = vi.fn(() => [ enemy1, enemy2 ]);
       const apply = vi.fn();
-      globalThis.Game_Action = vi.fn(function() { this.apply = apply; });
+      const setItem = vi.fn();
+      globalThis.Game_Action = vi.fn(function() { this.setItem = setItem; this.apply = apply; });
       const jabsBattler = buildBattler();
       jabsBattler.onItemApplied = vi.fn();
 
+      // Act
       jabsBattler.applyToolForAllOpponents(5);
 
+      // Assert- every action is the user's own, carries the tool, and lands on one enemy.
+      expect(globalThis.Game_Action).toHaveBeenCalledTimes(2);
+      expect(globalThis.Game_Action).toHaveBeenNthCalledWith(1, jabsBattler.getBattler(), false);
+      expect(globalThis.Game_Action).toHaveBeenNthCalledWith(2, jabsBattler.getBattler(), false);
+      expect(setItem).toHaveBeenCalledTimes(2);
+      expect(setItem).toHaveBeenCalledWith(5);
       expect(apply).toHaveBeenCalledWith(enemy1Battler);
       expect(apply).toHaveBeenCalledWith(enemy2Battler);
       expect(jabsBattler.onItemApplied).toHaveBeenCalledTimes(2);

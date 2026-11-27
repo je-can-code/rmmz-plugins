@@ -8,6 +8,7 @@ import './models/JABS_FoodChainSegment.js';
 import './models/JABS_FoodChainPlan.js';
 import './models/JABS_FoodChainResolver.js';
 import './models/JABS_Battler.js';
+import './models/JABS_State.js';
 
 import './managers/JABS_Engine.js';
 

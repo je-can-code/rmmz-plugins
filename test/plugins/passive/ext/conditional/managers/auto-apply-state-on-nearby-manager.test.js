@@ -1,10 +1,15 @@
 //region plugins/passive/ext/conditional/managers/auto-apply-state-on-nearby-manager.test.js
-import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { buildFateBattlerStub, installJabsFate } from '../../../../_base/core/_component/fixtures/install-jabs-fate.js';
 
 describe('AutoApplyStateOnNearbyManager (direct src import)', () =>
 {
   let AutoApplyStateOnNearbyManager;
   let FakePassiveRuleJabsAccess;
+
+  /** @type {Function|undefined} */
+  let originalRandomInt;
 
   beforeAll(async () =>
   {
@@ -39,6 +44,10 @@ describe('AutoApplyStateOnNearbyManager (direct src import)', () =>
     }
     vi.doMock('../../../../../../src/plugins/passive/ext/conditional/managers/AutoRuleManager.js', () => ({ default: FakeAutoRuleManager }));
 
+    // the aura rolls through J-ABS's shared state roll, the real one, which reads RPGManager as a bare global.
+    ({ default: globalThis.RPGManager } = await import('../../../../../../src/plugins/_base/core/managers/RPGManager.js'));
+    installJabsFate();
+
     ({ default: AutoApplyStateOnNearbyManager } = await import('../../../../../../src/plugins/passive/ext/conditional/managers/AutoApplyStateOnNearbyManager.js'));
   });
 
@@ -46,16 +55,65 @@ describe('AutoApplyStateOnNearbyManager (direct src import)', () =>
   {
     vi.clearAllMocks();
     globalThis.Graphics = { frameCount: 1000 };
+
+    // every die lands on 1 unless a test pins its own faces, so any roll with a chance above nothing lands.
+    originalRandomInt = Math.randomInt;
+    Math.randomInt = () => 0;
   });
 
+  afterEach(() =>
+  {
+    Math.randomInt = originalRandomInt;
+  });
+
+  /**
+   * Builds a battler stand-in that answers the shared roll neutrally unless told otherwise- no resistance, no luck gap,
+   * no fate, every state read as help- takes any state, and has never pulsed a rule.
+   * @param {object} [overrides] Members to replace on the stand-in.
+   * @returns {object}
+   */
   function makeBattler(overrides = {})
   {
-    return {
+    return buildFateBattlerStub({
       isStateAddable: vi.fn().mockReturnValue(true),
       addState: vi.fn(),
       getAutoRuleLastFrame: vi.fn().mockReturnValue(0),
       setAutoRuleLastFrame: vi.fn(),
       ...overrides,
+    });
+  }
+
+  /**
+   * A target resisting every state by half through State Rate and by a quarter through its type, with 50 LUK, reading
+   * every state as harm so luck weighs in: against a bearer with 110 LUK, the aura's full 100% becomes
+   * 100 x 0.5 x 0.75 x 1.06 = 39.75, rolled against as 40. Rolled by the target itself instead, the luck would fall
+   * away and leave 37.5, rolled against as 38.
+   * @param {object} [overrides] Members to replace on the stand-in.
+   * @returns {object}
+   */
+  function makeResistantTarget(overrides = {})
+  {
+    return makeBattler({
+      luk: 50,
+      stateRate: () => 0.5,
+      stateTypeResistRate: () => 0.75,
+      state: stateId => ({ id: stateId, isNegativeType: () => true }),
+      ...overrides,
+    });
+  }
+
+  /**
+   * Pins the dice to the given faces, in order; each face is what one roll reads, from 1 to 100. A roll past the last
+   * pinned face throws, so a test can never quietly roll more dice than it accounted for.
+   * @param {number[]} faces The faces to land on.
+   */
+  function rollDice(faces)
+  {
+    const remaining = [ ...faces ];
+    Math.randomInt = () =>
+    {
+      if (remaining.length === 0) throw new Error('rolled more dice than the test pinned');
+      return remaining.shift() - 1;
     };
   }
 
@@ -70,30 +128,116 @@ describe('AutoApplyStateOnNearbyManager (direct src import)', () =>
 
   describe('dispatch', () =>
   {
-    it('does not apply the state when it is not addable', () =>
+    /**
+     * A target carrying two curses that reads state 60 as negative and state 61 as anything else, so one target
+     * answers both ways and only the state handed to it decides which side of the roll its curse weighs on.
+     * @returns {object}
+     */
+    function makeCursedTarget()
     {
-      // Arrange
-      const battler = makeBattler({ isStateAddable: vi.fn().mockReturnValue(false) });
+      return makeBattler({
+        getNegativeRolls: () => 2,
+        state: stateId => ({ id: stateId, isNegativeType: () => stateId === 60 }),
+      });
+    }
+
+    /**
+     * A bearer with one lucky roll and three cursed rolls of its own, battler-wide, beside skill-scoped totals an aura
+     * never reads, having no skill to read them for.
+     * @returns {object}
+     */
+    function makeFatedBearer()
+    {
+      return makeBattler({
+        getPositiveRolls: () => 1,
+        getNegativeRolls: () => 3,
+        getPositiveRollsForSkill: () => 7,
+        getNegativeRollsForSkill: () => 8,
+      });
+    }
+
+    it('neither rolls for nor applies a state the target cannot take', () =>
+    {
+      // Arrange- this target is otherwise neutral, so a roll made anyway would land on the default die.
+      const target = makeBattler({ isStateAddable: vi.fn().mockReturnValue(false) });
+      const bearer = makeBattler();
+      const procSpy = vi.spyOn(globalThis.RPGManager, 'resolveProcCount');
 
       // Act
-      const result = AutoApplyStateOnNearbyManager.dispatch(battler, 5);
+      const result = AutoApplyStateOnNearbyManager.dispatch(target, 5, bearer);
 
       // Assert
-      expect(result).toEqual(false);
-      expect(battler.addState).not.toHaveBeenCalled();
+      expect(result).toBe(false);
+      expect(procSpy).not.toHaveBeenCalled();
+      expect(target.addState).not.toHaveBeenCalled();
+
+      // spies on the bare-global RPGManager leak into later tests in this file, so restore by hand.
+      procSpy.mockRestore();
     });
 
-    it('applies the state to the battler using itself as the source', () =>
+    it('applies the state once per landing, with the target as its own nominal source', () =>
     {
-      // Arrange
-      const battler = makeBattler();
+      // Arrange- the die lands exactly on the 40 the target's resistances and the bearer's luck leave.
+      const target = makeResistantTarget();
+      const bearer = makeBattler({ luk: 110 });
+      rollDice([ 40 ]);
 
       // Act
-      const result = AutoApplyStateOnNearbyManager.dispatch(battler, 5);
+      const result = AutoApplyStateOnNearbyManager.dispatch(target, 5, bearer);
 
       // Assert
-      expect(battler.addState).toHaveBeenCalledWith(5, battler);
-      expect(result).toEqual(true);
+      expect(result).toBe(true);
+      expect(target.addState.mock.calls).toEqual([ [ 5, target ] ]);
+    });
+
+    it('reports the state as rolled for when the roll misses', () =>
+    {
+      // Arrange- the die lands one past the 40 the target's resistances and the bearer's luck leave.
+      const target = makeResistantTarget();
+      const bearer = makeBattler({ luk: 110 });
+      rollDice([ 41 ]);
+
+      // Act
+      const result = AutoApplyStateOnNearbyManager.dispatch(target, 5, bearer);
+
+      // Assert
+      expect(result).toBe(true);
+      expect(target.addState).not.toHaveBeenCalled();
+    });
+
+    it('counts the target\'s curse as more chances to land when the state is negative', () =>
+    {
+      // Arrange
+      const target = makeCursedTarget();
+      const bearer = makeFatedBearer();
+      const procSpy = vi.spyOn(globalThis.RPGManager, 'resolveProcCount');
+
+      // Act
+      AutoApplyStateOnNearbyManager.dispatch(target, 60, bearer);
+
+      // Assert- the bearer's own chance and its one lucky roll, plus the target's two curses; the bearer's own three
+      // curses stay hurdles.
+      expect(procSpy).toHaveBeenCalledWith(bearer, 100, 4, 3);
+
+      // spies on the bare-global RPGManager leak into later tests in this file, so restore by hand.
+      procSpy.mockRestore();
+    });
+
+    it('counts the target\'s curse as more hurdles to clear when the state is not negative', () =>
+    {
+      // Arrange
+      const target = makeCursedTarget();
+      const bearer = makeFatedBearer();
+      const procSpy = vi.spyOn(globalThis.RPGManager, 'resolveProcCount');
+
+      // Act
+      AutoApplyStateOnNearbyManager.dispatch(target, 61, bearer);
+
+      // Assert- the bearer's own chance and its one lucky roll; its three curses and the target's two are all hurdles.
+      expect(procSpy).toHaveBeenCalledWith(bearer, 100, 2, 5);
+
+      // spies on the bare-global RPGManager leak into later tests in this file, so restore by hand.
+      procSpy.mockRestore();
     });
   });
 
@@ -217,13 +361,15 @@ describe('AutoApplyStateOnNearbyManager (direct src import)', () =>
       expect(battler.setAutoRuleLastFrame).toHaveBeenCalledWith(expect.any(String), 1000);
     });
 
-    it('dispatches the state to nearby enemies and stamps the cooldown when the gate passes', () =>
+    it('rolls each nearby enemy at the aura\'s full strength with the bearer rolling, and stamps the cooldown', () =>
     {
-      // Arrange
-      const battler = makeBattler();
+      // Arrange- the bearer's 110 LUK meets a resistant target's 50, leaving 40; the die lands on it.
+      const battler = makeBattler({ luk: 110 });
       const source = { constructor: { name: 'RPG_State' }, id: 1 };
-      const nearbyTarget = makeBattler();
+      const nearbyTarget = makeResistantTarget();
       FakePassiveRuleJabsAccess.nearbyEnemies.mockReturnValue([ { getBattler: () => nearbyTarget } ]);
+      const procSpy = vi.spyOn(globalThis.RPGManager, 'resolveProcCount');
+      rollDice([ 40 ]);
 
       // Act
       AutoApplyStateOnNearbyManager._tryDispatchProximityRule(
@@ -231,17 +377,52 @@ describe('AutoApplyStateOnNearbyManager (direct src import)', () =>
       );
 
       // Assert
-      expect(nearbyTarget.addState).toHaveBeenCalledWith(5, nearbyTarget);
+      expect(procSpy).toHaveBeenCalledWith(battler, 40, 1, 0);
+      expect(nearbyTarget.addState.mock.calls).toEqual([ [ 5, nearbyTarget ] ]);
       expect(battler.setAutoRuleLastFrame).toHaveBeenCalledWith(expect.any(String), 1000);
+
+      // spies on the bare-global RPGManager leak into later tests in this file, so restore by hand.
+      procSpy.mockRestore();
+    });
+
+    it('stamps the cooldown when the roll misses, even beside a target that cannot take the state', () =>
+    {
+      // Arrange- the first target is rolled for and the die clears its 40 by one; the second cannot take the state
+      // at all and is never rolled for, so it comes last, where it would have the last word on the stamp.
+      const battler = makeBattler({ luk: 110 });
+      const source = { constructor: { name: 'RPG_State' }, id: 1 };
+      const missedTarget = makeResistantTarget();
+      const unaddableTarget = makeBattler({ isStateAddable: vi.fn().mockReturnValue(false) });
+      FakePassiveRuleJabsAccess.nearbyEnemies.mockReturnValue([
+        { getBattler: () => missedTarget },
+        { getBattler: () => unaddableTarget },
+      ]);
+      const procSpy = vi.spyOn(globalThis.RPGManager, 'resolveProcCount');
+      rollDice([ 41 ]);
+
+      // Act
+      AutoApplyStateOnNearbyManager._tryDispatchProximityRule(
+        battler, source, 0, 5, 'enemiesNearby', [ 5, 'enemiesNearby', 1, 60 ],
+      );
+
+      // Assert
+      expect(procSpy).toHaveBeenCalledTimes(1);
+      expect(missedTarget.addState).not.toHaveBeenCalled();
+      expect(unaddableTarget.addState).not.toHaveBeenCalled();
+      expect(battler.setAutoRuleLastFrame).toHaveBeenCalledWith(expect.any(String), 1000);
+
+      // spies on the bare-global RPGManager leak into later tests in this file, so restore by hand.
+      procSpy.mockRestore();
     });
 
     it('does not stamp the cooldown when every nearby target rejects the state', () =>
     {
-      // Arrange
+      // Arrange- the target is otherwise neutral, so a roll made anyway would land on the default die.
       const battler = makeBattler();
       const source = { constructor: { name: 'RPG_State' }, id: 1 };
       const nearbyTarget = makeBattler({ isStateAddable: vi.fn().mockReturnValue(false) });
       FakePassiveRuleJabsAccess.nearbyEnemies.mockReturnValue([ { getBattler: () => nearbyTarget } ]);
+      const procSpy = vi.spyOn(globalThis.RPGManager, 'resolveProcCount');
 
       // Act
       AutoApplyStateOnNearbyManager._tryDispatchProximityRule(
@@ -249,8 +430,32 @@ describe('AutoApplyStateOnNearbyManager (direct src import)', () =>
       );
 
       // Assert
+      expect(procSpy).not.toHaveBeenCalled();
       expect(nearbyTarget.addState).not.toHaveBeenCalled();
       expect(battler.setAutoRuleLastFrame).not.toHaveBeenCalled();
+
+      // spies on the bare-global RPGManager leak into later tests in this file, so restore by hand.
+      procSpy.mockRestore();
+    });
+
+    it('lands the state once for every roll an Accumulating bearer lands in one pulse', () =>
+    {
+      // Arrange- an Accumulating bearer with two lucky rolls rolls all three of its chances against the 50 a
+      // target's half State Rate leaves, and two of the three dice land.
+      const battler = makeBattler({ isAccumulating: () => true, getPositiveRolls: () => 2 });
+      const source = { constructor: { name: 'RPG_State' }, id: 1 };
+      const nearbyTarget = makeBattler({ stateRate: () => 0.5 });
+      FakePassiveRuleJabsAccess.nearbyEnemies.mockReturnValue([ { getBattler: () => nearbyTarget } ]);
+      rollDice([ 10, 90, 50 ]);
+
+      // Act
+      AutoApplyStateOnNearbyManager._tryDispatchProximityRule(
+        battler, source, 0, 5, 'enemiesNearby', [ 5, 'enemiesNearby', 1, 60 ],
+      );
+
+      // Assert
+      expect(nearbyTarget.addState.mock.calls).toEqual([ [ 5, nearbyTarget ], [ 5, nearbyTarget ] ]);
+      expect(battler.setAutoRuleLastFrame).toHaveBeenCalledWith(expect.any(String), 1000);
     });
 
     it('uses alliesNearby (excluding self) for the alliesNearby condition kind', () =>

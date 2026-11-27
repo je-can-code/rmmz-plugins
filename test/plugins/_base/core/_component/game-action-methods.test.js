@@ -1,11 +1,10 @@
 //region plugins/_base/_component/game-action-methods.test.js
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { installJBaseHostGlobals } from './fixtures/install-j-base-host-globals.js';
 
 describe('J-Base Game_Action methods (direct src import)', () =>
 {
-  let originalMakeDamageValue;
   let originalClear;
 
   beforeAll(async () =>
@@ -16,12 +15,8 @@ describe('J-Base Game_Action methods (direct src import)', () =>
 
     await import('../../../../../src/plugins/_base/core/_metadata/initialization.js');
 
-    // vanilla RMMZ Game_Action#makeDamageValue this file aliases- stubbed bare so
+    // vanilla RMMZ Game_Action#clear this file aliases to seed the trigger damages- stubbed bare so
     // J.BASE.Aliased captures a real function rather than undefined.
-    originalMakeDamageValue = vi.fn(() => -10);
-    globalThis.Game_Action.prototype.makeDamageValue = originalMakeDamageValue;
-
-    // same treatment for #clear, which this file aliases to seed the trigger damages.
     originalClear = vi.fn();
     globalThis.Game_Action.prototype.clear = originalClear;
 
@@ -35,14 +30,29 @@ describe('J-Base Game_Action methods (direct src import)', () =>
     vi.unstubAllGlobals();
   });
 
-  beforeEach(() =>
-  {
-    originalMakeDamageValue.mockClear();
-  });
-
   function buildAction()
   {
     return Object.create(globalThis.Game_Action.prototype);
+  }
+
+  // an action whose damage roll is scripted step by step, so each step of J-Base's makeDamageValue
+  // leaves its own mark on the number it returns: variance adds 1, guard takes 2, a critical triples,
+  // and HAR throws unless something hands the action a subject.
+  function buildDamageRollAction(formulaValue, elementRate, damageRate)
+  {
+    const action = buildAction();
+    action.item = () => ({ damage: { variance: 20 } });
+    action.evalDamageFormula = () => formulaValue;
+    action.calcElementRate = () => elementRate;
+    action.damageRateAgainst = vi.fn(() => damageRate);
+    action.applyCritical = vi.fn(value => value * 3);
+    action.applyVariance = vi.fn(value => value + 1);
+    action.applyGuard = vi.fn(value => value - 2);
+    action.subject = () =>
+    {
+      throw new Error('HAR was read on a roll that is not a heal');
+    };
+    return action;
   }
 
   describe('registerFormulaContext', () =>
@@ -159,32 +169,112 @@ describe('J-Base Game_Action methods (direct src import)', () =>
 
   describe('makeDamageValue', () =>
   {
-    it('applies the caster\'s HAR when the original result is a heal (negative)', () =>
+    it('scales a harmful hit by its element and the seam\'s rate, skips REC and HAR, and rounds', () =>
     {
       // Arrange
-      originalMakeDamageValue.mockReturnValue(-10);
-      const action = buildAction();
-      action.subject = () => ({ har: 1.5 });
+      const action = buildDamageRollAction(101, 1.5, 0.5);
+      const target = { rec: 4 };
 
       // Act
-      const result = action.makeDamageValue({}, false);
+      const result = action.makeDamageValue(target, false);
 
       // Assert
-      expect(result).toBe(-15);
+      expect(result).toBe(75);
+      expect(action.damageRateAgainst).toHaveBeenCalledWith(target, true);
+      expect(action.applyVariance).toHaveBeenCalledWith(75.75, 20);
+      expect(action.applyCritical).not.toHaveBeenCalled();
     });
 
-    it('leaves the original result unchanged when it is not a heal (non-negative)', () =>
+    it('hands the seam an absorbed hit as not harmful, and applies HAR to what it heals', () =>
     {
       // Arrange
-      originalMakeDamageValue.mockReturnValue(10);
-      const action = buildAction();
-      action.subject = () => { throw new Error('should not be called'); };
+      const action = buildDamageRollAction(100, -1, 0.5);
+      action.subject = () => ({ har: 1.5 });
+      const target = { rec: 4 };
 
       // Act
-      const result = action.makeDamageValue({}, false);
+      const result = action.makeDamageValue(target, false);
 
       // Assert
-      expect(result).toBe(10);
+      expect(result).toBe(-76.5);
+      expect(action.damageRateAgainst).toHaveBeenCalledWith(target, false);
+    });
+
+    it('scales a heal by the target\'s REC and the caster\'s HAR, telling the seam it is not harmful', () =>
+    {
+      // Arrange
+      const action = buildDamageRollAction(-40, 1, 1);
+      action.subject = () => ({ har: 2 });
+      const target = { rec: 1.5 };
+
+      // Act
+      const result = action.makeDamageValue(target, false);
+
+      // Assert
+      expect(result).toBe(-122);
+      expect(action.damageRateAgainst).toHaveBeenCalledWith(target, false);
+    });
+
+    it('amplifies a critical hit', () =>
+    {
+      // Arrange
+      const action = buildDamageRollAction(10, 1, 1);
+      const target = { rec: 4 };
+
+      // Act
+      const result = action.makeDamageValue(target, true);
+
+      // Assert
+      expect(result).toBe(29);
+      expect(action.applyCritical).toHaveBeenCalledWith(10);
+    });
+  });
+
+  describe('damageRateAgainst', () =>
+  {
+    it('takes a physical hit at the target\'s PDR', () =>
+    {
+      // Arrange
+      const action = buildAction();
+      action.isPhysical = () => true;
+      action.isMagical = () => false;
+      const target = { pdr: 0.5, mdr: 2 };
+
+      // Act
+      const result = action.damageRateAgainst(target, true);
+
+      // Assert
+      expect(result).toBe(0.5);
+    });
+
+    it('takes a magical hit at the target\'s MDR', () =>
+    {
+      // Arrange
+      const action = buildAction();
+      action.isPhysical = () => false;
+      action.isMagical = () => true;
+      const target = { pdr: 0.5, mdr: 2 };
+
+      // Act
+      const result = action.damageRateAgainst(target, true);
+
+      // Assert
+      expect(result).toBe(2);
+    });
+
+    it('takes a certain hit at an even 1, whatever the target\'s rates', () =>
+    {
+      // Arrange
+      const action = buildAction();
+      action.isPhysical = () => false;
+      action.isMagical = () => false;
+      const target = { pdr: 0.5, mdr: 2 };
+
+      // Act
+      const result = action.damageRateAgainst(target, true);
+
+      // Assert
+      expect(result).toBe(1);
     });
   });
 

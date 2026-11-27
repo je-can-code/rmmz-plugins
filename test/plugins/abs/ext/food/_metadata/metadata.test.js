@@ -40,6 +40,7 @@ describe('J-ABS-FOOD metadata (direct src import)', () =>
     expect(Aliased.JABS_Battler).toBeInstanceOf(Map);
     expect(Aliased.JABS_Engine).toBeInstanceOf(Map);
     expect(Aliased.JABS_SkillSlotManager).toBeInstanceOf(Map);
+    expect(Aliased.JABS_State).toBeInstanceOf(Map);
     expect(Aliased.Game_Actor).toBeInstanceOf(Map);
     expect(Aliased.Input).toBeInstanceOf(Map);
     expect(Aliased.Scene_Boot).toBeInstanceOf(Map);
@@ -55,6 +56,7 @@ describe('J-ABS-FOOD metadata (direct src import)', () =>
     expect(Aliased.JABS_Battler.size).toBe(0);
     expect(Aliased.JABS_Engine.size).toBe(0);
     expect(Aliased.JABS_SkillSlotManager.size).toBe(0);
+    expect(Aliased.JABS_State.size).toBe(0);
     expect(Aliased.Game_Actor.size).toBe(0);
     expect(Aliased.Input.size).toBe(0);
     expect(Aliased.Scene_Boot.size).toBe(0);

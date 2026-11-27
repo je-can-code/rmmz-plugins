@@ -8,6 +8,7 @@ import JABS_EnemyAI from '../models/JABS_EnemyAI.js';
 import JABS_Battler from '../models/JABS_Battler.js';
 import JABS_DeathContext from '../models/JABS_DeathContext.js';
 import JABS_AiManager from '../managers/JABS_AiManager.js';
+import JABS_Fate from '../managers/JABS_Fate.js';
 
 /**
  * Extends {@link Game_Battler.initMembers}.<br/>
@@ -964,7 +965,12 @@ Game_Battler.prototype.onEvadeExecuteEffects = function()
 };
 
 /**
- * Processes the on-evasion state effects targeting the evader themselves.
+ * Processes the on-evasion state effects targeting the evader themselves.<br/>
+ * Each `<onEvadeApplySelf>` state is one the evader gives itself, so it rolls through
+ * {@link JABS_Fate.resolveStateProcCount} as both the roller and the recipient: its own State Rate traits and
+ * `<stateTypeResist>` weigh on the chance, it holds no luck edge over itself, and its fate counts once. An evasion is
+ * not a skill the evader uses, so the lucky and cursed rolls it brings are its battler-wide totals. The state is
+ * added once for every time it lands, and each of those adds checks the evader's immunities on its own.
  */
 Game_Battler.prototype.processOnEvadeStateSelf = function()
 {
@@ -974,29 +980,33 @@ Game_Battler.prototype.processOnEvadeStateSelf = function()
   // if there are none, there is nothing to do.
   if (selfEffects.length === 0) return;
 
-  // iterate over each effect and apply it if the chance roll passes.
+  // iterate over each effect and apply it as many times as its roll lands.
   selfEffects.forEach(stateEffect =>
   {
-    // this is a purely self-scoped proc- the evader is both the roller and the recipient, so
-    // both their own positive and negative rolls apply to their own single roll.
-    const skill = stateEffect.baseSkill(this);
-    const positiveRolls = 1 + this.getPositiveRollsForSkill(skill);
-    const negativeRolls = this.getNegativeRollsForSkill(skill);
+    // an on-evade effect carries the id of the state it applies, and the chance it lands.
+    const { skillId: stateId, chance } = stateEffect;
 
-    // resolve how many times this proc's action should execute (Accumulate Mode/Encore aware).
-    const procCount = stateEffect.resolveProcCount(positiveRolls, negativeRolls, this);
+    // the evader rolls against its own resistances, bringing its battler-wide fate since no skill is in hand.
+    const procCount = JABS_Fate.resolveStateProcCount(this, this, stateId, chance);
 
-    // apply the state to ourselves once per success — the evader gets the benefit, and names
+    // apply the state to ourselves once per landing — the evader gets the benefit, and names
     // itself as the source so the application routes through JABS rather than vanilla.
     for (let i = 0; i < procCount; i++)
     {
-      this.addState(stateEffect.skillId, this);
+      this.addState(stateId, this);
     }
   });
 };
 
 /**
- * Processes the on-evasion state effects targeting the attacker who was evaded.
+ * Processes the on-evasion state effects targeting the attacker who was evaded.<br/>
+ * Each `<onEvadeApply>` state is rolled by the evader against the attacker through
+ * {@link JABS_Fate.resolveStateProcCount}: the attacker's State Rate traits and `<stateTypeResist>` weigh on the
+ * chance, and the luck the evader holds over the attacker shapes what remains. An evasion is not a skill the evader
+ * uses, so the lucky and cursed rolls it brings are its battler-wide totals. With no action to aim it, the state
+ * decides how the attacker's curse weighs: a state carrying `<type:negative>` gets one more chance to land for every
+ * curse the attacker carries, and any other state has to clear each of them. The state is added once for every time
+ * it lands, and each of those adds checks the attacker's immunities on its own.
  * @param {Game_Actor|Game_Enemy} attacker The battler whose attack was evaded.
  */
 Game_Battler.prototype.processOnEvadeStateAttacker = function(attacker)
@@ -1007,24 +1017,21 @@ Game_Battler.prototype.processOnEvadeStateAttacker = function(attacker)
   // if there are none, there is nothing to do.
   if (attackerEffects.length === 0) return;
 
-  // iterate over each effect and apply it if the chance roll passes.
+  // iterate over each effect and apply it as many times as its roll lands.
   attackerEffects.forEach(stateEffect =>
   {
-    // the evader is the one whose proc this is (positive rolls); the attacker is the one
-    // receiving the punishment state and can resist it with their own negative rolls.
-    const skill = stateEffect.baseSkill(this);
-    const positiveRolls = 1 + this.getPositiveRollsForSkill(skill);
-    const negativeRolls = attacker.getNegativeRolls();
+    // an on-evade effect carries the id of the state it applies, and the chance it lands.
+    const { skillId: stateId, chance } = stateEffect;
 
-    // resolve how many times this proc's action should execute (Accumulate Mode/Encore aware).
-    const procCount = stateEffect.resolveProcCount(positiveRolls, negativeRolls, this);
+    // the evader rolls against the attacker's resistances, bringing its battler-wide fate since no skill is in hand.
+    const procCount = JABS_Fate.resolveStateProcCount(this, attacker, stateId, chance);
 
-    // apply the state to the attacker once per success — they get punished for missing. the
+    // apply the state to the attacker once per landing — they get punished for missing. the
     // evader is named as the source, both because the punishment is theirs and because that is
     // what routes the application through JABS rather than vanilla.
     for (let i = 0; i < procCount; i++)
     {
-      attacker.addState(stateEffect.skillId, this);
+      attacker.addState(stateId, this);
     }
   });
 };
@@ -2032,9 +2039,9 @@ Game_Battler.prototype.getPositiveRolls = function()
 };
 
 /**
- * The total extra negative rerolls this battler contributes whenever it is the party wanting a
- * `chanceIn100` roll to fail (e.g. the defender evading a hit, resisting a crit, or resisting a
- * state). Floored once at the end.
+ * The total extra rolls this battler's curse brings against its own fortune: one more roll its own
+ * `chanceIn100` rolls have to pass, one more chance for harm aimed at it to land, and one more roll
+ * help aimed at it has to pass, per curse. Floored once at the end.
  * @returns {number}
  */
 Game_Battler.prototype.getNegativeRolls = function()
@@ -2057,8 +2064,10 @@ Game_Battler.prototype.getPositiveRollsForSkill = function(skill)
 };
 
 /**
- * This battler's total negative rerolls while executing the given skill: its own battler-wide
- * `cursedRolls` plus that skill's own `<thisCursedRolls:[FORMULA]>` bonus, floored once combined.
+ * This battler's total curse while executing the given skill: its own battler-wide `cursedRolls`
+ * plus that skill's own `<thisCursedRolls:[FORMULA]>`, floored once combined. It weighs on every
+ * roll this battler makes with the skill, and turns the hit aside more often when a defender rolls
+ * to parry or glance it.
  * @param {RPG_UsableItem} skill The skill being executed.
  * @returns {number}
  */

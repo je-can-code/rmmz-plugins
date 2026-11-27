@@ -48,7 +48,20 @@ function buildAction(overrides = {})
   action.itemCri = overrides.itemCri ?? (() => 0);
   action.subject = () => overrides.attacker ?? buildAttacker();
   action.item = () => ({});
+  action.isForOpponent = () => true;
   return action;
+}
+
+/**
+ * Stubs the fate an action brings against one target, so a roll site can be seen forwarding it untouched.
+ * Any other target gets an empty pair, so a site asking about the wrong battler shows up as zeros.
+ * @param {object} action The action whose fate is stubbed.
+ * @param {object} aimedAt The only target the stubbed fate answers for.
+ * @param {number[]} rolls The positive and negative rolls to answer with.
+ */
+function stubFateRollsAgainst(action, aimedAt, rolls)
+{
+  action.fateRollsAgainst = target => (target === aimedAt ? rolls : [ 0, 0 ]);
 }
 
 /**
@@ -185,30 +198,20 @@ describe('J-ABS hit/crit chance conversion (direct src import)', () =>
       expect(calls[0].percent).toBe(600);
     });
 
-    it('feeds the attacker\'s positive rolls as a bonus on top of the baseline 1', () =>
-    {
-      // Arrange
-      const calls = stubChanceIn100(true);
-      const action = buildAction({ attacker: buildAttacker(3) });
-
-      // Act
-      action.isHitEvaded(buildTarget());
-
-      // Assert
-      expect(calls[0].rollForPositive).toBe(4);
-    });
-
-    it('feeds the target\'s negative rolls directly, with no baseline added', () =>
+    it('rolls with the fate the action brings against the target it is aimed at', () =>
     {
       // Arrange
       const calls = stubChanceIn100(true);
       const action = buildAction();
+      const target = buildTarget();
+      stubFateRollsAgainst(action, target, [ 7, 3 ]);
 
       // Act
-      action.isHitEvaded(buildTarget(2));
+      action.isHitEvaded(target);
 
       // Assert
-      expect(calls[0].rollForNegative).toBe(2);
+      expect(calls[0].rollForPositive).toBe(7);
+      expect(calls[0].rollForNegative).toBe(3);
     });
   });
 
@@ -281,18 +284,20 @@ describe('J-ABS hit/crit chance conversion (direct src import)', () =>
       expect(calls[0].percent).toBe(999900);
     });
 
-    it('feeds the attacker\'s positive rolls and the target\'s negative rolls into the same roll', () =>
+    it('rolls with the fate the action brings against the target it is aimed at', () =>
     {
       // Arrange
       const calls = stubChanceIn100(true);
-      const action = buildAction({ attacker: buildAttacker(2) });
+      const action = buildAction({ itemCri: () => 0.1 });
+      const target = buildTarget();
+      stubFateRollsAgainst(action, target, [ 6, 4 ]);
 
       // Act
-      action.isHitCritical(buildTarget(5));
+      action.isHitCritical(target);
 
       // Assert
-      expect(calls[0].rollForPositive).toBe(3);
-      expect(calls[0].rollForNegative).toBe(5);
+      expect(calls[0].rollForPositive).toBe(6);
+      expect(calls[0].rollForNegative).toBe(4);
     });
   });
 });

@@ -2290,37 +2290,16 @@ class JABS_Engine
   }
 
   /**
-   * Handles the on-cast state effects for a JABS action, firing once for the action as it executes- after
-   * any cast time has run out- rather than once per target hit.
-   * @param {JABS_Battler} caster The JABS_Battler executing the JABS action.
-   * @param {JABS_Action} action The JABS action being executed.
+   * A hook fired once for a JABS action as it executes- after any cast time has run out- rather than once per target
+   * hit, for the effects a cast has on its own caster the moment it goes off.<br/>
+   * Does nothing on its own. J-ABS has no on-cast effects of its own to apply here; extensions alias this to add
+   * theirs.
+   * @param {JABS_Battler} _caster The JABS_Battler executing the JABS action.
+   * @param {JABS_Action} _action The JABS action being executed.
    */
-  handleOnCastStateEffects(caster, action)
+  handleOnCastStateEffects(_caster, _action)
   {
-    // grab the underlying Game_Action to access its state-effect methods.
-    const gameAction = action.getAction();
-
-    // apply any on-cast self-states to the caster, once for this action.
-    gameAction.applyOnCastSelfStates();
-
-    // apply any conditional on-cast self-states that require the caster to have a specific state.
-    gameAction.applyOnCastSelfStatesIfAfflicted();
-
-    // remove any on-cast lose-states from the caster, once for this action.
-    gameAction.applyOnCastLoseStates();
-
-    // toggle any <toggleOnExecute> states on the caster, once for this action.
-    gameAction.applyToggleOnExecuteStates();
-
-    // cycle any <toggleGroupOnExecute> state groups on the caster, once for this action.
-    gameAction.applyToggleGroupOnExecuteStates();
-
-    // force-execute any <onCastExecuteSkill> payload skills, once for this action.
-    gameAction.applyOnCastExecuteSkills(caster);
-
-    // force-execute any <onCastExecuteSkillIfAfflicted> payload skills whose required state is
-    // currently active on the caster, once for this action.
-    gameAction.applyOnCastExecuteSkillsIfAfflicted(caster);
+    // deliberately empty: this is the extension point extensions alias to add their own on-cast effects.
   }
 
   /**
@@ -4215,15 +4194,38 @@ class JABS_Engine
     const scaleFactor = J.ABS.Metadata.ImplicitParryScaleFactor;
     const parryChancePercent = Math.round(rawChance * scaleFactor);
 
-    // roles are reversed from an offensive roll: the defender wants this to succeed (they're
-    // the one parrying), while the attacker's own curse works against them getting parried.
+    // roles are reversed from an offensive roll: the defender is the one rolling, to parry.
     const defenderBattler = target.getBattler();
-    const defenderPositiveRolls = defenderBattler.getPositiveRolls();
-    const attackerNegativeRolls = caster.getBattler().getNegativeRollsForSkill(action.getBaseSkill());
+    const [ positiveRolls, negativeRolls ] = this.defensiveFateRolls(caster, target, action);
 
     // chanceIn100 already treats <=0 as an automatic failure and a 100+ roll always succeeds
     // (every 1-100 roll qualifies), so no separate edge-case branches are needed here.
-    return RPGManager.fateOf100(defenderBattler, parryChancePercent, 1 + defenderPositiveRolls, attackerNegativeRolls);
+    return RPGManager.fateOf100(defenderBattler, parryChancePercent, positiveRolls, negativeRolls);
+  }
+
+  /**
+   * The rolls a defender brings to parrying or glancing an attacker's hit, as the positive and negative counts
+   * {@link RPGManager.fateOf100} takes.<br/>
+   * The defender is the one rolling, so its own luck adds chances to turn the hit aside and its own curse adds rolls
+   * it has to pass as well. The attacker's curse is the attacker's bad fate: one more chance for the defender to turn
+   * the hit aside for every curse the attacker carries, its skill's own included.
+   * @param {JABS_Battler} caster The battler performing the action.
+   * @param {JABS_Battler} target The battler defending against it.
+   * @param {JABS_Action} action The action being defended against.
+   * @returns {number[]} The positive rolls, the baseline one included, then the negative rolls.
+   */
+  defensiveFateRolls(caster, target, action)
+  {
+    // the defender's own luck and curse speak for and against its own roll.
+    const defenderBattler = target.getBattler();
+    const defenderPositiveRolls = defenderBattler.getPositiveRolls();
+    const defenderNegativeRolls = defenderBattler.getNegativeRolls();
+
+    // the attacker's curse is one more chance for its hit to be turned aside, per curse it carries.
+    const attackerCurse = caster.getBattler()
+      .getNegativeRollsForSkill(action.getBaseSkill());
+
+    return [ 1 + defenderPositiveRolls + attackerCurse, defenderNegativeRolls ];
   }
 
   /**
@@ -4246,13 +4248,12 @@ class JABS_Engine
     const ignoreParryPercent = this.getIgnoreParryPct(caster, action);
     const glancingChancePercent = JABS_Engine.glancingBlowChancePercent(caster, target, ignoreParryPercent);
 
-    // same role reversal as checkImplicitFullParry: the defender wants this to succeed.
+    // same role reversal as checkImplicitFullParry: the defender is the one rolling, to glance.
     const defenderBattler = target.getBattler();
-    const defenderPositiveRolls = defenderBattler.getPositiveRolls();
-    const attackerNegativeRolls = caster.getBattler().getNegativeRollsForSkill(action.getBaseSkill());
+    const [ positiveRolls, negativeRolls ] = this.defensiveFateRolls(caster, target, action);
 
     // chanceIn100 already treats <=0 as an automatic failure and a 100+ roll always succeeds.
-    return RPGManager.fateOf100(defenderBattler, glancingChancePercent, 1 + defenderPositiveRolls, attackerNegativeRolls);
+    return RPGManager.fateOf100(defenderBattler, glancingChancePercent, positiveRolls, negativeRolls);
   }
 
   /**
@@ -4602,13 +4603,18 @@ class JABS_Engine
     // grab the incoming skill's hit type for filtering.
     const incomingHitType = triggeringAction.getBaseSkill().hitType;
 
-    // grab the damage values from the result to stamp onto outgoing actions.
-    const { hpDamage, mpDamage, tpDamage } = retaliator.getBattler().result();
+    // grab the result of the hit that struck the retaliator, and the damage it dealt to stamp onto outgoing actions.
+    const triggeringResult = retaliator.getBattler()
+      .result();
+    const { hpDamage, mpDamage, tpDamage } = triggeringResult;
 
     retaliationSkills.forEach(skillChance =>
     {
       // skip if the hit type filter doesn't match.
       if (!skillChance.matchesHitType(incomingHitType)) return;
+
+      // skip if the outcome filter doesn't match how the hit landed.
+      if (!skillChance.matchesOutcome(triggeringResult)) return;
 
       // this is a purely self-scoped proc- the retaliator is both the roller and the recipient
       // of "do I retaliate"; the retaliation attack itself gets its own hit/crit/state rolls.

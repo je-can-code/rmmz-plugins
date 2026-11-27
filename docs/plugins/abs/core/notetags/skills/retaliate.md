@@ -39,9 +39,12 @@ All three default to 0 in non-retaliation formulas, so referencing them is safe 
 `<retaliate:[SKILL_ID, CHANCE, TYPE]>`
 Where SKILL_ID is the skill to fire.
 Where CHANCE is the integer percent chance to fire it (0-100).
-Where TYPE is an optional hit type filter: physical, magical, or certain.
-When TYPE is omitted the skill fires regardless of the incoming hit type.
-When TYPE is set the skill only fires if the incoming hit matches that type.
+Where TYPE is an optional filter, naming either a hit type or how the hit landed:
+- physical, magical, or certain: the skill only fires if the incoming hit is of that type.
+- glancing: the skill only fires if the incoming hit landed as a glancing blow. A glancing blow the battler then
+  evaded never landed, so it doesn't count.
+- critical: the skill only fires if the incoming hit was a critical hit.
+When TYPE is omitted the skill fires however the incoming hit landed, whatever its type.
 
 ## TAG EXAMPLES
 
@@ -49,3 +52,6 @@ When TYPE is set the skill only fires if the incoming hit matches that type.
 Thorns authoring example — reflect 30% of physical HP damage back.
 Payload skill formula: `d * 0.3`
 Payload skill: `<unparryable>`
+
+`<retaliate:[BACKHAND_SKILL_ID, 100, glancing]>`
+Punishes a glancing blow: whoever only grazed this battler is answered, and a square hit or a critical never is.

@@ -31,18 +31,28 @@ class JABS_OnChanceEffect
   hitType = null;
 
   /**
+   * The outcome filter for this on-chance effect: how the incoming hit must have landed.
+   * When null the effect fires however the hit landed. When `glancing`, only a glancing blow that
+   * landed triggers it; when `critical`, only a critical hit does.
+   * @type {string|null}
+   */
+  outcome = null;
+
+  /**
    * Constructor.
    * @param {number} skillId The id of the skill associated with this on-chance effect.
    * @param {number} chance A number between 1-100 representing the percent chance of success.
    * @param {string} key The key associated with this on-chance effect.
    * @param {number|null} hitType Optional hit type filter; null means any hit type.
+   * @param {string|null} outcome Optional outcome filter; null means a hit landing any way.
    */
-  constructor(skillId, chance, key, hitType = null)
+  constructor(skillId, chance, key, hitType = null, outcome = null)
   {
     this.skillId = skillId;
     this.chance = chance;
     this.key = key;
     this.hitType = hitType;
+    this.outcome = outcome;
   }
 
   /**
@@ -58,6 +68,24 @@ class JABS_OnChanceEffect
 
     // only fire when the hit type matches.
     return this.hitType === incomingHitType;
+  }
+
+  /**
+   * Checks whether this effect should fire given how the incoming action landed.
+   * If no outcome filter is set, always returns true.
+   * @param {Game_ActionResult} result The bearer's result from the hit that struck it.
+   * @returns {boolean}
+   */
+  matchesOutcome(result)
+  {
+    // no filter, fires however the hit landed.
+    if (this.outcome === null) return true;
+
+    // a glancing blow is rolled before the hit's evasion, so one the bearer then evaded never landed.
+    if (this.outcome === 'glancing') return result.glancing && result.isHit();
+
+    // the only other outcome is a critical hit, which is only ever rolled on a hit that landed.
+    return result.critical;
   }
 
   /**
@@ -115,7 +143,8 @@ class JABS_OnChanceEffect
   /**
    * Resolves how many times this effect's action should execute, folding in the positive-roller's
    * Accumulate Mode and Encore repeats. Use this instead of {@link #shouldTrigger} at any call
-   * site whose action is repeatable (adding a state, force-executing a skill).
+   * site whose action is repeatable, such as force-executing a skill. A state applied by chance
+   * rolls through {@link JABS_Fate} instead, where the recipient's resistances weigh on it.
    * @param {number=} rollForPositive The number of times to try for success; defaults to 1.
    * @param {number=} rollForNegative The number of times to try and undo success; defaults to 0.
    * @param {Game_Battler=} positiveRoller The battler whose success this roll is for; when absent,

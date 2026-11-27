@@ -16,8 +16,8 @@ battler lands a hit.
 
 ## NOTE ABOUT CHANCE, DURATION AND STACKS
 
-All notes from the [skill-scoped section](on-hit-apply-state-skill-scoped.md) apply here as well (CHANCE, DURATION,
-STACKS behavior, resistances, etc.).
+All notes from the [skill-scoped section](on-hit-apply-state-skill-scoped.md) apply here as well: how CHANCE rolls
+against the target's resistances and both battlers' fate, and how every landing carries DURATION and STACKS.
 
 ## NOTE ABOUT BOTH VARIANTS
 

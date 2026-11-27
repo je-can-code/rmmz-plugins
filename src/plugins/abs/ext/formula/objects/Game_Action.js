@@ -312,13 +312,13 @@ Game_Action.prototype.limitFormulaPacketDamage = function(recipient, magnitude, 
  * Damage path:
  *  - element rate
  *  - critical (on-hit only if result.critical true)
- *  - physical/magical damage rate
+ *  - physical/magical damage rate, via {@link #damageRateAgainst}
  *  - native guard
  *  - variance
  *  - JABS guard/parry reductions
  * Healing path:
  *  - element rate
- *  - physical/magical damage rate
+ *  - physical/magical damage rate, via {@link #damageRateAgainst}
  *  - variance
  *  - REC (recovery)
  * @param {Game_Battler} target The recipient.
@@ -344,16 +344,10 @@ Game_Action.prototype.pipeFormulaThroughBattleCalculations = function(target, ma
     value = this.applyCritical(value);
   }
 
-  // 3) phys/mag damage rate.
-  if (this.isPhysical())
-  {
-    value *= target.pdr;
-  }
-
-  if (this.isMagical())
-  {
-    value *= target.mdr;
-  }
+  // 3) the rate the target takes this hit type at, through the same seam a direct hit's damage uses.
+  // harm here is the packet's own kind, judged before the elemental rate: an absorbed damage packet
+  // comes out negative whatever its rate, and the clamp at the end holds it at 0 either way.
+  value *= this.damageRateAgainst(target, isDamage);
 
   // 4) guard only for damage.
   if (isDamage)

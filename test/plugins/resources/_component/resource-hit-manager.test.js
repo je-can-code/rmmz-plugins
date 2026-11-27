@@ -12,7 +12,7 @@ function buildRegexNamespace()
 {
   const namespace = {};
 
-  for (const direction of [ 'OnAttack', 'WhenHit' ])
+  for (const direction of [ 'OnAttack', 'OnCast', 'WhenHit' ])
   {
     for (const resource of [ 'Hp', 'Mp', 'Tp' ])
     {
@@ -120,6 +120,138 @@ describe('ResourceHitManager (resources ext/abs)', () =>
 
       // skill contributes 10, source contributes 20, rec is 1 on both -> 30.
       expect(ResourceHitManager.onAttackTpGain(caster, skill)).toBe(30);
+    });
+  });
+
+  describe('onCast gain calculations', () =>
+  {
+    it('combines flat, percent-of-max, and formula from the skill, scaled by rec, never reading on-attack tags', () =>
+    {
+      // Arrange- an on-attack sibling on the same skill answers too, and must not count.
+      const caster = buildBattler({ rec: 2 });
+      const skill = {};
+      getNumberFromNoteByRegexMock.mockImplementation((_data, regexp) =>
+      {
+        if (regexp === regexNamespace.OnCastHpGainFlat) return 10;
+        if (regexp === regexNamespace.OnCastHpGainPercent) return 5;
+        if (regexp === regexNamespace.OnAttackHpGainFlat) return 99;
+        return 0;
+      });
+      getResultFromNoteByRegexMock.mockImplementation((_data, regexp) =>
+      {
+        if (regexp === regexNamespace.OnCastHpGainFormula) return 3;
+        return 0;
+      });
+
+      // Act
+      const gain = ResourceHitManager.onCastHpGain(caster, skill);
+
+      // Assert- flat 10 + (mhp 1000 * 5%) 50 + formula 3 = 63, then * rec 2 = 126.
+      expect(gain).toBe(126);
+    });
+
+    it('reads a negative MP percent from the caster\'s traited sources against max MP', () =>
+    {
+      // Arrange- the HP side of the same source answers too, and must not count toward MP.
+      const source = {};
+      const caster = buildBattler({ hcrSources: () => [ source ] });
+      getNumberFromNoteByRegexMock.mockImplementation((data, regexp) =>
+      {
+        if (data === source && regexp === regexNamespace.OnCastMpGainPercent) return -10;
+        if (data === source && regexp === regexNamespace.OnCastHpGainPercent) return -50;
+        return 0;
+      });
+
+      // Act
+      const gain = ResourceHitManager.onCastMpGain(caster, {});
+
+      // Assert- mmp 500 * -10% = -50, at rec 1.
+      expect(gain).toBe(-50);
+    });
+
+    it('sums TP tags from both the skill and the caster\'s traited sources independently', () =>
+    {
+      // Arrange
+      const source = {};
+      const caster = buildBattler({ hcrSources: () => [ source ] });
+      const skill = {};
+      getNumberFromNoteByRegexMock.mockImplementation((data, regexp) =>
+      {
+        if (data === skill && regexp === regexNamespace.OnCastTpGainFlat) return 10;
+        if (data === source && regexp === regexNamespace.OnCastTpGainFlat) return 20;
+        return 0;
+      });
+
+      // Act
+      const gain = ResourceHitManager.onCastTpGain(caster, skill);
+
+      // Assert- the skill contributes 10 and the source 20.
+      expect(gain).toBe(30);
+    });
+  });
+
+  describe('applyOnCastEffects', () =>
+  {
+    it('applies every resource the on-cast tags move to the battler underneath the caster', () =>
+    {
+      // Arrange- the skill takes 10% of max HP and a state the caster carries refunds 5 TP; nothing moves MP.
+      const source = {};
+      const battler = buildBattler({ hcrSources: () => [ source ] });
+      const skill = {};
+      getNumberFromNoteByRegexMock.mockImplementation((data, regexp) =>
+      {
+        if (data === skill && regexp === regexNamespace.OnCastHpGainPercent) return -10;
+        if (data === source && regexp === regexNamespace.OnCastTpGainFlat) return 5;
+        return 0;
+      });
+      const caster = { getBattler: () => battler };
+      const action = { getBaseSkill: () => skill };
+
+      // Act
+      ResourceHitManager.applyOnCastEffects(caster, action);
+
+      // Assert
+      expect(battler.gainHpFromResource).toHaveBeenCalledWith(-100);
+      expect(battler.gainTpFromResource).toHaveBeenCalledWith(5);
+      expect(battler.gainMpFromResource).not.toHaveBeenCalled();
+    });
+
+    it('applies an MP gain on its own when only the MP side moves', () =>
+    {
+      // Arrange- the skill refunds 20 MP and moves nothing else.
+      const battler = buildBattler();
+      const skill = {};
+      getNumberFromNoteByRegexMock.mockImplementation((data, regexp) =>
+      {
+        if (data === skill && regexp === regexNamespace.OnCastMpGainFlat) return 20;
+        return 0;
+      });
+      const caster = { getBattler: () => battler };
+      const action = { getBaseSkill: () => skill };
+
+      // Act
+      ResourceHitManager.applyOnCastEffects(caster, action);
+
+      // Assert
+      expect(battler.gainMpFromResource).toHaveBeenCalledWith(20);
+      expect(battler.gainHpFromResource).not.toHaveBeenCalled();
+      expect(battler.gainTpFromResource).not.toHaveBeenCalled();
+    });
+
+    it('moves nothing when neither the skill nor the caster carries an on-cast tag', () =>
+    {
+      // Arrange- every tag lookup answers zero.
+      const battler = buildBattler();
+      const caster = { getBattler: () => battler };
+      const action = { getBaseSkill: () => ({}) };
+
+      // Act
+      ResourceHitManager.applyOnCastEffects(caster, action);
+
+      // Assert
+      expect(battler.gainHpFromResource).not.toHaveBeenCalled();
+      expect(battler.gainMpFromResource).not.toHaveBeenCalled();
+      expect(battler.gainTpFromResource).not.toHaveBeenCalled();
     });
   });
 
