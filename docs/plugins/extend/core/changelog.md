@@ -11,6 +11,19 @@ All the versioning and history of changes live here.
 
 ## The Actual Changelog
 
+### 1.10.0
+  - Updated `<applyState>` and `<thisApplyState>` to roll through J-ABS's state roll, so the target's State Rate traits,
+    `<stateTypeResist>`, luck and fate weigh on them. DURATION and STACKS hold on every landing.
+  - Updated the on-hit and on-cast self-states to roll against the caster's own resistances.
+  - Updated strip, remove and lose to roll with the action's fate: a cursed foe gives a strip more chances, and a cursed
+    ally more hurdles. A state immune to fate comes off on one plain roll.
+  - Updated `<onCastExecuteSkill>` and `<onCastExecuteSkillIfAfflicted>` to roll once with the caster's fate, so
+    `<veryCursed>` never fires them and `<veryLucky>` always does.
+  - Updated the on-cast state effects to run from J-Extend, through J-ABS's handleOnCastStateEffects hook.
+  - Updated the on-hit self-states to roll with the struck battler's roller, so a critical hit with `<forceCritProcs>`
+    guarantees them.
+  - Fixed bug with self-states recording the skill sharing the state's id as their source, rather than the skill cast.
+  - Requires J-ABS 4.30.0.
 ### 1.9.1
   - Fixed Game_Enemy#learnSkill returning nothing instead of whether the skill was learned.
 ### 1.9.0

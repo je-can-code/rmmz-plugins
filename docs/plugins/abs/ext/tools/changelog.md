@@ -11,6 +11,9 @@ All the versioning and history of changes live here.
 
 ## The Actual Changelog
 
+### 1.3.0
+  - Updated pulls to read the shared knockback resistance, and to announce themselves as knockback.
+  - Requires J-ABS 4.30.0.
 ### 1.2.1
   - Adapted to the RPGManager array read signature.
 ### 1.2.0

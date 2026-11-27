@@ -11,6 +11,11 @@ All the versioning and history of changes live here.
 
 ## The Actual Changelog
 
+### 1.2.0
+  - Updated region states to roll through J-ABS's state roll, so `<stateTypeResist>` weighs in beside State Rate.
+  - Updated every landing to go through the walker's own add, so a state it already carries is refreshed, extended or
+    stacked by that state's own rule.
+  - Requires J-ABS 4.30.0.
 ### 1.1.3
   - Fixed saving failing on a map with region states under J-Base-Save.
 ### 1.1.2

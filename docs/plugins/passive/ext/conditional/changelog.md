@@ -17,6 +17,13 @@ All the versioning and history of changes live here.
   - An `<autoExecuteSkill>` fired by a hit (`onDamageDealt`, `onWeaponHit`) now lands a `<direct>` payload on the
     battler that was struck, rather than hitting around its bearer. One with a cast time keeps that aim through its
     windup. Every other payload still fires from its bearer.
+  - Added `<toggleStateOnSkillExecution:[STATE_ID, STYPE_ID]>`, which flips a state each time its bearer pays for a
+    hardcast of that skill type.
+  - Updated the skill-execution removal rules to run after the skill's cost is paid, once per stacked state.
+  - Added the onHealDealt condition, which fires when this battler's skill heals a friendly target.
+  - Updated `<autoApplyStateOnNearby>` and `<autoInflictState>` to roll at full strength through J-ABS's state roll, the
+    bearer rolling. Their cooldown starts on any attempt.
+  - Requires J-ABS 4.30.0.
 ### 1.5.0
   - An `<autoExecuteSkill>` payload with a `<castTime>` now winds up, telegraph and all, before it fires.
   - Such a payload is skipped while its bearer is already deciding or casting something.

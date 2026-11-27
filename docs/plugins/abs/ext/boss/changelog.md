@@ -11,6 +11,9 @@ All the versioning and history of changes live here.
 
 ## The Actual Changelog
 
+### 2.1.0
+  - Updated fight participants to resist every push and pull.
+  - Requires J-ABS 4.30.0.
 ### 2.0.0
   - Removed `eventId` from participants. They now spawn from J-ABS's enemy clone map onto their `x` and `y`.
   - Added `template`, `bystander` and `summoned` to participants.

@@ -11,6 +11,10 @@ All the versioning and history of changes live here.
 
 ## The Actual Changelog
 
+### 1.2.0
+  - Updated formula damage to read the target's damage rate through `damageRateAgainst`, so
+    `<pierceDamageRateIfStateType>` pierces it too.
+  - Requires J-Base 4.5.0 and J-ABS 4.30.0.
 ### 1.1.3
   - Harmful packets now answer to J-ABS's `<noDamage>`, `<noSelfKill>` and `<noTargetKill>`.
   - Raised minimum J-ABS version requirement to 4.29.0.

@@ -5,11 +5,11 @@ description: The list of dependencies- required and optional- for this plugin.
 tags: [plugins, deps]
 dependencies:
   - key: J-Base
-    version: 3.7.0
+    version: 4.5.0
     base: true
     orderAfter: true
   - key: J-ABS
-    version: 4.29.0
+    version: 4.30.0
     base: true
     orderAfter: true
 ---

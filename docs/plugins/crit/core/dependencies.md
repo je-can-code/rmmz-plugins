@@ -9,7 +9,7 @@ dependencies:
     base: true
     orderAfter: true
   - key: J-ABS
-    version: 4.29.0
+    version: 4.30.0
     base: false
     orderAfter: true
   - key: J-NaturalGrowth

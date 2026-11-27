@@ -1,7 +1,7 @@
 //region ship-meta
 // single source of truth for this ship; read at build time only (not imported from initialization.js).
 export const PLUGIN_NAME = 'J-Resources-ABS';
-export const PLUGIN_VERSION = '1.2.0';
+export const PLUGIN_VERSION = '1.3.0';
 export const PLUGIN_DESC_TAG = 'RESOURCES-ABS';
 export const PLUGIN_DESCRIPTION = 'Damage-linked HP, MP, and TP resource effects.';
 //endregion ship-meta
