@@ -852,6 +852,9 @@ J.ABS.RegExp = {
   ImmuneToStates: /<immuneToStates>/gi,
   ImmuneToAll: /<immuneToAll>/gi,
 
+  // fate exemption, read from the applied state's own notes: no battler's fate weighs on a roll for this state.
+  ImmuneToFate: /<immuneToFate>/i,
+
   // casting/channeling interruption immunity, read from all of a battler's own note sources.
   CannotBeInterrupted: /<cannotBeInterrupted>/i,
 

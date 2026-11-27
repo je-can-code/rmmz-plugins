@@ -96,6 +96,33 @@ describe('J-ABS RPG_State effects (direct src import)', () =>
     });
   });
 
+  describe('isImmuneToFate', () =>
+  {
+    it('is true when the state carries <immuneToFate> among other tags', () =>
+    {
+      // Arrange- a classifier beside it must not stand in for the tag.
+      const state = buildState('<type:food>\n<immuneToFate>');
+
+      // Act
+      const immune = state.isImmuneToFate();
+
+      // Assert
+      expect(immune).toBe(true);
+    });
+
+    it('is false when the state carries other tags but not <immuneToFate>', () =>
+    {
+      // Arrange
+      const state = buildState('<type:food>\n<stateDuration:300>');
+
+      // Act
+      const immune = state.isImmuneToFate();
+
+      // Assert
+      expect(immune).toBe(false);
+    });
+  });
+
   describe('aggro amplifiers', () =>
   {
     it('jabsAggroInAmp reads the tag value, null when absent', () =>

@@ -50,7 +50,7 @@ function buildTarget(stateRate, stateTypeResistRate, isHarm = true)
     luk: 50,
     stateRate: () => stateRate,
     stateTypeResistRate: () => stateTypeResistRate,
-    state: () => ({ isNegativeType: () => isHarm }),
+    state: () => ({ isNegativeType: () => isHarm, isImmuneToFate: () => false }),
   });
 }
 
@@ -213,7 +213,7 @@ describe('J-ABS Game_Action state-related effect application (direct src import)
       action.subject = () => subject;
       action.item = () => 'the-skill';
       action.makeSuccess = vi.fn();
-      const target = { removeState: vi.fn() };
+      const target = { removeState: vi.fn(), state: () => ({ isImmuneToFate: () => false }) };
       action.fateRollsAgainst = () => [ 1, 0 ];
       const fateSpy = vi.spyOn(globalThis.RPGManager, 'fateOf100')
         .mockReturnValue(true);
@@ -235,7 +235,7 @@ describe('J-ABS Game_Action state-related effect application (direct src import)
       action.subject = () => subject;
       action.item = () => 'the-skill';
       action.makeSuccess = vi.fn();
-      const target = { removeState: vi.fn() };
+      const target = { removeState: vi.fn(), state: () => ({ isImmuneToFate: () => false }) };
       action.fateRollsAgainst = () => [ 1, 0 ];
       const fateSpy = vi.spyOn(globalThis.RPGManager, 'fateOf100')
         .mockReturnValue(false);

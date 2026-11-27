@@ -97,7 +97,7 @@ describe('AutoApplyStateOnNearbyManager (direct src import)', () =>
       luk: 50,
       stateRate: () => 0.5,
       stateTypeResistRate: () => 0.75,
-      state: stateId => ({ id: stateId, isNegativeType: () => true }),
+      state: stateId => ({ id: stateId, isNegativeType: () => true, isImmuneToFate: () => false }),
       ...overrides,
     });
   }
@@ -137,7 +137,7 @@ describe('AutoApplyStateOnNearbyManager (direct src import)', () =>
     {
       return makeBattler({
         getNegativeRolls: () => 2,
-        state: stateId => ({ id: stateId, isNegativeType: () => stateId === 60 }),
+        state: stateId => ({ id: stateId, isNegativeType: () => stateId === 60, isImmuneToFate: () => false }),
       });
     }
 

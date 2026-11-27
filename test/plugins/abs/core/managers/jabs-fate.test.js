@@ -80,7 +80,7 @@ function buildResistantRecipient(overrides = {})
     luk: 50,
     stateRate: () => 0.5,
     stateTypeResistRate: () => 0.75,
-    state: () => ({ isNegativeType: () => true }),
+    state: () => ({ isNegativeType: () => true, isImmuneToFate: () => false }),
     ...overrides,
   });
 }
@@ -594,6 +594,116 @@ describe('JABS_Fate (direct src import)', () =>
 
       // Assert
       expect(procSpy).toHaveBeenCalledWith(positiveRoller, 16, 5, 2);
+      procSpy.mockRestore();
+    });
+  });
+
+  describe('states immune to fate', () =>
+  {
+    /**
+     * A roller carrying every kind of fate there is: lucky and cursed rolls, Accumulate Mode, two Encore repeats, and
+     * a <veryCursed> that would sink any roll it made.
+     * @returns {object}
+     */
+    function buildFatefulRoller()
+    {
+      return buildFateBattlerStub({
+        luk: 110,
+        getPositiveRolls: () => 3,
+        getNegativeRolls: () => 2,
+        isAccumulating: () => true,
+        getEncoreRepeats: () => 2,
+        isVeryCursed: () => true,
+      });
+    }
+
+    /**
+     * A resistant, cursed recipient that reads the given state as harm immune to fate.
+     * @param {boolean} immune Whether it reads the state as immune to fate.
+     * @returns {object}
+     */
+    function buildRecipient(immune)
+    {
+      return buildResistantRecipient({
+        getNegativeRolls: () => 4,
+        state: () => ({ isNegativeType: () => true, isImmuneToFate: () => immune }),
+      });
+    }
+
+    it('reads whether a state is immune to fate the way its recipient sees it', () =>
+    {
+      // Arrange- the recipient answers for state 9 only.
+      const recipient = buildFateBattlerStub({
+        state: stateId => ({ isNegativeType: () => false, isImmuneToFate: () => stateId === 9 }),
+      });
+
+      // Act
+      const immune = JABS_Fate.isImmuneToFateState(recipient, 9);
+      const sibling = JABS_Fate.isImmuneToFateState(recipient, 10);
+
+      // Assert
+      expect(immune).toBe(true);
+      expect(sibling).toBe(false);
+    });
+
+    it('lands a state immune to fate once on one plain roll against its resisted chance, whatever fate either side brings', () =>
+    {
+      // Arrange- the die lands on 16, the chance the resistances and luck leave; Accumulate, Encore, the curses and
+      // the roller's <veryCursed> would all have changed the answer.
+      const chanceSpy = vi.spyOn(globalThis.RPGManager, 'chanceIn100');
+      const diceSpy = stubDice([ 16 ]);
+
+      // Act
+      const procCount = JABS_Fate.resolveStateProcCount(buildFatefulRoller(), buildRecipient(true), CC_STATE_ID, 40);
+
+      // Assert- one roll at 16, with no extra chances or hurdles, and one landing.
+      expect(chanceSpy).toHaveBeenCalledWith(16);
+      expect(procCount).toBe(1);
+      chanceSpy.mockRestore();
+      diceSpy.mockRestore();
+    });
+
+    it('lands nothing when the one plain roll misses', () =>
+    {
+      // Arrange- the die lands one past the 16 the resistances and luck leave.
+      const diceSpy = stubDice([ 17 ]);
+
+      // Act
+      const procCount = JABS_Fate.resolveStateProcCount(buildFatefulRoller(), buildRecipient(true), CC_STATE_ID, 40);
+
+      // Assert
+      expect(procCount).toBe(0);
+      diceSpy.mockRestore();
+    });
+
+    it('sets a positive roller handed over aside for a state immune to fate', () =>
+    {
+      // Arrange- a stand-in that always lands, against a state immune to fate the die misses.
+      const diceSpy = stubDice([ 17 ]);
+      const roller = buildFatefulRoller();
+      const standIn = buildSubstitutePositiveRoller();
+
+      // Act
+      const procCount = JABS_Fate.resolveStateProcCountWithRolls(
+        roller, buildRecipient(true), CC_STATE_ID, 40, [ 9, 0 ], standIn);
+
+      // Assert- the stand-in's <veryLucky> never spoke.
+      expect(procCount).toBe(0);
+      diceSpy.mockRestore();
+    });
+
+    it('lets fate weigh on the same state when it is not immune to fate', () =>
+    {
+      // Arrange- the very same roll, but the recipient reads the state as fateful.
+      const procSpy = vi.spyOn(globalThis.RPGManager, 'resolveProcCount')
+        .mockReturnValue(0);
+      const roller = buildFatefulRoller();
+
+      // Act
+      JABS_Fate.resolveStateProcCount(roller, buildRecipient(false), CC_STATE_ID, 40);
+
+      // Assert- the roller's 1 + 3 chances and the recipient's 4 curses as harm, then the roller's 2 curses.
+      expect(procSpy).toHaveBeenCalledWith(roller, 16, 8, 2);
       procSpy.mockRestore();
     });
   });

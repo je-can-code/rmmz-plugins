@@ -366,7 +366,7 @@ describe('Accumulate Mode / Encore (direct src import)', () =>
         luk: 0,
         stateRate: () => 1,
         stateTypeResistRate: () => 1,
-        state: () => ({ isNegativeType: () => false }),
+        state: () => ({ isNegativeType: () => false, isImmuneToFate: () => false }),
         getNegativeRolls: () => 0,
         addState(stateId, attacker)
         {

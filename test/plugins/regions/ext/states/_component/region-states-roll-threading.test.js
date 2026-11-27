@@ -80,6 +80,7 @@ describe('J-Regions-States roll threading (direct src import)', () =>
       state: stateId => ({
         id: stateId,
         isNegativeType: () => stateId === 12,
+        isImmuneToFate: () => false,
       }),
       getPositiveRolls: () => 4,
       getNegativeRolls: () => 2,

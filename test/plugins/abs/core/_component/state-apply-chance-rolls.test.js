@@ -38,7 +38,7 @@ function buildTarget(overrides = {})
     getNegativeRolls: () => overrides.negativeRolls ?? 0,
     stateRate: () => overrides.stateRate ?? 1,
     stateTypeResistRate: () => overrides.stateTypeResistRate ?? 1,
-    state: () => ({ isNegativeType: () => overrides.isHarm ?? false }),
+    state: () => ({ isNegativeType: () => overrides.isHarm ?? false, isImmuneToFate: () => overrides.isImmuneToFate ?? false }),
     removeState: () => {},
   };
 }
@@ -183,6 +183,24 @@ describe('J-ABS state application/removal roll threading (direct src import)', (
 
       // Assert
       expect(calls[0].percent).toBe(75);
+    });
+
+    it('takes a state immune to fate off on one plain roll, never asking for this action\'s fate', () =>
+    {
+      // Arrange- the action's fate would answer, and must not be asked.
+      const calls = stubChanceIn100(true);
+      const action = buildAction();
+      const target = buildTarget({ isImmuneToFate: true });
+      target.removeState = vi.fn();
+      action.fateRollsAgainst = vi.fn(() => [ 9, 9 ]);
+
+      // Act
+      action.itemEffectRemoveState(target, { value1: 0.3, dataId: 5 });
+
+      // Assert
+      expect(calls).toEqual([ { percent: 30, rollForPositive: undefined, rollForNegative: undefined } ]);
+      expect(action.fateRollsAgainst).not.toHaveBeenCalled();
+      expect(target.removeState).toHaveBeenCalledWith(5);
     });
 
     it('lets the roller chanceRollerAgainst names for the target settle the roll', () =>

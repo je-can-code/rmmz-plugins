@@ -220,6 +220,27 @@ describe('J-SkillExtend Game_Action state roll threading (direct src import)', (
       expect(effect.__calls).toEqual([ { rollForPositive: 6, rollForNegative: 1, positiveRoller: standIn } ]);
     });
 
+    it('rolls the removal of a state immune to fate once on its plain chance, with no fate and no roller', () =>
+    {
+      // Arrange- the target reads the effect's state as immune to fate; a very lucky roller is handed over and must not speak.
+      const caster = buildCaster();
+      const target = buildCursedTarget();
+      target.state = stateId => ({ isNegativeType: () => false, isImmuneToFate: () => stateId === 9 });
+      const action = buildAction(caster, true);
+      const effect = buildEffect(9);
+      const chanceSpy = vi.spyOn(globalThis.RPGManager, 'chanceIn100')
+        .mockReturnValue(false);
+
+      // Act
+      const removed = action.rollStateRemovalAgainst(target, effect, { isVeryLucky: () => true });
+
+      // Assert
+      expect(removed).toBe(false);
+      expect(chanceSpy).toHaveBeenCalledWith(40);
+      expect(effect.__calls).toEqual([]);
+      chanceSpy.mockRestore();
+    });
+
     it('lets a roller its caller hands over settle the roll instead', () =>
     {
       // Arrange- the seam would name the caster; the caller's own stand-in wins.

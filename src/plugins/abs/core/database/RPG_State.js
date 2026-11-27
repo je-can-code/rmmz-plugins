@@ -74,6 +74,21 @@ RPG_State.prototype.isNegativeType = function()
 };
 //endregion negative
 
+//region immuneToFate
+/**
+ * Whether or not this state carries the {@code <immuneToFate>} tag, which sets it apart from fate.<br/>
+ * Every roll to apply this state or take it away is one plain roll: its chance still meets State Rate traits,
+ * {@code <stateTypeResist>} and, for a harmful state, the luck between the two battlers, but no lucky or cursed roll,
+ * no {@code <veryLucky>} or {@code <veryCursed>}, no Accumulate Mode and no Encore weighs on it. So it lands once at
+ * most, whoever applies it.
+ * @returns {boolean}
+ */
+RPG_State.prototype.isImmuneToFate = function()
+{
+  return RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.RegExp.ImmuneToFate);
+};
+//endregion immuneToFate
+
 //region aggroInAmp
 /**
  * Multiply incoming aggro by this amount.

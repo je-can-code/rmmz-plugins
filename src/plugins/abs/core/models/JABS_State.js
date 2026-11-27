@@ -458,10 +458,11 @@ class JABS_State
    * The follow-up is rolled the way every state applied by chance is rolled, through
    * {@link JABS_Fate.resolveStateProcCount}: the battler that applied this state rolls the authored chance against the
    * afflicted battler, with the skill it applied this state with when there was one. The afflicted battler's State Rate
-   * traits and `<stateTypeResist>` weigh on the chance, and the luck the source holds over it shapes what remains. With
-   * no action to aim it, the follow-up's own `<type:negative>` decides whether the afflicted battler's curse helps it
-   * land or stands in its way. A state its own bearer applied rolls as one the bearer gives itself: no luck edge, and
-   * its fate counted once. Accumulate Mode and Encore can land the follow-up more than once.<br/>
+   * traits and `<stateTypeResist>` weigh on the chance, and for a harmful follow-up the luck the source holds over it
+   * shapes what remains. With no action to aim it, the follow-up's own `<type:negative>` decides whether the afflicted
+   * battler's curse helps it land or stands in its way. A state its own bearer applied rolls as one the bearer gives
+   * itself: no luck edge, and its fate counted once. Accumulate Mode and Encore can land the follow-up more than once,
+   * unless it is `<immuneToFate>`, which lands once at most on one plain roll.<br/>
    * This is the one place the count is decided, so an extension whose follow-ups land some other way aliases this.
    * Nothing is added here; the caller adds the follow-up once per landing.
    * @param {number} nextStateId The id of the follow-up state.

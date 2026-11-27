@@ -3778,10 +3778,10 @@ land the follow-up more than once, and the afflicted battler's immunities are ch
 The tag is read off the expiring state as the afflicted battler sees it, so a J-Extend extension state
 layered onto it can change the follow-up it names.
 
-Food chains are exempt from RNG: with J-ABS-Food installed, a state carrying `<foodChain:TYPE>` lands
-STATE_ID exactly once as it expires, with no roll at all. CHANCE, resistances, LUK, lucky and cursed
-rolls, `<veryLucky>`, `<veryCursed>`, Accumulate Mode and Encore never weigh on it; only the afflicted
-battler's immunities can still refuse it.
+A STATE_ID carrying `<immuneToFate>` rolls once and plainly: CHANCE still meets the afflicted battler's
+State Rate, `<stateTypeResist>` and, for harm, LUK, but no lucky or cursed rolls, `<veryLucky>`,
+`<veryCursed>`, Accumulate Mode or Encore weigh on it, so it lands once at most. Food chains tag their
+phases this way.
 
 ```
 <applyStateOnExpire:[15, 50]>
@@ -4250,6 +4250,34 @@ type classifier (`1 - 50/100 = 0.5`).
 ```
 Less resistant: increases the application chance of any `<type:negative>`-tagged state by 50%
 (`1 - (-50)/100 = 1.5`) — this battler is easier to afflict with ailments, not harder.
+
+---
+
+### `<immuneToFate>`
+
+**Applies to:**
+States
+
+**When:**
+any roll to apply this state, or to take it off a battler
+
+**Effect:**
+sets the state apart from fate. Every roll for it is one plain roll: its chance still meets the
+recipient's State Rate, `<stateTypeResist>` and, for a `<type:negative>` state, the LUK between the two
+battlers, and the recipient's immunities still stand. But no lucky or cursed rolls on either side, no
+curse on the recipient, no `<veryLucky>` or `<veryCursed>`, no `<forceCritProcs>`, and no Accumulate
+Mode or Encore weigh on it, so it lands once at most. A Remove State effect or a strip, remove or lose
+tag aimed at it rolls its chance once and plainly too. The tag is read off the state as its recipient
+sees it: unlike `<immuneToAll>` and its siblings above, it belongs on the state itself, never on a
+battler.
+
+```
+<immuneToFate>
+```
+A food chain's phase: it lands the next phase exactly once as it expires, whatever fate the bearer or
+its source carries.
+
+**See also:** `<luckyRolls>`, `<accumulate>`, `<encoreRepeats>`, `<applyStateOnExpire>`
 
 ---
 
@@ -4892,7 +4920,7 @@ This enemy never shows a danger indicator, even if the plugin default has it ena
 
 Adds food group chain states, a dedicated R2 food slot, and a JABS quick-menu Equip Food screen.
 Chain progression itself is authored via J-ABS core's `<applyStateOnExpire>`, not a tag from this
-plugin. Food chains are exempt from RNG: each phase lands the next with no roll (see `<foodChain>`).
+plugin. A chain's phases carry J-ABS's `<immuneToFate>`, so each lands the next exactly once (see `<foodChain>`).
 
 ### `<food:TYPE>`
 
@@ -4928,15 +4956,13 @@ same TYPE. The actual progression (which phase expires into which) is authored v
 `<applyStateOnExpire>`, not this tag; this tag identifies group membership for the HUD/logic that
 needs to know "is this a food-chain state, and which arc."
 
-It also exempts the state's expiry from RNG. A state carrying this tag lands the next phase its
-`<applyStateOnExpire>` names exactly once as it expires, with no roll at all: that tag's CHANCE, the
-bearer's State Rate and `<stateTypeResist>`, LUK, lucky and cursed rolls, `<veryLucky>`,
-`<veryCursed>`, Accumulate Mode and Encore never weigh on it. Immunity is not chance, so a bearer that
-cannot take the next phase at all still refuses it. A state without this tag rolls its follow-up the
-way J-ABS rolls any other.
+Give each phase J-ABS's `<immuneToFate>` too, so it lands the next phase its `<applyStateOnExpire>` names
+exactly once as it expires: no lucky or cursed rolls, `<veryLucky>`, `<veryCursed>`, Accumulate Mode or
+Encore weigh on it, while its CHANCE and the bearer's State Rate and `<stateTypeResist>` still apply.
 
 ```
 <foodChain:protein>
+<immuneToFate>
 <applyStateOnExpire:[90, 100]>
 ```
 "Well Fed (Protein)" — part of the protein arc, expires into state 90 ("Pumped") with no roll.

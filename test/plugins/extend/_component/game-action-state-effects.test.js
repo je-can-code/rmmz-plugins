@@ -528,7 +528,7 @@ describe('J-SkillExtend Game_Action state effects (direct src import)', () =>
           luk: 50,
           stateRate: stateId => (stateId === 12 ? 0.5 : 1),
           stateTypeResistRate: stateId => (stateId === 12 ? 0.75 : 1),
-          state: stateId => ({ isNegativeType: () => stateId === 12 }),
+          state: stateId => ({ isNegativeType: () => stateId === 12, isImmuneToFate: () => false }),
           getNegativeRolls: () => 2,
         });
         const action = buildAction(caster, buildSkill(''), true);

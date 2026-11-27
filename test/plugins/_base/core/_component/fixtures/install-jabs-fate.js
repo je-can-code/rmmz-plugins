@@ -86,7 +86,7 @@ export function buildFateBattlerStub(overrides = {})
     luk: 0,
     stateRate: () => 1,
     stateTypeResistRate: () => 1,
-    state: stateId => ({ id: stateId, isNegativeType: () => false }),
+    state: stateId => ({ id: stateId, isNegativeType: () => false, isImmuneToFate: () => false }),
     getPositiveRolls: () => 0,
     getNegativeRolls: () => 0,
     getPositiveRollsForSkill: () => 0,

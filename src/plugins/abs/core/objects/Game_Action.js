@@ -862,8 +862,7 @@ Game_Action.prototype.itemEffectAddNormalState = function(target, effect)
 
 /**
  * Overwrites {@link #itemEffectRemoveState}.<br/>
- * Potentially removes the state, rolling its chance with this action's fate. The roll's fate overrides come from
- * {@link #chanceRollerAgainst}.
+ * Potentially removes the state, on the roll {@link #rollRemoveStateEffect} makes.
  * @param {Game_Battler} target The target having the state removed.
  * @param {RPG_UsableEffect} effect The effect containing state data for removal.
  */
@@ -878,15 +877,8 @@ Game_Action.prototype.itemEffectRemoveState = function(target, effect)
   // convert the fractional value into a rounded base-100 roll.
   const d100 = Math.round(chance * 100);
 
-  // the caster wants the removal to succeed; a cursed target is that much easier to strip of a blessing,
-  // and that much harder to cleanse- a cursed battler's good luck fails them too.
-  const [ positiveRolls, negativeRolls ] = this.fateRollsAgainst(target);
-
-  // the battler whose fate overrides settle this roll; the subject, unless something guarantees it.
-  const roller = this.chanceRollerAgainst(target);
-
   // check if RNGesus blesses this battler.
-  const isRemoved = RPGManager.fateOf100(roller, d100, positiveRolls, negativeRolls);
+  const isRemoved = this.rollRemoveStateEffect(target, stateId, d100);
 
   if (isRemoved === true)
   {
@@ -896,6 +888,34 @@ Game_Action.prototype.itemEffectRemoveState = function(target, effect)
     // flag the action as a success.
     this.makeSuccess(target);
   }
+};
+
+/**
+ * Rolls whether a skill effect's Remove State takes a state off the target.<br/>
+ * The roll is made with this action's fate, as {@link #fateRollsAgainst} describes: the caster wants the removal to
+ * succeed, so a cursed target is that much easier to strip of a blessing and that much harder to cleanse. The roll's
+ * fate overrides come from {@link #chanceRollerAgainst}. A state carrying `<immuneToFate>`, as the target sees it, comes
+ * off on one plain roll instead, with no one's fate weighing in.
+ * @param {Game_Battler} target The target having the state removed.
+ * @param {number} stateId The id of the state being removed.
+ * @param {number} d100 The removal's chance, as a whole percent.
+ * @returns {boolean}
+ */
+Game_Action.prototype.rollRemoveStateEffect = function(target, stateId, d100)
+{
+  // a state immune to fate comes off on one plain roll.
+  const state = target.state(stateId);
+  if (state.isImmuneToFate()) return RPGManager.chanceIn100(d100);
+
+  // the caster wants the removal to succeed; a cursed target is that much easier to strip of a blessing,
+  // and that much harder to cleanse- a cursed battler's good luck fails them too.
+  const [ positiveRolls, negativeRolls ] = this.fateRollsAgainst(target);
+
+  // the battler whose fate overrides settle this roll; the subject, unless something guarantees it.
+  const roller = this.chanceRollerAgainst(target);
+
+  // roll the removal with that fate.
+  return RPGManager.fateOf100(roller, d100, positiveRolls, negativeRolls);
 };
 
 /**

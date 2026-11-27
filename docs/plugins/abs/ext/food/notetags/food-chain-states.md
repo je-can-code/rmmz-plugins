@@ -19,11 +19,12 @@ state expires into the peak, the peak expires into the tail, and the tail has no
 
 ## NOTE ABOUT RNG
 
-Food chains are exempt from RNG. A state carrying `<foodChain:TYPE>` lands the next phase its `<applyStateOnExpire>`
-names exactly once as it expires, with no roll at all. The tag's CHANCE is never rolled, and nothing that weighs on a
-roll weighs on this one: not the bearer's State Rate traits or `<stateTypeResist>`, not LUK, not lucky or cursed
-rolls, not `<veryLucky>` or `<veryCursed>`, and not Accumulate Mode or Encore. A bearer under `<veryCursed>` still
-moves through its whole arc, one phase at a time.
+Give every phase of a chain J-ABS's [`<immuneToFate>`](../../../core/notetags/states/immune-to-fate.md) too. Each phase
+then lands the next its `<applyStateOnExpire>` names on one plain roll as it expires: not lucky or cursed rolls, not
+`<veryLucky>` or `<veryCursed>`, and not Accumulate Mode or Encore weigh on it, so it moves on exactly one phase at a
+time. The phase's CHANCE and the bearer's State Rate traits and `<stateTypeResist>` still apply, so a chain authored at
+100 always lands on a bearer that does not resist it, and a bearer under `<veryCursed>` still moves through its whole
+arc.
 
 Immunity is not chance, so it still stands: a bearer that cannot take the next phase at all, through
 `<immuneToStates>`, `<stateTypeImmune>` or the like, does not take it.

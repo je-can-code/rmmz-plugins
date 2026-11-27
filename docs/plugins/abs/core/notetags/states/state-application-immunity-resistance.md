@@ -28,9 +28,8 @@ Multiple tags for the same TYPE stack additively.
 
 Every chance a state has to land on a battler is rolled the same way, whatever carries it there: a skill's own state
 effect, the attack states a normal attack carries, an on-hit, on-cast or on-crit tag, an evasion, an aura, a state
-spreading, a state applied as another expires, or a region. The one exception is a food chain's next phase, which
-[`J-ABS-Food`](../../../ext/food/notetags/food-chain-states.md) lands with no roll at all. The chance is built up in
-this order:
+spreading, a state applied as another expires, or a region. A state carrying `<immuneToFate>` takes the same chance with
+no fate weighing on it, as [Immunity to Fate](immune-to-fate.md) describes. The chance is built up in this order:
 
 ```
 1. The authored chance, as a percent.

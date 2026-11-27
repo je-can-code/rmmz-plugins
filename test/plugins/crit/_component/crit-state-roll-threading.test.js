@@ -102,7 +102,7 @@ describe('J-CriticalFactors Game_Action on-crit state rolls (direct src import)'
       luk: 50,
       stateRate: stateId => (stateId === STATE_ID ? 0.5 : 1),
       stateTypeResistRate: stateId => (stateId === STATE_ID ? 0.75 : 1),
-      state: () => ({ isNegativeType: () => true }),
+      state: () => ({ isNegativeType: () => true, isImmuneToFate: () => false }),
       getNegativeRolls: () => 3,
       addState: (...args) => added.push(args),
       __added: added,

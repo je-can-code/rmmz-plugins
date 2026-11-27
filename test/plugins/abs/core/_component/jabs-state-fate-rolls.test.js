@@ -32,6 +32,12 @@ const HARM_STATE_ID = 62;
 const SPREAD_STATE_ID = 63;
 
 /**
+ * A state carrying `<immuneToFate>`: rolled once and plainly, with no battler's fate weighing in.
+ * @type {number}
+ */
+const FATE_IMMUNE_STATE_ID = 64;
+
+/**
  * Registers a real RPG_State row whose note carries the given tags, so its type classifiers and its spread and expiry
  * tags all parse. A note yields one match of a tag per line, so a row typed twice puts each type on a line of its own.
  * @param {number} stateId The id to register the row under.
@@ -345,6 +351,28 @@ describe('J-ABS JABS_State fate rolls (direct src import)', () =>
         [ HELP_STATE_ID, source, sourceSkill ],
       ]);
       procSpy.mockRestore();
+    });
+
+    it('lands a follow-up immune to fate once on one plain roll, against the bearer\'s resistances and none of the source\'s fate', () =>
+    {
+      // Arrange- the source brings three lucky rolls, Accumulate Mode and two Encore repeats, any of which would land
+      // the follow-up more than once; the bearer halves it through State Rate, and the die lands right on the 50 left.
+      registerStateRow(EXPIRING_STATE_ID, `<applyStateOnExpire:[${FATE_IMMUNE_STATE_ID}, 100]>`);
+      registerStateRow(FATE_IMMUNE_STATE_ID, '<immuneToFate>');
+      const bearer = buildBattler({ stateRate: 0.5 });
+      const source = buildBattler({ positiveRolls: 3, notes: [ '<accumulate>', '<encoreRepeats:[2]>' ] });
+      const jabsState = new globalThis.JABS_State(bearer, EXPIRING_STATE_ID, 0, 50, 1, source);
+      const diceSpy = vi.spyOn(Math, 'randomInt')
+        .mockReturnValue(49);
+
+      // Act
+      jabsState.handleApplyStateOnExpire();
+
+      // Assert- one landing from one roll at 50.
+      expect(bearer.addState.mock.calls).toEqual([ [ FATE_IMMUNE_STATE_ID, source, null ] ]);
+      expect(diceSpy).toHaveBeenCalledTimes(1);
+      expect(diceSpy).toHaveBeenCalledWith(100);
+      diceSpy.mockRestore();
     });
   });
 

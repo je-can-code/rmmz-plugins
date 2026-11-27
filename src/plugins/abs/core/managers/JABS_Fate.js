@@ -145,11 +145,50 @@ class JABS_Fate
   }
 
   /**
+   * Whether a state is set apart from fate, as its recipient sees the state: one carrying `<immuneToFate>`.<br/>
+   * No battler's fate weighs on a roll for such a state, whoever makes it.
+   * @param {Game_Battler} recipient The battler the state is aimed at.
+   * @param {number} stateId The id of the state being rolled for.
+   * @returns {boolean}
+   */
+  static isImmuneToFateState(recipient, stateId)
+  {
+    // the state as its recipient sees it.
+    const state = recipient.state(stateId);
+
+    // a state carrying the tag answers to no one's fate.
+    return state.isImmuneToFate();
+  }
+
+  /**
+   * Resolves whether a state immune to fate lands on its recipient: once at most, on one plain roll.<br/>
+   * The chance is still {@link JABS_Fate.stateApplicationD100}, so the recipient's State Rate traits and
+   * `<stateTypeResist>` weigh on it, and the luck between the two battlers shapes a harmful state's. Nothing else
+   * does: no lucky or cursed roll, no recipient's curse, no `<veryLucky>`, `<veryCursed>` or `<forceCritProcs>`, no
+   * Accumulate Mode and no Encore.
+   * @param {Game_Battler} roller The battler applying the state.
+   * @param {Game_Battler} recipient The battler the state is aimed at.
+   * @param {number} stateId The id of the state being applied.
+   * @param {number} percent The authored chance, as a percent from 0 to 100.
+   * @returns {number}
+   */
+  static resolveImmuneToFateProcCount(roller, recipient, stateId, percent)
+  {
+    // the chance the state lands, after the recipient's resistances and, for harm, the luck between the two battlers.
+    const d100 = this.stateApplicationD100(roller, recipient, stateId, percent);
+
+    // one plain roll, and one landing at most.
+    return RPGManager.chanceIn100(d100) ? 1 : 0;
+  }
+
+  /**
    * Resolves how many times a state lands on its recipient, given the rolls brought to it.<br/>
    * The chance is {@link JABS_Fate.stateApplicationD100} and the count is {@link RPGManager.resolveProcCount}, so the
    * positive roller's `<veryLucky>` and `<veryCursed>` settle it outright, Accumulate Mode counts every positive roll
    * that lands, and Encore repeats each landing. The positive roller is the roller unless a caller hands over its
    * own, the way `<forceCritProcs>` guarantees an on-crit roll; the roller brings its luck to the chance either way.
+   * A state carrying `<immuneToFate>` sets all of that fate aside, as {@link JABS_Fate.resolveImmuneToFateProcCount}
+   * describes.
    * Nothing is added here.
    * @param {Game_Battler} roller The battler applying the state.
    * @param {Game_Battler} recipient The battler the state is aimed at.
@@ -162,6 +201,12 @@ class JABS_Fate
    */
   static resolveStateProcCountWithRolls(roller, recipient, stateId, percent, rolls, positiveRoller = roller)
   {
+    // a state immune to fate answers to no one's fate: one plain roll against its resisted chance.
+    if (this.isImmuneToFateState(recipient, stateId))
+    {
+      return this.resolveImmuneToFateProcCount(roller, recipient, stateId, percent);
+    }
+
     // the chance the state lands, after the recipient's resistances and the luck between the two battlers.
     const d100 = this.stateApplicationD100(roller, recipient, stateId, percent);
 

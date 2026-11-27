@@ -38,13 +38,13 @@ afflicted battler applied to itself rolls its follow-up as a state it gives itse
 and its fate counted once. Accumulate Mode and Encore can land the follow-up more than once, and the afflicted
 battler's immunities are checked on every landing.
 
-## NOTE ABOUT FOOD CHAINS
+## NOTE ABOUT FOLLOW-UPS IMMUNE TO FATE
 
-Food chains are exempt from RNG. With [`J-ABS-Food`](../../../ext/food/overview.md) installed, a state carrying
-[`<foodChain:TYPE>`](../../../ext/food/notetags/food-chain-states.md) lands the follow-up it names exactly once as it
-expires, with no roll at all: CHANCE, the afflicted battler's State Rate traits and `<stateTypeResist>`, LUK, lucky and
-cursed rolls, `<veryLucky>`, `<veryCursed>`, Accumulate Mode and Encore never weigh on it. Immunity is not chance, so
-the afflicted battler's immunities are still checked as it lands.
+A follow-up carrying [`<immuneToFate>`](../states/immune-to-fate.md) rolls once and plainly: CHANCE still meets the
+afflicted battler's State Rate traits, `<stateTypeResist>` and, for harm, LUK, but no lucky or cursed rolls,
+`<veryLucky>`, `<veryCursed>`, Accumulate Mode or Encore weigh on it, so it lands once at most. A food chain's phases
+([`<foodChain:TYPE>`](../../../ext/food/notetags/food-chain-states.md)) carry it, so a chain authored at 100 always
+moves on exactly one phase at a time.
 
 ## TAG USAGE
 

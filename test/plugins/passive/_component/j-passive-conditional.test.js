@@ -2083,7 +2083,7 @@ describe('J-Passive-Conditional (direct src import)', () =>
         luk: 50,
         stateRate: () => 0.5,
         stateTypeResistRate: () => 0.75,
-        state: stateId => ({ id: stateId, isNegativeType: () => stateId === 70 }),
+        state: stateId => ({ id: stateId, isNegativeType: () => stateId === 70, isImmuneToFate: () => false }),
       });
       const procSpy = vi.spyOn(globalThis.RPGManager, 'resolveProcCount');
 
@@ -2123,7 +2123,7 @@ describe('J-Passive-Conditional (direct src import)', () =>
       const applier = buildMomentumToolkitActor([ '<autoInflictState:[70, negaStateInflicted, 0]>' ]);
       const target = buildPayloadTarget({
         getNegativeRolls: () => 2,
-        state: stateId => ({ id: stateId, isNegativeType: () => stateId === 71 }),
+        state: stateId => ({ id: stateId, isNegativeType: () => stateId === 71, isImmuneToFate: () => false }),
       });
       const procSpy = vi.spyOn(globalThis.RPGManager, 'resolveProcCount');
 
@@ -2144,7 +2144,7 @@ describe('J-Passive-Conditional (direct src import)', () =>
       const applier = buildMomentumToolkitActor([ '<autoInflictState:[71, posiStateInflicted, 0]>' ]);
       const target = buildPayloadTarget({
         getNegativeRolls: () => 2,
-        state: stateId => ({ id: stateId, isNegativeType: () => stateId === 71 }),
+        state: stateId => ({ id: stateId, isNegativeType: () => stateId === 71, isImmuneToFate: () => false }),
       });
       const procSpy = vi.spyOn(globalThis.RPGManager, 'resolveProcCount');
 
@@ -2300,7 +2300,7 @@ describe('J-Passive-Conditional (direct src import)', () =>
       // Arrange- the payload's own row sits beside the inflicted state's, since the target reads the payload's
       // polarity through its state accessor when the payload is rolled for.
       globalThis.$dataStates[10] = { id: 10, isNegativeType: () => true };
-      globalThis.$dataStates[70] = { id: 70, isNegativeType: () => true };
+      globalThis.$dataStates[70] = { id: 70, isNegativeType: () => true, isImmuneToFate: () => false };
       const applier = buildMomentumToolkitActor([
         '<autoInflictState:[70, negaStateInflicted, 0]>',
         '<autoModifyCooldowns:[-60, negaStateInflicted, 0, flat, all]>',

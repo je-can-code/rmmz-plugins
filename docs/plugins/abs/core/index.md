@@ -124,6 +124,7 @@
 * [Disabled](notetags/states/disabled.md) - The tag locking a battler's basic attacks while the state is applied.
 * [Muted](notetags/states/muted.md) - The tag locking a battler's combat skills while the state is applied.
 * [Paralyzed](notetags/states/paralyzed.md) - The tag locking a battler's movement, basic attacks and combat skills all at once.
+* [Immunity to Fate](notetags/states/immune-to-fate.md) - The tag setting a state apart from fate, so every roll for it is one plain roll no lucky, cursed or repeating effect touches.
 * [State-Application Immunity & Resistance](notetags/states/state-application-immunity-resistance.md) - The tags blocking states from being applied to a battler, or reducing the chance they land.
 * [No Damage](notetags/states/no-damage.md) - The tag letting a battler be healed but never hurt.
 * [Skill Transform](notetags/states/skill-transform.md) - The tag transforming one equipped skill into another at runtime.

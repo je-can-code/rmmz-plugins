@@ -748,7 +748,8 @@ Game_Action.prototype.applyStates = function(target, jabsOnChanceEffects, positi
  * more chance to land for every curse it carries, while a removal aimed at anyone else is help, and has to clear
  * every curse its target carries. A caster removing its own state brings its fate once. The roller's
  * {@code <veryLucky>} and {@code <veryCursed>} settle the roll outright; that is the caster, unless
- * {@link #chanceRollerAgainst} or the caller hands over a stand-in that guarantees it.
+ * {@link #chanceRollerAgainst} or the caller hands over a stand-in that guarantees it. A state carrying
+ * {@code <immuneToFate>}, as the target sees it, comes off on one plain roll instead, with no one's fate weighing in.
  * @param {Game_Actor|Game_Enemy} target The battler losing the state; the caster itself for a lose-state.
  * @param {JABS_OnChanceEffect} jabsOnChanceEffect The removal to roll, naming the state and its percent chance.
  * @param {Game_Battler|object|null=} positiveRoller Whose fate overrides settle the roll; null, the default, leaves it
@@ -757,6 +758,10 @@ Game_Action.prototype.applyStates = function(target, jabsOnChanceEffects, positi
  */
 Game_Action.prototype.rollStateRemovalAgainst = function(target, jabsOnChanceEffect, positiveRoller = null)
 {
+  // a state immune to fate comes off on one plain roll, with no one's fate weighing in.
+  const state = target.state(jabsOnChanceEffect.skillId);
+  if (state.isImmuneToFate()) return RPGManager.chanceIn100(jabsOnChanceEffect.chance);
+
   // the chances this action's fate gives the removal to land on the target, then the hurdles it has to clear.
   const [ positiveRolls, negativeRolls ] = this.fateRollsAgainst(target);
 
