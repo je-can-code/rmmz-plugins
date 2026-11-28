@@ -51,24 +51,32 @@ Game_Action.prototype.setItemObject = function(itemObject)
 
 /**
  * Extends {@link #apply}.<br/>
- * Also applies on-hit states.
+ * Also applies on-hit states.<br/>
+ * The `<applyStateWhenAfflicted>` family is judged before the original logic runs. The hit's own state effects land
+ * inside it, so a target judged afterwards would already carry a state this very hit just gave it, and a gate meant to
+ * reward an earlier affliction would pass on the first hit every time.
  */
 J.EXTEND.Aliased.Game_Action.set('apply', Game_Action.prototype.apply);
 Game_Action.prototype.apply = function(target)
 {
+  // judge the afflicted-gated states against the target as it stands before this hit lands anything.
+  const afflictedGatedStates = this.whenAfflictedApplyStatesAgainst(target);
+
   // perform original logic.
   J.EXTEND.Aliased.Game_Action.get('apply')
     .call(this, target);
 
   // apply our on-hit self-states if we have any.
-  this.applyOnHitStateEffects(target);
+  this.applyOnHitStateEffects(target, afflictedGatedStates);
 };
 
 /**
  * Applies all on-hit state modifications, such as adding or removing states to self or the target.
  * @param {Game_Actor|Game_Enemy} target The target being hit with the action.
+ * @param {[number, number, number][]} afflictedGatedStates The `<applyStateWhenAfflicted>` entries the target
+ * qualified for before the hit landed, as `[stateId, necessaryStateId, chance]`.
  */
-Game_Action.prototype.applyOnHitStateEffects = function(target)
+Game_Action.prototype.applyOnHitStateEffects = function(target, afflictedGatedStates)
 {
   // if we cannot apply on-hit state effects, then do not.
   if (this.canApplyOnHitStateEffects(target) === false) return;
@@ -84,6 +92,9 @@ Game_Action.prototype.applyOnHitStateEffects = function(target)
 
   // apply our on-hit apply-states (with optional duration/stack overrides) if we have any.
   this.applyOnHitApplyStates(target);
+
+  // apply our on-hit afflicted-gated states, the ones the target qualified for before the hit landed.
+  this.applyOnHitWhenAfflictedStates(target, afflictedGatedStates);
 
   // apply our on-hit strip-states if we have any.
   this.applyOnHitStripStates(target);
@@ -265,6 +276,75 @@ Game_Action.prototype.applyOnHitApplyStates = function(target)
     for (let i = 0; i < procCount; i++)
     {
       target.addStateWithOverrides(stateId, attacker, overrides, this.item());
+    }
+  });
+};
+
+/**
+ * Gets every afflicted-gated apply-state this action carries, drawing from the same two places
+ * {@link #applyOnHitApplyStates} does: the caster's full notes ({@code <applyStateWhenAfflicted>}) and the executing
+ * skill ({@code <thisApplyStateWhenAfflicted>}). Caster-wide entries come first and skill-scoped entries last, the
+ * order those two land their own variants in. Each entry is a `[stateId, necessaryStateId, chance]` tuple.
+ * @returns {[number, number, number][]}
+ */
+Game_Action.prototype.whenAfflictedApplyStates = function()
+{
+  // caster-wide entries come from every note source the caster carries: equipment, states, skills and the rest.
+  const notes = this.subject()
+    .getAllNotes();
+
+  const casterEntries = RPGManager.getArraysFromAllNotesByRegex(notes, J.EXTEND.RegExp.ApplyStateWhenAfflicted);
+
+  // skill-scoped entries come from the executing skill alone.
+  const skillEntries = RPGManager.getArraysFromNotesByRegex(this.item(), J.EXTEND.RegExp.ThisApplyStateWhenAfflicted);
+
+  // caster-wide first, skill-scoped last.
+  return [ ...casterEntries, ...skillEntries ];
+};
+
+/**
+ * Gets the afflicted-gated apply-states the target qualifies for right now: the ones whose necessary state it is
+ * currently afflicted with.<br/>
+ * {@link #apply} asks this before the hit lands anything, so a necessary state the hit itself is about to add never
+ * counts. Whoever put the necessary state there does not matter, only that it was already there. Each entry is a
+ * `[stateId, necessaryStateId, chance]` tuple.
+ * @param {Game_Actor|Game_Enemy} target The battler about to be hit.
+ * @returns {[number, number, number][]}
+ */
+Game_Action.prototype.whenAfflictedApplyStatesAgainst = function(target)
+{
+  // keep only the entries whose necessary state the target already carries.
+  return this.whenAfflictedApplyStates()
+    .filter(([ , necessaryStateId ]) => target.isStateAffected(necessaryStateId));
+};
+
+/**
+ * Applies the afflicted-gated apply-states the target qualified for before the hit landed.<br/>
+ * Each entry rolls as this action's state roll through {@link #resolveStateProcCountAgainst}, the same roll an
+ * {@code <applyState>} entry makes: the authored percent meets the target's State Rate traits and
+ * {@code <stateTypeResist>}, then, for a harmful state, the luck between the caster and the target, and then this
+ * action's fate decides how many times it lands. Every landing adds the state through {@link Game_Battler#addState},
+ * attributed to the caster with the executing skill as its source, so the target's immunities are checked on each one.
+ * @param {Game_Actor|Game_Enemy} target The battler that was hit.
+ * @param {[number, number, number][]} qualifyingEntries The entries the target qualified for before the hit landed,
+ * as `[stateId, necessaryStateId, chance]`.
+ */
+Game_Action.prototype.applyOnHitWhenAfflictedStates = function(target, qualifyingEntries)
+{
+  // the caster applies every state, and the skill being executed is the source each one records.
+  const attacker = this.subject();
+  const skill = this.item();
+
+  // roll for each qualifying entry on its own.
+  qualifyingEntries.forEach(([ stateId, , chance ]) =>
+  {
+    // the count is how many times the state lands on this hit, and zero means it never did.
+    const procCount = this.resolveStateProcCountAgainst(target, stateId, chance);
+
+    // apply the state once per landing; immunity is checked on each one inside.
+    for (let i = 0; i < procCount; i++)
+    {
+      target.addState(stateId, attacker, skill);
     }
   });
 };

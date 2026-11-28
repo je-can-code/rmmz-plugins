@@ -257,8 +257,9 @@ always, once present on any of the attacker's note sources
 on a critical hit, forces every chance roll the hit carries to succeed, as if the attacker had rolled a
 guaranteed positive result: the `thisCritApply`/`thisCritSelf`/`onCritApply`/`onCritSelf` rolls above,
 the skill's own Add State and Remove State effects on the battler it crit, and J-SkillExtend's on-hit
-`<applyState>`, `<thisApplyState>`, `<onHitSelfState>`, `<onHitLoseState>`, `<onHitStripState>` and
-`<onHitRemoveState>` (and `<onCastStripState>`/`<onCastRemoveState>` on that battler). A hit that does not
+`<applyState>`, `<thisApplyState>`, `<applyStateWhenAfflicted>`, `<thisApplyStateWhenAfflicted>`, `<onHitSelfState>`,
+`<onHitLoseState>`, `<onHitStripState>` and `<onHitRemoveState>` (and `<onCastStripState>`/`<onCastRemoveState>` on
+that battler). A hit that does not
 crit is never forced. All of it happens without touching the attacker's real
 `isVeryLucky()`/`isVeryCursed()` flags anywhere else, and without inflating crit chance itself. A
 forced roll lands whatever its chance comes to, including a chance the recipient's State Rate and
@@ -6407,6 +6408,48 @@ tags.
 50% chance to apply state 8 forever, regardless of the state's own duration tags.
 
 **See also:** J-ABS's `<stateDurationFlat>`
+
+---
+
+### `<applyStateWhenAfflicted:[APPLYING_STATE_ID, NECESSARY_STATE_ID, CHANCE]>` / `<thisApplyStateWhenAfflicted:[APPLYING_STATE_ID, NECESSARY_STATE_ID, CHANCE]>`
+
+**Applies to:**
+`applyStateWhenAfflicted`: Actors, Classes, Enemies, Weapons, Armors, States, Skills (the caster's own note sources; a
+skill counts while the battler knows it). `thisApplyStateWhenAfflicted`: Skills (only while that skill is the one
+landing the hit)
+
+**When:**
+the caster lands a hit on a target that already carried NECESSARY_STATE_ID before the hit
+
+**Effect:**
+applies APPLYING_STATE_ID to the target at CHANCE percent, but only to a target that was already afflicted with
+NECESSARY_STATE_ID before this hit landed anything. A hit's own state effects land partway through the hit, so a
+necessary state the same hit applies never counts: a skill that applies state 72 and carries
+`<thisApplyStateWhenAfflicted:[73, 72, 100]>` puts only 72 on a fresh target, and adds 73 from its next hit on. Who put
+the necessary state there does not matter. The state lands with its own default duration and stacks.
+
+CHANCE rolls exactly as `<applyState>`'s does, through J-ABS's state application roll: State Rate, `<stateTypeResist>`,
+the LUK between caster and target, then both battlers' fate. Accumulate Mode and Encore can land the state more than
+once on a single hit, and the target's immunities are checked on every landing.
+
+| Variant | Read from | Fires on |
+|---|---|---|
+| `<applyStateWhenAfflicted>` | every note source the caster has | every hit the caster lands, with anything |
+| `<thisApplyStateWhenAfflicted>` | the skill's own note | that skill's own hits |
+
+Caster-wide entries roll first and skill-scoped ones last.
+
+```
+<thisApplyStateWhenAfflicted:[73, 72, 100]>
+```
+This skill's hits apply state 73 to any target that already carried state 72 before the hit.
+
+```
+<applyStateWhenAfflicted:[37, 15, 50]>
+```
+On a weapon: every hit its wielder lands has a 50% chance to apply state 37 to a target already afflicted with state 15.
+
+**See also:** `<applyState>` / `<thisApplyState>` (ungated), `<onCastSelfStateIfAfflicted>` (gated on the caster instead)
 
 ---
 

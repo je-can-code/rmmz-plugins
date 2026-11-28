@@ -277,11 +277,12 @@ describe('J-SkillExtend Game_Action state roll threading (direct src import)', (
       action.applyStates = vi.fn();
       action.loseStates = vi.fn();
       action.applyOnHitApplyStates = vi.fn();
+      action.applyOnHitWhenAfflictedStates = vi.fn();
       action.applyOnHitStripStates = vi.fn();
       action.applyOnHitRemoveStates = vi.fn();
 
       // Act
-      action.applyOnHitStateEffects(struck);
+      action.applyOnHitStateEffects(struck, []);
 
       // Assert
       expect(action.applyStates).toHaveBeenCalledWith(caster, [ selfEffect ], standIn);

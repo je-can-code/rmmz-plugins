@@ -22,8 +22,9 @@ On a critical hit, this forces:
 ```
 1. The on-crit states: thisCritApply, thisCritSelf, onCritApply and onCritSelf.
 2. The skill's own Add State and Remove State effects on the battler it crit.
-3. J-SkillExtend's on-hit tags on that hit: applyState, thisApplyState, onHitSelfState, onHitLoseState,
-   onHitStripState and onHitRemoveState, plus onCastStripState and onCastRemoveState on that battler.
+3. J-SkillExtend's on-hit tags on that hit: applyState, thisApplyState, applyStateWhenAfflicted,
+   thisApplyStateWhenAfflicted, onHitSelfState, onHitLoseState, onHitStripState and onHitRemoveState, plus
+   onCastStripState and onCastRemoveState on that battler.
 ```
 
 It does not change whether the hit itself crits, and it never forces a hit that did not crit. It does not touch the

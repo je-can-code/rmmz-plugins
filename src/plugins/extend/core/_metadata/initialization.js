@@ -347,6 +347,48 @@ J.EXTEND.RegExp.ThisApplyState = /<thisApplyState:[ ]?(\[\d+,[ ]?\d+(?:,[ ]?-?\d
 J.EXTEND.RegExp.ApplyState = /<applyState:[ ]?(\[\d+,[ ]?\d+(?:,[ ]?-?\d+(?:,[ ]?\d+)?)?])>/gi;
 
 /**
+ * The structure of a skill-scoped on-hit apply-state tag that only lands on a target already afflicted with another
+ * state. Reads from the executing skill only ({@code this.item()}).<br/>
+ * The target is judged as it stood before the hit, so a NECESSARY_STATE_ID that the same hit applies never counts: it
+ * has to have been there already, put there by an earlier hit or by anyone else. A target that qualifies rolls CHANCE
+ * the way {@link J.EXTEND.RegExp.ThisApplyState} does.
+ *
+ * <pre>
+ * Structure:
+ *  <thisApplyStateWhenAfflicted:[APPLYING_STATE_ID, NECESSARY_STATE_ID, CHANCE]>
+ *
+ * Example:
+ *  <thisApplyStateWhenAfflicted:[73, 72, 100]>
+ *
+ * Translation:
+ *  On hit, if the target already had state id 72 before this hit landed, apply state id 73 at 100% chance.
+ * </pre>
+ * @type {RegExp}
+ */
+J.EXTEND.RegExp.ThisApplyStateWhenAfflicted = /<thisApplyStateWhenAfflicted:[ ]?(\[\d+,[ ]?\d+,[ ]?\d+])>/gi;
+
+/**
+ * The structure of a caster-wide on-hit apply-state tag that only lands on a target already afflicted with another
+ * state. Reads from all of the caster's notes ({@code getAllNotes()}), so it can live on states, equips, actor data,
+ * or skills. One on a skill counts toward every hit its caster lands while that skill is known, not only that skill's
+ * own hits.<br/>
+ * Judged and rolled exactly as {@link J.EXTEND.RegExp.ThisApplyStateWhenAfflicted} is.
+ *
+ * <pre>
+ * Structure:
+ *  <applyStateWhenAfflicted:[APPLYING_STATE_ID, NECESSARY_STATE_ID, CHANCE]>
+ *
+ * Example (a weapon whose hits worsen a bleed that is already running):
+ *  <applyStateWhenAfflicted:[37, 15, 50]>
+ *
+ * Translation:
+ *  On hit, if the target already had state id 15 before this hit landed, roll a 50% chance to apply state id 37.
+ * </pre>
+ * @type {RegExp}
+ */
+J.EXTEND.RegExp.ApplyStateWhenAfflicted = /<applyStateWhenAfflicted:[ ]?(\[\d+,[ ]?\d+,[ ]?\d+])>/gi;
+
+/**
  * The structure of a skill-scoped toggle-state tag. Reads from the executing skill only
  * ({@code this.item()}). Fires once at press-time (same as the on-cast self-state tags), not on hit.
  *

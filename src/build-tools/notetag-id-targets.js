@@ -254,6 +254,7 @@ export const NotetagIdTargets = {
 
   // J-SkillExtend. An extension names rows in its own table: a skill extends skills, a state states.
   applyState: [ { position: 0, table: 'States' } ],
+  applyStateWhenAfflicted: [ { position: 0, table: 'States' }, { position: 1, table: 'States' } ],
   extend: [ { position: 'each', table: 'Self' } ],
   onCastExecuteSkill: [ { position: 0, table: 'Skills' } ],
   onCastExecuteSkillIfAfflicted: [ { position: 0, table: 'Skills' }, { position: 2, table: 'States' } ],
@@ -267,6 +268,7 @@ export const NotetagIdTargets = {
   onHitSelfState: [ { position: 0, table: 'States' } ],
   onHitStripState: [ { position: 0, table: 'States' } ],
   thisApplyState: [ { position: 0, table: 'States' } ],
+  thisApplyStateWhenAfflicted: [ { position: 0, table: 'States' }, { position: 1, table: 'States' } ],
   toggleGroupOnExecute: [ { position: 'each', table: 'States' } ],
   toggleOnExecute: [ { position: 0, table: 'States' } ],
 

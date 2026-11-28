@@ -12,6 +12,8 @@ All the versioning and history of changes live here.
 ## The Actual Changelog
 
 ### 1.10.0
+  - Added `<applyStateWhenAfflicted>` and `<thisApplyStateWhenAfflicted>`, which apply a state on hit only to a target
+    already afflicted with another state before the hit landed, rolled like `<applyState>`.
   - Updated `<applyState>` and `<thisApplyState>` to roll through J-ABS's state roll, so the target's State Rate traits,
     `<stateTypeResist>`, luck and fate weigh on them. DURATION and STACKS hold on every landing.
   - Updated the on-hit and on-cast self-states to roll against the caster's own resistances.

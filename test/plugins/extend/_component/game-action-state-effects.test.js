@@ -561,6 +561,161 @@ describe('J-SkillExtend Game_Action state effects (direct src import)', () =>
     });
   });
 
+  describe('the afflicted-gated apply-states', () =>
+  {
+    /**
+     * Builds a target that remembers which states it carries, so the gate has something real to judge. Every state
+     * added to it is recorded with what it was added by, and is carried from then on.
+     * @param {number[]} afflictedStateIds The states the target carries before the hit.
+     * @param {boolean} [hit] Whether or not the hit lands; defaults to landing.
+     * @returns {object}
+     */
+    function buildAfflictedTarget(afflictedStateIds, hit = true)
+    {
+      return buildTarget(hit, {
+        __afflictedStateIds: [ ...afflictedStateIds ],
+        __addedStateCalls: [],
+        isStateAffected(stateId)
+        {
+          return this.__afflictedStateIds.includes(stateId);
+        },
+        addState(stateId, attacker, sourceSkill)
+        {
+          this.__addedStates.push(stateId);
+          this.__addedStateCalls.push({ stateId, attacker, sourceSkill });
+          this.__afflictedStateIds.push(stateId);
+        },
+      });
+    }
+
+    it('lands on a target that already carried the necessary state, and skips a sibling whose state is missing', () =>
+    {
+      // Arrange- both entries are sure chances on the executing skill. the target carries 72 but not 99, so only the
+      // gate can tell the two entries apart.
+      const caster = buildBattler();
+      const skill = buildSkill('<thisApplyStateWhenAfflicted:[73, 72, 100]>\n<thisApplyStateWhenAfflicted:[74, 99, 100]>');
+      const target = buildAfflictedTarget([ 72 ]);
+      const action = buildAction(caster, skill);
+
+      // Act
+      action.apply(target);
+
+      // Assert
+      expect(target.__addedStates).toEqual([ 73 ]);
+    });
+
+    it('judges the target before the hit, so a necessary state the same hit lands does not count', () =>
+    {
+      // Arrange- the original logic lands state 72 partway through the hit, the way a skill's own Add State effect
+      // does. the target carried nothing before the hit.
+      const caster = buildBattler();
+      const skill = buildSkill('<thisApplyStateWhenAfflicted:[73, 72, 100]>');
+      const target = buildAfflictedTarget([]);
+      const action = buildAction(caster, skill);
+      const originalApply = globalThis.J.EXTEND.Aliased.Game_Action.get('apply');
+      globalThis.J.EXTEND.Aliased.Game_Action.set('apply', aimedAt => aimedAt.addState(72));
+
+      // Act
+      try
+      {
+        action.apply(target);
+      }
+      finally
+      {
+        globalThis.J.EXTEND.Aliased.Game_Action.set('apply', originalApply);
+      }
+
+      // Assert- the hit's own state landed, and the gated one did not follow it.
+      expect(target.__addedStates).toEqual([ 72 ]);
+    });
+
+    it('lands the caster-wide variant from any note source the caster carries, ahead of the skill-scoped one', () =>
+    {
+      // Arrange- a weapon carries the caster-wide variant and the executing skill carries the skill-scoped one, and
+      // the target carries both necessary states.
+      const weaponNote = { note: '<applyStateWhenAfflicted:[37, 15, 100]>' };
+      const caster = buildBattler([], [], [ weaponNote ]);
+      const skill = buildSkill('<thisApplyStateWhenAfflicted:[73, 72, 100]>');
+      const target = buildAfflictedTarget([ 15, 72 ]);
+      const action = buildAction(caster, skill);
+
+      // Act
+      action.apply(target);
+
+      // Assert
+      expect(target.__addedStates).toEqual([ 37, 73 ]);
+    });
+
+    it('reads the skill-scoped variant from the executing skill alone, never from another skill the caster knows', () =>
+    {
+      // Arrange- another skill the caster knows sits among its note sources carrying the skill-scoped variant, and
+      // the target carries the state both entries need.
+      const otherSkillNote = { note: '<thisApplyStateWhenAfflicted:[75, 72, 100]>' };
+      const caster = buildBattler([], [], [ otherSkillNote ]);
+      const skill = buildSkill('<thisApplyStateWhenAfflicted:[73, 72, 100]>');
+      const target = buildAfflictedTarget([ 72 ]);
+      const action = buildAction(caster, skill);
+
+      // Act
+      action.apply(target);
+
+      // Assert
+      expect(target.__addedStates).toEqual([ 73 ]);
+    });
+
+    it('rolls each entry\'s own chance for its own state, and adds it once per landing from the caster and skill', () =>
+    {
+      // Arrange- the necessary state, the applied state and the chance are all different numbers, so a roll handed
+      // the wrong slot shows. the roll answers two landings.
+      const caster = buildBattler();
+      const skill = buildSkill('<thisApplyStateWhenAfflicted:[73, 72, 40]>');
+      const target = buildAfflictedTarget([ 72 ]);
+      const action = buildAction(caster, skill);
+      action.resolveStateProcCountAgainst = vi.fn(() => 2);
+
+      // Act
+      action.apply(target);
+
+      // Assert
+      const landing = { stateId: 73, attacker: caster, sourceSkill: skill };
+      expect(action.resolveStateProcCountAgainst.mock.calls).toEqual([ [ target, 73, 40 ] ]);
+      expect(target.__addedStateCalls).toEqual([ landing, landing ]);
+    });
+
+    it('adds nothing when the roll never lands', () =>
+    {
+      // Arrange- the target qualifies, and the roll answers no landings.
+      const caster = buildBattler();
+      const skill = buildSkill('<thisApplyStateWhenAfflicted:[73, 72, 100]>');
+      const target = buildAfflictedTarget([ 72 ]);
+      const action = buildAction(caster, skill);
+      action.resolveStateProcCountAgainst = vi.fn(() => 0);
+
+      // Act
+      action.apply(target);
+
+      // Assert- the state was rolled for, and nothing was added.
+      expect(action.resolveStateProcCountAgainst).toHaveBeenCalledTimes(1);
+      expect(target.__addedStates).toEqual([]);
+    });
+
+    it('lands nothing when the hit misses, even on a target that qualifies', () =>
+    {
+      // Arrange- a sure chance against a target carrying the necessary state, so the miss is the only thing left that
+      // can keep it off.
+      const caster = buildBattler();
+      const skill = buildSkill('<thisApplyStateWhenAfflicted:[73, 72, 100]>');
+      const target = buildAfflictedTarget([ 72 ], false);
+      const action = buildAction(caster, skill);
+
+      // Act
+      action.apply(target);
+
+      // Assert
+      expect(target.__addedStates).toEqual([]);
+    });
+  });
+
   describe('applyStates', () =>
   {
     let resolveProcCount;
