@@ -10,7 +10,8 @@ tags: [abs, tag, state, skill]
 ## Description
 
 Locks the battler's combat skills. For actors, this is the four combat slots. For enemies, this is any skill that isn't
-the basic attack.
+the basic attack. A passive state carrying this tag mutes its bearer for as long as the passive lasts, the same as an
+applied state does.
 
 ## TAG USAGE
 

@@ -1927,6 +1927,20 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
         expect(JABS_AiManager.canMoveIdly(battler)).toEqual(false);
       });
 
+      it('returns false when a state holds the battler in place', () =>
+      {
+        // Arrange: the idle action is ready and RNG is forced favorable, so the hold is the only thing left that can
+        // keep the battler from wandering.
+        globalThis.RPGManager.chanceIn100.mockReturnValue(true);
+        const battler = buildIdleBattler({ isIdleActionReady: () => true, isMovementLockedByState: () => true });
+
+        // Act
+        const canMove = JABS_AiManager.canMoveIdly(battler);
+
+        // Assert
+        expect(canMove).toEqual(false);
+      });
+
       it('returns true when the idle action is ready and RNG favors idling', () =>
       {
         globalThis.RPGManager.chanceIn100.mockReturnValue(true);
@@ -2703,6 +2717,7 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
         getRange: () => 3,
         getThicknessTiles: () => 1,
         isSupportAction: () => false,
+        getBaseSkill: () => ({ id: 41 }),
         ...overrides,
       };
     }
@@ -2731,6 +2746,7 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
         getX: () => 0,
         getY: () => 0,
         canExecuteSkill: () => true,
+        isSkillLockedOutByState: () => false,
         setDecidedAction: vi.fn(),
         setWaitCountdown: vi.fn(),
         showAnimation: vi.fn(),
@@ -2872,6 +2888,121 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
         const battler = buildPhase2Battler({ isActionDecided: () => true, isInPosition: () => true, isCastingOrChanneling: () => true });
         JABS_AiManager.aiPhase2(battler);
         expect(JABS_AiManager.executeAiPhase2Action).not.toHaveBeenCalled();
+      });
+
+      it('puts a battler that cannot move in position once its target is in reach, and fires that same frame', () =>
+      {
+        // Arrange- the battler remembers being put in position, the way a real one does, so the fire check that
+        // follows sees it. Its target is 2 tiles off and the decided action reaches 3.
+        let inPosition = false;
+        JABS_AiManager.decideAiPhase2Movement = vi.fn();
+        JABS_AiManager.executeAiPhase2Action = vi.fn();
+        const battler = buildPhase2Battler({
+          isActionDecided: () => true,
+          canBattlerMove: () => false,
+          distanceToCurrentTarget: () => 2,
+          isInPosition: () => inPosition,
+          setInPosition: vi.fn(value =>
+          {
+            inPosition = value;
+          }),
+        });
+
+        // Act
+        JABS_AiManager.aiPhase2(battler);
+
+        // Assert- it never tried to walk anywhere, and fired from where it stands.
+        expect(JABS_AiManager.decideAiPhase2Movement).not.toHaveBeenCalled();
+        expect(battler.setInPosition).toHaveBeenCalledWith(true);
+        expect(JABS_AiManager.executeAiPhase2Action).toHaveBeenCalledWith(battler);
+      });
+
+      it('leaves a battler that cannot move waiting while its target is out of reach', () =>
+      {
+        // Arrange- its target is 5 tiles off and the decided action reaches 3.
+        let inPosition = false;
+        JABS_AiManager.decideAiPhase2Movement = vi.fn();
+        JABS_AiManager.executeAiPhase2Action = vi.fn();
+        const battler = buildPhase2Battler({
+          isActionDecided: () => true,
+          canBattlerMove: () => false,
+          distanceToCurrentTarget: () => 5,
+          isInPosition: () => inPosition,
+          setInPosition: vi.fn(value =>
+          {
+            inPosition = value;
+          }),
+        });
+
+        // Act
+        JABS_AiManager.aiPhase2(battler);
+
+        // Assert
+        expect(battler.setInPosition).not.toHaveBeenCalled();
+        expect(JABS_AiManager.executeAiPhase2Action).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('canFireFromWhereItStands()', () =>
+    {
+      /**
+       * Builds a battler ready to fire from where it stands: it cannot move, has decided an action reaching 3 tiles,
+       * stands 2 tiles from its target, is neither casting nor in position, and nothing forbids the action.
+       * @param {object} [overrides] Members to replace, by name.
+       * @returns {object}
+       */
+      function buildPinnedBattler(overrides = {})
+      {
+        return buildPhase2Battler({
+          isActionDecided: () => true,
+          canBattlerMove: () => false,
+          distanceToCurrentTarget: () => 2,
+          isSkillLockedOutByState: vi.fn(() => false),
+          ...overrides,
+        });
+      }
+
+      it('returns true for a battler that cannot move whose target is in reach of an action it may use', () =>
+      {
+        // Arrange
+        const battler = buildPinnedBattler();
+
+        // Act
+        const canFire = JABS_AiManager.canFireFromWhereItStands(battler);
+
+        // Assert- the lock check was asked about the decided action's own skill.
+        expect(canFire).toEqual(true);
+        expect(battler.isSkillLockedOutByState).toHaveBeenCalledWith(41);
+      });
+
+      it('returns false while casting or channeling', () =>
+      {
+        const battler = buildPinnedBattler({ isCastingOrChanneling: () => true });
+        expect(JABS_AiManager.canFireFromWhereItStands(battler)).toEqual(false);
+      });
+
+      it('returns false when already in position', () =>
+      {
+        const battler = buildPinnedBattler({ isInPosition: () => true });
+        expect(JABS_AiManager.canFireFromWhereItStands(battler)).toEqual(false);
+      });
+
+      it('returns false for a battler that can move, which walks into position instead', () =>
+      {
+        const battler = buildPinnedBattler({ canBattlerMove: () => true });
+        expect(JABS_AiManager.canFireFromWhereItStands(battler)).toEqual(false);
+      });
+
+      it('returns false while the target is out of reach of the decided action', () =>
+      {
+        const battler = buildPinnedBattler({ distanceToCurrentTarget: () => 5 });
+        expect(JABS_AiManager.canFireFromWhereItStands(battler)).toEqual(false);
+      });
+
+      it('returns false when the battler\'s states forbid the action it decided', () =>
+      {
+        const battler = buildPinnedBattler({ isSkillLockedOutByState: () => true });
+        expect(JABS_AiManager.canFireFromWhereItStands(battler)).toEqual(false);
       });
     });
 

@@ -9,7 +9,12 @@ tags: [abs, tag, state, movement, attack, skill]
 
 ## Description
 
-Functionally the same as being rooted, disabled, and muted all at once.
+Functionally the same as being rooted, disabled, and muted all at once. A paralyzed AI battler neither moves nor acts on
+its own, which makes this the state for holding a boss still while a boss fight's script acts for it: the fight's
+forced skills still fire.
+
+A passive state carrying this tag paralyzes its bearer for as long as the passive lasts, the same as an applied state
+does.
 
 ## TAG USAGE
 

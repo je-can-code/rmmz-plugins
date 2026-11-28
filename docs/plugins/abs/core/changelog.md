@@ -31,6 +31,11 @@ All the versioning and history of changes live here.
     sharing one knockback resistance.
   - Updated the on-cast state effects to come from J-Extend, which fills the handleOnCastStateEffects hook. Pair this
     version with J-Extend 1.10.0.
+  - Updated `<rooted>`, `<disabled>`, `<muted>` and `<paralyzed>` to count passive states, so a passive can pin a
+    battler in place for good.
+  - Fixed bug with a rooted AI battler never firing the skill it chose: it now fires from where it stands once its
+    target is within that skill's proximity, unless its states forbid that skill.
+  - Fixed bug with rooted battlers wandering while idle.
   - Fixed bug with a tool used on an opponent acting as that opponent rather than its user.
   - Requires J-Base 4.5.0.
 ### 4.29.0

@@ -10,7 +10,8 @@ tags: [abs, tag, state, attack]
 ## Description
 
 Locks the battler's basic attacks. For actors, this is mainhand and offhand. For enemies, this is their basic attack
-traited skill.
+traited skill. A passive state carrying this tag disables its bearer for as long as the passive lasts, the same as an
+applied state does.
 
 ## TAG USAGE
 

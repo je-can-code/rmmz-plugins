@@ -2442,15 +2442,16 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
     it('canBattlerUseAttacks is true with no states at all', () =>
     {
       const jabsBattler = buildBattler();
-      jabsBattler.getBattler = () => ({ states: () => [] });
+      jabsBattler.getBattler = () => ({ allStates: () => [] });
 
       expect(jabsBattler.canBattlerUseAttacks()).toBe(true);
     });
 
-    it('canBattlerUseAttacks is false when disarmed', () =>
+    it('canBattlerUseAttacks is false when disarmed, even by a passive the battler has not been given', () =>
     {
       const jabsBattler = buildBattler();
-      jabsBattler.getBattler = () => ({ states: () => [ { jabsDisarmed: true } ] });
+      // the disarming state is only a passive: it is among every state, never among the applied ones.
+      jabsBattler.getBattler = () => ({ states: () => [], allStates: () => [ { jabsDisarmed: true } ] });
 
       expect(jabsBattler.canBattlerUseAttacks()).toBe(false);
     });
@@ -2458,7 +2459,7 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
     it('canBattlerUseAttacks is false when paralyzed', () =>
     {
       const jabsBattler = buildBattler();
-      jabsBattler.getBattler = () => ({ states: () => [ { jabsParalyzed: true } ] });
+      jabsBattler.getBattler = () => ({ allStates: () => [ { jabsParalyzed: true } ] });
 
       expect(jabsBattler.canBattlerUseAttacks()).toBe(false);
     });
@@ -2466,7 +2467,7 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
     it('canBattlerUseAttacks is true when states are present but none disable attacking', () =>
     {
       const jabsBattler = buildBattler();
-      jabsBattler.getBattler = () => ({ states: () => [ {} ] });
+      jabsBattler.getBattler = () => ({ allStates: () => [ { jabsMuted: true } ] });
 
       expect(jabsBattler.canBattlerUseAttacks()).toBe(true);
     });
@@ -2474,15 +2475,16 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
     it('canBattlerUseSkills is true with no states at all', () =>
     {
       const jabsBattler = buildBattler();
-      jabsBattler.getBattler = () => ({ states: () => [] });
+      jabsBattler.getBattler = () => ({ allStates: () => [] });
 
       expect(jabsBattler.canBattlerUseSkills()).toBe(true);
     });
 
-    it('canBattlerUseSkills is false when muted', () =>
+    it('canBattlerUseSkills is false when muted, even by a passive the battler has not been given', () =>
     {
       const jabsBattler = buildBattler();
-      jabsBattler.getBattler = () => ({ states: () => [ { jabsMuted: true } ] });
+      // the muting state is only a passive: it is among every state, never among the applied ones.
+      jabsBattler.getBattler = () => ({ states: () => [], allStates: () => [ { jabsMuted: true } ] });
 
       expect(jabsBattler.canBattlerUseSkills()).toBe(false);
     });
@@ -2490,7 +2492,7 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
     it('canBattlerUseSkills is false when paralyzed', () =>
     {
       const jabsBattler = buildBattler();
-      jabsBattler.getBattler = () => ({ states: () => [ { jabsParalyzed: true } ] });
+      jabsBattler.getBattler = () => ({ allStates: () => [ { jabsParalyzed: true } ] });
 
       expect(jabsBattler.canBattlerUseSkills()).toBe(false);
     });
@@ -2500,13 +2502,92 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       // Arrange
       const jabsBattler = buildBattler();
       // a state carrying the sibling attack-side flag must not read as a mute.
-      jabsBattler.getBattler = () => ({ states: () => [ { jabsDisarmed: true } ] });
+      jabsBattler.getBattler = () => ({ allStates: () => [ { jabsDisarmed: true } ] });
 
       // Act
       const canUseSkills = jabsBattler.canBattlerUseSkills();
 
       // Assert
       expect(canUseSkills).toBe(true);
+    });
+  });
+
+  describe('isSkillLockedOutByState', () =>
+  {
+    /**
+     * Builds a battler whose locks and basic attack are told, watching whether its basic attack is asked about.
+     * @param {object} answers What the battler answers: canUseSkills, canUseAttacks and isBasicAttack.
+     * @returns {JABS_Battler}
+     */
+    function buildLockedBattler({ canUseSkills, canUseAttacks, isBasicAttack })
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.canBattlerUseSkills = () => canUseSkills;
+      jabsBattler.canBattlerUseAttacks = () => canUseAttacks;
+      jabsBattler.isSkillIdBasicAttack = vi.fn(() => isBasicAttack);
+      return jabsBattler;
+    }
+
+    it('locks out everything without asking about the basic attack when neither skills nor attacks are allowed', () =>
+    {
+      // Arrange
+      const jabsBattler = buildLockedBattler({ canUseSkills: false, canUseAttacks: false, isBasicAttack: false });
+
+      // Act
+      const lockedOut = jabsBattler.isSkillLockedOutByState(7);
+
+      // Assert
+      expect(lockedOut).toBe(true);
+      expect(jabsBattler.isSkillIdBasicAttack).not.toHaveBeenCalled();
+    });
+
+    it('locks out the basic attack of a battler that can use skills but not attacks', () =>
+    {
+      // Arrange
+      const jabsBattler = buildLockedBattler({ canUseSkills: true, canUseAttacks: false, isBasicAttack: true });
+
+      // Act
+      const lockedOut = jabsBattler.isSkillLockedOutByState(7);
+
+      // Assert
+      expect(lockedOut).toBe(true);
+      expect(jabsBattler.isSkillIdBasicAttack).toHaveBeenCalledWith(7);
+    });
+
+    it('allows the basic attack of a battler that can attack but not use skills', () =>
+    {
+      // Arrange
+      const jabsBattler = buildLockedBattler({ canUseSkills: false, canUseAttacks: true, isBasicAttack: true });
+
+      // Act
+      const lockedOut = jabsBattler.isSkillLockedOutByState(7);
+
+      // Assert
+      expect(lockedOut).toBe(false);
+    });
+
+    it('locks out any other skill of a battler that can attack but not use skills', () =>
+    {
+      // Arrange
+      const jabsBattler = buildLockedBattler({ canUseSkills: false, canUseAttacks: true, isBasicAttack: false });
+
+      // Act
+      const lockedOut = jabsBattler.isSkillLockedOutByState(7);
+
+      // Assert
+      expect(lockedOut).toBe(true);
+    });
+
+    it('allows any other skill of a battler that can use skills but not attacks', () =>
+    {
+      // Arrange
+      const jabsBattler = buildLockedBattler({ canUseSkills: true, canUseAttacks: false, isBasicAttack: false });
+
+      // Act
+      const lockedOut = jabsBattler.isSkillLockedOutByState(7);
+
+      // Assert
+      expect(lockedOut).toBe(false);
     });
   });
 
@@ -8209,15 +8290,16 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
     it('isMovementLockedByState is false with no states', () =>
     {
       const jabsBattler = buildBattler();
-      jabsBattler.getBattler = () => ({ states: () => [] });
+      jabsBattler.getBattler = () => ({ allStates: () => [] });
 
       expect(jabsBattler.isMovementLockedByState()).toBe(false);
     });
 
-    it('isMovementLockedByState is true when rooted', () =>
+    it('isMovementLockedByState is true when rooted, even by a passive the battler has not been given', () =>
     {
       const jabsBattler = buildBattler();
-      jabsBattler.getBattler = () => ({ states: () => [ { jabsRooted: true } ] });
+      // the rooting state is only a passive: it is among every state, never among the applied ones.
+      jabsBattler.getBattler = () => ({ states: () => [], allStates: () => [ { jabsRooted: true } ] });
 
       expect(jabsBattler.isMovementLockedByState()).toBe(true);
     });
@@ -8225,7 +8307,7 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
     it('isMovementLockedByState is true when paralyzed', () =>
     {
       const jabsBattler = buildBattler();
-      jabsBattler.getBattler = () => ({ states: () => [ { jabsParalyzed: true } ] });
+      jabsBattler.getBattler = () => ({ allStates: () => [ { jabsParalyzed: true } ] });
 
       expect(jabsBattler.isMovementLockedByState()).toBe(true);
     });
@@ -8233,7 +8315,7 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
     it('isMovementLockedByState is false when states are present but none lock movement', () =>
     {
       const jabsBattler = buildBattler();
-      jabsBattler.getBattler = () => ({ states: () => [ {} ] });
+      jabsBattler.getBattler = () => ({ allStates: () => [ { jabsDisarmed: true, jabsMuted: true } ] });
 
       expect(jabsBattler.isMovementLockedByState()).toBe(false);
     });

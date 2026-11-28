@@ -4190,7 +4190,11 @@ the state is active on a battler
 `rooted` locks movement (including dodge skills for actors). `disabled` locks
 basic attacks (mainhand/offhand for actors, the basic-attack trait skill for enemies). `muted`
 locks combat skills (the four combat slots for actors, anything non-basic for enemies).
-`paralyzed` is rooted + disabled + muted combined.
+`paralyzed` is rooted + disabled + muted combined. A passive state carrying any of them locks its
+bearer the same as an applied one, which is how a turret or vent is pinned for good. A rooted AI
+battler attacks from where it stands once its target is within the chosen skill's proximity, and
+waits while it isn't; it does not wander while idle. A paralyzed one never acts on its own, so it is
+the state for holding a boss still while its fight's script acts for it.
 
 ```
 <type:negative>

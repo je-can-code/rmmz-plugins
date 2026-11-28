@@ -1274,6 +1274,9 @@ class JABS_AiManager
    */
   static canMoveIdly(battler)
   {
+    // rooted/paralyzed battlers cannot wander about.
+    if (battler.isMovementLockedByState()) return false;
+
     // if we're not able to move idly, then do not.
     if (!battler.isIdleActionReady()) return false;
 
@@ -1543,12 +1546,50 @@ class JABS_AiManager
       return;
     }
 
+    // a battler that cannot move never takes the step that puts it in position, so it fires from where it stands.
+    if (this.canFireFromWhereItStands(battler))
+    {
+      // flag this battler as in-position to execute.
+      battler.setInPosition(true);
+    }
+
     // check if we're ready to execute actions.
     if (this.needsActionExecution(battler))
     {
       // execute the decided action.
       this.executeAiPhase2Action(battler);
     }
+  }
+
+  /**
+   * Determines whether a battler that cannot move is ready to fire its decided action from where it stands.<br/>
+   * A battler that can move gets into position by moving there, in {@link #decideAiPhase2Movement}, and a battler
+   * that cannot never reaches that step. So once its target is within the decided action's proximity, it counts as in
+   * position where it stands; while its target is out of reach, it waits for the target to come to it. A battler whose
+   * states forbid the action it decided, like a paralyzed one, waits too, so being held in place never lets it act.
+   * @param {JABS_Battler} battler The battler to check.
+   * @returns {boolean} True if the battler should fire from where it stands, false otherwise.
+   */
+  static canFireFromWhereItStands(battler)
+  {
+    // a battler already casting is past positioning.
+    if (battler.isCastingOrChanneling()) return false;
+
+    // a battler already in position has nothing left to settle.
+    if (battler.isInPosition()) return false;
+
+    // a battler that can move gets into position by moving.
+    if (battler.canBattlerMove()) return false;
+
+    // a target out of reach has to come to it.
+    if (this.needsToMoveCloser(battler)) return false;
+
+    // a battler forbidden the action it decided holds it rather than firing it.
+    const [ action, ] = battler.getDecidedAction();
+    if (battler.isSkillLockedOutByState(action.getBaseSkill().id)) return false;
+
+    // its target is in reach, so it fires from where it stands.
+    return true;
   }
 
   /**

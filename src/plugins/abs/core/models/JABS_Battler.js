@@ -2809,39 +2809,66 @@ class JABS_Battler
   };
 
   /**
-   * Whether or not the battler is able to use attacks based on states.
+   * Whether or not the battler is able to use attacks based on states.<br/>
+   * Passive states count as much as applied ones, so a passive that disables its bearer disables it for good.
    * @returns {boolean} True if the battler can attack, false otherwise.
    */
   canBattlerUseAttacks()
   {
+    // every state on the battler, passives included.
     const states = this.getBattler()
-      .states();
-    if (!states.length)
-    {
-      return true;
-    }
+      .allStates();
 
-    const disabled = states.find(state => (state.jabsDisarmed || state.jabsParalyzed));
+    // a disabling or paralyzing state forbids basic attacks.
+    const disabled = states.some(state => (state.jabsDisarmed || state.jabsParalyzed));
+
     return !disabled;
-
   };
 
   /**
-   * Whether or not the battler is able to use skills based on states.
+   * Whether or not the battler is able to use skills based on states.<br/>
+   * Passive states count as much as applied ones, so a passive that mutes its bearer mutes it for good.
    * @returns {boolean} True if the battler can use skills, false otherwise.
    */
   canBattlerUseSkills()
   {
+    // every state on the battler, passives included.
     const states = this.getBattler()
-      .states();
-    if (!states.length)
-    {
-      return true;
-    }
+      .allStates();
 
-    const muted = states.find(state => (state.jabsMuted || state.jabsParalyzed));
+    // a muting or paralyzing state forbids skills.
+    const muted = states.some(state => (state.jabsMuted || state.jabsParalyzed));
+
     return !muted;
+  };
 
+  /**
+   * Whether the battler's states forbid it from using the given skill.<br/>
+   * A disabling state forbids the battler's basic attack, and a muting state forbids every other skill. A paralyzing
+   * state does both, and a battler forbidden both is answered before anything asks whether the skill is its basic
+   * attack, which for an actor means scanning its skill slots on every AI decision.
+   * @param {number} skillId The skill to check.
+   * @returns {boolean}
+   */
+  isSkillLockedOutByState(skillId)
+  {
+    // check if the battler can use skills.
+    const canUseSkills = this.canBattlerUseSkills();
+
+    // check if the battler can use basic attacks.
+    const canUseAttacks = this.canBattlerUseAttacks();
+
+    // a battler that can use neither is locked out of everything, whatever the skill is.
+    if (!canUseSkills && !canUseAttacks) return true;
+
+    // check if the skill is the battler's basic attack.
+    const isBasicAttack = this.isSkillIdBasicAttack(skillId);
+
+    // a basic attack answers to the disabling states.
+    if (isBasicAttack) return !canUseAttacks;
+
+    // anything else answers to the muting states.
+    return !canUseSkills;
   };
 
   /**
@@ -6688,17 +6715,15 @@ class JABS_Battler
   };
 
   /**
-   * Checks all states to see if any are movement-locking.
+   * Checks all states to see if any are movement-locking.<br/>
+   * Passive states count as much as applied ones, so a passive that roots its bearer pins it in place for good.
    * @returns {boolean} True if there is at least one locking movement, false otherwise.
    */
   isMovementLockedByState()
   {
-    // grab the states to check for movement-blocking effects.
+    // grab every state on the battler, passives included, to check for movement-blocking effects.
     const states = this.getBattler()
-      .states();
-
-    // if we have no states,
-    if (!states.length) return false;
+      .allStates();
 
     // check all our states to see if any are blocking movement.
     const lockedByState = states.some(state => (state.jabsRooted || state.jabsParalyzed));
@@ -6979,33 +7004,8 @@ class JABS_Battler
     // if there is no chosen skill, then we obviously cannot execute it.
     if (!chosenSkillId) return false;
 
-    // check if the battler can use skills.
-    const canUseSkills = this.canBattlerUseSkills();
-
-    // check if the battler can use basic attacks.
-    const canUseAttacks = this.canBattlerUseAttacks();
-
-    // if can't use basic attacks or skills, then autofail.
-    if (!canUseSkills && !canUseAttacks)
-    {
-      return false;
-    }
-
-    // check if the chosen skill is the enemy's basic attack.
-    const isBasicAttack = this.isSkillIdBasicAttack(chosenSkillId);
-
-    // check if basic attacks are blocked plus this being a basic attack.
-    if (!canUseAttacks && isBasicAttack)
-    {
-      // if the skill is a basic attack, but the battler can't attack, then fail.
-      return false;
-    }
-
-    // if the skill is an assigned skill, but the battler can't use skills, then fail.
-    if (!canUseSkills && !isBasicAttack)
-    {
-      return false;
-    }
+    // a disabled battler cannot basic attack, and a muted one cannot use anything else.
+    if (this.isSkillLockedOutByState(chosenSkillId)) return false;
 
     // check if this battler can pay the costs for the given skill id.
     if (!this.canPaySkillCost(chosenSkillId))
