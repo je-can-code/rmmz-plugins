@@ -4694,6 +4694,83 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
     });
   });
 
+  describe('cancelLinedUpAction', () =>
+  {
+    beforeEach(() =>
+    {
+      globalThis.$jabsEngine = { applyCooldownValueForSkill: vi.fn() };
+    });
+
+    /**
+     * Builds a battler that has decided an action and taken up position to fire it.
+     * @returns {JABS_Battler}
+     */
+    function buildLinedUpBattler()
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.setDecidedAction([ { getCooldown: () => 100 } ]);
+      jabsBattler.setInPosition(true);
+      jabsBattler.endChannel = vi.fn();
+      return jabsBattler;
+    }
+
+    it('stops a channel in flight, drops the decision and the position, and spends no cooldown', () =>
+    {
+      // Arrange
+      const jabsBattler = buildLinedUpBattler();
+      jabsBattler.isChanneling = () => true;
+      jabsBattler.isCasting = () => true;
+
+      // Act
+      jabsBattler.cancelLinedUpAction();
+
+      // Assert- the channel is what stops, and a windup check never comes into it.
+      expect(jabsBattler.endChannel).toHaveBeenCalledTimes(1);
+      expect(jabsBattler.isActionDecided()).toBe(false);
+      expect(jabsBattler.isInPosition()).toBe(false);
+      expect(globalThis.$jabsEngine.applyCooldownValueForSkill).not.toHaveBeenCalled();
+    });
+
+    it('stops a windup in flight before it fires, and spends no cooldown', () =>
+    {
+      // Arrange
+      const jabsBattler = buildLinedUpBattler();
+      jabsBattler.isChanneling = () => false;
+      jabsBattler.isCasting = () => true;
+      jabsBattler.setCasting(true);
+      jabsBattler.setCastTimeCountdown(40);
+
+      // Act
+      jabsBattler.cancelLinedUpAction();
+
+      // Assert
+      expect(jabsBattler._casting).toBe(false);
+      expect(jabsBattler.getCastTimeCountdown()).toBe(0);
+      expect(jabsBattler.endChannel).not.toHaveBeenCalled();
+      expect(jabsBattler.isActionDecided()).toBe(false);
+      expect(jabsBattler.isInPosition()).toBe(false);
+      expect(globalThis.$jabsEngine.applyCooldownValueForSkill).not.toHaveBeenCalled();
+    });
+
+    it('drops a decision that is lined up but not yet casting', () =>
+    {
+      // Arrange
+      const jabsBattler = buildLinedUpBattler();
+      jabsBattler.isChanneling = () => false;
+      jabsBattler.isCasting = () => false;
+      jabsBattler.setCastTimeCountdown(40);
+
+      // Act
+      jabsBattler.cancelLinedUpAction();
+
+      // Assert- nothing was winding up, so the countdown is left alone.
+      expect(jabsBattler.isActionDecided()).toBe(false);
+      expect(jabsBattler.isInPosition()).toBe(false);
+      expect(jabsBattler.getCastTimeCountdown()).toBe(40);
+      expect(jabsBattler.endChannel).not.toHaveBeenCalled();
+    });
+  });
+
   describe('engagement update pipeline', () =>
   {
     describe('canUpdateEngagement', () =>

@@ -4194,7 +4194,9 @@ locks combat skills (the four combat slots for actors, anything non-basic for en
 bearer the same as an applied one, which is how a turret or vent is pinned for good. A rooted AI
 battler attacks from where it stands once its target is within the chosen skill's proximity, and
 waits while it isn't; it does not wander while idle. A paralyzed one never acts on its own, so it is
-the state for holding a boss still while its fight's script acts for it.
+the state for holding a boss still while its fight's script acts for it. A paralyzing state landing
+cancels whatever its bearer had lined up, with no cooldown spent, so a script holds a boss before
+forcing a cast, never mid-windup.
 
 ```
 <type:negative>

@@ -22,6 +22,7 @@ function buildMinimalBattler()
     resetStateCounts: vi.fn(),
     addJabsState: vi.fn(),
     onJabsStateInflicted: vi.fn(),
+    cancelLinedUpActionIfHeld: vi.fn(),
     flagSkillSlotsForRefresh: vi.fn(),
     _result: { pushAddedState: vi.fn() },
   };
@@ -37,6 +38,9 @@ function buildMinimalBattler()
 
 describe('J-ABS Game_Battler#onJabsStateInflicted (direct src import)', () =>
 {
+  /** @type {typeof import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js').default} */
+  let JABS_AiManager;
+
   beforeAll(async () =>
   {
     vi.resetModules();
@@ -53,6 +57,9 @@ describe('J-ABS Game_Battler#onJabsStateInflicted (direct src import)', () =>
 
     // patches globalThis.Game_Battler.prototype directly, no vm involved.
     await import('../../../../../src/plugins/abs/core/objects/Game_Battler.js');
+
+    // the same module instance Game_Battler imported, so its lookup can be answered for a test.
+    ({ default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js'));
   });
 
   it('fires onJabsStateInflicted with the state id and attacker after tracking is settled', () =>
@@ -123,6 +130,96 @@ describe('J-ABS Game_Battler#onJabsStateInflicted (direct src import)', () =>
 
     // Act & Assert
     expect(() => battler.onJabsStateInflicted(14, { name: 'attacker' })).not.toThrow();
+  });
+
+  it('asks whether the state holds the battler once its tracking is settled', () =>
+  {
+    // Arrange
+    const battler = buildMinimalBattler();
+
+    // Act
+    battler.handleAddingJabsState(14, { name: 'attacker' });
+
+    // Assert- asked about the state just added, after JABS started tracking it.
+    expect(battler.cancelLinedUpActionIfHeld).toHaveBeenCalledWith(14);
+    const [ askedOrder ] = battler.cancelLinedUpActionIfHeld.mock.invocationCallOrder;
+    const [ trackedOrder ] = battler.addJabsState.mock.invocationCallOrder;
+    expect(askedOrder).toBeGreaterThan(trackedOrder);
+  });
+
+  describe('cancelLinedUpActionIfHeld', () =>
+  {
+    /**
+     * Builds a battler whose state 30 paralyzes and whose state 31 only roots, and whose map presence is told.
+     * @param {object|null} jabsBattler The map presence the lookup answers with.
+     * @returns {{ battler: object, lookup: Function }}
+     */
+    function buildHeldBattler(jabsBattler)
+    {
+      const battler = Object.create(globalThis.Game_Battler.prototype);
+      battler.getUuid = () => 'held-uuid';
+      battler.state = stateId => ({ jabsParalyzed: stateId === 30, jabsRooted: stateId === 31 });
+      const lookup = vi.fn(uuid => (uuid === 'held-uuid' ? jabsBattler : null));
+      return { battler, lookup };
+    }
+
+    /**
+     * Runs the given act with the battler lookup answering through the given stand-in, restoring it afterwards.
+     * @param {Function} lookup The stand-in lookup.
+     * @param {Function} act The act to run.
+     */
+    function withLookup(lookup, act)
+    {
+      const original = JABS_AiManager.getBattlerByUuid;
+      JABS_AiManager.getBattlerByUuid = lookup;
+      try
+      {
+        act();
+      }
+      finally
+      {
+        JABS_AiManager.getBattlerByUuid = original;
+      }
+    }
+
+    it('cancels what a battler on the map had lined up when the state paralyzes it', () =>
+    {
+      // Arrange
+      const jabsBattler = { cancelLinedUpAction: vi.fn() };
+      const { battler, lookup } = buildHeldBattler(jabsBattler);
+
+      // Act
+      withLookup(lookup, () => battler.cancelLinedUpActionIfHeld(30));
+
+      // Assert
+      expect(lookup).toHaveBeenCalledWith('held-uuid');
+      expect(jabsBattler.cancelLinedUpAction).toHaveBeenCalledTimes(1);
+    });
+
+    it('leaves a battler alone when the state only roots it', () =>
+    {
+      // Arrange- the battler is on the map with something lined up, so only the state can keep it from cancelling.
+      const jabsBattler = { cancelLinedUpAction: vi.fn() };
+      const { battler, lookup } = buildHeldBattler(jabsBattler);
+
+      // Act
+      withLookup(lookup, () => battler.cancelLinedUpActionIfHeld(31));
+
+      // Assert
+      expect(jabsBattler.cancelLinedUpAction).not.toHaveBeenCalled();
+    });
+
+    it('does nothing for a paralyzed battler with no presence on the map', () =>
+    {
+      // Arrange
+      const { battler, lookup } = buildHeldBattler(null);
+
+      // Act
+      withLookup(lookup, () => battler.cancelLinedUpActionIfHeld(30));
+
+      // Assert- it looked for the battler on the map and found nothing to cancel.
+      expect(lookup).toHaveBeenCalledWith('held-uuid');
+    });
   });
 });
 //endregion plugins/abs/core/_component/game-battler-on-jabs-state-inflicted.test.js

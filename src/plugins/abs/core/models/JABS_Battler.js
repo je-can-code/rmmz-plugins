@@ -4339,6 +4339,31 @@ class JABS_Battler
   };
 
   /**
+   * Cancels whatever this battler has lined up to fire: a windup or channel in flight stops, the decided action is
+   * dropped, and the battler is no longer in position, so it decides afresh once it can act again.<br/>
+   * Unlike {@link #interrupt}, nothing is penalized. The action never happened, so no cooldown is spent on it. A hold
+   * calls this the moment it lands, so a held battler never acts on a decision it made before.
+   */
+  cancelLinedUpAction()
+  {
+    // a channel in flight stops where it is; ticks that already fired stand.
+    if (this.isChanneling())
+    {
+      this.endChannel();
+    }
+    // a windup in flight stops before it ever fires.
+    else if (this.isCasting())
+    {
+      this.setCasting(false);
+      this.setCastTimeCountdown(0);
+    }
+
+    // the decided action is dropped, and with it the position taken up to fire it.
+    this.clearDecidedAction();
+    this.setInPosition(false);
+  };
+
+  /**
    * Updates the timer for "engagement".
    *
    * This is an important timer that prevents recalculating distances for all
