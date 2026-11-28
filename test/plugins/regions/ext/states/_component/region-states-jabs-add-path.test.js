@@ -83,7 +83,7 @@ describe('J-Regions-States landings through J-ABS\'s add path (direct src import
       resetStateCounts: vi.fn(),
       addJabsState: vi.fn(),
       onJabsStateInflicted: vi.fn(),
-      cancelLinedUpActionIfHeld: vi.fn(),
+      cancelLinedUpActionIfForbidden: vi.fn(),
       flagSkillSlotsForRefresh: vi.fn(),
       _result: { pushAddedState: vi.fn() },
       ...overrides,

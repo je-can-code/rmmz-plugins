@@ -4196,7 +4196,9 @@ battler attacks from where it stands once its target is within the chosen skill'
 waits while it isn't; it does not wander while idle. A paralyzed one never acts on its own, so it is
 the state for holding a boss still while its fight's script acts for it. A paralyzing state landing
 cancels whatever its bearer had lined up, with no cooldown spent, so a script holds a boss before
-forcing a cast, never mid-windup.
+forcing a cast, never mid-windup. A muting state landing cancels a lined-up skill that winds up with a
+cast time, and a disabling one a lined-up basic attack that does; an action with no cast time still
+goes off.
 
 ```
 <type:negative>

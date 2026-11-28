@@ -4771,6 +4771,101 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
     });
   });
 
+  describe('hasForbiddenWindupLinedUp', () =>
+  {
+    const MUTING = { jabsMuted: true, jabsDisarmed: false };
+    const DISABLING = { jabsMuted: false, jabsDisarmed: true };
+
+    /**
+     * Builds a battler that has lined up skill 9, winding up for the given cast time, whose basic attack is told.
+     * @param {number} castTime The lined-up action's cast time, in frames.
+     * @param {boolean} isBasicAttack Whether skill 9 is the battler's basic attack.
+     * @returns {JABS_Battler}
+     */
+    function buildWindingBattler(castTime, isBasicAttack)
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.setDecidedAction([ { getCastTime: () => castTime, getBaseSkill: () => ({ id: 9 }) } ]);
+      jabsBattler.isSkillIdBasicAttack = vi.fn(skillId => (skillId === 9 ? isBasicAttack : !isBasicAttack));
+      return jabsBattler;
+    }
+
+    it('is false with nothing lined up', () =>
+    {
+      // Arrange
+      const jabsBattler = buildBattler();
+      jabsBattler.isSkillIdBasicAttack = vi.fn(() => false);
+
+      // Act
+      const forbidden = jabsBattler.hasForbiddenWindupLinedUp(MUTING);
+
+      // Assert
+      expect(forbidden).toBe(false);
+      expect(jabsBattler.isSkillIdBasicAttack).not.toHaveBeenCalled();
+    });
+
+    it('is false for an action with no cast time, which has no windup to cancel', () =>
+    {
+      // Arrange- a skill a mute would otherwise forbid.
+      const jabsBattler = buildWindingBattler(0, false);
+
+      // Act
+      const forbidden = jabsBattler.hasForbiddenWindupLinedUp(MUTING);
+
+      // Assert
+      expect(forbidden).toBe(false);
+    });
+
+    it('is true for a skill that winds up when the state mutes', () =>
+    {
+      // Arrange
+      const jabsBattler = buildWindingBattler(1, false);
+
+      // Act
+      const forbidden = jabsBattler.hasForbiddenWindupLinedUp(MUTING);
+
+      // Assert- the skill asked about is the lined-up one.
+      expect(forbidden).toBe(true);
+      expect(jabsBattler.isSkillIdBasicAttack).toHaveBeenCalledWith(9);
+    });
+
+    it('is false for a skill that winds up when the state only disables', () =>
+    {
+      // Arrange
+      const jabsBattler = buildWindingBattler(60, false);
+
+      // Act
+      const forbidden = jabsBattler.hasForbiddenWindupLinedUp(DISABLING);
+
+      // Assert
+      expect(forbidden).toBe(false);
+    });
+
+    it('is true for a basic attack that winds up when the state disables', () =>
+    {
+      // Arrange
+      const jabsBattler = buildWindingBattler(30, true);
+
+      // Act
+      const forbidden = jabsBattler.hasForbiddenWindupLinedUp(DISABLING);
+
+      // Assert
+      expect(forbidden).toBe(true);
+    });
+
+    it('is false for a basic attack that winds up when the state only mutes', () =>
+    {
+      // Arrange
+      const jabsBattler = buildWindingBattler(30, true);
+
+      // Act
+      const forbidden = jabsBattler.hasForbiddenWindupLinedUp(MUTING);
+
+      // Assert
+      expect(forbidden).toBe(false);
+    });
+  });
+
   describe('engagement update pipeline', () =>
   {
     describe('canUpdateEngagement', () =>

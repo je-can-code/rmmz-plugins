@@ -22,7 +22,7 @@ function buildMinimalBattler()
     resetStateCounts: vi.fn(),
     addJabsState: vi.fn(),
     onJabsStateInflicted: vi.fn(),
-    cancelLinedUpActionIfHeld: vi.fn(),
+    cancelLinedUpActionIfForbidden: vi.fn(),
     flagSkillSlotsForRefresh: vi.fn(),
     _result: { pushAddedState: vi.fn() },
   };
@@ -132,7 +132,7 @@ describe('J-ABS Game_Battler#onJabsStateInflicted (direct src import)', () =>
     expect(() => battler.onJabsStateInflicted(14, { name: 'attacker' })).not.toThrow();
   });
 
-  it('asks whether the state holds the battler once its tracking is settled', () =>
+  it('asks whether the state forbids what the battler lined up once its tracking is settled', () =>
   {
     // Arrange
     const battler = buildMinimalBattler();
@@ -141,16 +141,24 @@ describe('J-ABS Game_Battler#onJabsStateInflicted (direct src import)', () =>
     battler.handleAddingJabsState(14, { name: 'attacker' });
 
     // Assert- asked about the state just added, after JABS started tracking it.
-    expect(battler.cancelLinedUpActionIfHeld).toHaveBeenCalledWith(14);
-    const [ askedOrder ] = battler.cancelLinedUpActionIfHeld.mock.invocationCallOrder;
+    expect(battler.cancelLinedUpActionIfForbidden).toHaveBeenCalledWith(14);
+    const [ askedOrder ] = battler.cancelLinedUpActionIfForbidden.mock.invocationCallOrder;
     const [ trackedOrder ] = battler.addJabsState.mock.invocationCallOrder;
     expect(askedOrder).toBeGreaterThan(trackedOrder);
   });
 
-  describe('cancelLinedUpActionIfHeld', () =>
+  describe('cancelLinedUpActionIfForbidden', () =>
   {
+    // the states the battler below sees: 30 paralyzes, 31 only roots, 32 mutes and 33 disables.
+    const STATES = {
+      30: { jabsParalyzed: true, jabsRooted: false, jabsMuted: false, jabsDisarmed: false },
+      31: { jabsParalyzed: false, jabsRooted: true, jabsMuted: false, jabsDisarmed: false },
+      32: { jabsParalyzed: false, jabsRooted: false, jabsMuted: true, jabsDisarmed: false },
+      33: { jabsParalyzed: false, jabsRooted: false, jabsMuted: false, jabsDisarmed: true },
+    };
+
     /**
-     * Builds a battler whose state 30 paralyzes and whose state 31 only roots, and whose map presence is told.
+     * Builds a battler that sees the states above, and whose map presence is told.
      * @param {object|null} jabsBattler The map presence the lookup answers with.
      * @returns {{ battler: object, lookup: Function }}
      */
@@ -158,9 +166,19 @@ describe('J-ABS Game_Battler#onJabsStateInflicted (direct src import)', () =>
     {
       const battler = Object.create(globalThis.Game_Battler.prototype);
       battler.getUuid = () => 'held-uuid';
-      battler.state = stateId => ({ jabsParalyzed: stateId === 30, jabsRooted: stateId === 31 });
+      battler.state = stateId => STATES[stateId];
       const lookup = vi.fn(uuid => (uuid === 'held-uuid' ? jabsBattler : null));
       return { battler, lookup };
+    }
+
+    /**
+     * Builds a map presence with something lined up, answering whether the given state forbids its windup as told.
+     * @param {boolean} forbidden What it answers about its windup.
+     * @returns {object}
+     */
+    function buildPresence(forbidden)
+    {
+      return { cancelLinedUpAction: vi.fn(), hasForbiddenWindupLinedUp: vi.fn(() => forbidden) };
     }
 
     /**
@@ -182,30 +200,60 @@ describe('J-ABS Game_Battler#onJabsStateInflicted (direct src import)', () =>
       }
     }
 
-    it('cancels what a battler on the map had lined up when the state paralyzes it', () =>
+    it('cancels whatever a battler on the map had lined up when the state paralyzes it, windup or not', () =>
     {
-      // Arrange
-      const jabsBattler = { cancelLinedUpAction: vi.fn() };
+      // Arrange- nothing lined up would count as a forbidden windup, so only the paralysis can cancel.
+      const jabsBattler = buildPresence(false);
       const { battler, lookup } = buildHeldBattler(jabsBattler);
 
       // Act
-      withLookup(lookup, () => battler.cancelLinedUpActionIfHeld(30));
+      withLookup(lookup, () => battler.cancelLinedUpActionIfForbidden(30));
 
       // Assert
       expect(lookup).toHaveBeenCalledWith('held-uuid');
       expect(jabsBattler.cancelLinedUpAction).toHaveBeenCalledTimes(1);
     });
 
-    it('leaves a battler alone when the state only roots it', () =>
+    it('cancels a windup the state forbids when the state mutes or disables', () =>
     {
-      // Arrange- the battler is on the map with something lined up, so only the state can keep it from cancelling.
-      const jabsBattler = { cancelLinedUpAction: vi.fn() };
+      // Arrange
+      const jabsBattler = buildPresence(true);
       const { battler, lookup } = buildHeldBattler(jabsBattler);
 
       // Act
-      withLookup(lookup, () => battler.cancelLinedUpActionIfHeld(31));
+      withLookup(lookup, () => battler.cancelLinedUpActionIfForbidden(32));
+
+      // Assert- the windup was judged against the muting state itself.
+      expect(jabsBattler.hasForbiddenWindupLinedUp).toHaveBeenCalledWith(STATES[32]);
+      expect(jabsBattler.cancelLinedUpAction).toHaveBeenCalledTimes(1);
+    });
+
+    it('leaves alone what the state does not forbid when it mutes or disables', () =>
+    {
+      // Arrange
+      const jabsBattler = buildPresence(false);
+      const { battler, lookup } = buildHeldBattler(jabsBattler);
+
+      // Act
+      withLookup(lookup, () => battler.cancelLinedUpActionIfForbidden(33));
+
+      // Assert- it asked, and nothing was cancelled.
+      expect(jabsBattler.hasForbiddenWindupLinedUp).toHaveBeenCalledWith(STATES[33]);
+      expect(jabsBattler.cancelLinedUpAction).not.toHaveBeenCalled();
+    });
+
+    it('leaves a battler alone when the state only roots it', () =>
+    {
+      // Arrange- the battler is on the map and would call anything forbidden, so only the state can keep it from
+      // cancelling.
+      const jabsBattler = buildPresence(true);
+      const { battler, lookup } = buildHeldBattler(jabsBattler);
+
+      // Act
+      withLookup(lookup, () => battler.cancelLinedUpActionIfForbidden(31));
 
       // Assert
+      expect(lookup).not.toHaveBeenCalled();
       expect(jabsBattler.cancelLinedUpAction).not.toHaveBeenCalled();
     });
 
@@ -215,7 +263,7 @@ describe('J-ABS Game_Battler#onJabsStateInflicted (direct src import)', () =>
       const { battler, lookup } = buildHeldBattler(null);
 
       // Act
-      withLookup(lookup, () => battler.cancelLinedUpActionIfHeld(30));
+      withLookup(lookup, () => battler.cancelLinedUpActionIfForbidden(30));
 
       // Assert- it looked for the battler on the map and found nothing to cancel.
       expect(lookup).toHaveBeenCalledWith('held-uuid');

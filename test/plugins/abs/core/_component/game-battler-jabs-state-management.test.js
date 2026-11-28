@@ -116,7 +116,7 @@ describe('J-ABS Game_Battler JABS state management (direct src import)', () =>
       battler.isStateAffected = () => true;
       battler.resetStateCounts = vi.fn();
       battler.addJabsState = vi.fn();
-      battler.cancelLinedUpActionIfHeld = vi.fn();
+      battler.cancelLinedUpActionIfForbidden = vi.fn();
       battler.result = () => ({ pushAddedState: vi.fn() });
 
       // Act

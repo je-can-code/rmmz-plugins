@@ -4364,6 +4364,31 @@ class JABS_Battler
   };
 
   /**
+   * Whether the action this battler has lined up winds up with a cast time and is of the kind the given state forbids:
+   * a disabling state forbids its basic attack, and a muting state forbids every other skill. An action with no cast
+   * time has no windup to cancel, so it never counts.
+   * @param {RPG_State} state The state just put on this battler.
+   * @returns {boolean}
+   */
+  hasForbiddenWindupLinedUp(state)
+  {
+    // nothing decided, nothing lined up.
+    if (!this.isActionDecided()) return false;
+
+    // the primary action is the one that winds up.
+    const [ action, ] = this.getDecidedAction();
+
+    // an action with no cast time has no windup to cancel.
+    if (action.getCastTime() <= 0) return false;
+
+    // a basic attack answers to the disabling states.
+    if (this.isSkillIdBasicAttack(action.getBaseSkill().id)) return state.jabsDisarmed;
+
+    // anything else answers to the muting states.
+    return state.jabsMuted;
+  };
+
+  /**
    * Updates the timer for "engagement".
    *
    * This is an important timer that prevents recalculating distances for all

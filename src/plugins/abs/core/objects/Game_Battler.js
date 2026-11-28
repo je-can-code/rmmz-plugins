@@ -1417,8 +1417,8 @@ Game_Battler.prototype.handleAddingJabsState = function(stateId, attacker, overr
   // fires on every application, first or repeat- unlike onStateAdded, which only fires once.
   this.onJabsStateInflicted(stateId, attacker);
 
-  // a state that holds this battler in place cancels whatever it had lined up.
-  this.cancelLinedUpActionIfHeld(stateId);
+  // a state that forbids what this battler had lined up cancels it.
+  this.cancelLinedUpActionIfForbidden(stateId);
 
   // add the new state to the action result on this battler.
   this.result().pushAddedState(stateId);
@@ -1428,17 +1428,21 @@ Game_Battler.prototype.handleAddingJabsState = function(stateId, attacker, overr
 };
 
 /**
- * Cancels whatever this battler had lined up to fire when the state just put on it is a hold.<br/>
- * A paralyzing state stops its bearer moving, attacking and casting, so a decision made before it landed is dropped
- * rather than fired from inside the hold, every application of it included. A boss fight's script still acts for a
- * held boss: a cast it forces after the hold lands is untouched, so a script puts its hold on before forcing a cast,
- * never during the windup of one.
+ * Cancels whatever this battler had lined up to fire when the state just put on it forbids it.<br/>
+ * A paralyzing state holds its bearer outright, so whatever it had lined up is dropped rather than fired from inside
+ * the hold. A muting state cancels a skill it had lined up that winds up with a cast time, and a disabling state does
+ * the same for its basic attack; an action with no cast time still goes off. Every application cancels, a repeat one
+ * included. A boss fight's script still acts for a held boss: a cast it forces after the hold lands is untouched, so a
+ * script puts its hold on before forcing a cast, never during the windup of one.
  * @param {number} stateId The state just put on this battler.
  */
-Game_Battler.prototype.cancelLinedUpActionIfHeld = function(stateId)
+Game_Battler.prototype.cancelLinedUpActionIfForbidden = function(stateId)
 {
-  // only a paralyzing state holds its bearer.
-  if (!this.state(stateId).jabsParalyzed) return;
+  // this battler's view of the state just put on it.
+  const state = this.state(stateId);
+
+  // a state that locks nothing cancels nothing.
+  if (!state.jabsParalyzed && !state.jabsMuted && !state.jabsDisarmed) return;
 
   // what a battler has lined up lives on its presence on the map.
   const jabsBattler = JABS_AiManager.getBattlerByUuid(this.getUuid());
@@ -1446,8 +1450,12 @@ Game_Battler.prototype.cancelLinedUpActionIfHeld = function(stateId)
   // a battler with no presence on the map has nothing lined up.
   if (!jabsBattler) return;
 
-  // drop whatever it had lined up.
-  jabsBattler.cancelLinedUpAction();
+  // a hold takes whatever was lined up; a mute or a disable takes only a windup of the kind it forbids.
+  if (state.jabsParalyzed || jabsBattler.hasForbiddenWindupLinedUp(state))
+  {
+    // drop whatever it had lined up.
+    jabsBattler.cancelLinedUpAction();
+  }
 };
 
 /**

@@ -35,7 +35,9 @@ All the versioning and history of changes live here.
     battler in place for good.
   - Fixed bug with a rooted AI battler never firing the skill it chose: it now fires from where it stands once its
     target is within that skill's proximity, unless its states forbid that skill.
-  - Updated `<paralyzed>` to cancel whatever its bearer had lined up the moment it lands, with no cooldown spent.
+  - Updated `<paralyzed>` to cancel whatever its bearer had lined up the moment it lands, and `<muted>` and `<disabled>`
+    to cancel a lined-up skill or basic attack of the kind they lock that winds up with a cast time. No cooldown is
+    spent on a cancelled action.
   - Fixed bug with rooted battlers wandering while idle.
   - Fixed bug with a tool used on an opponent acting as that opponent rather than its user.
   - Requires J-Base 4.5.0.
