@@ -52,9 +52,12 @@ class AutoRuleManager
    * @param {any[]} _tuple - The full authored tuple this dispatch came from, for subclasses whose
    * payload needs more than just `id` (e.g. a modification amount plus a range/target selector
    * living further down the tuple than the shared loop itself ever inspects).
-   * @returns {boolean} - True when the effect was successfully dispatched.
+   * @param {JABS_Battler|null} _hitTarget - The battler a hit-driven rule's hit landed on, for subclasses
+   * that aim at it; null for every condition that has no hit behind it.
+   * @returns {boolean} - True when the dispatch went ahead, which is what spends the rule's cooldown; each
+   * subclass says what going ahead means for its effect.
    */
-  static dispatch(_battler, _id, _tuple)
+  static dispatch(_battler, _id, _tuple, _hitTarget)
   {
     // subclasses must implement the actual dispatch logic for their effect type.
     throw new Error(`${this.name} must implement static dispatch()`);
@@ -268,8 +271,10 @@ class AutoRuleManager
   /**
    * Fires {@code onDamageDealt} rules on the battler that just landed damage on an opponent.
    * @param {Game_Actor|Game_Enemy} battler - The battler that dealt the damage.
+   * @param {JABS_Battler|null} [hitTarget=null] - The battler the damage landed on, handed to every rule
+   * this fires so a payload aimed at it can land on it.
    */
-  static scheduleDamageDealtTriggers(battler)
+  static scheduleDamageDealtTriggers(battler, hitTarget = null)
   {
     // no ABS context means there is nothing to schedule.
     if (!$jabsEngine || $jabsEngine.absEnabled === false) return;
@@ -278,17 +283,36 @@ class AutoRuleManager
     if (!battler) return;
 
     // delegate to the main dispatch loop with the onDamageDealt condition kind.
-    this.tryDispatch(battler, 'onDamageDealt');
+    this.tryDispatch(battler, 'onDamageDealt', hitTarget);
   }
 
   /**
-   * Fires {@code onWeaponHit} rules on the battler that just landed a mainhand/offhand attack.
+   * Fires {@code onHealDealt} rules on the battler whose action just restored HP, MP or TP on a battler of its own
+   * side, itself included.
    *
-   * Narrower than {@code onDamageDealt} — only counts hits from the caster's own basic-attack or
-   * combo chain (whatever is bound to the Mainhand/Offhand slot), not damage from arbitrary skills.
-   * @param {Game_Actor|Game_Enemy} battler - The battler that landed the weapon hit.
+   * The healing counterpart of {@code onDamageDealt}, and narrower than {@code onAllyHeal}: only an action that
+   * lands reaches it, never regeneration or a heal that merely happened nearby.
+   * @param {Game_Actor|Game_Enemy} battler - The battler that did the healing.
+   * @param {JABS_Battler} hitTarget - The battler the heal landed on, handed to every rule this fires so a payload
+   * aimed at it can land on it.
    */
-  static scheduleWeaponHitTriggers(battler)
+  static scheduleHealDealtTriggers(battler, hitTarget)
+  {
+    // delegate to the main dispatch loop with the onHealDealt condition kind.
+    this.tryDispatch(battler, 'onHealDealt', hitTarget);
+  }
+
+  /**
+   * Fires {@code onWeaponHit} rules on the battler that just landed a weapon hit.
+   *
+   * Narrower than {@code onDamageDealt}: only hits from the caster's own basic attack or combo chain
+   * (whatever is bound to the Mainhand/Offhand slot) count, along with skills authored to count as weapon
+   * hits, never damage from arbitrary skills. See {@link JABS_Engine#isWeaponHitAction}.
+   * @param {Game_Actor|Game_Enemy} battler - The battler that landed the weapon hit.
+   * @param {JABS_Battler|null} [hitTarget=null] - The battler the hit landed on, handed to every rule this
+   * fires so a payload aimed at it can land on it.
+   */
+  static scheduleWeaponHitTriggers(battler, hitTarget = null)
   {
     // no ABS context means there is nothing to schedule.
     if (!$jabsEngine || $jabsEngine.absEnabled === false) return;
@@ -297,7 +321,7 @@ class AutoRuleManager
     if (!battler) return;
 
     // delegate to the main dispatch loop with the onWeaponHit condition kind.
-    this.tryDispatch(battler, 'onWeaponHit');
+    this.tryDispatch(battler, 'onWeaponHit', hitTarget);
   }
 
   /**
@@ -388,8 +412,10 @@ class AutoRuleManager
    * Walks every authored tuple on this battler and dispatches when the condition kind matches.
    * @param {Game_Actor|Game_Enemy} battler - The battler whose rules are evaluated.
    * @param {string} conditionKind - The condition kind to match against authored tuples.
+   * @param {JABS_Battler|null} [hitTarget=null] - The battler a hit-driven condition's hit landed on, passed
+   * through to every dispatch; null for every condition that has no hit behind it.
    */
-  static tryDispatch(battler, conditionKind)
+  static tryDispatch(battler, conditionKind, hitTarget = null)
   {
     // no ABS context means there is nothing to dispatch.
     if (!$jabsEngine || $jabsEngine.absEnabled === false) return;
@@ -431,7 +457,7 @@ class AutoRuleManager
       if (Number.isNaN(param) || param < 0) continue;
 
       // attempt to dispatch the rule through the frame-cooldown gate.
-      this._tryDispatchRule(battler, source, tupleIndex, id, kind, param, tuple);
+      this._tryDispatchRule(battler, source, tupleIndex, id, kind, param, tuple, hitTarget);
     }
   }
 
@@ -588,8 +614,10 @@ class AutoRuleManager
    * @param {number} cooldownFrames - Minimum frames that must elapse between dispatches for this key.
    * @param {any[]} tuple - The full authored tuple, forwarded to the subclass dispatch for rules
    * whose payload needs more than just `id`.
+   * @param {JABS_Battler|null} [hitTarget=null] - The battler a hit-driven condition's hit landed on,
+   * forwarded to the subclass dispatch; null for every condition that has no hit behind it.
    */
-  static _tryDispatchRule(battler, source, tupleIndex, id, condition, cooldownFrames, tuple)
+  static _tryDispatchRule(battler, source, tupleIndex, id, condition, cooldownFrames, tuple, hitTarget = null)
   {
     // build the stable key used to track the last-dispatch frame for this rule on this battler.
     const ruleKey = this.buildRuleKey(source, tupleIndex, id, condition);
@@ -597,7 +625,7 @@ class AutoRuleManager
     // capture the current frame count as the reference point for cooldown evaluation.
     const now = Graphics.frameCount;
 
-    // read the frame this rule last successfully dispatched on this battler.
+    // read the frame this rule last dispatched on this battler.
     const lastFrame = battler.getAutoRuleLastFrame(ruleKey);
 
     // calculate how many frames have elapsed since the rule last fired.
@@ -607,9 +635,9 @@ class AutoRuleManager
     if (lastFrame > 0 && elapsed < cooldownFrames) return;
 
     // attempt the terminal dispatch through the subclass implementation.
-    const dispatched = this.dispatch(battler, id, tuple);
+    const dispatched = this.dispatch(battler, id, tuple, hitTarget);
 
-    // only stamp the cooldown when the dispatch actually succeeded.
+    // only stamp the cooldown when the dispatch went ahead.
     if (dispatched === true)
     {
       battler.setAutoRuleLastFrame(ruleKey, now);

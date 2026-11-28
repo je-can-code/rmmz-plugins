@@ -28,17 +28,108 @@ describe('JABS_OnChanceEffect (direct src import)', () =>
   {
     it('sets every field from the constructor arguments', () =>
     {
-      const effect = new JABS_OnChanceEffect(5, 30, 'onDefeat', 1);
+      const effect = new JABS_OnChanceEffect(5, 30, 'onDefeat', 1, 'critical');
       expect(effect.skillId).toBe(5);
       expect(effect.chance).toBe(30);
       expect(effect.key).toBe('onDefeat');
       expect(effect.hitType).toBe(1);
+      expect(effect.outcome).toBe('critical');
     });
 
-    it('defaults hitType to null when omitted', () =>
+    it('defaults hitType and outcome to null when omitted', () =>
     {
       const effect = new JABS_OnChanceEffect(5, 30, 'onDefeat');
       expect(effect.hitType).toBeNull();
+      expect(effect.outcome).toBeNull();
+    });
+  });
+
+  describe('matchesOutcome', () =>
+  {
+    /**
+     * A bearer's result from the hit that struck it.
+     * @param {{glancing?: boolean, critical?: boolean, hit?: boolean}} landed How the hit landed.
+     * @returns {object}
+     */
+    const buildResult = ({ glancing = false, critical = false, hit = true }) =>
+      ({ glancing, critical, isHit: () => hit });
+
+    it('is true however the hit landed when no filter is set', () =>
+    {
+      // Arrange- a plain hit, neither glancing nor critical, so no outcome check could pass it by accident.
+      const effect = new JABS_OnChanceEffect(5, 30, 'k', null, null);
+      const result = buildResult({});
+
+      // Act
+      const matches = effect.matchesOutcome(result);
+
+      // Assert
+      expect(matches).toBe(true);
+    });
+
+    it('is true for a glancing filter when a glancing blow landed', () =>
+    {
+      // Arrange
+      const effect = new JABS_OnChanceEffect(5, 30, 'k', null, 'glancing');
+      const result = buildResult({ glancing: true });
+
+      // Act
+      const matches = effect.matchesOutcome(result);
+
+      // Assert
+      expect(matches).toBe(true);
+    });
+
+    it('is false for a glancing filter when the glancing blow was then evaded', () =>
+    {
+      // Arrange
+      const effect = new JABS_OnChanceEffect(5, 30, 'k', null, 'glancing');
+      const result = buildResult({ glancing: true, hit: false });
+
+      // Act
+      const matches = effect.matchesOutcome(result);
+
+      // Assert
+      expect(matches).toBe(false);
+    });
+
+    it('is false for a glancing filter when the hit landed square, even as a critical', () =>
+    {
+      // Arrange
+      const effect = new JABS_OnChanceEffect(5, 30, 'k', null, 'glancing');
+      const result = buildResult({ critical: true });
+
+      // Act
+      const matches = effect.matchesOutcome(result);
+
+      // Assert
+      expect(matches).toBe(false);
+    });
+
+    it('is true for a critical filter when the hit was a critical hit', () =>
+    {
+      // Arrange
+      const effect = new JABS_OnChanceEffect(5, 30, 'k', null, 'critical');
+      const result = buildResult({ critical: true });
+
+      // Act
+      const matches = effect.matchesOutcome(result);
+
+      // Assert
+      expect(matches).toBe(true);
+    });
+
+    it('is false for a critical filter when the hit only glanced', () =>
+    {
+      // Arrange
+      const effect = new JABS_OnChanceEffect(5, 30, 'k', null, 'critical');
+      const result = buildResult({ glancing: true });
+
+      // Act
+      const matches = effect.matchesOutcome(result);
+
+      // Assert
+      expect(matches).toBe(false);
     });
   });
 

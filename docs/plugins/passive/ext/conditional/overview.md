@@ -3,7 +3,7 @@ type: overview
 title: The Plugin Overview
 description: The general overview for what this plugin is about along with the when and how you might use it.
 tags: [passive-conditional, overview]
-version: "1.5.0"
+version: "1.6.0"
 ---
 
 # Overview
@@ -21,15 +21,20 @@ Tag families on database rows (skills, states, equip, class, actor, enemy, etc.)
 - [`autoApplyState`](notetags/auto-apply-state.md) — applies a real combat state on a timer or combat event
 - [`autoApplyStateOnNearby`](notetags/auto-apply-state-on-nearby.md) — same as `autoApplyState`, but aura-style onto
   nearby battlers instead of the bearer
-- [`autoExecuteSkill`](notetags/auto-execute-skill.md) — executes a map skill on a timer or combat event
+- [`autoExecuteSkill`](notetags/auto-execute-skill.md) — executes a map skill on a timer or combat event, landing a
+  direct one on the battler a hit struck
+- [`countsAsWeaponHit`](notetags/counts-as-weapon-hit.md) — lets a skill's hits fire `onWeaponHit` rules as a basic
+  attack's do
 - [`autoModifyCooldowns`](notetags/auto-modify-cooldowns.md) — modifies one or more of the bearer's own active
   skill-slot cooldowns on a timer or combat event
 - [`autoInflictState`](notetags/auto-inflict-state.md) — applies a real combat state onto whoever this battler just
   inflicted a state upon
-- [`removeOnSkillExecution`](notetags/remove-on-skill-execution.md) — chance to strip a stack from this state when the
-  bearer executes a map skill
+- [`removeOnSkillExecution`](notetags/remove-on-skill-execution.md) — chance to strip a stack from this state once the
+  bearer has paid for a map skill it is executing
 - [`removeOnSkillResolution`](notetags/remove-on-skill-resolution.md) — chance to strip a stack from this state when
   the bearer's fired action expires
+- [`toggleStateOnSkillExecution`](notetags/toggle-state-on-skill-execution.md) — arms a state on one hardcast of a
+  skill type and spends it on the next, a Red Mage's Dualcast
 - [`removeStateOnMove`](notetags/remove-state-on-move.md) — strips this state the instant the bearer moves (pairs with
   `autoApplyState`'s "stand")
 

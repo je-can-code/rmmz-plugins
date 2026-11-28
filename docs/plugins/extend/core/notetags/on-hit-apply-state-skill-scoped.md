@@ -15,8 +15,19 @@ author exactly how long or how many stacks a state lands with on a per-skill bas
 
 ## NOTE ABOUT CHANCE
 
-CHANCE is an integer between 0 and 100. Target state resistances are still respected — if the target cannot receive the
-state, it will not be applied regardless of the chance roll.
+CHANCE is a whole percent between 0 and 100, and it rolls the way every chance a state has to land rolls, as
+[State-Application Immunity & Resistance](../../../abs/core/notetags/states/state-application-immunity-resistance.md)
+describes: it meets the target's State Rate traits and `<stateTypeResist>`, then, for a harmful state, the luck
+between the caster and the target, and is then rolled with both battlers' fate, as
+[On-Chance Roll Manipulation](../../../abs/core/notetags/skills/on-chance-roll-manipulation-lucky-cursed-rolls.md)
+describes. A skill aimed at the caster's opponents applies its state as harm, so every curse the target carries is one
+more chance for the state to land; a skill aimed at anyone else applies it as help, so every curse the target carries is
+one more hurdle it has to clear.
+
+[Accumulate Mode](../../../abs/core/notetags/skills/accumulate-mode.md) and
+[Encore Repeats](../../../abs/core/notetags/skills/encore-repeats-bonus-proc-executions.md) can land the state more than
+once on a single hit, and every landing carries the same DURATION and STACKS. The target's immunities are checked on
+every landing, so a target that cannot receive the state never does, however the roll went.
 
 ## NOTE ABOUT DURATION
 

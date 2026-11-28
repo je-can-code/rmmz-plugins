@@ -29,7 +29,8 @@ All plugins in this ecosystem require the base plugin.
 ## J-ABS
 
 Supplies the usable-item slot food is eaten from, the executed actions a chain-ending skill is caught in, and the
-`<applyStateOnExpire>` and `<stateDuration>` state timers a food chain advances by.
+`<applyStateOnExpire>` and `<stateDuration>` state timers a food chain advances by, and the `<immuneToFate>` tag a chain's
+phases carry so fate never blocks a phase or lands it twice.
 
 ## J-ABS-InputManager
 

@@ -9,7 +9,7 @@ dependencies:
     base: true
     orderAfter: true
   - key: J-ABS
-    version: 4.13.0
+    version: 4.30.0
     base: true
     orderAfter: true
   - key: J-Passive

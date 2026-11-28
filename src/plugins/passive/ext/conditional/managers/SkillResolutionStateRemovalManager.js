@@ -1,4 +1,6 @@
 //region SkillResolutionStateRemovalManager
+import DistinctStates from '../helpers/DistinctStates.js';
+
 /**
  * Processes {@link RPG_State#removeOnSkillResolutionRules} when a map battler's action resolves
  * against a target.<br/>
@@ -9,7 +11,8 @@
 class SkillResolutionStateRemovalManager
 {
   /**
-   * Rolls removal rules on every combat state this battler currently carries.
+   * Rolls removal rules on every combat state this battler currently carries, once per state however many
+   * stacks of it are applied.
    * @param {Game_Actor|Game_Enemy} battler - The battler whose action just resolved.
    * @param {number} skillId - The database skill id that resolved against the target.
    */
@@ -27,14 +30,12 @@ class SkillResolutionStateRemovalManager
     // cache the executed skill's type for stype matching.
     const executedStype = skill.stypeId;
 
-    // only states presently on the battler can declare removal rules on their own row.
-    const activeStates = battler.states();
+    // only states presently on the battler can declare removal rules on their own row, and a rule speaks for its
+    // state once, so a stacked state rolls once rather than once per stack.
+    const activeStates = DistinctStates.of(battler);
 
     for (const state of activeStates)
     {
-      // skip null/undefined entries in the state array.
-      if (!state) continue;
-
       const rules = state.removeOnSkillResolutionRules;
 
       for (const tuple of rules)

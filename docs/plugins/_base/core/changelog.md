@@ -11,6 +11,11 @@ All the versioning and history of changes live here.
 
 ## The Actual Changelog
 
+### 4.5.0
+  - Added `Game_Action#damageRateAgainst`, the one place an action reads its target's damage rate: PDR for a physical
+    hit, MDR for a magical one, and neither for a certain hit. Plugins alias it to change that rate.
+  - Added `RPGManager.resolveHitOutcomeString`, which reads a "glancing" or "critical" outcome filter from a tag.
+  - Fixed bug with a negative count of lucky or cursed rolls rolling forever and freezing the game.
 ### 4.4.0
   - Added Spriteset_Base#animationSprites and Spriteset_Map#balloonSprites.
   - Added Game_Enemy#enemyActions, the actions an enemy's database entry lists plus any it has learned.

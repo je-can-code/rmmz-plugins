@@ -11,6 +11,36 @@ All the versioning and history of changes live here.
 
 ## The Actual Changelog
 
+### 4.30.0
+  - Every state applied by chance now rolls the same way, whatever carries it: a skill's Add State, an on-hit, on-cast
+    or on-crit tag, an evasion, an aura, a spread, an expiry chain or a region. Its chance meets the recipient's State
+    Rate traits and `<stateTypeResist>`, a harmful state meets the luck between the two battlers, and both battlers'
+    fate counts the landings, Accumulate Mode and Encore included.
+  - Added `<immuneToFate>` for states: every roll to apply such a state or take it off is one plain roll, with no lucky
+    or cursed roll, `<veryLucky>`, `<veryCursed>`, Accumulate Mode or Encore weighing on it.
+  - Added `<pierceDamageRateIfStateType:TYPE>`, which lets a battler's hits ignore a target's PDR or MDR while the target
+    carries a state of that type. It is described in words in the game's notetag lines.
+  - Added the "glancing" and "critical" filters to `<retaliate>`.
+  - Added `chanceRollerAgainst`, which a plugin can alias to guarantee an action's chance rolls.
+  - Updated cursed rolls to be their holder's bad fate: harm aimed at a cursed battler gets more chances to land, help
+    aimed at it more hurdles to clear. `<thisCursedRolls>` follows the same rule.
+  - Updated parries and glancing blows to weigh the defender's luck and the attacker's curse.
+  - Updated Certain Hit to mean only that a skill cannot miss; the states it carries take the same roll as any other.
+  - Updated luck to weigh only on harmful states: a state without `<type:negative>` meets no luck gap.
+  - Updated knockback to announce itself through onKnockback only when it moves its target, with pushes and pulls
+    sharing one knockback resistance.
+  - Updated the on-cast state effects to come from J-Extend, which fills the handleOnCastStateEffects hook. Pair this
+    version with J-Extend 1.10.0.
+  - Updated `<rooted>`, `<disabled>`, `<muted>` and `<paralyzed>` to count passive states, so a passive can pin a
+    battler in place for good.
+  - Fixed bug with a rooted AI battler never firing the skill it chose: it now fires from where it stands once its
+    target is within that skill's proximity, unless its states forbid that skill.
+  - Updated `<paralyzed>` to cancel whatever its bearer had lined up the moment it lands, and `<muted>` and `<disabled>`
+    to cancel a lined-up skill or basic attack of the kind they lock that winds up with a cast time. No cooldown is
+    spent on a cancelled action.
+  - Fixed bug with rooted battlers wandering while idle.
+  - Fixed bug with a tool used on an opponent acting as that opponent rather than its user.
+  - Requires J-Base 4.5.0.
 ### 4.29.0
   - Added `<noDamage>`, which lets a battler be healed but never hurt.
   - Added `<noSelfKill>` and `<noTargetKill>`, with `<thisNoSelfKill>` and `<thisNoTargetKill>` for a single skill,

@@ -1,6 +1,7 @@
 //region plugins/regions/ext/states/_component/region-states-ext.test.js
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 
+import { buildFateBattlerStub } from '../../../../_base/core/_component/fixtures/install-jabs-fate.js';
 import {
   installRegionsStatesStackHostGlobals,
   setPluginContextToJBase,
@@ -9,18 +10,16 @@ import {
 } from '../../../_component/fixtures/install-regions-host-globals.js';
 
 /**
- * Builds a battler stand-in with the state-tracking + roll-threading surface applyRegionStates() relies on.
+ * Builds a battler stand-in with the state-tracking surface applyRegionStates() relies on, on top of everything
+ * J-ABS's shared state roll reads at its neutral answer: no resistance, no luck, no lucky or cursed rolls. A tag at
+ * 100% therefore reaches the real dice at 100 and always lands.
  * @param {Array<{stateId: number, attacker: object}>} added Tracks addState calls.
  * @param {Array<{stateId: number, attacker: object}>} reset Tracks resetStateCounts calls.
  * @returns {object}
  */
 function buildRegionStatesBattler(added, reset)
 {
-  return {
-    stateRate()
-    {
-      return 1;
-    },
+  return buildFateBattlerStub({
     isStateAffected(stateId)
     {
       return added.some(entry => entry.stateId === stateId);
@@ -33,31 +32,7 @@ function buildRegionStatesBattler(added, reset)
     {
       reset.push({ stateId, attacker });
     },
-    getPositiveRollsForSkill()
-    {
-      return 0;
-    },
-    getNegativeRollsForSkill()
-    {
-      return 0;
-    },
-    isVeryLucky()
-    {
-      return false;
-    },
-    isVeryCursed()
-    {
-      return false;
-    },
-    isAccumulating()
-    {
-      return false;
-    },
-    getEncoreRepeats()
-    {
-      return 0;
-    },
-  };
+  });
 }
 
 describe('J-Regions-States Game_Map / Game_Character (direct src import)', () =>
@@ -71,7 +46,8 @@ describe('J-Regions-States Game_Map / Game_Character (direct src import)', () =>
     setPluginContextToJBase();
     await import('../../../../../../src/plugins/_base/core/_metadata/initialization.js');
 
-    ({ default: globalThis.RPGManager } = await import('../../../../../../src/plugins/_base/core/managers/RPGManager.js'));
+    ({ default: globalThis.RPGManager } = await import(
+      '../../../../../../src/plugins/_base/core/managers/RPGManager.js'));
 
     setPluginContextToJRegions();
     await import('../../../../../../src/plugins/regions/core/_metadata/initialization.js');
@@ -228,7 +204,7 @@ describe('J-Regions-States Game_Map / Game_Character (direct src import)', () =>
       expect(ch.canHandleRegionStates()).toBe(false);
     });
 
-    it('reapplies the state (resetStateCounts) on a second applyRegionStates cycle', () =>
+    it('reapplies the state through addState, never a bare count reset, on a second applyRegionStates cycle', () =>
     {
       // Arrange
       globalThis.$dataMap = { note: '<regionAddState:[7, 12, 100, 0]>' };
@@ -264,8 +240,9 @@ describe('J-Regions-States Game_Map / Game_Character (direct src import)', () =>
       ch.applyRegionStates();
       ch.applyRegionStates();
 
-      // Assert
-      expect(reset).toEqual([ { stateId: 12, attacker: battler } ]);
+      // Assert- the second cycle lands on a battler already carrying the state, and still goes through the add.
+      expect(added).toEqual([ { stateId: 12, attacker: battler }, { stateId: 12, attacker: battler } ]);
+      expect(reset).toEqual([]);
     });
   });
 });

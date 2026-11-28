@@ -44,6 +44,20 @@ J.RESOURCES.EXT.ABS.RegExp.OnAttackTpGainFlat    = /<on-attack-tp-gain:(-?\d+)>/
 J.RESOURCES.EXT.ABS.RegExp.OnAttackTpGainPercent = /<on-attack-tp-gain:(-?\d+)%>/gi;
 J.RESOURCES.EXT.ABS.RegExp.OnAttackTpGainFormula = /<on-attack-tp-gain:\[([+\-*/ ().\w]+)]>/gi;
 
+// on-cast tags (on the skill, or on the caster's actor/class/equip/states — fires for the caster once each time it
+// executes a skill, as the skill's costs are paid, whether or not the skill goes on to land a hit).
+J.RESOURCES.EXT.ABS.RegExp.OnCastHpGainFlat    = /<on-cast-hp-gain:(-?\d+)>/gi;
+J.RESOURCES.EXT.ABS.RegExp.OnCastHpGainPercent = /<on-cast-hp-gain:(-?\d+)%>/gi;
+J.RESOURCES.EXT.ABS.RegExp.OnCastHpGainFormula = /<on-cast-hp-gain:\[([+\-*/ ().\w]+)]>/gi;
+
+J.RESOURCES.EXT.ABS.RegExp.OnCastMpGainFlat    = /<on-cast-mp-gain:(-?\d+)>/gi;
+J.RESOURCES.EXT.ABS.RegExp.OnCastMpGainPercent = /<on-cast-mp-gain:(-?\d+)%>/gi;
+J.RESOURCES.EXT.ABS.RegExp.OnCastMpGainFormula = /<on-cast-mp-gain:\[([+\-*/ ().\w]+)]>/gi;
+
+J.RESOURCES.EXT.ABS.RegExp.OnCastTpGainFlat    = /<on-cast-tp-gain:(-?\d+)>/gi;
+J.RESOURCES.EXT.ABS.RegExp.OnCastTpGainPercent = /<on-cast-tp-gain:(-?\d+)%>/gi;
+J.RESOURCES.EXT.ABS.RegExp.OnCastTpGainFormula = /<on-cast-tp-gain:\[([+\-*/ ().\w]+)]>/gi;
+
 // when-hit tags (on actor/class/equip/state — fires for the target when taking damage).
 J.RESOURCES.EXT.ABS.RegExp.WhenHitHpGainFlat    = /<when-hit-hp-gain:(\d+)>/gi;
 J.RESOURCES.EXT.ABS.RegExp.WhenHitHpGainPercent = /<when-hit-hp-gain:(\d+)%>/gi;

@@ -71,6 +71,12 @@ function buildGameBattler(uuid)
     return globalThis.$dataStates[stateId];
   };
 
+  // a spread rolls through JABS_Fate, which reads both of these from the roller and the candidate. vanilla's LUK and
+  // State Rate are not loaded in this realm, so both are given outright: a missing LUK would turn every chance into
+  // NaN, which never lands and never throws, and every spread here would quietly miss.
+  battler.luk = 0;
+  battler.stateRate = () => 1;
+
   return battler;
 }
 

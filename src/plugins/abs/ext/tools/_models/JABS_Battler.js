@@ -271,13 +271,11 @@ JABS_Battler.prototype.pullToCaster = function(action, caster)
   const pullMagnitude = action.getBaseSkill().jabsPullForward;
   if (pullMagnitude === null) return;
 
-  // pull-forward is dampened by the exact same resistance stat that dampens push knockback-
-  // resistance to being forcibly displaced is one stat, regardless of which direction it goes.
-  const notes = this.getBattler()
-    .getAllNotes();
-
-  const resist = RPGManager.getSumFromAllNotesByRegex(notes, J.ABS.RegExp.KnockbackResist);
-  if (resist >= 100) return;
+  // a pull is knockback aimed back toward the caster, so the very resistance that dampens a push
+  // dampens it too, read from the same place J-ABS reads it- a battler that refuses every knockback,
+  // a boss fight participant among them, refuses every pull as well.
+  const resist = $jabsEngine.resolveKnockbackResist(this);
+  if (resist >= JABS_Engine.FullKnockbackResist) return;
   const effectiveMagnitude = pullMagnitude * ((100 - resist) / 100);
 
   // determine the raw vector and the maximum distance we could possibly travel without
@@ -319,6 +317,10 @@ JABS_Battler.prototype.pullToCaster = function(action, caster)
 
   // execute the jump- this battler (the target) moves, not the caster.
   targetCharacter.jump(finalX, finalY);
+
+  // a pull that moved this battler is a knockback toward the caster, announced the way J-ABS announces
+  // its own.
+  $jabsEngine.announceKnockback(action, this, finalX, finalY);
 };
 
 /**

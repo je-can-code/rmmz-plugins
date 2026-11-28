@@ -13,7 +13,7 @@
 * [Critical Damage Reduction](notetags/critical-damage-reduction.md) - The tags reducing the amount of damage received when an enemy battler lands a critical hit.
 * [Natural Growth](notetags/natural-growth.md) - The integration details with the J-NaturalGrowth plugin, growing CDM and CDR by flat or rate multipliers.
 * [On-Crit State Application](notetags/on-crit-state-application.md) - The tags applying states to the target or to the attacker whenever a critical hit lands.
-* [Forcing On-Crit Procs](notetags/forcing-on-crit-procs.md) - The tag forcing every on-crit state application roll to succeed, without touching crit chance or luck.
+* [Forcing On-Crit Procs](notetags/forcing-on-crit-procs.md) - The tag forcing every chance roll a critical hit carries to succeed, without touching crit chance or luck.
 * [Conditional Critical Chance by Target State](notetags/conditional-critical-chance-by-target-state.md) - The tags adding bonus crit chance that only applies when the target has a specific state active.
 * [Conditional Critical Chance by Target State Type](notetags/conditional-critical-chance-by-target-state-type.md) - The tags adding bonus crit chance when the target has any state carrying a given type classifier.
 * [Guaranteed Critical Hit by Target State](notetags/guaranteed-critical-hit-by-target-state.md) - The tags guaranteeing a critical hit when the target has any one of the listed states active.

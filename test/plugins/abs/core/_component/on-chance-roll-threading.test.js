@@ -79,52 +79,6 @@ describe('J-ABS on-chance-effect roll threading (direct src import)', () =>
     globalThis.RPGManager.chanceIn100 = originalChanceIn100;
   });
 
-  describe('Game_Battler.processOnEvadeStateSelf', () =>
-  {
-    it('the evader is both the positive and negative roller', () =>
-    {
-      // Arrange
-      const effect = buildEffect();
-      const evader = {
-        getPositiveRollsForSkill: () => 3,
-        getNegativeRollsForSkill: () => 2,
-        onEvadeApplySelfEffects: () => [ effect ],
-        addState: () => {},
-        processOnEvadeStateSelf: globalThis.Game_Battler.prototype.processOnEvadeStateSelf,
-      };
-
-      // Act
-      evader.processOnEvadeStateSelf();
-
-      // Assert
-      expect(effect.__calls).toEqual([ { rollForPositive: 4, rollForNegative: 2 } ]);
-    });
-  });
-
-  describe('Game_Battler.processOnEvadeStateAttacker', () =>
-  {
-    it('the evader rolls positive, the punished attacker rolls negative', () =>
-    {
-      // Arrange
-      const effect = buildEffect();
-      const evader = {
-        getPositiveRollsForSkill: () => 1,
-        onEvadeApplyAttackerEffects: () => [ effect ],
-        processOnEvadeStateAttacker: globalThis.Game_Battler.prototype.processOnEvadeStateAttacker,
-      };
-      const attacker = {
-        getNegativeRolls: () => 5,
-        addState: () => {},
-      };
-
-      // Act
-      evader.processOnEvadeStateAttacker(attacker);
-
-      // Assert
-      expect(effect.__calls).toEqual([ { rollForPositive: 2, rollForNegative: 5 } ]);
-    });
-  });
-
   describe('JABS_Battler.handleOnEvadeSkills', () =>
   {
     it('the evader is both the roller and the recipient of the trigger roll', () =>
@@ -172,6 +126,7 @@ describe('J-ABS on-chance-effect roll threading (direct src import)', () =>
       // Arrange
       const effect = buildEffect(7);
       effect.matchesHitType = () => true;
+      effect.matchesOutcome = () => true;
       const gameBattler = {
         result: () => ({ hpDamage: 0, mpDamage: 0, tpDamage: 0 }),
         getPositiveRollsForSkill: () => 4,

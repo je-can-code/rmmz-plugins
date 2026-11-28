@@ -2807,29 +2807,21 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
 
   describe('handleOnCastStateEffects', () =>
   {
-    it('applies all seven on-cast state effect hooks against the underlying Game_Action', () =>
+    it('does nothing on its own, never reaching into the action it is handed', () =>
     {
+      // Arrange- the hook is J-ABS's extension point, and J-ABS has no on-cast effects of its own. the only way to
+      // reach the action's effects is through its Game_Action, so a hook that applied anything would have to ask.
       const engine = new JABS_Engine();
-      const gameAction = {
-        applyOnCastSelfStates: vi.fn(),
-        applyOnCastSelfStatesIfAfflicted: vi.fn(),
-        applyOnCastLoseStates: vi.fn(),
-        applyToggleOnExecuteStates: vi.fn(),
-        applyToggleGroupOnExecuteStates: vi.fn(),
-        applyOnCastExecuteSkills: vi.fn(),
-        applyOnCastExecuteSkillsIfAfflicted: vi.fn(),
-      };
-      const action = { getAction: () => gameAction };
+      const caster = { getBattler: vi.fn() };
+      const action = { getAction: vi.fn() };
 
-      engine.handleOnCastStateEffects('caster', action);
+      // Act
+      const result = engine.handleOnCastStateEffects(caster, action);
 
-      expect(gameAction.applyOnCastSelfStates).toHaveBeenCalledTimes(1);
-      expect(gameAction.applyOnCastSelfStatesIfAfflicted).toHaveBeenCalledTimes(1);
-      expect(gameAction.applyOnCastLoseStates).toHaveBeenCalledTimes(1);
-      expect(gameAction.applyToggleOnExecuteStates).toHaveBeenCalledTimes(1);
-      expect(gameAction.applyToggleGroupOnExecuteStates).toHaveBeenCalledTimes(1);
-      expect(gameAction.applyOnCastExecuteSkills).toHaveBeenCalledWith('caster');
-      expect(gameAction.applyOnCastExecuteSkillsIfAfflicted).toHaveBeenCalledWith('caster');
+      // Assert
+      expect(action.getAction).not.toHaveBeenCalled();
+      expect(caster.getBattler).not.toHaveBeenCalled();
+      expect(result).toBeUndefined();
     });
   });
 
@@ -5160,6 +5152,9 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       const engine = new JABS_Engine();
       engine.canBeKnockedBack = vi.fn(() => true);
       engine.getKnockbackAmplificationPct = vi.fn(() => 0);
+
+      // stands in for the announcement, so each test can say whether this hit announced and with what.
+      engine.announceKnockback = vi.fn();
       return Object.assign(engine, overrides);
     }
 
@@ -5191,56 +5186,72 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       }, overrides);
     }
 
-    it('does not process knockback when the target cannot be knocked back', () =>
+    it('neither moves nor announces anything when the target cannot be knocked back', () =>
     {
+      // Arrange
       const engine = buildEngine({ canBeKnockedBack: vi.fn(() => false) });
       const targetSprite = buildTargetSprite();
       const target = buildTarget(targetSprite);
       const action = buildAction();
 
+      // Act
       engine.checkKnockback(action, target);
 
+      // Assert
       expect(targetSprite.jump).not.toHaveBeenCalled();
+      expect(engine.announceKnockback).not.toHaveBeenCalled();
     });
 
-    it('does not process knockback for a healing action', () =>
+    it('neither moves nor announces anything for a healing action', () =>
     {
+      // Arrange
       const engine = buildEngine();
       const targetSprite = buildTargetSprite();
       const target = buildTarget(targetSprite);
       const action = buildAction({ isHealing: () => true });
 
+      // Act
       engine.checkKnockback(action, target);
 
+      // Assert
       expect(targetSprite.jump).not.toHaveBeenCalled();
+      expect(engine.announceKnockback).not.toHaveBeenCalled();
     });
 
-    it('does not process knockback when the target has full (100%+) knockback resist', () =>
+    it('neither moves nor announces anything when the target has full (100%+) knockback resist', () =>
     {
+      // Arrange
       globalThis.RPGManager.getSumFromAllNotesByRegex.mockReturnValue(100);
       const engine = buildEngine();
       const targetSprite = buildTargetSprite();
       const target = buildTarget(targetSprite);
       const action = buildAction();
 
+      // Act
       engine.checkKnockback(action, target);
 
+      // Assert
       expect(targetSprite.jump).not.toHaveBeenCalled();
+      expect(engine.announceKnockback).not.toHaveBeenCalled();
     });
 
-    it('does not process knockback when the skill has no knockback value', () =>
+    it('neither moves nor announces anything when the skill has no knockback value', () =>
     {
+      // Arrange- the Meteor shape: a hit that carries no knockback at all.
       const engine = buildEngine();
       const targetSprite = buildTargetSprite();
       const target = buildTarget(targetSprite);
       const action = buildAction({ getKnockback: () => null });
 
+      // Act
       engine.checkKnockback(action, target);
 
+      // Assert
       expect(targetSprite.jump).not.toHaveBeenCalled();
+      expect(engine.announceKnockback).not.toHaveBeenCalled();
     });
 
-    it('hops the target in place when the computed knockback is 0', () =>
+    it('hops the target in place when the computed knockback is 0, announcing nothing', () =>
     {
       // Arrange- a non-direct action, so the hop is attributable to the zero distance alone.
       const engine = buildEngine();
@@ -5256,18 +5267,25 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       // had nowhere to go. skipping the walk entirely is what actually distinguishes them.
       expect(targetSprite.jump).toHaveBeenCalledWith(0, 0);
       expect(targetSprite.walkInDirectionClamped).not.toHaveBeenCalled();
+
+      // a hop in place moves nobody, so it is no knockback to announce.
+      expect(engine.announceKnockback).not.toHaveBeenCalled();
     });
 
-    it('hops the target in place for a direct action regardless of knockback value', () =>
+    it('hops the target in place for a direct action regardless of knockback value, announcing nothing', () =>
     {
+      // Arrange
       const engine = buildEngine();
       const targetSprite = buildTargetSprite();
       const target = buildTarget(targetSprite);
       const action = buildAction({ isDirectAction: () => true });
 
+      // Act
       engine.checkKnockback(action, target);
 
+      // Assert
       expect(targetSprite.jump).toHaveBeenCalledWith(0, 0);
+      expect(engine.announceKnockback).not.toHaveBeenCalled();
     });
 
     it('reduces the effective knockback distance by the target\'s resist percentage', () =>
@@ -5297,17 +5315,27 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       expect(targetSprite.jump).toHaveBeenCalledWith(0, 10);
     });
 
-    it('jumps straight to the computed destination for a skill tagged to ignore terrain', () =>
+    it('jumps straight to the computed destination for a skill tagged to ignore terrain, then announces it', () =>
     {
+      // Arrange
       const engine = buildEngine();
       const targetSprite = buildTargetSprite();
       const target = buildTarget(targetSprite);
       const action = buildAction({ getKnockback: () => 4, getBaseSkill: () => ({ jabsIgnoreTerrain: true }) });
 
+      // Act
       engine.checkKnockback(action, target);
 
+      // Assert
       expect(targetSprite.jump).toHaveBeenCalledWith(0, 4);
       expect(targetSprite.walkInDirectionClamped).not.toHaveBeenCalled();
+
+      // announced once, with the offset the target was sent, and only after it was on its way.
+      expect(engine.announceKnockback).toHaveBeenCalledTimes(1);
+      expect(engine.announceKnockback).toHaveBeenCalledWith(action, target, 0, 4);
+      const [ jumpOrder ] = targetSprite.jump.mock.invocationCallOrder;
+      const [ announceOrder ] = engine.announceKnockback.mock.invocationCallOrder;
+      expect(jumpOrder).toBeLessThan(announceOrder);
     });
 
     it('computes a negative y offset for an UP-facing knockback', () =>
@@ -5358,17 +5386,116 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       expect(targetSprite.jump).toHaveBeenCalledWith(4, 0);
     });
 
-    it('walks tile-by-tile toward the destination, stopping at the last passable tile, for a terrain-respecting skill', () =>
+    it('walks tile-by-tile toward the destination, stopping at the last passable tile, then announces it', () =>
     {
+      // Arrange
       const engine = buildEngine();
       const targetSprite = buildTargetSprite({ walkInDirectionClamped: vi.fn(() => [ 0, 2 ]) });
       const target = buildTarget(targetSprite);
       const action = buildAction({ getKnockback: () => 4, getBaseSkill: () => ({ jabsIgnoreTerrain: false }) });
 
+      // Act
       engine.checkKnockback(action, target);
 
+      // Assert
       expect(targetSprite.walkInDirectionClamped).toHaveBeenCalledWith(J.ABS.Directions.DOWN, 4);
       expect(targetSprite.jump).toHaveBeenCalledWith(0, 2);
+
+      // announced once, with where the walk actually stopped rather than where it was aimed, after the jump.
+      expect(engine.announceKnockback).toHaveBeenCalledTimes(1);
+      expect(engine.announceKnockback).toHaveBeenCalledWith(action, target, 0, 2);
+      const [ jumpOrder ] = targetSprite.jump.mock.invocationCallOrder;
+      const [ announceOrder ] = engine.announceKnockback.mock.invocationCallOrder;
+      expect(jumpOrder).toBeLessThan(announceOrder);
+    });
+  });
+
+  describe('resolveKnockbackResist', () =>
+  {
+    it('sums the knockback resistance across every note source the target carries', () =>
+    {
+      // Arrange
+      const notes = [ { note: '<knockbackResist:20>' }, { note: '<knockbackResist:15>' } ];
+      const target = { getBattler: () => ({ getAllNotes: () => notes }) };
+      globalThis.RPGManager.getSumFromAllNotesByRegex.mockReturnValue(35);
+      const engine = new JABS_Engine();
+
+      // Act
+      const resist = engine.resolveKnockbackResist(target);
+
+      // Assert
+      expect(resist).toBe(35);
+      expect(globalThis.RPGManager.getSumFromAllNotesByRegex).toHaveBeenCalledWith(notes, J.ABS.RegExp.KnockbackResist);
+    });
+  });
+
+  describe('resolveKnockbackDistance', () =>
+  {
+    it('refuses all knockback once the resolved resistance is full, whatever the notes say', () =>
+    {
+      // Arrange- the notes report no resistance at all, so only the resolver can refuse the knockback.
+      globalThis.RPGManager.getSumFromAllNotesByRegex.mockReturnValue(0);
+      const engine = new JABS_Engine();
+      engine.resolveKnockbackResist = vi.fn(() => JABS_Engine.FullKnockbackResist);
+      const target = { getBattler: () => ({ getAllNotes: () => [] }) };
+      const action = { getKnockback: () => 5 };
+
+      // Act
+      const distance = engine.resolveKnockbackDistance(action, target);
+
+      // Assert
+      expect(distance).toBeNull();
+      expect(engine.resolveKnockbackResist).toHaveBeenCalledWith(target);
+    });
+  });
+
+  describe('announceKnockback', () =>
+  {
+    it('announces nothing when the knockback left its target where it stood', () =>
+    {
+      // Arrange
+      const engine = new JABS_Engine();
+      engine.onKnockback = vi.fn();
+      const action = { id: 'action' };
+      const target = { id: 'target' };
+
+      // Act
+      engine.announceKnockback(action, target, 0, 0);
+
+      // Assert
+      expect(engine.onKnockback).not.toHaveBeenCalled();
+    });
+
+    it('announces a knockback that moved its target along the horizontal axis', () =>
+    {
+      // Arrange- spying without replacing it runs the hook's own body as well.
+      const engine = new JABS_Engine();
+      const onKnockback = vi.spyOn(engine, 'onKnockback');
+      const action = { id: 'action' };
+      const target = { id: 'target' };
+
+      // Act
+      engine.announceKnockback(action, target, -3, 0);
+
+      // Assert
+      expect(onKnockback).toHaveBeenCalledTimes(1);
+      expect(onKnockback).toHaveBeenCalledWith(action, target);
+    });
+
+    it('announces a knockback that moved its target along the vertical axis', () =>
+    {
+      // Arrange
+      const engine = new JABS_Engine();
+      engine.onKnockback = vi.fn();
+      const action = { id: 'action' };
+      const target = { id: 'target' };
+
+      // Act
+      engine.announceKnockback(action, target, 0, 2);
+
+      // Assert
+      expect(engine.onKnockback).toHaveBeenCalledTimes(1);
+      expect(engine.onKnockback).toHaveBeenCalledWith(action, target);
     });
   });
 
@@ -5781,7 +5908,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
   {
     function buildTarget(overrides = {})
     {
-      const targetBattler = { getPositiveRolls: () => 0 };
+      const targetBattler = { getPositiveRolls: () => 0, getNegativeRolls: () => 0 };
       return Object.assign({ getBattler: () => targetBattler }, overrides);
     }
 
@@ -5849,7 +5976,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
   {
     function buildTarget(overrides = {})
     {
-      const targetBattler = { getPositiveRolls: () => 0 };
+      const targetBattler = { getPositiveRolls: () => 0, getNegativeRolls: () => 0 };
       return Object.assign({ getBattler: () => targetBattler }, overrides);
     }
 
@@ -6549,6 +6676,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
     {
       return Object.assign({
         matchesHitType: () => true,
+        matchesOutcome: () => true,
         baseSkill: () => ({}),
         resolveProcCount: () => 1,
         skillId: 7,
@@ -6573,6 +6701,23 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
 
       engine.executeRetaliationSkills(retaliator, [ skillChance ], buildTriggeringAction());
 
+      expect(retaliator.createJabsActionFromSkill).not.toHaveBeenCalled();
+    });
+
+    it('skips a retaliation skill whose outcome filter does not match how the hit landed', () =>
+    {
+      // Arrange- the hit type matches, so only the outcome filter stands in the way.
+      const engine = new JABS_Engine();
+      engine.canExecuteMapActions = vi.fn(() => true);
+      engine.executeMapAction = vi.fn();
+      const retaliator = buildRetaliator([ buildRetaliationAction() ]);
+      const skillChance = buildSkillChance({ matchesOutcome: vi.fn(() => false) });
+
+      // Act
+      engine.executeRetaliationSkills(retaliator, [ skillChance ], buildTriggeringAction());
+
+      // Assert
+      expect(skillChance.matchesOutcome).toHaveBeenCalledWith(expect.objectContaining({ hpDamage: 1 }));
       expect(retaliator.createJabsActionFromSkill).not.toHaveBeenCalled();
     });
 

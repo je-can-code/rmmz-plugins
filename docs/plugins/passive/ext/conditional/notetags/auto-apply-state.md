@@ -30,8 +30,11 @@ PARAM is minimum FRAMES between applies (per source+state+condition):
 - `onAllyHeal` — when a battler within proximity of THIS battler is healed (any resource)
 - `onKill` — when this battler defeats an enemy (`JABS_Engine#handleDefeatedEnemy`)
 - `onDamageDealt` — when this battler lands damage on an opposing battler (`JABS_Engine#postExecuteSkillEffects`)
-- `onWeaponHit` — narrower `onDamageDealt`: only Mainhand/Offhand-slot hits qualify (basic attack or its combo chain);
-  skills fired from any other slot do not trigger this condition
+- `onWeaponHit` — narrower `onDamageDealt`: only Mainhand/Offhand-slot hits qualify (basic attack or its combo chain),
+  along with skills carrying [`<countsAsWeaponHit>`](counts-as-weapon-hit.md); no other skill triggers this condition
+- `onHealDealt` — when this battler's action restores HP, MP or TP on a battler of its own side, itself included
+  (`JABS_Engine#postExecuteSkillEffects`); only a landed action counts, so unlike `onAllyHeal` it never hears natural
+  regeneration, lifesteal or a heal cascade
 - `move` — PARAM = whole TILES per apply (Pixelistics `updatePixelStepping`; requires `J-Pixelistics`)
 - `stand` — PARAM = frames between applies while standing still on the map
 - `enemiesNearby` / `alliesNearby` / `enemiesNearbyBelow` / `alliesNearbyBelow` — 4/5-value proximity tuples, same
@@ -71,6 +74,7 @@ Where PARAM meaning depends on CONDITION (see the conditions above).
 `<autoApplyState:[57, onKill, 0]>`
 `<autoApplyState:[58, onDamageDealt, 0]>`
 `<autoApplyState:[59, onAllyHeal, 0]>`
+`<autoApplyState:[60, onHealDealt, 0]>`
 `<autoApplyState:[MOMENTUM_ID, move, 2]>`
 `<autoApplyState:[BUFF_ID, stand, 120]>`
 

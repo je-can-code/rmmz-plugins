@@ -70,6 +70,12 @@ function buildGameBattler(uuid)
     return globalThis.$dataStates[stateId];
   };
 
+  // an expiry chain and a spread both roll through JABS_Fate, which reads these two from every battler in the roll.
+  // vanilla's LUK and State Rate are not loaded in this realm, so both are given outright: a missing LUK would turn
+  // every chance into NaN, which never lands and never throws, and every roll here would quietly miss.
+  battler.luk = 0;
+  battler.stateRate = () => 1;
+
   return battler;
 }
 
@@ -325,26 +331,29 @@ describe('J-ABS state lifecycle edge cases (direct src import)', () =>
       expect(battler.addState).not.toHaveBeenCalled();
     });
 
-    it('does not apply the follow-up state when the chance roll fails', () =>
+    it('does not apply the follow-up state when its roll never lands', () =>
     {
       // Arrange
       registerStateRow(STATE_ID, `<applyStateOnExpire:[${OTHER_STATE_ID}, 50]>`);
+      registerStateRow(OTHER_STATE_ID, '');
       const battler = buildGameBattler('a');
       const jabsState = new globalThis.JABS_State(battler, STATE_ID, 0, 50, 1);
-      vi.spyOn(globalThis.RPGManager, 'chanceIn100').mockReturnValue(false);
+      const procSpy = vi.spyOn(globalThis.RPGManager, 'resolveProcCount')
+        .mockReturnValue(0);
 
       // Act
       jabsState.handleApplyStateOnExpire();
 
       // Assert
       expect(battler.addState).not.toHaveBeenCalled();
-      globalThis.RPGManager.chanceIn100.mockRestore();
+      procSpy.mockRestore();
     });
 
-    it('applies the follow-up state to the afflicted battler when the chance roll succeeds', () =>
+    it('applies the follow-up state to the afflicted battler once when its roll lands', () =>
     {
-      // Arrange
+      // Arrange- the real roll: a 100% chance against no resistance lands exactly once.
       registerStateRow(STATE_ID, `<applyStateOnExpire:[${OTHER_STATE_ID}, 100]>`);
+      registerStateRow(OTHER_STATE_ID, '');
       const battler = buildGameBattler('a');
       const source = buildGameBattler('source');
       const jabsState = new globalThis.JABS_State(battler, STATE_ID, 0, 50, 1, source);
@@ -353,6 +362,7 @@ describe('J-ABS state lifecycle edge cases (direct src import)', () =>
       jabsState.handleApplyStateOnExpire();
 
       // Assert
+      expect(battler.addState).toHaveBeenCalledTimes(1);
       expect(battler.addState).toHaveBeenCalledWith(OTHER_STATE_ID, source, null);
     });
   });

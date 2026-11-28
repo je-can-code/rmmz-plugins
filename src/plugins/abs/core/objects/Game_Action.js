@@ -1,5 +1,6 @@
 //region Game_Action
 import JABS_AiManager from './../managers/JABS_AiManager.js';
+import JABS_Fate from './../managers/JABS_Fate.js';
 
 /**
  * Overwrites {@link #subject}.<br/>
@@ -392,6 +393,41 @@ Game_Action.prototype.isIgnoredRecoverHarm = function(target, maximum, effect)
 //endregion damage limits
 
 /**
+ * The rolls this action brings against a target, as the positive and negative counts {@link RPGManager.fateOf100}
+ * takes: the positive rolls, the baseline one included, then the negative rolls.<br/>
+ * The subject's own fate speaks for and against its own roll, whatever it aims at: its luck adds chances to succeed,
+ * and its curse adds rolls it has to pass as well. A target's curse is that target's bad fate. Harm aimed at a cursed
+ * target gets one more chance to land for every curse it carries, so the target has to survive each of them, while
+ * help aimed at it has to clear every curse it carries to land at all. An action aimed at the subject's opponents is
+ * harm, and anything else it aims is help. A battler aiming at itself brings its fate once, as the roller.<br/>
+ * Every roll this action makes reads its fate here- the hit, the critical, a state removed and a state applied- and
+ * the math behind it is {@link JABS_Fate.actionRollsAgainst}, shared with the rolls no action makes.
+ * @param {Game_Battler} target The battler this action is aimed at.
+ * @returns {number[]}
+ */
+Game_Action.prototype.fateRollsAgainst = function(target)
+{
+  // the subject's fate meets the target's, as harm when this action is aimed at the subject's opponents.
+  return JABS_Fate.actionRollsAgainst(this, target);
+};
+
+/**
+ * The battler whose fate overrides settle this action's chance rolls against a target: whether a state lands on it,
+ * and whether a state comes off it.<br/>
+ * That is this action's subject. The hit and the critical never ask; they always roll with the subject. An extension
+ * that guarantees some of these rolls aliases this to hand over a stand-in whose `isVeryLucky` answers yes. The
+ * subject still brings its own luck and rolls to every roll either way, and the stand-in counts landings with the
+ * subject's Accumulate Mode and Encore.
+ * @param {Game_Battler} _target The battler the roll is aimed at.
+ * @returns {Game_Battler|object}
+ */
+// eslint-disable-next-line no-unused-vars
+Game_Action.prototype.chanceRollerAgainst = function(_target)
+{
+  return this.subject();
+};
+
+/**
  * Calculates whether or not this action is evaded by the target.
  * @param {Game_Battler} target The target the skill is being applied to.
  * @returns {boolean} True if this action was evaded, false otherwise.
@@ -402,13 +438,11 @@ Game_Action.prototype.isHitEvaded = function(target)
   // both are already-summed fractional rates (0.05 = 5%), so this converts to a 0-100+ percent.
   const hitChancePercent = (1 + this.itemHit() - this.itemEva(target)) * 100;
 
-  // the attacker wants this roll to succeed (their own luck plus this skill's own bonus);
-  // the target wants it to fail (their own curse resisting the hit).
-  const attackerPositiveRolls = this.subject().getPositiveRollsForSkill(this.item());
-  const targetNegativeRolls = target.getNegativeRolls();
+  // the attacker's fate and the target's both weigh on whether the hit lands.
+  const [ positiveRolls, negativeRolls ] = this.fateRollsAgainst(target);
 
   // roll once for whether the hit actually connects.
-  const isHit = RPGManager.fateOf100(this.subject(), hitChancePercent, 1 + attackerPositiveRolls, targetNegativeRolls);
+  const isHit = RPGManager.fateOf100(this.subject(), hitChancePercent, positiveRolls, negativeRolls);
 
   // evaded is simply the inverse of having landed the hit.
   return isHit === false;
@@ -423,11 +457,12 @@ Game_Action.prototype.isHitCritical = function(target)
 {
   // itemCri() already yields the fully-combined, floored-at-0 crit rate (0.05 = 5%);
   // convert to a percent and roll once for whether this hit qualifies as a critical.
-  const attackerPositiveRolls = this.subject().getPositiveRollsForSkill(this.item());
-  const targetNegativeRolls = target.getNegativeRolls();
+  const critChancePercent = this.itemCri(target) * 100;
 
-  const isCritical = RPGManager.fateOf100(
-    this.subject(), this.itemCri(target) * 100, 1 + attackerPositiveRolls, targetNegativeRolls);
+  // the attacker's fate and the target's both weigh on whether the hit lands critically.
+  const [ positiveRolls, negativeRolls ] = this.fateRollsAgainst(target);
+
+  const isCritical = RPGManager.fateOf100(this.subject(), critChancePercent, positiveRolls, negativeRolls);
 
   return isCritical;
 };
@@ -827,7 +862,7 @@ Game_Action.prototype.itemEffectAddNormalState = function(target, effect)
 
 /**
  * Overwrites {@link #itemEffectRemoveState}.<br/>
- * Potentially removes the state, leveraging our {@link RPGManager.chanceIn100}.
+ * Potentially removes the state, on the roll {@link #rollRemoveStateEffect} makes.
  * @param {Game_Battler} target The target having the state removed.
  * @param {RPG_UsableEffect} effect The effect containing state data for removal.
  */
@@ -842,13 +877,8 @@ Game_Action.prototype.itemEffectRemoveState = function(target, effect)
   // convert the fractional value into a rounded base-100 roll.
   const d100 = Math.round(chance * 100);
 
-  // the caster wants the removal to succeed; the target's own curse can still resist it, even
-  // when the effect is a beneficial cleanse- a cursed battler's good luck fails them too.
-  const casterPositiveRolls = this.subject().getPositiveRollsForSkill(this.item());
-  const targetNegativeRolls = target.getNegativeRolls();
-
   // check if RNGesus blesses this battler.
-  const isRemoved = RPGManager.fateOf100(this.subject(), d100, 1 + casterPositiveRolls, targetNegativeRolls);
+  const isRemoved = this.rollRemoveStateEffect(target, stateId, d100);
 
   if (isRemoved === true)
   {
@@ -861,18 +891,51 @@ Game_Action.prototype.itemEffectRemoveState = function(target, effect)
 };
 
 /**
- * Applies a state when the shouldApplyState roll passes for this action.
- * @param {Game_Battler} target The target.
+ * Rolls whether a skill effect's Remove State takes a state off the target.<br/>
+ * The roll is made with this action's fate, as {@link #fateRollsAgainst} describes: the caster wants the removal to
+ * succeed, so a cursed target is that much easier to strip of a blessing and that much harder to cleanse. The roll's
+ * fate overrides come from {@link #chanceRollerAgainst}. A state carrying `<immuneToFate>`, as the target sees it, comes
+ * off on one plain roll instead, with no one's fate weighing in.
+ * @param {Game_Battler} target The target having the state removed.
+ * @param {number} stateId The id of the state being removed.
+ * @param {number} d100 The removal's chance, as a whole percent.
+ * @returns {boolean}
+ */
+Game_Action.prototype.rollRemoveStateEffect = function(target, stateId, d100)
+{
+  // a state immune to fate comes off on one plain roll.
+  const state = target.state(stateId);
+  if (state.isImmuneToFate()) return RPGManager.chanceIn100(d100);
+
+  // the caster wants the removal to succeed; a cursed target is that much easier to strip of a blessing,
+  // and that much harder to cleanse- a cursed battler's good luck fails them too.
+  const [ positiveRolls, negativeRolls ] = this.fateRollsAgainst(target);
+
+  // the battler whose fate overrides settle this roll; the subject, unless something guarantees it.
+  const roller = this.chanceRollerAgainst(target);
+
+  // roll the removal with that fate.
+  return RPGManager.fateOf100(roller, d100, positiveRolls, negativeRolls);
+};
+
+/**
+ * Applies a state a skill effect carries once for every time its roll lands on the target: once at most, unless
+ * Accumulate Mode or Encore land it again.<br/>
+ * The roll is {@link #resolveApplyStateProcCount}: the effect's chance meets the target's resistances and the luck
+ * between the two battlers, and then this action's fate. Every landing adds the state through
+ * {@link #applyStateEffect}, so the target's immunities are checked on each one.
+ * @param {Game_Battler} target The battler the state is aimed at.
  * @param {number} stateId The id of the state being applied.
- * @param {number} chance The base chance the state will be applied.
- * @param {boolean} useAttackerStateRate Whether or not the attacker's state rate should apply.
+ * @param {number} chance The chance the skill effect authored, as a decimal from 0 to 1.
+ * @param {boolean} useAttackerStateRate Whether the attacker's own rate for the state applies, as it does for the
+ * states a normal attack carries.
  */
 Game_Action.prototype.handleApplyState = function(target, stateId, chance, useAttackerStateRate)
 {
-  // resolve how many times this proc's action should execute (Accumulate Mode/Encore aware).
+  // resolve how many times the state lands (Accumulate Mode/Encore aware).
   const procCount = this.resolveApplyStateProcCount(target, stateId, chance, useAttackerStateRate);
 
-  // apply the state once per success.
+  // apply the state once per landing.
   for (let i = 0; i < procCount; i++)
   {
     this.applyStateEffect(target, stateId);
@@ -880,104 +943,58 @@ Game_Action.prototype.handleApplyState = function(target, stateId, chance, useAt
 };
 
 /**
- * Calculates the fully-modified d100 chance of applying the given state to the target, shared
- * by both {@link #shouldApplyState} and {@link #resolveApplyStateProcCount}.<br/>
- * A certain hit sets aside the target's resistances and the two battlers' luck alike, the way RMMZ's
- * own state effects do, so the state it carries lands at its authored chance. Only the attacker's
- * own state rate still shapes it.
- * @param {Game_Battler} target The battler being afflicted with the state.
+ * Resolves how many times a state a skill effect carries lands on the target, folding in the subject's Accumulate
+ * Mode and Encore repeats.<br/>
+ * A skill effect authors its chance as a decimal, and this is the one place that chance becomes the percent
+ * {@link #resolveStateProcCountAgainst} rolls. The states a normal attack carries also answer to the attacker's own
+ * rate for each of them, before the target's resistances weigh in.
+ * @param {Game_Battler} target The battler the state is aimed at.
  * @param {number} stateId The id of the state being applied.
- * @param {number} baseChance The decimal base chance of applying the state.
- * @param {boolean=} useAttackerStateRate Whether or not to apply the attacker's state rate.
- * @returns {number} The rounded base-100 chance of application.
- */
-Game_Action.prototype.calculateStateApplicationD100 = function(target, stateId, baseChance, useAttackerStateRate = false)
-{
-  // initialize the application modifier to 100%.
-  let applicationModifier = 1.00;
-
-  // check if we're applying the attacker's state rate against the base chance.
-  if (useAttackerStateRate)
-  {
-    // apply the chance of success for this particular state from the attacker.
-    applicationModifier *= this.subject()
-      .attackStatesRate(stateId);
-  }
-
-  // determine whether or not we should apply target resistances for this action.
-  if (this.shouldTargetApplyResistances())
-  {
-    // apply the target's own state resistance rates against the state.
-    applicationModifier *= target.stateRate(stateId);
-
-    // apply the target's own type-scoped resistance rate against the state.
-    applicationModifier *= target.stateTypeResistRate(stateId);
-
-    // apply the action's luck modifier based on the two battlers; a certain hit skips it with the resistances.
-    applicationModifier *= this.lukEffectRate(target);
-  }
-
-  // calculate the chance.
-  const calculatedChance = baseChance * applicationModifier;
-
-  // convert the result into a rounded base-100 number.
-  return Math.round(calculatedChance * 100);
-};
-
-/**
- * Determines whether or not the state should be applied to the target.
- * @param {Game_Battler} target The battler being afflicted with the state.
- * @param {number} stateId The id of the state being applied.
- * @param {number} baseChance The decimal base chance of applying the state.
- * @param {boolean=} useAttackerStateRate Whether or not to apply the attacker's state rate.
- * @returns {boolean} True if the state should be applied to the target, false otherwise.
- */
-Game_Action.prototype.shouldApplyState = function(target, stateId, baseChance, useAttackerStateRate = false)
-{
-  const d100 = this.calculateStateApplicationD100(target, stateId, baseChance, useAttackerStateRate);
-
-  // the caster wants the state to stick; the target's own curse can undermine that success.
-  const casterPositiveRolls = this.subject().getPositiveRollsForSkill(this.item());
-  const targetNegativeRolls = target.getNegativeRolls();
-
-  // roll d100.
-  return RPGManager.fateOf100(this.subject(), d100, 1 + casterPositiveRolls, targetNegativeRolls);
-};
-
-/**
- * Resolves how many times the state application should execute, folding in the caster's
- * Accumulate Mode and Encore repeats.
- * @param {Game_Battler} target The battler being afflicted with the state.
- * @param {number} stateId The id of the state being applied.
- * @param {number} baseChance The decimal base chance of applying the state.
- * @param {boolean=} useAttackerStateRate Whether or not to apply the attacker's state rate.
- * @returns {number} How many times the state application should execute; 0 means it did not proc.
+ * @param {number} baseChance The chance the skill effect authored, as a decimal from 0 to 1.
+ * @param {boolean=} useAttackerStateRate Whether the attacker's own rate for the state applies; defaults to false.
+ * @returns {number}
  */
 Game_Action.prototype.resolveApplyStateProcCount = function(target, stateId, baseChance, useAttackerStateRate = false)
 {
-  const d100 = this.calculateStateApplicationD100(target, stateId, baseChance, useAttackerStateRate);
+  // a skill effect authors its chance as a decimal, and the state roll takes a percent.
+  let percent = baseChance * 100;
 
-  // the caster wants the state to stick; the target's own curse can undermine that success.
-  const casterPositiveRolls = this.subject().getPositiveRollsForSkill(this.item());
-  const targetNegativeRolls = target.getNegativeRolls();
+  // the states a normal attack carries also answer to the attacker's own rate for each of them.
+  if (useAttackerStateRate)
+  {
+    percent *= this.subject()
+      .attackStatesRate(stateId);
+  }
 
-  return RPGManager.resolveProcCount(this.subject(), d100, 1 + casterPositiveRolls, targetNegativeRolls);
+  // roll the state against the target with this action's fate.
+  return this.resolveStateProcCountAgainst(target, stateId, percent);
 };
 
 /**
- * Determines whether or not the direct application of a state should be
- * resisted by a target.
- *
- * The default implementation is to ignore resistances only for skills/items that
- * are of type "certain hit" in the database.
- * @returns {boolean} True if the resistances should be applied, false otherwise.
+ * Resolves how many times a state with an authored percent chance lands on a target for this action: a skill
+ * effect's state, or a state an on-hit, on-cast or on-crit tag carries.<br/>
+ * The chance meets the target's resistance to the state by its id, through State Rate traits, and by its type,
+ * through `<stateTypeResist>`. A harmful state, one carrying `<type:negative>`, then meets the luck between this
+ * action's subject and the target. A certain hit meets them too: it cannot miss, but the states it carries roll like
+ * any others. This action's fate then decides the count, as {@link #fateRollsAgainst} describes: harm when the action
+ * is aimed at the subject's opponents, help otherwise, and the subject's fate counted once when the target is the
+ * subject itself.<br/>
+ * Nothing is added here; the caller adds the state once per landing, through whichever add method it needs.
+ * @param {Game_Battler} target The battler the state is aimed at; the subject itself for a self-state.
+ * @param {number} stateId The id of the state being applied.
+ * @param {number} percent The authored chance, as a percent from 0 to 100.
+ * @param {Game_Battler|object|null=} positiveRoller Whose fate overrides, Accumulate Mode and Encore count the
+ * landings, for a caller that hands over its own; null, the default, means {@link #chanceRollerAgainst}. The subject
+ * brings its luck either way.
+ * @returns {number}
  */
-Game_Action.prototype.shouldTargetApplyResistances = function()
+Game_Action.prototype.resolveStateProcCountAgainst = function(target, stateId, percent, positiveRoller = null)
 {
-  // certain hits ignore target's state application modifiers and luck impacts!
-  if (this.isCertainHit()) return false;
+  // a caller's own roller wins; otherwise this action names the roller for its rolls against the target.
+  const roller = positiveRoller ?? this.chanceRollerAgainst(target);
 
-  return true;
+  // roll the state the way every chance-based state application rolls, with this action's fate.
+  return JABS_Fate.resolveActionStateProcCount(this, target, stateId, percent, roller);
 };
 
 /**
@@ -1608,6 +1625,57 @@ Game_Action.prototype.calculateAuthoredVulnerabilityStackPct = function(target)
   return totalPct;
 };
 //endregion state damage multipliers
+
+//region damage rate pierce
+/**
+ * Extends {@link #damageRateAgainst}.<br/>
+ * Lifts a target's damage rate to an even 1 when this action pierces it ({@link #isDamageRatePierced}),
+ * so the hit lands as though the target resisted none of it. Resistance and immunity are both lifted,
+ * but a rate already at or above 1 is a vulnerability and stands, the way `<pierceElement>` never
+ * touches a weakness. A heal is never pierced, having no mitigation to get past.
+ * @param {Game_Battler} target The target being hit.
+ * @param {boolean} isHarmful Whether the value this rate scales is harm rather than a heal.
+ * @returns {number}
+ */
+J.ABS.Aliased.Game_Action.set('damageRateAgainst', Game_Action.prototype.damageRateAgainst);
+Game_Action.prototype.damageRateAgainst = function(target, isHarmful)
+{
+  // perform original logic.
+  const damageRate = J.ABS.Aliased.Game_Action.get('damageRateAgainst')
+    .call(this, target, isHarmful);
+
+  // a heal has no mitigation to pierce.
+  if (isHarmful === false) return damageRate;
+
+  // a target this action doesn't pierce keeps whatever rate it has.
+  if (this.isDamageRatePierced(target) === false) return damageRate;
+
+  // a pierced target resists nothing, but stays exactly as vulnerable as it was.
+  return Math.max(1, damageRate);
+};
+
+/**
+ * Whether or not this action pierces the given target's damage rate.<br/>
+ * `<pierceDamageRateIfStateType:TYPE>` on any of the caster's note sources pierces it while the target
+ * already carries at least one active state classified as TYPE, matched case-insensitively. Several
+ * tags naming different types pierce on any one of them. The caster's notes are read the same way the
+ * other state-type bonuses read them, through the battler's note cache.
+ * @param {Game_Battler} target The target being hit.
+ * @returns {boolean}
+ */
+Game_Action.prototype.isDamageRatePierced = function(target)
+{
+  // gather every note source on the caster.
+  const notes = this.subject()
+    .getAllNotes();
+
+  // collect every type whose carriers this caster pierces.
+  const piercedTypes = RPGManager.getStringsFromAllNotesByRegex(notes, J.ABS.RegExp.PierceDamageRateIfStateType);
+
+  // the target is pierced while it carries an active state of any one of those types.
+  return piercedTypes.some(type => this.targetHasActiveStateType(target, type));
+};
+//endregion damage rate pierce
 
 //region skill history bonus
 /**

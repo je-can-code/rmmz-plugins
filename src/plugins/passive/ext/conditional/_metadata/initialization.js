@@ -169,6 +169,31 @@ J.PASSIVE.EXT.CONDITIONAL.RegExp.AutoApplyStateOnNearby = /<autoApplyStateOnNear
 J.PASSIVE.EXT.CONDITIONAL.RegExp.AutoExecuteSkill = /<autoExecuteSkill:[ ]?(\[[^\]]+])>/gi;
 
 /**
+ * Marks a skill whose hits count as weapon hits for {@code onWeaponHit} rules, though it is cast from a
+ * combat-skill slot rather than the Mainhand or Offhand slot.<br/>
+ * Read by {@link RPGManager.checkForBooleanFromNoteByRegex} off the skill whose hit just landed, in
+ * {@link JABS_Engine#isWeaponHitAction}.
+ * <p>
+ * Meant for a skill that is a weapon technique in all but its slot- a blade flurry, a whip whirl- so that
+ * whatever a swing sets off (an enchant's follow-up, a per-swing buff) goes off on its hits as well. A payload
+ * that a weapon-hit rule fires must never carry it: that follow-up would count as a weapon hit itself, and fire
+ * again off every hit it lands.
+ * </p>
+ * <pre>
+ * Structure:
+ *  <countsAsWeaponHit>
+ *
+ * Example:
+ *  <countsAsWeaponHit>
+ *
+ * Translation:
+ *  every hit this skill lands fires its caster's onWeaponHit rules, as a basic attack's hit would.
+ * </pre>
+ * @type {RegExp}
+ */
+J.PASSIVE.EXT.CONDITIONAL.RegExp.CountsAsWeaponHit = /<countsAsWeaponHit>/i;
+
+/**
  * Captures {@code autoModifyCooldowns} bracket tuples from database notes.<br/>
  * Parsed by {@link RPGManager.getArraysFromNotesByRegex} (Path 1: outer tag + inner bracket capture).<br/>
  * Each match schedules a signed cooldown modification via {@link AutoModifyCooldownManager} against
@@ -213,7 +238,7 @@ J.PASSIVE.EXT.CONDITIONAL.RegExp.AutoModifyCooldowns = /<autoModifyCooldowns:[ ]
  *   <li>{@code [1071, 'negaStateInflicted', 0]} — every time this battler inflicts any negative state</li>
  *   <li>{@code [1072, 'posiStateInflicted', 60]} — on inflicting a positive state, at most once per 60 frames</li>
  *   <li>{@code [1073, 'anyStateInflicted', 0]} — every time this battler inflicts any state at all</li>
- *   <li>{@code [1074, 'onKnockback', 0]} — every time this battler knocks an enemy back</li>
+ *   <li>{@code [1074, 'onKnockback', 0]} — every time one of this battler's hits moves an enemy, pushed or pulled</li>
  * </ul>
  * @type {RegExp}
  */
@@ -221,10 +246,12 @@ J.PASSIVE.EXT.CONDITIONAL.RegExp.AutoInflictState = /<autoInflictState:[ ]?(\[[^
 
 /**
  * Captures {@code removeOnSkillExecution} bracket tuples from <strong>state</strong> notes only.<br/>
- * On skill execution, rolls chance and may peel stacks via {@link Game_Battler#decrementStateStacks}.
+ * Once the bearer has paid for a map skill it is executing, rolls chance and may peel stacks via
+ * {@link Game_Battler#decrementStateStacks}- after the cost, so a state these rules strip still has its say in what
+ * that skill costs.
  * <p>
  * Author shape: {@code <removeOnSkillExecution:[stypeId, chance]>}.<br/>
- * {@code stypeId} 0 matches any skill type. {@code chance} is 1–100 for {@link RPGManager.chanceIn100}.
+ * {@code stypeId} 0 matches any skill type. {@code chance} is 1–100 for {@link RPGManager.fateOf100}.
  * </p>
  * @type {RegExp}
  */
@@ -237,11 +264,34 @@ J.PASSIVE.EXT.CONDITIONAL.RegExp.RemoveOnSkillExecution = /<removeOnSkillExecuti
  * state traits are still active during damage calculation.
  * <p>
  * Author shape: {@code <removeOnSkillResolution:[stypeId, chance]>}.<br/>
- * {@code stypeId} 0 matches any skill type. {@code chance} is 1–100 for {@link RPGManager.chanceIn100}.
+ * {@code stypeId} 0 matches any skill type. {@code chance} is 1–100 for {@link RPGManager.fateOf100}.
  * </p>
  * @type {RegExp}
  */
 J.PASSIVE.EXT.CONDITIONAL.RegExp.RemoveOnSkillResolution = /<removeOnSkillResolution:[ ]?(\[[^\]]+])>/gi;
+
+/**
+ * Captures {@code toggleStateOnSkillExecution} bracket tuples from <strong>state</strong> notes only.<br/>
+ * Read by {@link SkillExecutionStateToggleManager} once the bearer has paid for a skill it is executing. Each tuple
+ * names a state and a skill type: a hardcast of that type, meaning any skill of it that costs MP, executed while the
+ * bearer lacks the state applies it, and one executed while the bearer carries it removes it, after that cast's cast
+ * time and cost were both read with the state still on. A skill type of 0 matches every skill type. A skill that
+ * costs no MP does neither.
+ *
+ * <pre>
+ * Structure:
+ *  <toggleStateOnSkillExecution:[STATE_ID, STYPE_ID]>
+ *
+ * Example:
+ *  <toggleStateOnSkillExecution:[143, 4]>
+ *
+ * Translation:
+ *  a type-4 skill that costs MP, executed without state 143, applies state 143;
+ *  a type-4 skill that costs MP, executed with state 143, removes it once its cost is paid.
+ * </pre>
+ * @type {RegExp}
+ */
+J.PASSIVE.EXT.CONDITIONAL.RegExp.ToggleStateOnSkillExecution = /<toggleStateOnSkillExecution:[ ]?(\[[^\]]+])>/gi;
 
 /**
  * Captures {@code removeStateOnMove} bracket tuples from <strong>state</strong> notes only.<br/>

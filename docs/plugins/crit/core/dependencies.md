@@ -8,6 +8,10 @@ dependencies:
     version: 4.0.0
     base: true
     orderAfter: true
+  - key: J-ABS
+    version: 4.30.0
+    base: false
+    orderAfter: true
   - key: J-NaturalGrowth
     version: 3.0.0
     base: false
@@ -24,6 +28,12 @@ All the various dependencies along with why they are dependencies live here.
 ## J-Base
 
 All plugins in this ecosystem require the base plugin.
+
+## J-ABS
+
+Reads the on-crit state tags as its on-chance effects, and rolls every state they carry through its state roll: the
+recipient's resistances, the luck between the two battlers on a harmful state, and their fate all weigh in, and the recipient's immunities
+are checked on every landing. Without it, the on-crit state tags do nothing.
 
 ## J-NaturalGrowth
 

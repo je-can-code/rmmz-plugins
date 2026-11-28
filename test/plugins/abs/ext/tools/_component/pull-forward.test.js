@@ -102,6 +102,9 @@ describe('J-ABS-Tools pull-forward (direct src import)', () =>
     await import('../../../../../../src/plugins/abs/core/database/RPG_Skill.js');
     ({ default: globalThis.JABS_Battler } = await import('../../../../../../src/plugins/abs/core/models/JABS_Battler.js'));
 
+    // the real engine class, whose knockback resistance a pull reads and whose announcement it makes.
+    ({ default: globalThis.JABS_Engine } = await import('../../../../../../src/plugins/abs/core/managers/JABS_Engine.js'));
+
     // J-ABS-Tools requires its own plugin parameters (grabThrowEnabled/directionFixAlways).
     installPluginManagerWithParams(globalThis, 'J-ABS-Tools', {});
 
@@ -122,6 +125,13 @@ describe('J-ABS-Tools pull-forward (direct src import)', () =>
     // resolvePullVector needs real sqrt; the shared fixture's Math stub omits it for determinism
     // elsewhere, so patch it in for this file only.
     globalThis.Math.sqrt = Math.sqrt;
+
+    // a pull reads the target's resistance through J-ABS's own resolver, run for real here so the
+    // knockbackResist notes below still decide it, and announces itself through a fresh spy.
+    globalThis.$jabsEngine = {
+      resolveKnockbackResist: globalThis.JABS_Engine.prototype.resolveKnockbackResist,
+      announceKnockback: vi.fn(),
+    };
   });
 
   describe('RPG_Skill tag getters', () =>
@@ -255,6 +265,7 @@ describe('J-ABS-Tools pull-forward (direct src import)', () =>
 
       // Assert
       expect(target.lastJump).toBeNull();
+      expect(globalThis.$jabsEngine.announceKnockback).not.toHaveBeenCalled();
     });
 
     it('does nothing when already being displaced', () =>
@@ -270,21 +281,50 @@ describe('J-ABS-Tools pull-forward (direct src import)', () =>
 
       // Assert
       expect(target.lastJump).toBeNull();
+      expect(globalThis.$jabsEngine.announceKnockback).not.toHaveBeenCalled();
     });
 
-    it('pulls the target toward the caster by the tagged magnitude', () =>
+    it('pulls the target toward the caster by the tagged magnitude, then announces it as a knockback', () =>
     {
-      // Arrange
+      // Arrange- record where the target stood at the moment of the announcement.
       const target = buildCharacter({ x: 0, y: 0 });
       const jabsTarget = buildJabsBattler(target);
       const jabsCaster = buildJabsBattler(buildCharacter({ x: 10, y: 0 }));
       const action = { getBaseSkill: () => buildSkillRow('<pullForward:3>') };
+      let jumpSeenByAnnouncement = null;
+      globalThis.$jabsEngine.announceKnockback = vi.fn(() =>
+      {
+        jumpSeenByAnnouncement = target.lastJump;
+      });
 
       // Act
       jabsTarget.pullToCaster(action, jabsCaster);
 
       // Assert
       expect(target.lastJump).toEqual([ 3, 0 ]);
+
+      // announced once, as a knockback toward the caster, only once the target was already on its way.
+      expect(globalThis.$jabsEngine.announceKnockback).toHaveBeenCalledTimes(1);
+      expect(globalThis.$jabsEngine.announceKnockback).toHaveBeenCalledWith(action, jabsTarget, 3, 0);
+      expect(jumpSeenByAnnouncement).toEqual([ 3, 0 ]);
+    });
+
+    it('refuses the pull outright when J-ABS resolves the target as fully resistant, as it does for a boss', () =>
+    {
+      // Arrange- the notes carry no resistance at all, so only the engine's resolver can refuse the pull.
+      const target = buildCharacter({ x: 0, y: 0 });
+      const jabsTarget = buildJabsBattler(target);
+      const jabsCaster = buildJabsBattler(buildCharacter({ x: 10, y: 0 }));
+      const action = { getBaseSkill: () => buildSkillRow('<pullForward:4>') };
+      globalThis.$jabsEngine.resolveKnockbackResist = vi.fn(() => 100);
+
+      // Act
+      jabsTarget.pullToCaster(action, jabsCaster);
+
+      // Assert
+      expect(globalThis.$jabsEngine.resolveKnockbackResist).toHaveBeenCalledWith(jabsTarget);
+      expect(target.lastJump).toBeNull();
+      expect(globalThis.$jabsEngine.announceKnockback).not.toHaveBeenCalled();
     });
 
     it('clamps the pull so the target cannot overshoot past the caster', () =>
@@ -333,9 +373,10 @@ describe('J-ABS-Tools pull-forward (direct src import)', () =>
 
       // Assert
       expect(target.lastJump).toBeNull();
+      expect(globalThis.$jabsEngine.announceKnockback).not.toHaveBeenCalled();
     });
 
-    it('stops at the last passable tile by default', () =>
+    it('stops at the last passable tile by default, announcing where it stopped rather than where it aimed', () =>
     {
       // Arrange- refuse the step out of x=1, making x=2 the wall the pull comes to rest against.
       const target = buildCharacter({ x: 0, y: 0, canPass: (x) => x < 1 });
@@ -348,6 +389,7 @@ describe('J-ABS-Tools pull-forward (direct src import)', () =>
 
       // Assert
       expect(target.lastJump).toEqual([ 1, 0 ]);
+      expect(globalThis.$jabsEngine.announceKnockback).toHaveBeenCalledWith(action, jabsTarget, 1, 0);
     });
 
     it('sails through blocked tiles when the skill carries <ignoreTerrain>', () =>
@@ -378,6 +420,7 @@ describe('J-ABS-Tools pull-forward (direct src import)', () =>
 
       // Assert
       expect(target.lastJump).toBeNull();
+      expect(globalThis.$jabsEngine.announceKnockback).not.toHaveBeenCalled();
     });
 
     it('pulls horizontally leftward when the caster is to the left', () =>

@@ -17,6 +17,21 @@ Chain progression is authored entirely via
 [`<applyStateOnExpire>`](../../../core/notetags/skills/apply-state-on-expire.md) (`J-ABS` core). The Well Fed entry
 state expires into the peak, the peak expires into the tail, and the tail has no expire link (natural end of chain).
 
+## NOTE ABOUT RNG
+
+Give every phase of a chain J-ABS's [`<immuneToFate>`](../../../core/notetags/states/immune-to-fate.md) too. Each phase
+then lands the next its `<applyStateOnExpire>` names on one plain roll as it expires: not lucky or cursed rolls, not
+`<veryLucky>` or `<veryCursed>`, and not Accumulate Mode or Encore weigh on it, so it moves on exactly one phase at a
+time. The phase's CHANCE and the bearer's State Rate traits and `<stateTypeResist>` still apply, so a chain authored at
+100 always lands on a bearer that does not resist it, and a bearer under `<veryCursed>` still moves through its whole
+arc.
+
+Immunity is not chance, so it still stands: a bearer that cannot take the next phase at all, through
+`<immuneToStates>`, `<stateTypeImmune>` or the like, does not take it.
+
+A state without `<foodChain>` is not a phase of any arc, so its own `<applyStateOnExpire>` follow-up rolls the way
+`J-ABS` rolls any other, however closely it is tied to a meal.
+
 ## NOTE ABOUT DURATION
 
 Required for arcs longer than ~2.8 minutes: use `J-ABS` core `<stateDuration:FRAMES>` on each phase state (see

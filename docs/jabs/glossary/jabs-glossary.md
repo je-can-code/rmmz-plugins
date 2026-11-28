@@ -662,8 +662,8 @@ Applicable to:
 ---
 # Knockback
 The `knockback` allows for skills to knock back the target by `X` amount.
-Knockback can be negative, resulting in pulling an enemy closer.
-Knockback is reduced by `knockback resist`.
+To pull an enemy closer instead, use J-ABS-Tools' `<pullForward>`.
+Knockback is reduced by `knockback resist`, and so is a pull.
 
 > This functionality has had some quirkiness about it, resulting randomly in sending the battler flying. I'm sorry. I'll fix it eventually.
 

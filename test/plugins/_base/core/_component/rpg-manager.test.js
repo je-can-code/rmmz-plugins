@@ -1004,6 +1004,20 @@ describe('RPGManager', () =>
       expect(list[0].key).toBe('jeOC');
     });
 
+    it('reads an optional third value as either the hit type or the outcome it filters on', () =>
+    {
+      // Arrange- one effect filtered by outcome beside one filtered by hit type, so each lands in its own field.
+      const data = { note: '<jeOC:[7, 55, glancing]>\n<jeOC:[8, 40, physical]>' };
+      const re = /<jeOC:(\[[0-9]+,\s*[0-9]+,\s*[a-z]+\])>/g;
+
+      // Act
+      const list = RPGManager.getOnChanceEffectsFromDatabaseObject(data, re);
+
+      // Assert
+      expect(list.map(effect => [ effect.skillId, effect.hitType, effect.outcome ]))
+        .toEqual([ [ 7, null, 'glancing' ], [ 8, 1, null ] ]);
+    });
+
     it('returns an empty array when the note has no matches', () =>
     {
       // Arrange
@@ -1123,6 +1137,34 @@ describe('RPGManager', () =>
       expect(result).toBe(0);
       globalThis.Math.randomInt = prev;
     });
+
+    it('counts a roll landing exactly on the threshold as a success', () =>
+    {
+      // Arrange- randomInt 49 is a roll of 50, the very edge of a 50% chance.
+      const prev = globalThis.Math.randomInt;
+      globalThis.Math.randomInt = () => 49;
+
+      // Act
+      const result = RPGManager.countSuccessesIn100(50, 2);
+
+      // Assert
+      expect(result).toBe(2);
+      globalThis.Math.randomInt = prev;
+    });
+
+    it('attempts nothing for a count at or below zero, even at a sure 100%', () =>
+    {
+      // Arrange- counting down from below zero would never reach it, so a negative count must stop at once.
+      const percentOfSuccess = 100;
+
+      // Act
+      const fromZero = RPGManager.countSuccessesIn100(percentOfSuccess, 0);
+      const fromBelowZero = RPGManager.countSuccessesIn100(percentOfSuccess, -2);
+
+      // Assert
+      expect(fromZero).toBe(0);
+      expect(fromBelowZero).toBe(0);
+    });
   });
 
   describe('chanceIn100', () =>
@@ -1209,6 +1251,56 @@ describe('RPGManager', () =>
 
       // Assert
       expect(result).toBe(true);
+      globalThis.Math.randomInt = prev;
+    });
+
+    it('lands a roll, and keeps it through a reroll, exactly on the threshold', () =>
+    {
+      // Arrange- randomInt 49 is a roll of 50, the very edge of a 50% chance, for the roll and its reroll alike.
+      const prev = globalThis.Math.randomInt;
+      globalThis.Math.randomInt = () => 49;
+
+      // Act
+      const result = RPGManager.chanceIn100(50, 1, 1);
+
+      // Assert
+      expect(result).toBe(true);
+      globalThis.Math.randomInt = prev;
+    });
+
+    it('gives no chance at all for a positive count at or below zero, even at a sure 100%', () =>
+    {
+      // Arrange- read as truthy, a negative count would keep rolling until the dice happened to agree.
+      const percentOfSuccess = 100;
+
+      // Act
+      const fromZero = RPGManager.chanceIn100(percentOfSuccess, 0, 0);
+      const fromBelowZero = RPGManager.chanceIn100(percentOfSuccess, -1, 0);
+
+      // Assert
+      expect(fromZero).toBe(false);
+      expect(fromBelowZero).toBe(false);
+    });
+
+    it('rerolls nothing for a negative count at or below zero, leaving an earlier success standing', () =>
+    {
+      // Arrange- the first roll lands; any reroll after it would miss, so a single reroll shows up as a failure.
+      const prev = globalThis.Math.randomInt;
+      let rolls = 0;
+      globalThis.Math.randomInt = () =>
+      {
+        rolls++;
+        return rolls === 1 ? 10 : 80;
+      };
+
+      // Act
+      const withZero = RPGManager.chanceIn100(50, 1, 0);
+      rolls = 0;
+      const withBelowZero = RPGManager.chanceIn100(50, 1, -1);
+
+      // Assert
+      expect(withZero).toBe(true);
+      expect(withBelowZero).toBe(true);
       globalThis.Math.randomInt = prev;
     });
   });
@@ -1415,6 +1507,57 @@ describe('RPGManager', () =>
 
       // Assert
       expect(result).toBe(0);
+    });
+  });
+
+  describe('resolveHitOutcomeString', () =>
+  {
+    it('returns null when no filter was written', () =>
+    {
+      // Arrange
+      const input = undefined;
+
+      // Act
+      const result = RPGManager.resolveHitOutcomeString(input);
+
+      // Assert
+      expect(result).toBeNull();
+    });
+
+    it('hands back "glancing", lowercased', () =>
+    {
+      // Arrange
+      const input = 'Glancing';
+
+      // Act
+      const result = RPGManager.resolveHitOutcomeString(input);
+
+      // Assert
+      expect(result).toBe('glancing');
+    });
+
+    it('hands back "critical", lowercased', () =>
+    {
+      // Arrange
+      const input = 'CRITICAL';
+
+      // Act
+      const result = RPGManager.resolveHitOutcomeString(input);
+
+      // Assert
+      expect(result).toBe('critical');
+    });
+
+    it('returns null for a hit type, which names no outcome', () =>
+    {
+      // Arrange
+      const input = 'physical';
+
+      // Act
+      const result = RPGManager.resolveHitOutcomeString(input);
+
+      // Assert
+      expect(result).toBeNull();
     });
   });
 

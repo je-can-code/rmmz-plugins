@@ -73,6 +73,16 @@ class JABS_Engine
     },
   };
 
+  /**
+   * The knockback resistance, as a percent, at which a target refuses being forcibly moved at all.
+   *
+   * Pushes and pulls both answer to it: a pull is knockback aimed back toward the caster, so a target
+   * that resists every knockback resists every pull with the same number. At or above it the target
+   * does not even hop in place.
+   * @type {100}
+   */
+  static FullKnockbackResist = 100;
+
   //region properties
   /**
    * Gets the action events.
@@ -2280,37 +2290,16 @@ class JABS_Engine
   }
 
   /**
-   * Handles the on-cast state effects for a JABS action, firing once at press-time
-   * rather than once per target hit.
-   * @param {JABS_Battler} caster The JABS_Battler executing the JABS action.
-   * @param {JABS_Action} action The JABS action being executed.
+   * A hook fired once for a JABS action as it executes- after any cast time has run out- rather than once per target
+   * hit, for the effects a cast has on its own caster the moment it goes off.<br/>
+   * Does nothing on its own. J-ABS has no on-cast effects of its own to apply here; extensions alias this to add
+   * theirs.
+   * @param {JABS_Battler} _caster The JABS_Battler executing the JABS action.
+   * @param {JABS_Action} _action The JABS action being executed.
    */
-  handleOnCastStateEffects(caster, action)
+  handleOnCastStateEffects(_caster, _action)
   {
-    // grab the underlying Game_Action to access its state-effect methods.
-    const gameAction = action.getAction();
-
-    // apply any on-cast self-states to the caster exactly once, at the moment of press.
-    gameAction.applyOnCastSelfStates();
-
-    // apply any conditional on-cast self-states that require the caster to have a specific state.
-    gameAction.applyOnCastSelfStatesIfAfflicted();
-
-    // remove any on-cast lose-states from the caster exactly once, at the moment of press.
-    gameAction.applyOnCastLoseStates();
-
-    // toggle any <toggleOnExecute> states on the caster exactly once, at the moment of press.
-    gameAction.applyToggleOnExecuteStates();
-
-    // cycle any <toggleGroupOnExecute> state groups on the caster exactly once, at press-time.
-    gameAction.applyToggleGroupOnExecuteStates();
-
-    // force-execute any <onCastExecuteSkill> payload skills exactly once, at the moment of press.
-    gameAction.applyOnCastExecuteSkills(caster);
-
-    // force-execute any <onCastExecuteSkillIfAfflicted> payload skills whose required state is
-    // currently active on the caster, exactly once, at the moment of press.
-    gameAction.applyOnCastExecuteSkillsIfAfflicted(caster);
+    // deliberately empty: this is the extension point extensions alias to add their own on-cast effects.
   }
 
   /**
@@ -3736,6 +3725,26 @@ class JABS_Engine
   }
 
   /**
+   * Resolves how strongly the given target resists being forcibly moved, as a percent.
+   *
+   * Summed from `<knockbackResist:PCT>` across every note source the target has. Knockback and
+   * pull-forward both read it from here, so a plugin granting a resistance of its own- J-ABS-Boss
+   * makes every participant of a boss fight immovable- aliases this one method and both kinds of
+   * forced movement agree on it.
+   * @param {JABS_Battler} target The map battler whose resistance is being resolved.
+   * @returns {number} The resistance percent; {@link JABS_Engine.FullKnockbackResist} or more refuses
+   * every push and every pull.
+   */
+  resolveKnockbackResist(target)
+  {
+    const targetNotes = target.getBattler()
+      .getAllNotes();
+
+    // every source of resistance the target carries adds together.
+    return RPGManager.getSumFromAllNotesByRegex(targetNotes, J.ABS.RegExp.KnockbackResist);
+  }
+
+  /**
    * Resolves how far an action should knock its target back, after the target's resistance and the
    * caster's amplification have both been applied.
    *
@@ -3748,15 +3757,12 @@ class JABS_Engine
    */
   resolveKnockbackDistance(action, target)
   {
-    const targetNotes = target.getBattler()
-      .getAllNotes();
-
     // determine the current knockback resist of the target.
-    const targetKnockbackResist = RPGManager.getSumFromAllNotesByRegex(targetNotes, J.ABS.RegExp.KnockbackResist);
+    const targetKnockbackResist = this.resolveKnockbackResist(target);
 
     // don't even knock them up or around at all, they are immune to knockback.
-    // having 100 or more resistance means they don't even hop in place.
-    if (targetKnockbackResist >= 100) return null;
+    // having full resistance means they don't even hop in place.
+    if (targetKnockbackResist >= JABS_Engine.FullKnockbackResist) return null;
 
     // get the knockback value from the skill if applicable.
     let knockback = action.getKnockback();
@@ -3780,7 +3786,9 @@ class JABS_Engine
   }
 
   /**
-   * Forces the target hit to be knocked back.
+   * Forces the target hit to be knocked back, announcing it through {@link #announceKnockback} once
+   * the target is on its way.<br/>
+   * A hop in place moves nobody and announces nothing.
    * @param {JABS_Action} action The action potentially knocking the target back.
    * @param {JABS_Battler} target The map battler to potentially knockback.
    */
@@ -3820,6 +3828,9 @@ class JABS_Engine
     if (action.getBaseSkill().jabsIgnoreTerrain)
     {
       targetSprite.jump(xPlus, yPlus);
+
+      // the target is sailing to its destination, so announce the knockback.
+      this.announceKnockback(action, target, xPlus, yPlus);
       return;
     }
 
@@ -3831,6 +3842,43 @@ class JABS_Engine
 
     // execute the jump to the new destination.
     targetSprite.jump(dx, dy);
+
+    // announce the knockback, which terrain may have cut down to nothing.
+    this.announceKnockback(action, target, dx, dy);
+  }
+
+  /**
+   * Announces a knockback through {@link #onKnockback}, but only when it actually moved its target.<br/>
+   * Terrain can cut a knockback down to nothing, and a facing with no cardinal meaning sends it along
+   * no axis at all; either way the target is still standing where it was, and a knockback that moved
+   * nobody is no knockback. A pull is knockback aimed back toward the caster, so the plugins that pull
+   * announce through here as well.
+   * @param {JABS_Action} action The action whose hit moved the target.
+   * @param {JABS_Battler} target The map battler that was moved.
+   * @param {number} dx The horizontal tiles the target was sent.
+   * @param {number} dy The vertical tiles the target was sent.
+   */
+  announceKnockback(action, target, dx, dy)
+  {
+    // a knockback that went nowhere moved nobody.
+    if (dx === 0 && dy === 0) return;
+
+    // the target is on its way to a new tile.
+    this.onKnockback(action, target);
+  }
+
+  /**
+   * Lifecycle event: a hit has just knocked its target off the tile it stood on, pushed away or pulled
+   * in.<br/>
+   * Reached only through {@link #announceKnockback}, so a hit that leaves its target where it stood- one
+   * that healed, was parried, struck a target already airborne, carried no knockback, met a target that
+   * refuses all of it, or only hopped it in place- never calls this. Extended by optional plugins (e.g.
+   * J-Passive-Conditional, whose onKnockback rules fire from here).
+   * @param {JABS_Action} _action The action whose hit moved the target.
+   * @param {JABS_Battler} _target The map battler that was moved.
+   */
+  onKnockback(_action, _target)
+  {
   }
 
   /**
@@ -4146,15 +4194,38 @@ class JABS_Engine
     const scaleFactor = J.ABS.Metadata.ImplicitParryScaleFactor;
     const parryChancePercent = Math.round(rawChance * scaleFactor);
 
-    // roles are reversed from an offensive roll: the defender wants this to succeed (they're
-    // the one parrying), while the attacker's own curse works against them getting parried.
+    // roles are reversed from an offensive roll: the defender is the one rolling, to parry.
     const defenderBattler = target.getBattler();
-    const defenderPositiveRolls = defenderBattler.getPositiveRolls();
-    const attackerNegativeRolls = caster.getBattler().getNegativeRollsForSkill(action.getBaseSkill());
+    const [ positiveRolls, negativeRolls ] = this.defensiveFateRolls(caster, target, action);
 
     // chanceIn100 already treats <=0 as an automatic failure and a 100+ roll always succeeds
     // (every 1-100 roll qualifies), so no separate edge-case branches are needed here.
-    return RPGManager.fateOf100(defenderBattler, parryChancePercent, 1 + defenderPositiveRolls, attackerNegativeRolls);
+    return RPGManager.fateOf100(defenderBattler, parryChancePercent, positiveRolls, negativeRolls);
+  }
+
+  /**
+   * The rolls a defender brings to parrying or glancing an attacker's hit, as the positive and negative counts
+   * {@link RPGManager.fateOf100} takes.<br/>
+   * The defender is the one rolling, so its own luck adds chances to turn the hit aside and its own curse adds rolls
+   * it has to pass as well. The attacker's curse is the attacker's bad fate: one more chance for the defender to turn
+   * the hit aside for every curse the attacker carries, its skill's own included.
+   * @param {JABS_Battler} caster The battler performing the action.
+   * @param {JABS_Battler} target The battler defending against it.
+   * @param {JABS_Action} action The action being defended against.
+   * @returns {number[]} The positive rolls, the baseline one included, then the negative rolls.
+   */
+  defensiveFateRolls(caster, target, action)
+  {
+    // the defender's own luck and curse speak for and against its own roll.
+    const defenderBattler = target.getBattler();
+    const defenderPositiveRolls = defenderBattler.getPositiveRolls();
+    const defenderNegativeRolls = defenderBattler.getNegativeRolls();
+
+    // the attacker's curse is one more chance for its hit to be turned aside, per curse it carries.
+    const attackerCurse = caster.getBattler()
+      .getNegativeRollsForSkill(action.getBaseSkill());
+
+    return [ 1 + defenderPositiveRolls + attackerCurse, defenderNegativeRolls ];
   }
 
   /**
@@ -4177,13 +4248,12 @@ class JABS_Engine
     const ignoreParryPercent = this.getIgnoreParryPct(caster, action);
     const glancingChancePercent = JABS_Engine.glancingBlowChancePercent(caster, target, ignoreParryPercent);
 
-    // same role reversal as checkImplicitFullParry: the defender wants this to succeed.
+    // same role reversal as checkImplicitFullParry: the defender is the one rolling, to glance.
     const defenderBattler = target.getBattler();
-    const defenderPositiveRolls = defenderBattler.getPositiveRolls();
-    const attackerNegativeRolls = caster.getBattler().getNegativeRollsForSkill(action.getBaseSkill());
+    const [ positiveRolls, negativeRolls ] = this.defensiveFateRolls(caster, target, action);
 
     // chanceIn100 already treats <=0 as an automatic failure and a 100+ roll always succeeds.
-    return RPGManager.fateOf100(defenderBattler, glancingChancePercent, 1 + defenderPositiveRolls, attackerNegativeRolls);
+    return RPGManager.fateOf100(defenderBattler, glancingChancePercent, positiveRolls, negativeRolls);
   }
 
   /**
@@ -4533,13 +4603,18 @@ class JABS_Engine
     // grab the incoming skill's hit type for filtering.
     const incomingHitType = triggeringAction.getBaseSkill().hitType;
 
-    // grab the damage values from the result to stamp onto outgoing actions.
-    const { hpDamage, mpDamage, tpDamage } = retaliator.getBattler().result();
+    // grab the result of the hit that struck the retaliator, and the damage it dealt to stamp onto outgoing actions.
+    const triggeringResult = retaliator.getBattler()
+      .result();
+    const { hpDamage, mpDamage, tpDamage } = triggeringResult;
 
     retaliationSkills.forEach(skillChance =>
     {
       // skip if the hit type filter doesn't match.
       if (!skillChance.matchesHitType(incomingHitType)) return;
+
+      // skip if the outcome filter doesn't match how the hit landed.
+      if (!skillChance.matchesOutcome(triggeringResult)) return;
 
       // this is a purely self-scoped proc- the retaliator is both the roller and the recipient
       // of "do I retaliate"; the retaliation attack itself gets its own hit/crit/state rolls.

@@ -11,6 +11,14 @@ All the versioning and history of changes live here.
 
 ## The Actual Changelog
 
+### 1.6.0
+  - Updated on-crit states to roll through J-ABS's state roll: the recipient's resistances, the luck gap on a harmful
+    state, and both battlers' fate.
+  - Updated `<forceCritProcs>` to land every chance roll a critical hit carries: the skill's own Add State and Remove
+    State effects and J-SkillExtend's on-hit tags, as well as the on-crit states.
+  - Fixed bug with on-crit states recording the skill sharing the state's id as their source, rather than the skill
+    that crit.
+  - Requires J-ABS 4.30.0.
 ### 1.5.0
   - Its tags are described in words. The base critical reduction now applies and defaults to 0, and SDP critical bonuses
     are no longer 100 times too small.

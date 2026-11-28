@@ -1,12 +1,13 @@
 //region ResourceHitManager
 /**
- * Manages damage-linked resource mutations for J-Resources-ABS.
+ * Manages combat-linked resource mutations for J-Resources-ABS.
  *
  * On-attack effects aggregate tags from both the executing skill and the caster's
- * traited sources (actor/class/equip/states) and apply gains to the caster.
- * When-hit effects aggregate tags from the target's traited sources and apply
- * gains to the target. Negative net totals are clamped by the engine's own
- * gainHp/Mp/Tp calls.
+ * traited sources (actor/class/equip/states) and apply gains to the caster for every
+ * hit the skill lands. On-cast effects aggregate the same way and apply gains to the
+ * caster once each time it executes a skill, hit or miss. When-hit effects aggregate
+ * tags from the target's traited sources and apply gains to the target. Negative net
+ * totals are clamped by the engine's own gainHp/Mp/Tp calls.
  */
 class ResourceHitManager
 {
@@ -43,6 +44,32 @@ class ResourceHitManager
     if (hpGain !== 0) caster.gainHpFromResource(hpGain);
     if (mpGain !== 0) caster.gainMpFromResource(mpGain);
     if (tpGain !== 0) caster.gainTpFromResource(tpGain);
+  }
+
+  /**
+   * Applies all on-cast resource gains to the caster, once each time it executes a skill.<br/>
+   * Called as the skill's costs are paid, so it fires whether or not the skill goes on to land a hit, and only once
+   * however many actions or targets the skill goes on to have. Tags are read from both the executing skill and the
+   * caster's traited sources (actor/class/equip/states), then summed before being applied, so a negative total on a
+   * state the caster carries taxes every skill it uses.
+   * @param {JABS_Battler} caster The battler executing the skill.
+   * @param {JABS_Action} action The action whose skill is being paid for.
+   */
+  static applyOnCastEffects(caster, action)
+  {
+    // the gains land on the battler underneath the map battler, read against the skill it is executing.
+    const battler = caster.getBattler();
+    const skill = action.getBaseSkill();
+
+    // total each resource across the skill and the caster's own sources.
+    const hpGain = ResourceHitManager.onCastHpGain(battler, skill);
+    const mpGain = ResourceHitManager.onCastMpGain(battler, skill);
+    const tpGain = ResourceHitManager.onCastTpGain(battler, skill);
+
+    // apply only the resources that actually move.
+    if (hpGain !== 0) battler.gainHpFromResource(hpGain);
+    if (mpGain !== 0) battler.gainMpFromResource(mpGain);
+    if (tpGain !== 0) battler.gainTpFromResource(tpGain);
   }
 
   /**
@@ -124,6 +151,66 @@ class ResourceHitManager
   }
 
   //endregion on-attack
+
+  //region on-cast
+  /**
+   * Calculates the HP gain for the caster from on-cast tags.
+   * Aggregates from both the executing skill and the caster's traited sources.
+   * @param {Game_Actor|Game_Enemy} caster The caster of the skill.
+   * @param {RPG_Skill} skill The skill being executed.
+   * @returns {number}
+   */
+  static onCastHpGain(caster, skill)
+  {
+    return ResourceHitManager.#gainBySkillAndSources(
+      caster,
+      skill,
+      J.RESOURCES.EXT.ABS.RegExp.OnCastHpGainFlat,
+      J.RESOURCES.EXT.ABS.RegExp.OnCastHpGainPercent,
+      J.RESOURCES.EXT.ABS.RegExp.OnCastHpGainFormula,
+      caster.mhp
+    );
+  }
+
+  /**
+   * Calculates the MP gain for the caster from on-cast tags.
+   * Aggregates from both the executing skill and the caster's traited sources.
+   * @param {Game_Actor|Game_Enemy} caster The caster of the skill.
+   * @param {RPG_Skill} skill The skill being executed.
+   * @returns {number}
+   */
+  static onCastMpGain(caster, skill)
+  {
+    return ResourceHitManager.#gainBySkillAndSources(
+      caster,
+      skill,
+      J.RESOURCES.EXT.ABS.RegExp.OnCastMpGainFlat,
+      J.RESOURCES.EXT.ABS.RegExp.OnCastMpGainPercent,
+      J.RESOURCES.EXT.ABS.RegExp.OnCastMpGainFormula,
+      caster.mmp
+    );
+  }
+
+  /**
+   * Calculates the TP gain for the caster from on-cast tags.
+   * Aggregates from both the executing skill and the caster's traited sources.
+   * @param {Game_Actor|Game_Enemy} caster The caster of the skill.
+   * @param {RPG_Skill} skill The skill being executed.
+   * @returns {number}
+   */
+  static onCastTpGain(caster, skill)
+  {
+    return ResourceHitManager.#gainBySkillAndSources(
+      caster,
+      skill,
+      J.RESOURCES.EXT.ABS.RegExp.OnCastTpGainFlat,
+      J.RESOURCES.EXT.ABS.RegExp.OnCastTpGainPercent,
+      J.RESOURCES.EXT.ABS.RegExp.OnCastTpGainFormula,
+      caster.mtp
+    );
+  }
+
+  //endregion on-cast
 
   //region when-hit
   /**

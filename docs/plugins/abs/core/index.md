@@ -64,7 +64,7 @@
 * [On Evade Apply](notetags/skills/on-evade-apply.md) - The tag defining a state a battler may inflict on the attacker who missed it.
 * [On Evade Apply Self](notetags/skills/on-evade-apply-self.md) - The tag defining a state a battler may apply to itself when it evades an incoming attack.
 * [On Evade Execute](notetags/skills/on-evade-execute.md) - The tag defining a skill a battler may fire when it evades an incoming attack.
-* [On-Chance Roll Manipulation (Lucky/Cursed Rolls)](notetags/skills/on-chance-roll-manipulation-lucky-cursed-rolls.md) - The tags adding extra rolls to either side of an on-chance roll contest, or bypassing it entirely.
+* [On-Chance Roll Manipulation (Lucky/Cursed Rolls)](notetags/skills/on-chance-roll-manipulation-lucky-cursed-rolls.md) - The tags handing a battler good or bad fate on on-chance rolls, or bypassing the roll entirely.
 * [Encore Repeats (Bonus Proc Executions)](notetags/skills/encore-repeats-bonus-proc-executions.md) - The tag defining how many extra times a battler's successful on-chance procs execute.
 * [Accumulate Mode](notetags/skills/accumulate-mode.md) - The tag counting every positive roll in a chance-roll contest instead of stopping at the first success.
 * [Skill History Bonus](notetags/skills/skill-history-bonus.md) - The tags applying a damage multiplier based on a battler's recent skill execution history.
@@ -77,6 +77,7 @@
 * [Bonus Damage](notetags/skills/bonus-damage.md) - The tags adding an unconditional percent damage bonus, caster-wide or to a single skill.
 * [Bonus Damage If State Type](notetags/skills/bonus-damage-if-state-type.md) - The tag adding bonus damage while the target has any active state of a given type.
 * [Bonus Damage per State Type](notetags/skills/bonus-damage-per-state-type.md) - The tag adding bonus damage for every active state of a given type on the target.
+* [Pierce Damage Rate If State Type](notetags/skills/pierce-damage-rate-if-state-type.md) - The tag letting a battler's hits ignore a target's PDR and MDR resistance while it carries any active state of a given type.
 * [Bonus Damage If Self State](notetags/skills/bonus-damage-if-self-state.md) - The tags adding bonus damage while the caster itself has a specific state active.
 * [Bonus Damage per State Stack](notetags/skills/bonus-damage-per-state-stack.md) - The tags adding bonus damage per stack of one specific state on the target.
 * [Bonus Damage for My State Count](notetags/skills/bonus-damage-for-my-state-count.md) - The tags adding bonus damage for every distinct state the caster has applied to the target.
@@ -118,11 +119,12 @@
 * [Use on Pickup](notetags/loot/use-on-pickup.md) - The tag making a dropped item perform as if used on the player who picks it up.
 * [Expiration](notetags/loot/expiration.md) - The tag overriding how long a specific loot drop persists on the map.
 * [Dynamically Spawning Loot](notetags/loot/dynamically-spawning-loot.md) - The plugin command for generating and spawning loot at any map location.
-* [Negative](notetags/states/negative.md) - The classifier informing the AI that a state is harmful.
+* [Negative](notetags/states/negative.md) - The classifier marking a state as harmful, for the AI, for immunity, and for rolls no action aims.
 * [Rooted](notetags/states/rooted.md) - The tag locking a battler's movement while the state is applied.
 * [Disabled](notetags/states/disabled.md) - The tag locking a battler's basic attacks while the state is applied.
 * [Muted](notetags/states/muted.md) - The tag locking a battler's combat skills while the state is applied.
 * [Paralyzed](notetags/states/paralyzed.md) - The tag locking a battler's movement, basic attacks and combat skills all at once.
+* [Immunity to Fate](notetags/states/immune-to-fate.md) - The tag setting a state apart from fate, so every roll for it is one plain roll no lucky, cursed or repeating effect touches.
 * [State-Application Immunity & Resistance](notetags/states/state-application-immunity-resistance.md) - The tags blocking states from being applied to a battler, or reducing the chance they land.
 * [No Damage](notetags/states/no-damage.md) - The tag letting a battler be healed but never hurt.
 * [Skill Transform](notetags/states/skill-transform.md) - The tag transforming one equipped skill into another at runtime.

@@ -33,6 +33,23 @@ Object.defineProperty(RPG_State.prototype, 'removeOnSkillResolutionRules', {
 });
 
 /**
+ * Parsed {@link J.PASSIVE.EXT.CONDITIONAL.RegExp.ToggleStateOnSkillExecution} tuples from this state row.<br/>
+ * Each tuple is {@code [stateId, stypeId]}: the state a skill of that type costing MP arms or spends;
+ * {@code stypeId} 0 matches any skill type.
+ * @type {Array<[number, number]>}
+ */
+Object.defineProperty(RPG_State.prototype, 'toggleStateOnSkillExecutionRules', {
+  get()
+  {
+    // pull every skill-execution toggle tuple from notes on this state row.
+    return RPGManager.getArraysFromNotesByRegex(
+      this,
+      J.PASSIVE.EXT.CONDITIONAL.RegExp.ToggleStateOnSkillExecution
+    );
+  },
+});
+
+/**
  * Parsed {@link J.PASSIVE.EXT.CONDITIONAL.RegExp.RemoveStateOnMove} tuples from this state row.<br/>
  * Each tuple is {@code [stateId]}; when the owning battler moves, that state is stripped.
  * @type {any[][]}

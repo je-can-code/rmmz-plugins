@@ -11,6 +11,9 @@ All the versioning and history of changes live here.
 
 ## The Actual Changelog
 
+### 1.3.0
+  - Added `<on-cast-hp-gain>`, `<on-cast-mp-gain>` and `<on-cast-tp-gain>`, which grant or take resources once each time
+    the caster executes a skill, hit or miss.
 ### 1.2.0
   - Added natural growth tags for lifesteal, manasteal and techsteal (lst, mst, tst).
 ### 1.1.0

@@ -117,7 +117,15 @@ Game_Character.prototype.canHandleRegionStates = function()
 };
 
 /**
- * Applies all relevant region states based on their regionId.
+ * Applies all relevant region states based on their regionId.<br/>
+ * Each tagged state is one the battler standing on the region gives itself, so its chance is rolled through
+ * {@link JABS_Fate.resolveStateProcCount} with that battler as both the roller and the recipient: the tag's chance
+ * meets its own resistances to the state, its fate counts once, and it holds no luck over itself.<br/>
+ * Every landing adds the state through {@link Game_Battler#addState}, credited to the battler itself, exactly as any
+ * other application would: J-ABS checks the battler's immunities on each one, starts the state on a battler that does
+ * not carry it yet, and reapplies it by the state's own rule- refreshed, extended or stacked- on a battler that
+ * already does, whether the earlier landing came in this proc or a previous one. The tag's animation plays only when
+ * the state landed at least once.
  */
 Game_Character.prototype.applyRegionStates = function()
 {
@@ -141,32 +149,20 @@ Game_Character.prototype.applyRegionStates = function()
       animationId
     } = regionStateData;
 
-    // get the calculated rate for the state being applied.
-    const calculatedChance = battler.stateRate(stateId) * chance;
+    // the one standing on the region rolls for the state and receives it, so the tag's chance meets that battler's
+    // own State Rate and <stateTypeResist> for the state, and its fate counts once with no luck held over itself.
+    // a region carries no skill, so the battler-wide lucky and cursed rolls are the only rolls it brings.
+    const procCount = JABS_Fate.resolveStateProcCount(battler, battler, stateId, chance);
 
-    // this is a purely self-scoped proc- the one stepping on the region is both the roller and
-    // the recipient of the region-state application roll.
-    const state = $dataStates.at(stateId);
-    const positiveRolls = 1 + battler.getPositiveRollsForSkill(state);
-    const negativeRolls = battler.getNegativeRollsForSkill(state);
-
-    // resolve how many times this proc's action should execute (Accumulate Mode/Encore aware).
-    const procCount = RPGManager.resolveProcCount(battler, calculatedChance, positiveRolls, negativeRolls);
+    // a roll that landed nothing abandons the whole proc, its animation included.
     if (procCount === 0) return;
 
-    // same entry point as j-skill-extend applyStates; resetStateCounts on reapply still routes to
-    // addJabsState- apply once per success, re-checking affected status each time so a second
-    // success within the same proc stacks deeper instead of re-adding fresh.
+    // every landing goes through the battler's own add, credited to itself, which J-ABS routes to its tracker: the
+    // immunities are checked each time, a state the battler does not carry yet starts fresh, and one it already
+    // carries is refreshed, extended or stacked by its own reapplication rule rather than started over.
     for (let i = 0; i < procCount; i++)
     {
-      if (battler.isStateAffected(stateId))
-      {
-        battler.resetStateCounts(stateId, battler);
-      }
-      else
-      {
-        battler.addState(stateId, battler);
-      }
+      battler.addState(stateId, battler);
     }
 
     // check if there is a valid animation to play.

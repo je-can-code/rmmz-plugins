@@ -28,4 +28,20 @@ JABS_Engine.prototype.postPrimaryBattleEffects = function(action, target)
   // apply resource gains to the target from when-hit source tags.
   ResourceHitManager.applyWhenHitEffects(action, target);
 };
+
+/**
+ * Extends {@link #paySkillCosts}.<br/>
+ * Also applies on-cast resource gains to the caster, once for every skill it executes: as the skill's costs are paid,
+ * before it has hit or missed anything.
+ */
+J.RESOURCES.EXT.ABS.Aliased.JABS_Engine.set('paySkillCosts', JABS_Engine.prototype.paySkillCosts);
+JABS_Engine.prototype.paySkillCosts = function(caster, action)
+{
+  // perform original logic.
+  J.RESOURCES.EXT.ABS.Aliased.JABS_Engine.get('paySkillCosts')
+    .call(this, caster, action);
+
+  // apply resource gains to the caster from on-cast tags, hit or miss.
+  ResourceHitManager.applyOnCastEffects(caster, action);
+};
 //endregion JABS_Engine

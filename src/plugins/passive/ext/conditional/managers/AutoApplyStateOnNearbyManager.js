@@ -10,11 +10,18 @@ import AutoRuleManager from './AutoRuleManager.js';
  * on the condition kind. This enables aura-style effects where the bearer passively afflicts
  * surrounding targets on a pulse timer.
  *
+ * Every pulse rolls for the state on each target at the aura's full strength, through the same roll
+ * as any other state applied by chance, {@link JABS_Fate.resolveStateProcCount}. The bearer is the
+ * roller: each target's resistances and the luck between the two decide how likely it is to land,
+ * the state's own {@code <type:negative>} classifier decides whether a target's curse helps it land
+ * or stands in its way, and the bearer's Accumulate Mode and Encore can land it more than once in a
+ * single pulse.
+ *
  * Only proximity condition kinds ({@code enemiesNearby}/{@code alliesNearby} and their
  * {@code Below} counterparts) are meaningful here; other condition kinds have no proximity
  * target set to iterate and will not fire. Note that a {@code *Below} tuple with a threshold
  * of 1 (the "nothing nearby" case) can gate-pass while resolving zero targets — that pulse
- * simply applies to nobody. Thresholds of 2+ still land on the stragglers under the count
+ * simply rolls for nobody. Thresholds of 2+ aim at whichever stragglers remain under the count
  * (e.g. "not swarmed by 5+ enemies, but hit whichever 1-2 are still around").
  */
 class AutoApplyStateOnNearbyManager extends AutoRuleManager
@@ -26,22 +33,38 @@ class AutoApplyStateOnNearbyManager extends AutoRuleManager
   static get rulesProperty() { return 'autoApplyStateOnNearbyRules'; }
 
   /**
-   * Pushes a real combat state onto the target battler through the JABS addState path.
+   * Rolls the aura's state against one nearby target, and pushes it onto that target through the
+   * JABS addState path once for every time it lands.
+   *
+   * The bearer rolls at the aura's full strength through {@link JABS_Fate.resolveStateProcCount}:
+   * the target's State Rate and {@code <stateTypeResist>}, and the luck between the two battlers,
+   * shape the chance; the state's own {@code <type:negative>} classifier decides whether the
+   * target's curse is one more chance for it to land or one more hurdle for it to clear; and the
+   * bearer's Accumulate Mode and Encore decide how many times it lands. A state the target cannot
+   * take at all is never rolled for, and every landing checks the target's immunities on its own.
    *
    * The battler parameter here is the nearby target, not the rule bearer — the bearer's
    * cooldown is managed separately in {@link _tryDispatchProximityRule}.
    * @param {Game_Actor|Game_Enemy} battler - The nearby battler receiving the state.
    * @param {number} stateId - The database id of the state to apply.
-   * @returns {boolean} - True when addState was called and the state was addable.
+   * @param {Game_Actor|Game_Enemy} bearer - The battler whose aura this is, who rolls for the state to land.
+   * @returns {boolean} - True when the state was rolled for against this target, whether or not it landed.
    */
-  static dispatch(battler, stateId)
+  static dispatch(battler, stateId, bearer)
   {
-    // passive-tracked states cannot be layered on as combat states.
+    // a state the target cannot take at all- a passive it holds, or one it is immune to- is never rolled for.
     if (battler.isStateAddable(stateId) === false) return false;
 
-    // apply the state with the target as the nominal source for JABS state tracking.
-    battler.addState(stateId, battler);
+    // the bearer rolls the aura's state at its full strength against this target's resistances.
+    const procCount = JABS_Fate.resolveStateProcCount(bearer, battler, stateId, 100);
 
+    // apply the state once per landing, with the target as the nominal source for JABS state tracking.
+    for (let i = 0; i < procCount; i++)
+    {
+      battler.addState(stateId, battler);
+    }
+
+    // the state was rolled for, which is what a pulse spends its cooldown on, whether or not it landed.
     return true;
   }
 
@@ -49,8 +72,12 @@ class AutoApplyStateOnNearbyManager extends AutoRuleManager
    * Overrides the base proximity handler to redirect state application onto nearby battlers.
    *
    * The cooldown is tracked on the rule bearer so the pulse cadence is consistent regardless
-   * of how many targets are in range. The state is applied to every nearby battler in the
-   * resolved set each time the cooldown elapses.
+   * of how many targets are in range. Each time the cooldown elapses, the state is rolled for on
+   * every nearby battler in the resolved set, and the cooldown starts over as soon as any of them
+   * was rolled for, whether or not it landed: a pulse spends its cooldown on the attempt, so a
+   * target's resistances thin out the pulses that land rather than earning the aura a fresh roll
+   * on the very next frame. A pulse whose targets cannot take the state at all rolls for nobody,
+   * and leaves the cooldown where it was.
    * @param {Game_Actor|Game_Enemy} battler - The battler whose proximity is evaluated.
    * @param {RPG_BaseItem} source - The database row that declared the rule.
    * @param {number} tupleIndex - Zero-based index of this tuple on the source row.
@@ -80,7 +107,7 @@ class AutoApplyStateOnNearbyManager extends AutoRuleManager
     // skip tuples with invalid cooldown values.
     if (Number.isNaN(cooldownFrames) || cooldownFrames < 0) return;
 
-    // collect the nearby battlers that will receive the state — this is also the set the gate counts.
+    // collect the nearby battlers the state is rolled for — this is also the set the gate counts.
     const nearbyJabsBattlers = this.nearbyBattlersForKind(battler, kind, triggerTiles);
 
     // the proximity gate fails when this kind's comparison direction is not satisfied.
@@ -92,14 +119,14 @@ class AutoApplyStateOnNearbyManager extends AutoRuleManager
     // capture the current frame count as the reference point for cooldown evaluation.
     const now = Graphics.frameCount;
 
-    // read the frame this rule last successfully pulsed on this bearer.
+    // read the frame this rule last pulsed on this bearer.
     const lastFrame = battler.getAutoRuleLastFrame(ruleKey);
 
     // the cooldown window has not yet elapsed — skip this pulse.
     if (lastFrame > 0 && (now - lastFrame) < cooldownFrames) return;
 
-    // apply the state to every nearby target that is currently in range.
-    let anyDispatched = false;
+    // roll the state for every nearby target that is currently in range.
+    let anyRolled = false;
     nearbyJabsBattlers.forEach(jabsTarget =>
     {
       // unwrap the JABS battler to the underlying Game_Battler for addState.
@@ -108,12 +135,12 @@ class AutoApplyStateOnNearbyManager extends AutoRuleManager
       // skip targets whose underlying battler cannot be resolved.
       if (!target) return;
 
-      // dispatch the state onto this target and track whether any landed.
-      if (this.dispatch(target, id) === true) anyDispatched = true;
+      // roll the state for this target with the bearer rolling, and note whether it could be rolled for at all.
+      if (this.dispatch(target, id, battler) === true) anyRolled = true;
     });
 
-    // stamp the bearer's cooldown only when at least one dispatch succeeded.
-    if (anyDispatched === true)
+    // stamp the bearer's cooldown once any target was rolled for, whether or not the state landed.
+    if (anyRolled === true)
     {
       battler.setAutoRuleLastFrame(ruleKey, now);
     }

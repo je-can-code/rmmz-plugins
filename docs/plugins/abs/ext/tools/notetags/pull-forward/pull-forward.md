@@ -13,6 +13,8 @@ The inverse of [gap close](../gap-closing/gap-closing.md): instead of the caster
 pulled toward the caster. Unlike gap close, this is NOT key-gated- it behaves like
 [knockback](../../../../core/notetags/skills/knockback.md) in reverse, and any target without enough
 [`<knockbackResist>`](../../../../core/notetags/using-skills/knockback-resistance.md) to fully negate it gets pulled.
+A boss fight participant resists knockback in full, so it is never pulled. A pull that moves its target counts as a
+knockback, and announces itself the same way, so `onKnockback` rules fire on it.
 
 ## NOTE ABOUT GAP CLOSING
 

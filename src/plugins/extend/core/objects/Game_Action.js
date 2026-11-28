@@ -51,36 +51,50 @@ Game_Action.prototype.setItemObject = function(itemObject)
 
 /**
  * Extends {@link #apply}.<br/>
- * Also applies on-hit states.
+ * Also applies on-hit states.<br/>
+ * The `<applyStateWhenAfflicted>` family is judged before the original logic runs. The hit's own state effects land
+ * inside it, so a target judged afterwards would already carry a state this very hit just gave it, and a gate meant to
+ * reward an earlier affliction would pass on the first hit every time.
  */
 J.EXTEND.Aliased.Game_Action.set('apply', Game_Action.prototype.apply);
 Game_Action.prototype.apply = function(target)
 {
+  // judge the afflicted-gated states against the target as it stands before this hit lands anything.
+  const afflictedGatedStates = this.whenAfflictedApplyStatesAgainst(target);
+
   // perform original logic.
   J.EXTEND.Aliased.Game_Action.get('apply')
     .call(this, target);
 
   // apply our on-hit self-states if we have any.
-  this.applyOnHitStateEffects(target);
+  this.applyOnHitStateEffects(target, afflictedGatedStates);
 };
 
 /**
  * Applies all on-hit state modifications, such as adding or removing states to self or the target.
  * @param {Game_Actor|Game_Enemy} target The target being hit with the action.
+ * @param {[number, number, number][]} afflictedGatedStates The `<applyStateWhenAfflicted>` entries the target
+ * qualified for before the hit landed, as `[stateId, necessaryStateId, chance]`.
  */
-Game_Action.prototype.applyOnHitStateEffects = function(target)
+Game_Action.prototype.applyOnHitStateEffects = function(target, afflictedGatedStates)
 {
   // if we cannot apply on-hit state effects, then do not.
   if (this.canApplyOnHitStateEffects(target) === false) return;
 
+  // the self-states this hit carries roll with the roller its rolls against the struck battler get.
+  const struckRoller = this.chanceRollerAgainst(target);
+
   // apply our on-hit self-states if we have any.
-  this.applyOnHitSelfStates();
+  this.applyOnHitSelfStates(struckRoller);
 
   // apply our on-hit lose-states if we have any.
-  this.applyOnHitLoseStates();
+  this.applyOnHitLoseStates(struckRoller);
 
   // apply our on-hit apply-states (with optional duration/stack overrides) if we have any.
   this.applyOnHitApplyStates(target);
+
+  // apply our on-hit afflicted-gated states, the ones the target qualified for before the hit landed.
+  this.applyOnHitWhenAfflictedStates(target, afflictedGatedStates);
 
   // apply our on-hit strip-states if we have any.
   this.applyOnHitStripStates(target);
@@ -107,12 +121,15 @@ Game_Action.prototype.canApplyOnHitStateEffects = function(target)
 };
 
 /**
- * Applies all applicable on-hit self states.
+ * Applies all applicable on-hit self states.<br/>
+ * They roll with the roller this hit's rolls against the struck battler get, so whatever guarantees those rolls,
+ * such as a critical hit with `<forceCritProcs>`, guarantees these too.
+ * @param {Game_Battler|object} positiveRoller Whose fate overrides, Accumulate Mode and Encore count the landings.
  */
-Game_Action.prototype.applyOnHitSelfStates = function()
+Game_Action.prototype.applyOnHitSelfStates = function(positiveRoller)
 {
   // apply all on-hit states to oneself.
-  this.applyStates(this.subject(), this.onHitSelfStates());
+  this.applyStates(this.subject(), this.onHitSelfStates(), positiveRoller);
 };
 
 /**
@@ -132,12 +149,14 @@ Game_Action.prototype.onHitSelfStates = function()
 };
 
 /**
- * Removes all applicable on-hit lose states.
+ * Removes all applicable on-hit lose states.<br/>
+ * They roll with the roller this hit's rolls against the struck battler get, the same as the on-hit self states.
+ * @param {Game_Battler|object} positiveRoller Whose fate overrides settle each roll.
  */
-Game_Action.prototype.applyOnHitLoseStates = function()
+Game_Action.prototype.applyOnHitLoseStates = function(positiveRoller)
 {
   // lose all on-hit states from oneself.
-  this.loseStates(this.subject(), this.onHitLoseStates());
+  this.loseStates(this.subject(), this.onHitLoseStates(), positiveRoller);
 };
 
 /**
@@ -214,10 +233,12 @@ Game_Action.prototype.onHitRemoveStates = function()
  * ({@code <applyState>}). Caster-wide entries fire first; skill-scoped entries
  * fire second and win on any same-state conflict via force-replace semantics.
  *
- * Each entry is evaluated independently: the chance is rolled, and on success a
- * {@link JABS_StateOverrides} is constructed and passed to
- * {@link Game_Battler#addStateWithOverrides}.
- * Target state resistance is still respected inside {@link Game_Battler#handleAddingJabsState}.
+ * Each entry rolls on its own, as this action's state roll through {@link #resolveStateProcCountAgainst}: the
+ * authored percent meets the target's State Rate traits and {@code <stateTypeResist>}, then the luck between the
+ * caster and the target, and then this action's fate decides how many times it lands. Every landing carries the
+ * entry's {@link JABS_StateOverrides} to {@link Game_Battler#addStateWithOverrides}, so Accumulate Mode and Encore
+ * land the authored duration and stacks each time, and the target's immunities are checked on each one inside
+ * {@link Game_Battler#handleAddingJabsState}.
  * @param {Game_Actor|Game_Enemy} target The target being hit with the action.
  */
 Game_Action.prototype.applyOnHitApplyStates = function(target)
@@ -244,21 +265,95 @@ Game_Action.prototype.applyOnHitApplyStates = function(target)
   // iterate over every entry and conditionally apply.
   allEntries.forEach(([stateId, chance, duration = null, stacks = null]) =>
   {
-    // roll the chance; if it doesn't pass, this state does not apply on this hit.
-    if (!RPGManager.chanceIn100(chance)) return;
+    // roll the authored percent against the target's resistances, the luck between the two battlers and this
+    // action's fate; the count is how many times the state lands on this hit, and zero means it never did.
+    const procCount = this.resolveStateProcCountAgainst(target, stateId, chance);
 
-    // build the overrides object from whatever the tag provided.
+    // build the overrides object from whatever the tag provided; every landing carries the same one.
     const overrides = new JABS_StateOverrides(duration, stacks);
 
-    // apply the state to the target with the overrides; resistance is checked inside.
-    target.addStateWithOverrides(stateId, attacker, overrides, this.item());
+    // apply the state to the target once per landing with the overrides; immunity is checked on each one inside.
+    for (let i = 0; i < procCount; i++)
+    {
+      target.addStateWithOverrides(stateId, attacker, overrides, this.item());
+    }
+  });
+};
+
+/**
+ * Gets every afflicted-gated apply-state this action carries, drawing from the same two places
+ * {@link #applyOnHitApplyStates} does: the caster's full notes ({@code <applyStateWhenAfflicted>}) and the executing
+ * skill ({@code <thisApplyStateWhenAfflicted>}). Caster-wide entries come first and skill-scoped entries last, the
+ * order those two land their own variants in. Each entry is a `[stateId, necessaryStateId, chance]` tuple.
+ * @returns {[number, number, number][]}
+ */
+Game_Action.prototype.whenAfflictedApplyStates = function()
+{
+  // caster-wide entries come from every note source the caster carries: equipment, states, skills and the rest.
+  const notes = this.subject()
+    .getAllNotes();
+
+  const casterEntries = RPGManager.getArraysFromAllNotesByRegex(notes, J.EXTEND.RegExp.ApplyStateWhenAfflicted);
+
+  // skill-scoped entries come from the executing skill alone.
+  const skillEntries = RPGManager.getArraysFromNotesByRegex(this.item(), J.EXTEND.RegExp.ThisApplyStateWhenAfflicted);
+
+  // caster-wide first, skill-scoped last.
+  return [ ...casterEntries, ...skillEntries ];
+};
+
+/**
+ * Gets the afflicted-gated apply-states the target qualifies for right now: the ones whose necessary state it is
+ * currently afflicted with.<br/>
+ * {@link #apply} asks this before the hit lands anything, so a necessary state the hit itself is about to add never
+ * counts. Whoever put the necessary state there does not matter, only that it was already there. Each entry is a
+ * `[stateId, necessaryStateId, chance]` tuple.
+ * @param {Game_Actor|Game_Enemy} target The battler about to be hit.
+ * @returns {[number, number, number][]}
+ */
+Game_Action.prototype.whenAfflictedApplyStatesAgainst = function(target)
+{
+  // keep only the entries whose necessary state the target already carries.
+  return this.whenAfflictedApplyStates()
+    .filter(([ , necessaryStateId ]) => target.isStateAffected(necessaryStateId));
+};
+
+/**
+ * Applies the afflicted-gated apply-states the target qualified for before the hit landed.<br/>
+ * Each entry rolls as this action's state roll through {@link #resolveStateProcCountAgainst}, the same roll an
+ * {@code <applyState>} entry makes: the authored percent meets the target's State Rate traits and
+ * {@code <stateTypeResist>}, then, for a harmful state, the luck between the caster and the target, and then this
+ * action's fate decides how many times it lands. Every landing adds the state through {@link Game_Battler#addState},
+ * attributed to the caster with the executing skill as its source, so the target's immunities are checked on each one.
+ * @param {Game_Actor|Game_Enemy} target The battler that was hit.
+ * @param {[number, number, number][]} qualifyingEntries The entries the target qualified for before the hit landed,
+ * as `[stateId, necessaryStateId, chance]`.
+ */
+Game_Action.prototype.applyOnHitWhenAfflictedStates = function(target, qualifyingEntries)
+{
+  // the caster applies every state, and the skill being executed is the source each one records.
+  const attacker = this.subject();
+  const skill = this.item();
+
+  // roll for each qualifying entry on its own.
+  qualifyingEntries.forEach(([ stateId, , chance ]) =>
+  {
+    // the count is how many times the state lands on this hit, and zero means it never did.
+    const procCount = this.resolveStateProcCountAgainst(target, stateId, chance);
+
+    // apply the state once per landing; immunity is checked on each one inside.
+    for (let i = 0; i < procCount; i++)
+    {
+      target.addState(stateId, attacker, skill);
+    }
   });
 };
 
 /**
  * Extends {@link #applyItemUserEffect}.<br/>
  * Also applies on-cast target-affecting states (strip/remove).
- * On-cast self states (self/lose) fire once at press-time via {@link JABS_Engine#handleOnCastStateEffects} instead.
+ * On-cast self states (self/lose) fire once at press-time instead, through this plugin's extension of
+ * {@link JABS_Engine#handleOnCastStateEffects}.
  */
 J.EXTEND.Aliased.Game_Action.set('applyItemUserEffect', Game_Action.prototype.applyItemUserEffect);
 Game_Action.prototype.applyItemUserEffect = function(target)
@@ -277,7 +372,8 @@ Game_Action.prototype.applyItemUserEffect = function(target)
 /**
  * Toggles all {@code <toggleOnExecute:STATE_ID>} states on the caster: for each tagged state id,
  * removes it if the caster currently has it, or adds it if they don't. Fires once at press-time
- * (see {@link JABS_Engine#handleOnCastStateEffects}), same as the on-cast self-state family below.
+ * (see this plugin's extension of {@link JABS_Engine#handleOnCastStateEffects}), same as the on-cast
+ * self-state family below.
  * There is no chance roll; this always triggers when the skill executes.
  */
 Game_Action.prototype.applyToggleOnExecuteStates = function()
@@ -481,12 +577,15 @@ Game_Action.prototype.onCastExecuteSkills = function()
 /**
  * Rolls and force-executes a batch of already-gated `[skillId, chance]` payloads through JABS,
  * sharing the single depth guard between both the unconditional and state-gated
- * {@code onCastExecuteSkill} families so a mixed chain still can't loop forever.
+ * {@code onCastExecuteSkill} families so a mixed chain still can't loop forever.<br/>
+ * Each payload rolls once, by the caster, through {@link Game_Action#rollOnCastExecuteSkill}, and a payload whose
+ * roll lands is force-executed once.
+ * @param {Game_Action} action The action being cast, whose caster rolls for every payload.
  * @param {[number, number][]} payloads Tuples of `[skillId, chance]` that have already passed
  * whatever gate (if any) applies to their source tag.
  * @param {JABS_Battler} caster The JABS battler executing this cast.
  */
-function dispatchOnCastExecuteSkillPayloads(payloads, caster)
+function dispatchOnCastExecuteSkillPayloads(action, payloads, caster)
 {
   // nothing to do if no tags were found.
   if (payloads.length === 0) return;
@@ -503,10 +602,10 @@ function dispatchOnCastExecuteSkillPayloads(payloads, caster)
     // roll each payload independently and force-execute the skill on success.
     payloads.forEach(([skillId, chance]) =>
     {
-      // skip the roll entirely when it fails; nothing to execute this tag this cast.
-      if (!RPGManager.chanceIn100(chance)) return;
+      // skip the payload entirely when the caster's roll fails; nothing to execute this tag this cast.
+      if (action.rollOnCastExecuteSkill(chance) === false) return;
 
-      // force the payload skill onto the map as a real, independent action.
+      // force the payload skill onto the map as a real, independent action, once.
       $jabsEngine.forceMapAction(caster, skillId, false);
     });
   }
@@ -518,15 +617,41 @@ function dispatchOnCastExecuteSkillPayloads(payloads, caster)
 }
 
 /**
+ * Rolls whether one {@code <onCastExecuteSkill>} or {@code <onCastExecuteSkillIfAfflicted>} payload executes on this
+ * cast.<br/>
+ * The caster rolls the payload's authored percent with its own fate alone, as it carries it with the skill being
+ * cast: one chance plus its lucky rolls, then its cursed rolls as hurdles the roll has to clear, the skill's own
+ * {@code <thisLuckyRolls>} and {@code <thisCursedRolls>} joining its battler-wide totals. Nothing is aimed at anyone
+ * yet, so no resistance and no other battler's fate weighs on it. The caster's {@code <veryLucky>} executes the
+ * payload every time, even at 0%, and its {@code <veryCursed>} never does, even at 100%.<br/>
+ * The answer is a single yes or no: a payload whose roll lands executes once, and Accumulate Mode and Encore never
+ * repeat it.
+ * @param {number} chance The payload's authored chance, as a percent from 0 to 100.
+ * @returns {boolean}
+ */
+Game_Action.prototype.rollOnCastExecuteSkill = function(chance)
+{
+  // the caster rolls for its own payload.
+  const caster = this.subject();
+
+  // the caster's own fate with the skill being cast: its chances, then the hurdles it has to clear.
+  const [ positiveRolls, negativeRolls ] = JABS_Fate.ownRolls(caster, this.item());
+
+  // one roll, which the caster's own fate overrides settle before any dice are thrown.
+  return RPGManager.fateOf100(caster, chance, positiveRolls, negativeRolls);
+};
+
+/**
  * Force-executes every qualifying {@code <onCastExecuteSkill>} payload through JABS, exactly once
- * at the moment of press. Each tag rolls its own chance independently, so a single cast can chain
- * into several follow-up skills at once.
+ * at the moment of press. Each tag rolls its own chance independently, with the caster's own fate,
+ * through {@link #rollOnCastExecuteSkill}, so a single cast can chain into several follow-up skills
+ * at once.
  * @param {JABS_Battler} caster The JABS battler executing this cast.
  */
 Game_Action.prototype.applyOnCastExecuteSkills = function(caster)
 {
   // grab every authored payload tuple from the executing skill and dispatch them, unconditionally.
-  dispatchOnCastExecuteSkillPayloads(this.onCastExecuteSkills(), caster);
+  dispatchOnCastExecuteSkillPayloads(this, this.onCastExecuteSkills(), caster);
 };
 
 /**
@@ -545,7 +670,8 @@ Game_Action.prototype.onCastExecuteSkillsIfAfflicted = function()
  * Force-executes every qualifying {@code <onCastExecuteSkillIfAfflicted>} payload through JABS,
  * exactly once at the moment of press, but only for tags whose required state is currently active
  * on the caster. Lets a skill fire one of several possible payloads depending on which state the
- * caster is carrying, without ever rolling or executing the ones that don't apply.
+ * caster is carrying, without ever rolling or executing the ones that don't apply. A payload that
+ * qualifies rolls exactly as its unconditional sibling does, through {@link #rollOnCastExecuteSkill}.
  * @param {JABS_Battler} caster The JABS battler executing this cast.
  */
 Game_Action.prototype.applyOnCastExecuteSkillsIfAfflicted = function(caster)
@@ -563,7 +689,7 @@ Game_Action.prototype.applyOnCastExecuteSkillsIfAfflicted = function(caster)
     .map(([ skillId, chance ]) => [ skillId, chance ]);
 
   // dispatch whatever survived the affliction gate through the shared roll-and-execute path.
-  dispatchOnCastExecuteSkillPayloads(qualifyingPayloads, caster);
+  dispatchOnCastExecuteSkillPayloads(this, qualifyingPayloads, caster);
 };
 
 /**
@@ -651,57 +777,99 @@ Game_Action.prototype.reactiveStateSources = function()
 };
 
 /**
- * Applies the given states to the target.
- * @param target {Game_Actor|Game_Enemy} The target to apply states to.
- * @param jabsOnChanceEffects {JABS_OnChanceEffect[]} The various states to potentially apply.
+ * Applies the given chance-based states to the target, which is the caster itself for every on-hit and on-cast
+ * self-state.<br/>
+ * Each state rolls as this action's state roll through {@link #resolveStateProcCountAgainst}: the effect's authored
+ * percent meets the target's own State Rate traits and {@code <stateTypeResist>}, then, for a harmful state, the luck
+ * between the caster and the target, and then this action's fate decides how many times it lands. A caster giving
+ * itself a state holds no luck over itself and brings its fate once. Every landing adds the state through
+ * {@link Game_Battler#addState},
+ * attributed to the caster, so Accumulate Mode and Encore can land it more than once and the target's immunities are
+ * checked on each one.<br/>
+ * Each landing records the skill being executed as the state's source skill, the way a skill's own state effect does.
+ * The effect names a state, never a skill, so a skill looked up by that id would be an unrelated row at best- and that
+ * row is what the state's slip amplification, spreading and expiry would go on to read.
+ * @param {Game_Actor|Game_Enemy} target The battler receiving the states; the caster itself for a self-state.
+ * @param {JABS_OnChanceEffect[]} jabsOnChanceEffects The states to roll for, each naming its state and percent chance.
+ * @param {Game_Battler|object|null=} positiveRoller Whose fate overrides, Accumulate Mode and Encore count the
+ * landings; null, the default, leaves it to {@link #chanceRollerAgainst}.
  */
-Game_Action.prototype.applyStates = function(target, jabsOnChanceEffects)
+Game_Action.prototype.applyStates = function(target, jabsOnChanceEffects, positiveRoller = null)
 {
   // if there are no effects, don't bother.
   if (jabsOnChanceEffects.length === 0) return;
 
+  // the caster applies every state, and the skill being executed is the source each one records.
+  const attacker = this.subject();
+  const skill = this.item();
+
   // iterate over each of them and see if we should apply them.
   jabsOnChanceEffects.forEach(jabsOnChanceEffect =>
   {
-    // the caster wants the state to stick; the target's own curse can undermine that success.
-    const attacker = this.subject();
-    const skill = jabsOnChanceEffect.baseSkill(attacker);
-    const positiveRolls = 1 + attacker.getPositiveRollsForSkill(skill);
-    const negativeRolls = target.getNegativeRolls();
+    // the effect names the state to apply and authors its chance as a percent.
+    const { skillId: stateId, chance } = jabsOnChanceEffect;
 
-    // resolve how many times this proc's action should execute (Accumulate Mode/Encore aware).
-    const procCount = jabsOnChanceEffect.resolveProcCount(positiveRolls, negativeRolls, attacker);
+    // roll the chance against the target's own resistances with this action's fate; zero means it never landed.
+    const procCount = this.resolveStateProcCountAgainst(target, stateId, chance, positiveRoller);
 
-    // apply the given state once per success, with the caster as the attacker.
+    // apply the given state once per landing, with the caster as the attacker and the executing skill as its source.
     for (let i = 0; i < procCount; i++)
     {
-      target.addState(jabsOnChanceEffect.skillId, attacker, skill);
+      target.addState(stateId, attacker, skill);
     }
   });
 };
 
 /**
- * Loses the given states from the target.
- * This consumes a single stack in JABS, or removes the whole state outside JABS.
- * @param target {Game_Actor|Game_Enemy} The target to lose states from.
- * @param jabsOnChanceEffects {JABS_OnChanceEffect[]} The various states to potentially lose.
+ * Rolls whether an on-chance state removal lands on the target: one stack lost or stripped, or the whole state
+ * removed.<br/>
+ * A removal meets no resistances. Its authored percent rolls with this action's fate against the target, as
+ * {@link #fateRollsAgainst} describes: a removal aimed at the caster's opponents is harm, so a cursed foe gives it one
+ * more chance to land for every curse it carries, while a removal aimed at anyone else is help, and has to clear
+ * every curse its target carries. A caster removing its own state brings its fate once. The roller's
+ * {@code <veryLucky>} and {@code <veryCursed>} settle the roll outright; that is the caster, unless
+ * {@link #chanceRollerAgainst} or the caller hands over a stand-in that guarantees it. A state carrying
+ * {@code <immuneToFate>}, as the target sees it, comes off on one plain roll instead, with no one's fate weighing in.
+ * @param {Game_Actor|Game_Enemy} target The battler losing the state; the caster itself for a lose-state.
+ * @param {JABS_OnChanceEffect} jabsOnChanceEffect The removal to roll, naming the state and its percent chance.
+ * @param {Game_Battler|object|null=} positiveRoller Whose fate overrides settle the roll; null, the default, leaves it
+ * to {@link #chanceRollerAgainst}.
+ * @returns {boolean}
  */
-Game_Action.prototype.loseStates = function(target, jabsOnChanceEffects)
+Game_Action.prototype.rollStateRemovalAgainst = function(target, jabsOnChanceEffect, positiveRoller = null)
+{
+  // a state immune to fate comes off on one plain roll, with no one's fate weighing in.
+  const state = target.state(jabsOnChanceEffect.skillId);
+  if (state.isImmuneToFate()) return RPGManager.chanceIn100(jabsOnChanceEffect.chance);
+
+  // the chances this action's fate gives the removal to land on the target, then the hurdles it has to clear.
+  const [ positiveRolls, negativeRolls ] = this.fateRollsAgainst(target);
+
+  // a caller's own roller wins; otherwise this action names the roller for its rolls against the target.
+  const roller = positiveRoller ?? this.chanceRollerAgainst(target);
+
+  // roll the dice, letting the roller's fate overrides settle it first.
+  return jabsOnChanceEffect.shouldTrigger(positiveRolls, negativeRolls, roller);
+};
+
+/**
+ * Loses the given states from the target, each on its own roll through {@link #rollStateRemovalAgainst}.
+ * Each one that lands consumes a single stack of its state, through {@link #loseState}.
+ * @param {Game_Actor|Game_Enemy} target The target to lose states from; the caster itself for a lose-state.
+ * @param {JABS_OnChanceEffect[]} jabsOnChanceEffects The various states to potentially lose.
+ * @param {Game_Battler|object|null=} positiveRoller Whose fate overrides settle each roll; null, the default, leaves
+ * it to {@link #chanceRollerAgainst}.
+ */
+Game_Action.prototype.loseStates = function(target, jabsOnChanceEffects, positiveRoller = null)
 {
   // if there are no effects, don't bother.
   if (jabsOnChanceEffects.length === 0) return;
 
-  // iterate over each of them and see if we should apply them.
+  // iterate over each of them and see if we should lose them.
   jabsOnChanceEffects.forEach(jabsOnChanceEffect =>
   {
-    // the caster wants the removal to succeed; the target's own curse can resist it.
-    const attacker = this.subject();
-    const skill = jabsOnChanceEffect.baseSkill(attacker);
-    const positiveRolls = 1 + attacker.getPositiveRollsForSkill(skill);
-    const negativeRolls = target.getNegativeRolls();
-
-    // roll the dice to see if the on-chance effect applies.
-    if (jabsOnChanceEffect.shouldTrigger(positiveRolls, negativeRolls, attacker))
+    // roll the dice with this action's fate against the target to see if the on-chance effect applies.
+    if (this.rollStateRemovalAgainst(target, jabsOnChanceEffect, positiveRoller))
     {
       // lose the given state from the target.
       this.loseState(target, jabsOnChanceEffect.skillId);
@@ -710,27 +878,21 @@ Game_Action.prototype.loseStates = function(target, jabsOnChanceEffects)
 };
 
 /**
- * Strips the given states from the target.
- * This consumes a single stack in JABS, or removes the whole state outside JABS.
- * @param target {Game_Actor|Game_Enemy} The target to strip states from.
- * @param jabsOnChanceEffects {JABS_OnChanceEffect[]} The various states to potentially strip.
+ * Strips the given states from the target, each on its own roll through {@link #rollStateRemovalAgainst}.
+ * Each one that lands consumes a single stack of its state, through {@link #stripState}.
+ * @param {Game_Actor|Game_Enemy} target The target to strip states from.
+ * @param {JABS_OnChanceEffect[]} jabsOnChanceEffects The various states to potentially strip.
  */
 Game_Action.prototype.stripStates = function(target, jabsOnChanceEffects)
 {
   // if there are no effects, don't bother.
   if (jabsOnChanceEffects.length === 0) return;
 
-  // iterate over each of them and see if we should apply them.
+  // iterate over each of them and see if we should strip them.
   jabsOnChanceEffects.forEach(jabsOnChanceEffect =>
   {
-    // the caster wants the strip to succeed; the target's own curse can resist it.
-    const attacker = this.subject();
-    const skill = jabsOnChanceEffect.baseSkill(attacker);
-    const positiveRolls = 1 + attacker.getPositiveRollsForSkill(skill);
-    const negativeRolls = target.getNegativeRolls();
-
-    // roll the dice to see if the on-chance effect applies.
-    if (jabsOnChanceEffect.shouldTrigger(positiveRolls, negativeRolls, attacker))
+    // roll the dice with this action's fate against the target to see if the on-chance effect applies.
+    if (this.rollStateRemovalAgainst(target, jabsOnChanceEffect))
     {
       // strip the given state from the target.
       this.stripState(target, jabsOnChanceEffect.skillId);
@@ -739,67 +901,47 @@ Game_Action.prototype.stripStates = function(target, jabsOnChanceEffects)
 };
 
 /**
- * Loses a single stack of the given state from the target.
- * This falls back to full state removal outside JABS.
+ * Loses a single stack of the given state from the target.<br/>
+ * J-ABS decrements the stack it tracks, and removes the state once its last stack is gone.
  * @param {Game_Actor|Game_Enemy} target The target losing the state.
  * @param {number} stateId The id of the state to lose.
  */
 Game_Action.prototype.loseState = function(target, stateId)
 {
-  // if JABS is available, then consume only a single stack.
-  if (J.ABS)
-  {
-    target.decrementStateStacks(stateId);
-    return;
-  }
-
-  // otherwise, just remove the state normally.
-  target.removeState(stateId);
+  // consume a single stack of the state.
+  target.decrementStateStacks(stateId);
 };
 
 /**
- * Strips a single stack of the given state from the target.
- * This falls back to full state removal outside JABS.
+ * Strips a single stack of the given state from the target.<br/>
+ * J-ABS decrements the stack it tracks, and removes the state once its last stack is gone.
  * @param {Game_Actor|Game_Enemy} target The target losing the state.
  * @param {number} stateId The id of the state to strip.
  */
 Game_Action.prototype.stripState = function(target, stateId)
 {
-  // if JABS is available, then consume only a single stack.
-  if (J.ABS)
-  {
-    target.decrementStateStacks(stateId);
-    return;
-  }
-
-  // otherwise, just remove the state normally.
-  target.removeState(stateId);
+  // consume a single stack of the state.
+  target.decrementStateStacks(stateId);
 };
 
 /**
- * Removes the given states from the target.
+ * Removes the given states from the target, each on its own roll through {@link #rollStateRemovalAgainst}.
  * This fully strips the state instead of consuming a single stack.
- * @param target {Game_Actor|Game_Enemy} The target to apply states to.
- * @param jabsOnChanceEffects {JABS_OnChanceEffect[]} The various states to potentially apply.
+ * @param {Game_Actor|Game_Enemy} target The target to remove states from.
+ * @param {JABS_OnChanceEffect[]} jabsOnChanceEffects The various states to potentially remove.
  */
 Game_Action.prototype.removeStates = function(target, jabsOnChanceEffects)
 {
   // if there are no effects, don't bother.
   if (jabsOnChanceEffects.length === 0) return;
 
-  // iterate over each of them and see if we should apply them.
+  // iterate over each of them and see if we should remove them.
   jabsOnChanceEffects.forEach(jabsOnChanceEffect =>
   {
-    // the caster wants the removal to succeed; the target's own curse can resist it.
-    const attacker = this.subject();
-    const skill = jabsOnChanceEffect.baseSkill(attacker);
-    const positiveRolls = 1 + attacker.getPositiveRollsForSkill(skill);
-    const negativeRolls = target.getNegativeRolls();
-
-    // roll the dice to see if the on-chance effect applies.
-    if (jabsOnChanceEffect.shouldTrigger(positiveRolls, negativeRolls, attacker))
+    // roll the dice with this action's fate against the target to see if the on-chance effect applies.
+    if (this.rollStateRemovalAgainst(target, jabsOnChanceEffect))
     {
-      // apply the given state to the caster, with the caster as the attacker.
+      // remove the given state from the target entirely.
       target.removeState(jabsOnChanceEffect.skillId);
     }
   });

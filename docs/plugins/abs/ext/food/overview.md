@@ -11,3 +11,6 @@ version: "2.0.0"
 This plugin adds food group chain states, a dedicated R2 food slot, and an ABS quick-menu Equip Food screen. It depends
 on [`J-ABS`](../../core/overview.md) core for the general
 [`<applyStateOnExpire>`](../../core/notetags/skills/apply-state-on-expire.md) state-chaining mechanic.
+
+A food chain's phases carry J-ABS's `<immuneToFate>`, so each one lands the next exactly once as it expires, with no fate
+weighing in, as [Food Chain States](notetags/food-chain-states.md) describes.

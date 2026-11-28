@@ -10,7 +10,8 @@ tags: [abs, tag, state, immunity, resistance]
 ## Description
 
 These tags are read from the TARGET's own notes (states, equips, class, etc.), not from the state being applied. Checked
-in `Game_Battler#isStateAddable`, in this priority order- each fully blocks application before any chance roll:
+in `Game_Battler#isStateAddable`, in this priority order- each one blocks the state outright, every time it would land,
+however its chance roll went:
 
 ```
 1. <immuneToAll>          — blocks everything, including the death state.
@@ -22,6 +23,33 @@ in `Game_Battler#isStateAddable`, in this priority order- each fully blocks appl
 `<stateTypeResist:[TYPE, PCT]>` is different- it does not block anything outright, it reduces the chance a state
 carrying a matching `<type:TYPE>` tag lands, folded into the same application roll as vanilla's per-id state rate.
 Multiple tags for the same TYPE stack additively.
+
+## NOTE ABOUT THE APPLICATION ROLL
+
+Every chance a state has to land on a battler is rolled the same way, whatever carries it there: a skill's own state
+effect, the attack states a normal attack carries, an on-hit, on-cast or on-crit tag, an evasion, an aura, a state
+spreading, a state applied as another expires, or a region. A state carrying `<immuneToFate>` takes the same chance with
+no fate weighing on it, as [Immunity to Fate](immune-to-fate.md) describes. The chance is built up in this order:
+
+```
+1. The authored chance, as a percent.
+2. The target's State Rate traits for that state.
+3. The target's <stateTypeResist> for each type the state carries.
+4. For a state carrying <type:negative>, the luck between the two battlers.
+```
+
+The luck is RMMZ's own: every point of LUK the battler applying the state holds over the target adds a tenth of a
+percent to the chance, and every point it lacks takes one away. Luck only weighs on harm. A state without the
+`<type:negative>` classifier is a blessing, and no one lucks their way out of a blessing, so no luck gap touches its
+chance. A battler applying a state to itself holds no edge over itself, but its own State Rate traits and
+`<stateTypeResist>` still weigh in. The attack states a normal attack carries also answer to the attacker's own rate for
+each of them, before the target's resistances do.
+
+The result is rounded to a whole percent and rolled with both battlers' fate, as
+[On-Chance Roll Manipulation](../skills/on-chance-roll-manipulation-lucky-cursed-rolls.md) describes. Accumulate Mode
+and Encore can land it more than once, and the immunities above are checked on every landing.
+
+A Certain Hit skill cannot miss, and the states it carries take this same roll.
 
 ## TAG USAGE
 

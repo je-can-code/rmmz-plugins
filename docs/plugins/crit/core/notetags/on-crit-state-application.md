@@ -31,9 +31,27 @@ These effects require `J-ABS` to be loaded. The tags will be silently ignored in
 
 ## NOTE ABOUT CHANCE VALUES
 
-CHANCE is a whole-number percent from 0 to 100.
-A CHANCE of 100 means the state is always applied on crit.
+CHANCE is a whole-number percent from 0 to 100: the chance the roll starts from, before the recipient's resistances and,
+for a harmful state, the luck between the two battlers weigh in.
 Multiple tags for the same state are each rolled independently.
+
+## NOTE ABOUT THE ROLL
+
+Each on-crit state rolls through J-ABS's state application roll, the same roll every state with a chance to land takes,
+as [State-Application Immunity & Resistance](../../../abs/core/notetags/states/state-application-immunity-resistance.md)
+describes. The CHANCE meets the recipient's State Rate traits and `<stateTypeResist>`, then, for a harmful state, the luck
+between the attacker and the recipient, and the result is rolled with both battlers' fate, as
+[On-Chance Roll Manipulation](../../../abs/core/notetags/skills/on-chance-roll-manipulation-lucky-cursed-rolls.md)
+describes. The skill that landed the critical hit is the skill in hand for that fate.
+
+`Apply` variants are aimed at the target by the skill that crit. A skill targeting the attacker's opponents aims them as
+harm, so each curse the target carries is one more chance for the state to land; any other skill aims them as help, so
+each curse the target carries is one more hurdle the state has to clear.
+
+`Self` variants are aimed at the attacker by itself. The attacker's own State Rate traits and `<stateTypeResist>` weigh
+in, it holds no luck over itself, and its fate counts once.
+
+Accumulate Mode and Encore can land a state more than once, and the recipient's immunities are checked on every landing.
 
 ## TAG USAGE
 
@@ -53,22 +71,23 @@ Multiple tags for the same state are each rolled independently.
 `<onCritApply:[STATE_ID, CHANCE]>`
 `<onCritSelf:[STATE_ID, CHANCE]>`
 Where STATE_ID is the id of the state to apply.
-Where CHANCE is the percent chance (0–100) that the state applies on a crit.
+Where CHANCE is the percent chance (0–100) the state's roll starts from on a crit.
 `Apply` variants apply the state to the TARGET that was critically hit.
 `Self` variants apply the state to the ATTACKER who landed the critical hit.
 
 ## TAG EXAMPLES
 
 `<thisCritApply:[5, 30]>`
-This skill has a 30% chance to apply state id 5 to the target when it crits.
+When this skill crits, it rolls a 30% chance to apply state id 5 to the target.
 
 `<thisCritSelf:[12, 100]>`
-This skill always applies state id 12 to the attacker when it crits.
+When this skill crits, it rolls a 100% chance to apply state id 12 to the attacker, which the attacker's own State Rate
+traits and `<stateTypeResist>` can lower.
 
 `<onCritApply:[5, 25]>`
-Whenever this battler (or whatever carries this note) lands any critical hit, there is a 25% chance to apply state id 5
+Whenever this battler (or whatever carries this note) lands any critical hit, it rolls a 25% chance to apply state id 5
 to the target.
 A passive mastery state with this tag would grant the effect for as long as the state is active.
 
 `<onCritSelf:[20, 50]>`
-Whenever this battler lands any critical hit, there is a 50% chance to apply state id 20 to themselves.
+Whenever this battler lands any critical hit, it rolls a 50% chance to apply state id 20 to themselves.

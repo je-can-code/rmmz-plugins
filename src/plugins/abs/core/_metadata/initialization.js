@@ -692,16 +692,18 @@ J.ABS.RegExp = {
   ThisLuckyRolls: /<thisLuckyRolls:[ ]?\[([+\-*/ ().\w]+)]>/gi,
 
   /**
-   * Battler-wide bonus negative rerolls fed into chanceIn100 whenever this battler is the party
-   * wanting a roll to fail (e.g. the defender evading a hit/crit/state-apply). Evaluated with
-   * `a` bound to this battler, summed across every note source. No floor or cap.
+   * Battler-wide bad fate, fed into chanceIn100 against this battler. On its own rolls each curse is
+   * one more roll it has to pass as well; on harm aimed at it, one more chance for that harm to land;
+   * on help aimed at it, one more roll that help has to pass. Evaluated with `a` bound to this
+   * battler, summed across every note source. No floor or cap.
    * Structure: <cursedRolls:[FORMULA]>
    * @type {RegExp}
    */
   CursedRolls: /<cursedRolls:[ ]?\[([+\-*/ ().\w]+)]>/gi,
 
   /**
-   * Same as {@link CursedRolls}, but read from a specific skill's own note only.
+   * Same as {@link CursedRolls}, but read from a specific skill's own note only- curses its caster's
+   * fortune specifically while using it.
    * Structure: <thisCursedRolls:[FORMULA]>
    * @type {RegExp}
    */
@@ -849,6 +851,9 @@ J.ABS.RegExp = {
   ImmuneToNegatives: /<immuneToNegatives>/gi,
   ImmuneToStates: /<immuneToStates>/gi,
   ImmuneToAll: /<immuneToAll>/gi,
+
+  // fate exemption, read from the applied state's own notes: no battler's fate weighs on a roll for this state.
+  ImmuneToFate: /<immuneToFate>/i,
 
   // casting/channeling interruption immunity, read from all of a battler's own note sources.
   CannotBeInterrupted: /<cannotBeInterrupted>/i,
@@ -1361,6 +1366,28 @@ J.ABS.RegExp = {
    * @type {RegExp}
    */
   BonusDamagePerStateType: /<bonusDamagePerStateType:[ ]?(\[[a-zA-Z][a-zA-Z0-9_-]*,[ ]?-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?])>/gi,
+
+  /**
+   * Pierces the target's physical and magical damage rates while it carries at least one active
+   * state with the given type classifier (see RPG_Base's types()). A rate below 1.00, resistance and
+   * immunity alike, is lifted to an even 1.00, while a rate already at or above 1.00 is a
+   * vulnerability and stands. Heals are never pierced. Reads from getAllNotes(), so it works from any
+   * note source the battler carries; several tags naming different types pierce on any one of them.
+   *
+   * <pre>
+   * Structure:
+   *  <pierceDamageRateIfStateType:TYPE>
+   *
+   * Example:
+   *  <pierceDamageRateIfStateType:cc>
+   *
+   * Translation:
+   *  Against a target with any active state classified as "cc", this battler's physical and magical
+   *  hits treat the target's PDR and MDR as no lower than 100%.
+   * </pre>
+   * @type {RegExp}
+   */
+  PierceDamageRateIfStateType: /<pierceDamageRateIfStateType:[ ]?([a-zA-Z][a-zA-Z0-9_-]*)>/gi,
 
   /**
    * Percent damage bonus per stack of one specific state currently active on the target.

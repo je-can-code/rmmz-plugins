@@ -38,6 +38,7 @@ J.EXTEND.Aliased.Game_Action = new Map();
 J.EXTEND.Aliased.Game_Actor = new Map();
 J.EXTEND.Aliased.Game_Enemy = new Map();
 J.EXTEND.Aliased.Game_Item = new Map();
+J.EXTEND.Aliased.JABS_Engine = new Map();
 J.EXTEND.Aliased.JABS_SkillSlotManager = new Map();
 
 /**
@@ -249,6 +250,12 @@ J.EXTEND.RegExp.OnCastRemoveState = /<onCastRemoveState:[ ]?(\[\d+,[ ]?\d+])>/i;
  * of the on-cast family — not per target hit. Repeatable: a skill may carry several of these tags,
  * each rolled and dispatched independently, so one cast can chain into multiple follow-up skills.
  *
+ * CHANCE rolls once per tag with the caster's own fate alone: its lucky and cursed rolls, joined by
+ * the cast skill's own {@code <thisLuckyRolls>} and {@code <thisCursedRolls>}, weigh on any CHANCE
+ * under 100, and no resistance or other battler's fate does. {@code <veryLucky>} executes the
+ * payload every time, even at 0%, and {@code <veryCursed>} never does, even at 100%. A payload whose
+ * roll lands executes once; Accumulate Mode and Encore never repeat it.
+ *
  * <pre>
  * Structure:
  *  <onCastExecuteSkill:[SKILL_ID, CHANCE]>
@@ -258,8 +265,8 @@ J.EXTEND.RegExp.OnCastRemoveState = /<onCastRemoveState:[ ]?(\[\d+,[ ]?\d+])>/i;
  *  <onCastExecuteSkill:[1027, 50]>
  *
  * Translation:
- *  On cast, always force-execute skill id 1026, and separately roll a 50% chance to also
- *  force-execute skill id 1027.
+ *  On cast, force-execute skill id 1026 at 100%, which only a very cursed caster misses, and
+ *  separately roll a 50% chance with the caster's own fate to also force-execute skill id 1027.
  * </pre>
  * @type {RegExp}
  */
@@ -269,6 +276,8 @@ J.EXTEND.RegExp.OnCastExecuteSkill = /<onCastExecuteSkill:[ ]?(\[\d+,[ ]?\d+])>/
  * The structure of a conditional on-cast force-execute-skill tag.
  * Force-executes a payload skill only if the caster already has a required state active — the
  * <onCastSelfStateIfAfflicted> gate pattern, applied to <onCastExecuteSkill> instead of a self-state.
+ * A payload that passes the gate rolls CHANCE exactly as {@link J.EXTEND.RegExp.OnCastExecuteSkill}
+ * does, with the caster's own fate alone, and executes once when it lands.
  *
  * <pre>
  * Structure:
@@ -336,6 +345,48 @@ J.EXTEND.RegExp.ThisApplyState = /<thisApplyState:[ ]?(\[\d+,[ ]?\d+(?:,[ ]?-?\d
  * @type {RegExp}
  */
 J.EXTEND.RegExp.ApplyState = /<applyState:[ ]?(\[\d+,[ ]?\d+(?:,[ ]?-?\d+(?:,[ ]?\d+)?)?])>/gi;
+
+/**
+ * The structure of a skill-scoped on-hit apply-state tag that only lands on a target already afflicted with another
+ * state. Reads from the executing skill only ({@code this.item()}).<br/>
+ * The target is judged as it stood before the hit, so a NECESSARY_STATE_ID that the same hit applies never counts: it
+ * has to have been there already, put there by an earlier hit or by anyone else. A target that qualifies rolls CHANCE
+ * the way {@link J.EXTEND.RegExp.ThisApplyState} does.
+ *
+ * <pre>
+ * Structure:
+ *  <thisApplyStateWhenAfflicted:[APPLYING_STATE_ID, NECESSARY_STATE_ID, CHANCE]>
+ *
+ * Example:
+ *  <thisApplyStateWhenAfflicted:[73, 72, 100]>
+ *
+ * Translation:
+ *  On hit, if the target already had state id 72 before this hit landed, apply state id 73 at 100% chance.
+ * </pre>
+ * @type {RegExp}
+ */
+J.EXTEND.RegExp.ThisApplyStateWhenAfflicted = /<thisApplyStateWhenAfflicted:[ ]?(\[\d+,[ ]?\d+,[ ]?\d+])>/gi;
+
+/**
+ * The structure of a caster-wide on-hit apply-state tag that only lands on a target already afflicted with another
+ * state. Reads from all of the caster's notes ({@code getAllNotes()}), so it can live on states, equips, actor data,
+ * or skills. One on a skill counts toward every hit its caster lands while that skill is known, not only that skill's
+ * own hits.<br/>
+ * Judged and rolled exactly as {@link J.EXTEND.RegExp.ThisApplyStateWhenAfflicted} is.
+ *
+ * <pre>
+ * Structure:
+ *  <applyStateWhenAfflicted:[APPLYING_STATE_ID, NECESSARY_STATE_ID, CHANCE]>
+ *
+ * Example (a weapon whose hits worsen a bleed that is already running):
+ *  <applyStateWhenAfflicted:[37, 15, 50]>
+ *
+ * Translation:
+ *  On hit, if the target already had state id 15 before this hit landed, roll a 50% chance to apply state id 37.
+ * </pre>
+ * @type {RegExp}
+ */
+J.EXTEND.RegExp.ApplyStateWhenAfflicted = /<applyStateWhenAfflicted:[ ]?(\[\d+,[ ]?\d+,[ ]?\d+])>/gi;
 
 /**
  * The structure of a skill-scoped toggle-state tag. Reads from the executing skill only

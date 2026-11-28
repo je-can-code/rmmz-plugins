@@ -9,6 +9,7 @@
 # notetag
 
 * [On-Attack Gains](notetags/on-attack-gains.md) - The tags granting the caster HP, MP, or TP every time a skill lands a hit on-map.
+* [On-Cast Gains](notetags/on-cast-gains.md) - The tags granting or taxing the caster HP, MP, or TP once every time it executes a skill on-map, hit or miss.
 * [When-Hit Gains](notetags/when-hit-gains.md) - The tags granting a battler HP, MP, or TP each time it takes HP damage on-map.
 * [Steal Rates](notetags/steal-rates.md) - The lifesteal, manasteal and techsteal tags recovering a percentage of the HP damage a battler deals.
 * [Heal Events](notetags/heal-events.md) - The onSelf and onAlly tags cascading secondary HP, MP, or TP heals whenever a battler recovers a resource.
